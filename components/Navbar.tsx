@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { SyncStatusBadge } from './SyncStatusBadge';
+import { useViTinhAnTamStore } from '@/lib/store';
 
 export function Navbar() {
   const pathname = usePathname();
+  const { currentUser, isLoggedIn, logout } = useViTinhAnTamStore();
 
   return (
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -27,15 +29,6 @@ export function Navbar() {
           <div className="flex items-center gap-3 ml-auto">
             {/* Sync Badge */}
             <SyncStatusBadge />
-
-            {/* KTV Login Link */}
-            <Link
-              href="/dashboard"
-              className="text-blue-700 hover:text-blue-800 transition-colors flex items-center gap-1 font-semibold text-xs bg-blue-100/80 hover:bg-blue-200 px-2.5 py-0.5 rounded"
-            >
-              <span className="material-symbols-outlined text-xs">lock</span>
-              <span>KTV Login</span>
-            </Link>
           </div>
         </div>
       </div>
@@ -117,13 +110,60 @@ export function Navbar() {
             <span>Tra cứu tem</span>
           </Link>
 
-          <Link
-            href="/dashboard"
-            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-all shadow-xs flex items-center gap-1"
-          >
-            <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
-            <span className="hidden md:inline">Admin CRM</span>
-          </Link>
+          {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
+          {isLoggedIn ? (
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/dashboard"
+                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-all shadow-xs flex items-center gap-2"
+                title="Vào hệ thống quản lý"
+              >
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    currentUser.role === 'admin'
+                      ? 'bg-blue-400'
+                      : currentUser.role === 'technician'
+                      ? 'bg-emerald-400'
+                      : 'bg-purple-400'
+                  }`}
+                />
+                <span className="hidden md:inline font-semibold">
+                  {currentUser.name.split(' ').slice(-2).join(' ')}
+                </span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                    currentUser.role === 'admin'
+                      ? 'bg-blue-500/30 text-blue-200'
+                      : currentUser.role === 'technician'
+                      ? 'bg-emerald-500/30 text-emerald-200'
+                      : 'bg-purple-500/30 text-purple-200'
+                  }`}
+                >
+                  {currentUser.role === 'admin'
+                    ? 'Admin'
+                    : currentUser.role === 'technician'
+                    ? 'KTV'
+                    : 'Sales'}
+                </span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => logout()}
+                title="Đăng xuất"
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">logout</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-sm">lock</span>
+              <span>Đăng Nhập</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

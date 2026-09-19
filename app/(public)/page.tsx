@@ -446,8 +446,9 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500">Chi phí trọn gói chỉ từ:</div>
-                    <div className="text-2xl font-bold text-blue-600 font-mono">550.000₫</div>
+                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá minh bạch sau kiểm tra</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Tư vấn nâng cấp đúng nhu cầu, không vẽ bệnh</div>
                   </div>
                 </div>
 
@@ -480,10 +481,9 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500">Chỉ: <span className="line-through text-slate-400">200.000₫</span></div>
-                    <div className="text-2xl font-bold text-blue-600 font-mono">
-                      150.000₫ <span className="text-xs font-normal text-slate-600">(còn 100k khi làm Combo)</span>
-                    </div>
+                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá tận nơi theo dòng máy</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Kiểm tra nhiệt độ CPU &amp; cánh quạt miễn phí</div>
                   </div>
                 </div>
 
@@ -513,8 +513,9 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500">Chi phí dịch vụ tận nơi:</div>
-                    <div className="text-2xl font-bold text-blue-600 font-mono">120.000₫ - 180.000₫</div>
+                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá theo nhu cầu cài đặt</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">Hỗ trợ phần mềm văn phòng &amp; kết nối máy in</div>
                   </div>
                 </div>
               </div>
@@ -1076,8 +1077,9 @@ export default function HomePage() {
               <a className="hover:text-slate-300 transition-colors" href="#chinh-sach">
                 Quy định bảo hành
               </a>
-              <Link className="hover:text-slate-300 transition-colors" href="/dashboard">
-                Cổng nội bộ KTV
+              <Link className="hover:text-slate-300 transition-colors flex items-center gap-1" href="/login">
+                <span className="material-symbols-outlined text-xs">lock</span>
+                <span>Đăng nhập nội bộ</span>
               </Link>
             </div>
           </div>

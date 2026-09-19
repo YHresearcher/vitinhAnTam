@@ -24,9 +24,12 @@ import {
 } from './mockData';
 
 interface StoreContextType {
-  // RBAC Profile
+  // RBAC Profile & Auth
   currentUser: UserProfile;
+  isLoggedIn: boolean;
   setCurrentUserRole: (role: UserRole) => void;
+  login: (role: UserRole) => void;
+  logout: () => void;
   canEditStock: () => boolean;
   canUpdateRepairStatus: () => boolean;
   canAccessPayroll: () => boolean;
@@ -79,6 +82,7 @@ const StoreContext = createContext<StoreContextType | null>(null);
 
 const STORAGE_KEYS = {
   role: 'vtat_user_role_v2',
+  isLoggedIn: 'vtat_is_logged_in_v2',
   inventory: 'vtat_inventory_v2',
   customers: 'vtat_customers_v2',
   tickets: 'vtat_tickets_v2',
@@ -88,8 +92,9 @@ const STORAGE_KEYS = {
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  // RBAC State
+  // RBAC State & Login status
   const [currentUser, setCurrentUser] = useState<UserProfile>(MOCK_USERS.admin);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
 
   // Collections
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
@@ -113,8 +118,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const setCurrentUserRole = (role: UserRole) => {
     setCurrentUser(MOCK_USERS[role]);
+    setIsLoggedIn(true);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.role, role);
+      localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
+    }
+  };
+
+  const login = (role: UserRole) => {
+    setCurrentUser(MOCK_USERS[role]);
+    setIsLoggedIn(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.role, role);
+      localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
+    }
+  };
+
+  const logout = () => {
+    setIsLoggedIn(false);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.isLoggedIn);
     }
   };
 
@@ -133,11 +156,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async function loadData() {
       setIsLoading(true);
 
-      // Load saved role if any
+      // Load saved role and login status if any
       if (typeof window !== 'undefined') {
         const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
+        const savedLoggedIn = localStorage.getItem(STORAGE_KEYS.isLoggedIn);
         if (savedRole && MOCK_USERS[savedRole]) {
           setCurrentUser(MOCK_USERS[savedRole]);
+        }
+        if (savedLoggedIn === 'false') {
+          setIsLoggedIn(false);
+        } else if (savedLoggedIn === 'true') {
+          setIsLoggedIn(true);
         }
       }
 
@@ -456,7 +485,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <StoreContext.Provider
       value={{
         currentUser,
+        isLoggedIn,
         setCurrentUserRole,
+        login,
+        logout,
         canEditStock,
         canUpdateRepairStatus,
         canAccessPayroll,

@@ -7,6 +7,21 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/dang-nhap",
+        destination: "/login",
+        permanent: false,
+      },
+      {
+        source: "/admin/login",
+        destination: "/login",
+        permanent: false,
+      },
+      {
+        source: "/ktv/login",
+        destination: "/login",
+        permanent: false,
+      },
+      {
         source: "/admin",
         destination: "/dashboard",
         permanent: false,
