@@ -622,8 +622,7 @@ export default function HomePage() {
           {/* 4. KHỐI 3: TRA CỨU BẢO HÀNH (SĐT HOẶC SERVICE TAG) */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="tra-cuu-bao-hanh">
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Minh Bạch Tuyệt Đối 24/7</div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
@@ -655,32 +654,6 @@ export default function HomePage() {
                   <span>{isSearching ? 'Đang tìm...' : 'Kiểm Tra Ngay'}</span>
                 </button>
               </form>
-
-              {/* Quick Presets */}
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                <span>Gợi ý tìm nhanh:</span>
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('ST-8F4K92X')}
-                  className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono text-[11px] font-semibold hover:bg-blue-100 border border-blue-100"
-                >
-                  ST-8F4K92X (Dell OptiPlex)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('PC-GAMING-9921')}
-                  className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-mono text-[11px] font-semibold hover:bg-blue-100 border border-blue-100"
-                >
-                  PC-GAMING-9921
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectPreset('0918234891')}
-                  className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold hover:bg-slate-200 border border-slate-200"
-                >
-                  SĐT: 0918234891
-                </button>
-              </div>
             </div>
 
             {/* Search Result - Multi-tier Display */}
@@ -774,8 +747,7 @@ export default function HomePage() {
           {/* 5. KHỐI 4: QUY TRÌNH KIỂM ĐỊNH & BẰNG CHỨNG */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Quy Chuẩn Kỹ Thuật Độc Quyền</div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 QUY TRÌNH KIỂM ĐỊNH 4 LỚP TRƯỚC KHI GIAO
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
@@ -833,10 +805,7 @@ export default function HomePage() {
             <div className="space-y-6 pt-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
-                    TRẢI NGHIỆM THỰC TẾ
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     NHẬN XÉT CỦA KHÁCH HÀNG
                   </h2>
                 </div>
@@ -952,8 +921,7 @@ export default function HomePage() {
               <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div className="space-y-6">
                   <div className="space-y-1">
-                    <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Phủ Sóng Toàn Diện 10KM</div>
-                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                       Mạng Lưới Kỹ Thuật Lưu Động Long An
                     </h2>
                   </div>

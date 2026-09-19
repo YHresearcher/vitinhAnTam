@@ -67,15 +67,6 @@ function WarrantyLookupContent() {
 
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-100 shadow-xs mb-5">
-          <span className="inline-flex h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-          <span className="text-xs font-semibold tracking-wide uppercase text-blue-700">
-            Cổng Dịch Vụ Khách Hàng Điện Tử
-          </span>
-          <span className="text-xs text-slate-300">•</span>
-          <span className="text-xs text-slate-500 font-mono">Long An - Tây Ninh</span>
-        </div>
-
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
           KIỂM TRA BẢO HÀNH ĐIỆN TỬ &amp; <span className="text-blue-600">LỊCH SỬ THIẾT BỊ</span>
         </h1>
@@ -115,32 +106,6 @@ function WarrantyLookupContent() {
                 <span>{isSearching ? 'Đang kiểm tra...' : 'Kiểm Tra Ngay'}</span>
               </button>
             </form>
-          </div>
-
-          {/* Quick Presets */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-3.5 text-xs text-slate-500">
-            <span className="font-medium text-slate-600">Tìm kiếm nhanh:</span>
-            <button
-              type="button"
-              onClick={() => handlePreset('ST-8F4K92X')}
-              className="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 text-[11px] font-mono transition-colors shadow-2xs"
-            >
-              ST-8F4K92X (Dell OptiPlex)
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePreset('PC-GAMING-9921')}
-              className="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 text-[11px] font-mono transition-colors shadow-2xs"
-            >
-              PC-GAMING-9921
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePreset('0918234891')}
-              className="px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-blue-400 hover:text-blue-600 text-[11px] font-mono transition-colors shadow-2xs"
-            >
-              SĐT: 0918.234.891
-            </button>
           </div>
         </div>
       </section>
