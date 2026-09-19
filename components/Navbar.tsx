@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
@@ -10,6 +10,7 @@ import { useViTinhAnTamStore } from '@/lib/store';
 export function Navbar() {
   const pathname = usePathname();
   const { currentUser, isLoggedIn, logout, systemSettings, currentLang, setLang } = useViTinhAnTamStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isEn = currentLang === 'en';
 
@@ -23,7 +24,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1">
           <Link
             href="/"
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
@@ -60,7 +61,7 @@ export function Navbar() {
             href="/tra-cuu-bao-hanh"
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               pathname === '/tra-cuu-bao-hanh'
-                ? 'bg-blue-50 text-blue-800 font-bold font-semibold'
+                ? 'bg-blue-50 text-blue-800 font-bold'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
@@ -70,7 +71,7 @@ export function Navbar() {
             href="/dat-lich"
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               pathname === '/dat-lich'
-                ? 'bg-blue-50 text-blue-800 font-bold font-semibold'
+                ? 'bg-blue-50 text-blue-800 font-bold'
                 : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
@@ -153,8 +154,83 @@ export function Navbar() {
               <span className="material-symbols-outlined text-xl">login</span>
             </Link>
           )}
+
+          {/* Mobile Menu Button Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+            aria-label="Toggle Navigation Menu"
+          >
+            <span className="material-symbols-outlined text-2xl">
+              {isMobileMenuOpen ? 'close' : 'menu'}
+            </span>
+          </button>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg">
+          <Link
+            href="/"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+              pathname === '/' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {isEn ? 'Home' : 'Trang chủ'}
+          </Link>
+          <Link
+            href="/vi-sao-chon-an-tam"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+              pathname === '/vi-sao-chon-an-tam' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {isEn ? 'Why Us' : 'Vì sao chọn An Tâm'}
+          </Link>
+          <a
+            href="/#danh-muc-san-pham"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+          >
+            {isEn ? 'Products' : 'Sản phẩm'}
+          </a>
+          <a
+            href="/#dich-vu-spa"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+          >
+            {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
+          </a>
+          <Link
+            href="/tra-cuu-bao-hanh"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+              pathname === '/tra-cuu-bao-hanh' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}
+          </Link>
+          <Link
+            href="/dat-lich"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+              pathname === '/dat-lich' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            {isEn ? 'Book Schedule' : 'Đặt lịch hẹn'}
+          </Link>
+          <a
+            href="/#chinh-sach"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+          >
+            {isEn ? 'Contact' : 'Liên hệ'}
+          </a>
+        </div>
+      )}
     </header>
   );
 }

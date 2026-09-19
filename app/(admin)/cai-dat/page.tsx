@@ -41,7 +41,7 @@ export default function CaiDatPage() {
         workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
         workingHoursWeekend: '08h00 - 21h00 (Trọn ngày)',
         primeHours: '17:30 - 21:00',
-        footerAbout: 'Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng & dịch vụ xử lý tận nơi trong 2 giờ tại Long An - Tây Ninh.',
+        footerAbout: 'Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, IBM & dịch vụ xử lý tận nơi trong 2 giờ tại Long An - Tây Ninh.',
         footerCopyright: '© 2026 Vi Tính An Tâm (vitinhantam.vn) - Giữ trọn chữ tín, an tâm sử dụng.',
         storeName: 'Vi Tính An Tâm',
       };

@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     default: 'Vi Tính An Tâm - Máy Tính Cũ Tuyển Chọn Loại 1 & Dịch Vụ 2H Tận Nơi Long An - Tây Ninh',
     template: '%s | Vi Tính An Tâm',
   },
-  description: 'Chuyên PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn loại 1 nguyên bản >95%, cài sẵn Windows bản quyền số vĩnh viễn và dịch vụ kiểm tra bảo hành, cứu hộ tận nơi trong 2 giờ tại Long An - Tây Ninh.',
+  description: 'Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, IBM tuyển chọn loại 1 nguyên bản >95%, cài sẵn Windows bản quyền số vĩnh viễn và dịch vụ kiểm tra bảo hành, cứu hộ tận nơi trong 2 giờ tại Long An - Tây Ninh.',
   keywords: [
     'Vi tính An Tâm',
     'máy tính cũ loại 1',

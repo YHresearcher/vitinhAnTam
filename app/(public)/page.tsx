@@ -244,148 +244,84 @@ export default function HomePage() {
           <div className="absolute top-[40%] -right-32 w-[450px] h-[450px] bg-sky-100/60 rounded-full blur-[100px] pointer-events-none -z-10" />
 
           {/* 1. HERO BANNER SECTION */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16 lg:pt-12 lg:pb-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              {/* Left Column */}
-              <div className="lg:col-span-8 space-y-6">
-                <div className="space-y-4">
-                  <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-700 flex items-center gap-2">
-                    <span className="w-6 h-0.5 bg-blue-700" />
-                    VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12 lg:pt-12 lg:pb-16">
+            <div className="max-w-4xl mx-auto text-left space-y-6">
+              <div className="space-y-4">
+                <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-700 flex items-center gap-2">
+                  <span className="w-6 h-0.5 bg-blue-700" />
+                  VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM
+                </span>
+                <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
+                  MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1
+                </h1>
+                <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
+                    <span className="material-symbols-outlined text-base">verified_user</span>
+                    <span>WINDOWS BẢN QUYỀN</span>
                   </span>
-                  <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
-                    MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
-                      <span className="material-symbols-outlined text-base">verified_user</span>
-                      <span>WINDOWS BẢN QUYỀN</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold shadow-xs">
-                      <span className="material-symbols-outlined text-base text-orange-600">bolt</span>
-                      <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl">
-                  Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng &amp; dịch vụ hồi sinh máy tính cấp tốc khu vực Long An - Tây Ninh.
-                </p>
-
-                {/* 3 Trụ Cột Cam Kết */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
-                  <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">computer</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase">MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1</h3>
-                    <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Ngoại hình đẹp, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
-                    <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">verified_user</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase">WINDOWS BẢN QUYỀN</h3>
-                    <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
-                    <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">schedule</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 uppercase">DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
-                    <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dual CTA Buttons */}
-                <div className="flex flex-wrap items-center gap-3.5 pt-3">
-                  <a
-                    href="#danh-muc-san-pham"
-                    className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
-                  >
-                    <span className="material-symbols-outlined text-lg">computer</span>
-                    <span>XEM DANH MỤC MÁY</span>
-                  </a>
-                  <Link
-                    href="/dat-lich"
-                    className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-lg">home_repair_service</span>
-                    <span>ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI</span>
-                  </Link>
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold shadow-xs">
+                    <span className="material-symbols-outlined text-base text-orange-600">bolt</span>
+                    <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
+                  </span>
                 </div>
               </div>
 
-              {/* Right Column: Hero Live Station Showcase */}
-              <div className="lg:col-span-4 relative">
-                <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
-                  <div className="relative h-64 sm:h-72 w-full rounded-xl overflow-hidden mb-4 border border-slate-200 bg-slate-100">
-                    <img
-                      className="w-full h-full object-cover"
-                      alt="Máy tính đồng bộ doanh nghiệp và laptop tuyển chọn kỹ lưỡng tại Vi Tính An Tâm"
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVHGVQdGoKoVXAwU6yjMLDBWAOvJvMJjMYYR-uGGp_yR16sbGNGfIGEVOI-jK5EAILW4owtjMgdNjqreUBRD3syOQ6OcUN6-yvS10I7Hqh9Ae-XW9vinCGiMR2fyCR5Rzcds6m7N29w5XAXbs-Aov2qfO1UDnRW3Vm7Je5H1DzWR2urIl3fYFAKLRqktLbhDsPj4GRtfMV3CNdDsWOVFl7arQwFItiQU2tj-mWbZRBt-i7YRGXhE19"
-                    />
-                    <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-md text-[11px] font-bold text-emerald-700 border border-slate-200 shadow-xs flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                      <span>SẴN KHO LONG AN - TÂY NINH</span>
-                    </div>
-                  </div>
+              <p className="text-lg sm:text-xl text-slate-700 font-medium leading-relaxed">
+                Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, IBM
+              </p>
 
-                  {/* Diagnostics Badge Preview */}
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-600 font-medium">Tiêu chuẩn tuyển chọn máy:</span>
-                      <span className="text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        Loại A (&gt;95%)
-                      </span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
-                      <div className="bg-gradient-to-r from-blue-600 to-emerald-500 h-full rounded-full w-[96%]" />
-                    </div>
-                    <div className="pt-2 flex items-center justify-between text-xs text-slate-600">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span> 0% Bad Sector
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm text-emerald-600">check_circle</span> Sạc Zin Theo Máy
-                      </span>
-                    </div>
+              {/* 3 Trụ Cột Nổi Bật */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
+                  <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-xl">computer</span>
                   </div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">DELL, HP, IBM NGUYÊN BẢN</h3>
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
+                    Ngoại hình đẹp &gt;95%, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.
+                  </p>
                 </div>
+
+                <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-xl">verified_user</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">WINDOWS BẢN QUYỀN</h3>
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
+                    Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
+                  <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-xl">schedule</span>
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
+                    Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.
+                  </p>
+                </div>
+              </div>
+
+              {/* Dual CTA Buttons */}
+              <div className="flex flex-wrap items-center gap-3.5 pt-3">
+                <a
+                  href="#danh-muc-san-pham"
+                  className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
+                >
+                  <span className="material-symbols-outlined text-lg">computer</span>
+                  <span>XEM DANH MỤC MÁY</span>
+                </a>
+                <Link
+                  href="/dat-lich"
+                  className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">home_repair_service</span>
+                  <span>ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI</span>
+                </Link>
               </div>
             </div>
           </section>
-
-          
-          {/* ========================================================================= */}
-          {/* REASSURANCE BANNER DẪN TỚI TAB VÌ SAO CHỌN AN TÂM */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
-            <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-700 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <span className="material-symbols-outlined text-base">verified_user</span>
-                </div>
-                <span>
-                  <strong className="text-slate-900 font-bold">Cam kết minh bạch:</strong> SSD/RAM mới 100% bảo hành 36 tháng đổi mới, thân máy 6 - 12 tháng. 100% Windows Pro bản quyền sạch.
-                </span>
-              </div>
-              <Link
-                href="/vi-sao-chon-an-tam"
-                className="text-blue-700 hover:text-blue-800 font-bold flex items-center gap-1 shrink-0 group transition-colors"
-              >
-                <span>TÌM HIỂU THÊM</span>
-                <span className="material-symbols-outlined text-base group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
-              </Link>
-            </div>
-          </div>
 
 
 
