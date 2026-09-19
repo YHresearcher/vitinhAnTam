@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
-import { InventoryItem } from '@/lib/supabase';
+import { InventoryItem, generateCustomerCode } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import {
   Search,
@@ -14,6 +14,11 @@ import {
   Cpu,
   Layers,
   Lock,
+  ShoppingBag,
+  UserCheck,
+  Calendar,
+  Hash,
+  Sparkles,
   Edit2,
   Trash2,
   CheckCircle2,
@@ -35,6 +40,9 @@ export default function KhoMayPage() {
     updateInventoryStock,
     updateQcStatus,
     deleteInventoryItem,
+    canSellAndEditWarranty,
+    sellInventoryItem,
+    customers,
   } = useStore();
 
   // Filter & Search states
@@ -49,6 +57,71 @@ export default function KhoMayPage() {
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [tempStockValue, setTempStockValue] = useState<number>(1);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  // Sales & Handover Modal States (Admin & Sales)
+  const [sellingItem, setSellingItem] = useState<InventoryItem | null>(null);
+  const [sellCustomerName, setSellCustomerName] = useState('');
+  const [sellCustomerBirthDate, setSellCustomerBirthDate] = useState('1992-05-15');
+  const [sellCustomerPhone, setSellCustomerPhone] = useState('0918234891');
+  const [sellCustomerAddress, setSellCustomerAddress] = useState('TP. Tân An, Long An');
+  const [sellSerialNumber, setSellSerialNumber] = useState('');
+  const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(12);
+  const [sellPrice, setSellPrice] = useState<number>(0);
+
+  const existingCustomerCodes = customers
+    .map((c) => c.customer_code)
+    .filter((code): code is string => Boolean(code));
+  const previewCustomerCode = generateCustomerCode(
+    sellCustomerBirthDate,
+    sellCustomerPhone,
+    existingCustomerCodes
+  );
+
+  const handleOpenSellModal = (item: InventoryItem) => {
+    if (!canSellAndEditWarranty()) {
+      setActionNotice('Chỉ Quản trị viên và Nhân viên bán hàng mới có quyền xuất bán & điều chỉnh thông tin bảo hành!');
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+    setSellingItem(item);
+    setSellCustomerName(item.customer_name || '');
+    setSellCustomerBirthDate('1992-05-15');
+    setSellCustomerPhone(item.customer_phone || '0918234891');
+    setSellCustomerAddress('TP. Tân An, Long An');
+    setSellSerialNumber(item.serial_number || `SN-${item.service_tag}-2025`);
+    setSellWarrantyMonths(item.warranty_months || 12);
+    setSellPrice(item.price ?? item.retail_price ?? 0);
+  };
+
+  const handleConfirmSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sellingItem) return;
+    if (!sellCustomerName.trim() || !sellCustomerPhone.trim()) {
+      setActionNotice('Vui lòng nhập họ tên và số điện thoại khách hàng!');
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+
+    const res = await sellInventoryItem({
+      itemId: sellingItem.id,
+      customerName: sellCustomerName,
+      customerPhone: sellCustomerPhone,
+      birthDate: sellCustomerBirthDate,
+      customerAddress: sellCustomerAddress,
+      serialNumber: sellSerialNumber,
+      warrantyMonths: sellWarrantyMonths,
+      soldPrice: sellPrice,
+    });
+
+    if (res.success) {
+      setActionNotice(res.message);
+      setSellingItem(null);
+      setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice(res.message);
+      setTimeout(() => setActionNotice(null), 4000);
+    }
+  };
 
   // New Machine Form State
   const [newItem, setNewItem] = useState({
@@ -537,6 +610,24 @@ export default function KhoMayPage() {
                       {/* Actions */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* Sale Handover Button (Admin & Sales) */}
+                          <button
+                            onClick={() => handleOpenSellModal(item)}
+                            title={
+                              canSellAndEditWarranty()
+                                ? 'Xuất bán máy, cấp mã KH & điều chỉnh bảo hành'
+                                : 'Chỉ Admin và Bán Hàng có quyền bán máy'
+                            }
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 border transition-all ${
+                              item.qc_status === 'sold'
+                                ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
+                            }`}
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" />
+                            <span>{item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}</span>
+                          </button>
+
                           {/* Print 50x30mm Label */}
                           <button
                             onClick={() => handleOpenLabelModal(item)}
@@ -783,6 +874,203 @@ export default function KhoMayPage() {
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm"
                 >
                   Lưu Thiết Bị Vào Kho
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+
+      {/* MODAL BÁN HÀNG & BÀN GIAO THIẾT BỊ (ADMIN & SALES ONLY) */}
+      {sellingItem && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-5 my-8">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200">
+                  <ShoppingBag className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase mb-0.5">
+                    <span>Phân Quyền Bán Hàng &amp; Admin</span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900">
+                    Xuất Bán Thiết Bị &amp; Bàn Giao Khách Hàng
+                  </h2>
+                </div>
+              </div>
+              <button
+                onClick={() => setSellingItem(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmSale} className="space-y-4">
+              {/* Device Overview Banner */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Thiết bị xuất bán</span>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">
+                    {sellingItem.brand} {sellingItem.device_model || sellingItem.model} ({sellingItem.form_factor})
+                  </div>
+                  <div className="text-slate-500 mt-0.5 flex items-center gap-2">
+                    <span>Tag: <strong className="text-blue-700 font-mono">{sellingItem.service_tag}</strong></span>
+                    <span>• Vị trí: {sellingItem.shelf_location}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Giá đề xuất</span>
+                  <div className="text-base font-black text-blue-700 mt-0.5">
+                    {(sellingItem.price ?? sellingItem.retail_price ?? 0).toLocaleString('vi-VN')} đ
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 1: CUSTOMER INFO & AUTO GENERATED CODE */}
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <UserCheck className="w-4 h-4 text-blue-600" />
+                    <span>Thông Tin Khách Hàng</span>
+                  </label>
+                  <span className="text-[11px] text-blue-700 font-medium">Tự động cấp mã KH</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và Tên Khách Hàng *</label>
+                    <input
+                      type="text"
+                      required
+                      value={sellCustomerName}
+                      onChange={(e) => setSellCustomerName(e.target.value)}
+                      placeholder="VD: Anh Tuấn (Cty Vận Tải)"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Số Điện Thoại Khách Hàng *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={sellCustomerPhone}
+                      onChange={(e) => setSellCustomerPhone(e.target.value)}
+                      placeholder="0918234891"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ngày, Tháng, Năm Sinh *</label>
+                    <input
+                      type="date"
+                      required
+                      value={sellCustomerBirthDate}
+                      onChange={(e) => setSellCustomerBirthDate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Địa Chỉ Giao Hàng</label>
+                    <input
+                      type="text"
+                      value={sellCustomerAddress}
+                      onChange={(e) => setSellCustomerAddress(e.target.value)}
+                      placeholder="Số nhà, Phường/Xã, TP. Tân An..."
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Auto Generated Customer Code Display */}
+                <div className="p-3 rounded-xl bg-white border border-blue-200 flex items-center justify-between gap-3 shadow-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
+                      Mã Khách Hàng Được Tạo Tự Động
+                    </span>
+                    <span className="text-base font-black text-blue-700 font-mono">
+                      {previewCustomerCode || 'Đang tạo...'}
+                    </span>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                      Công thức: [NgàyThángSinh DDMM] + [4 số cuối SĐT]. Nếu trùng lặp tự động thêm 2 số ngẫu nhiên.
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold shrink-0">
+                    Chuẩn CRM
+                  </span>
+                </div>
+              </div>
+
+              {/* SECTION 2: DEVICE SERIAL & WARRANTY DURATION */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  Thông Số Bán Hàng &amp; Bảo Hành (Quyền Bán Hàng &amp; Admin)
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Serial Number Của Thiết Bị *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={sellSerialNumber}
+                      onChange={(e) => setSellSerialNumber(e.target.value)}
+                      placeholder="VD: SN-DELL-8F4K92X-2025"
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Thời Hạn Bảo Hành (Tháng) *
+                    </label>
+                    <select
+                      value={sellWarrantyMonths}
+                      onChange={(e) => setSellWarrantyMonths(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-700"
+                    >
+                      <option value={6}>6 Tháng (Linh kiện cơ bản)</option>
+                      <option value={12}>12 Tháng (Chuẩn máy loại A)</option>
+                      <option value={24}>24 Tháng (Gói cao cấp)</option>
+                      <option value={36}>36 Tháng (SSD &amp; RAM mới hãng)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Giá Bán Thực Tế (VNĐ)</label>
+                  <input
+                    type="number"
+                    value={sellPrice}
+                    onChange={(e) => setSellPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSellingItem(null)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Xác Nhận Xuất Bán &amp; Kích Hoạt Bảo Hành</span>
                 </button>
               </div>
             </form>

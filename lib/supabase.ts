@@ -78,8 +78,10 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
 
 export interface Customer {
   id: string;
+  customer_code?: string; // Mã khách hàng: DDMM + 4 số cuối SĐT (VD: 15055678)
   full_name: string;
   name?: string;
+  birth_date?: string; // YYYY-MM-DD hoặc DD/MM/YYYY
   phone: string;
   address: string;
   area_zone?: string;
@@ -252,4 +254,42 @@ export const getQRCodeUrl = (text: string, size = 150): string => {
 
 export const formatVND = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+
+// Sinh Mã Khách Hàng tự động theo công thức: [NgàyThángSinh (DDMM)] + [4 số cuối SĐT]
+// Ví dụ: Sinh 15/05/1992, SĐT 012345678 -> 15055678. Nếu trùng lặp -> thêm 2 số ngẫu nhiên.
+export const generateCustomerCode = (
+  birthDate: string,
+  phone: string,
+  existingCodes: string[] = []
+): string => {
+  let day = '01';
+  let month = '01';
+
+  if (birthDate) {
+    if (birthDate.includes('-')) {
+      const parts = birthDate.split('-');
+      if (parts.length === 3) {
+        day = parts[2].padStart(2, '0');
+        month = parts[1].padStart(2, '0');
+      }
+    } else if (birthDate.includes('/')) {
+      const parts = birthDate.split('/');
+      if (parts.length === 3) {
+        day = parts[0].padStart(2, '0');
+        month = parts[1].padStart(2, '0');
+      }
+    }
+  }
+
+  const cleanPhone = phone.replace(/\D/g, '');
+  const last4 = cleanPhone.slice(-4).padStart(4, '0');
+  let code = `${day}${month}${last4}`;
+
+  if (existingCodes.includes(code)) {
+    const randomSuffix = Math.floor(10 + Math.random() * 90).toString();
+    code = `${code}${randomSuffix}`;
+  }
+
+  return code;
 };

@@ -94,6 +94,82 @@ const PRODUCTS: ProductShowcase[] = [
   },
 ];
 
+
+interface CustomerReview {
+  name: string;
+  role: string;
+  comment: string;
+  service: string;
+  location: string;
+}
+
+const CUSTOMER_REVIEWS: CustomerReview[] = [
+  {
+    name: 'Anh Minh Tuấn',
+    role: 'Kế toán trưởng - Cty Vận Tải',
+    comment: 'Trang bị 6 bộ máy Dell OptiPlex cho phòng kế toán dùng phần mềm MISA và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
+    service: 'Dell OptiPlex 7060 SFF',
+    location: 'Phường 2, TP. Tân An',
+  },
+  {
+    name: 'Chị Mai Lan',
+    role: 'Giáo viên trường THCS',
+    comment: 'Gói bảo dưỡng máy tính và nâng cấp SSD làm dàn máy cũ chạy nhanh như mới. Thích nhất là quy trình làm trực tiếp trước mặt mình, giữ nguyên toàn bộ giáo án và hình ảnh.',
+    service: 'Nâng cấp SSD NVMe & Spa máy',
+    location: 'Thị trấn Thủ Thừa',
+  },
+  {
+    name: 'Chú Bảy Nam',
+    role: 'Khách hàng cá nhân',
+    comment: 'Tôi lớn tuổi không rành vi tính, may có cháu kỹ thuật qua tận nhà lúc 18h30 cài lại máy in và kiểm tra nguồn máy. Phục vụ tận tình, giải thích rõ ràng, giá cả phải chăng.',
+    service: 'Cứu hộ máy tính tận nơi',
+    location: 'Phường 3, TP. Tân An',
+  },
+  {
+    name: 'Anh Quốc Hoàng',
+    role: 'Giám đốc Công ty Xây Dựng',
+    comment: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ là lý do công ty tôi chọn An Tâm làm đối tác kỹ thuật dài hạn. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
+    service: 'Bảo trì hệ thống PC văn phòng',
+    location: 'KCN Lợi Bình Nhơn',
+  },
+  {
+    name: 'Chị Thúy Nga',
+    role: 'Kinh doanh trực tuyến',
+    comment: 'Máy tính bị treo nguồn giữa ca tối, gọi hotline được KTV tới kiểm tra ngay trong hơn 1 tiếng. Thay nguồn mới chính hãng bảo hành 36 tháng có tem niêm phong rất yên tâm.',
+    service: 'Thay nguồn & Vệ sinh máy',
+    location: 'Phường 4, TP. Tân An',
+  },
+];
+
+interface FaqItem {
+  question: string;
+  answer: string;
+  icon: string;
+}
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    icon: 'schedule',
+    question: 'Chính sách xử lý nhanh tận nơi trong 2 giờ áp dụng vào thời gian nào?',
+    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag hoặc gọi Hotline 0903.892.100. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (TP. Tân An, Thủ Thừa, Châu Thành) để xử lý ngay. Đặc biệt, dịch vụ xử lý nhanh trong 2 giờ được ưu tiên cao điểm nhất trong khung giờ vàng từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00) nhằm phục vụ quý khách ngoài giờ hành chính mà không làm gián đoạn công việc tại cơ quan hay văn phòng.',
+  },
+  {
+    icon: 'sync',
+    question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 15 phút hoạt động ra sao?',
+    answer: 'Đối với linh kiện phần cứng (SSD, RAM, nguồn, quạt) phát sinh lỗi, kỹ thuật viên mang linh kiện mới chính hãng nguyên tem đến tận nơi thay thế ngay tại chỗ trong 15 - 30 phút, cam kết không giữ máy ngâm đồ làm ảnh hưởng đến tiến độ công việc của khách hàng.',
+  },
+  {
+    icon: 'security',
+    question: 'Nâng cấp SSD và cài lại máy có bị mất dữ liệu hóa đơn thuế & MISA không?',
+    answer: 'Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình sao lưu và Clone nguyên bản từ ổ cứng cũ sang SSD mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm kế toán MISA, file ngoài màn hình Desktop và tài khoản Zalo / trình duyệt đều được giữ nguyên 100%, không cần cài đặt lại từ đầu.',
+  },
+  {
+    icon: 'verified_user',
+    question: 'Máy tính cũ tại An Tâm có được mở nắp kiểm tra linh kiện bên trong không?',
+    answer: 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp bo mạch sạch đẹp nguyên bản, xem nhãn SSD / RAM chính hãng mới nguyên hộp và chạy phần mềm kiểm tra sức khỏe ổ cứng CrystalDiskInfo 100% Good trước khi quyết định thanh toán.',
+  },
+];
+
 export default function HomePage() {
   const { findWarrantyByTagOrPhone } = useViTinhAnTamStore();
 
@@ -104,6 +180,7 @@ export default function HomePage() {
   });
   const [isSearching, setIsSearching] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // Category filter
   const [activeCategory, setActiveCategory] = useState<'all' | 'office' | 'laptop' | 'workstation'>('all');
@@ -171,50 +248,59 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               {/* Left Column */}
               <div className="lg:col-span-8 space-y-6">
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-600 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-blue-600" />
-                    Đơn vị tiên phong máy chuẩn A tại Long An
+                    Đơn vị chuyên máy tính đồng bộ tại Long An
                   </span>
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.15]">
-                    Máy Tính Cũ Chuẩn A – Cài Sẵn Win Bản Quyền Số –{' '}
-                    <span className="text-blue-600">Đổi Mới Tận Nơi Trong 2 Giờ</span>
+                  <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
+                    Máy tính cũ tuyển chọn loại 1
                   </h1>
+                  <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
+                      <span className="material-symbols-outlined text-base">verified_user</span>
+                      <span>Windows bản quyền</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs">
+                      <span className="material-symbols-outlined text-base">schedule</span>
+                      <span>Dịch vụ xử lý tận nơi trong 2 giờ</span>
+                    </span>
+                  </div>
                 </div>
 
                 <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl">
                   Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng &amp; dịch vụ hồi sinh máy tính cấp tốc tại Thành phố Tân An và các huyện lân cận tỉnh Long An.
                 </p>
 
-                {/* 3 Cam Kết Thép */}
+                {/* 3 Trụ Cột Cam Kết */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
                   <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                     <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">verified_user</span>
+                      <span className="material-symbols-outlined text-xl">computer</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">100% Win Bản Quyền Sạch</h3>
+                    <h3 className="text-sm font-bold text-slate-900">Máy tính cũ tuyển chọn loại 1</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Active kỹ thuật số vĩnh viễn, không cài lậu, an toàn dữ liệu thuế &amp; kế toán.
+                      Ngoại hình đẹp, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                     <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">swap_horiz</span>
+                      <span className="material-symbols-outlined text-xl">verified_user</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Bảo Hành 1 Đổi 1 - 15 Phút</h3>
+                    <h3 className="text-sm font-bold text-slate-900">Windows bản quyền</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Đổi linh kiện/máy ngay tại quầy hoặc trong 2 giờ tận nơi, không giữ máy ngâm đồ.
+                      Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.
                     </p>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                     <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                      <span className="material-symbols-outlined text-xl">memory</span>
+                      <span className="material-symbols-outlined text-xl">schedule</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">SSD/RAM Mới Hãng 36T</h3>
+                    <h3 className="text-sm font-bold text-slate-900">Dịch vụ xử lý tận nơi trong 2 giờ</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
-                      Linh kiện Kingston/Samsung mới 100% nguyên hộp, bảo hành hãng trọn vẹn 3 năm.
+                      Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.
                     </p>
                   </div>
                 </div>
@@ -743,149 +829,120 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Evidence & Reviews */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-7 p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
+            {/* NHẬN XÉT CỦA KHÁCH HÀNG (DẠNG CUỘN NGANG TỰ ĐỘNG CHẬM RÃI, 5 REVIEW) */}
+            <div className="space-y-6 pt-6">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs uppercase tracking-wider font-bold text-blue-600">
-                      Chứng Minh Kỹ Thuật Thực Tế
-                    </span>
-                    <span className="text-xs text-slate-500">Hình ảnh thật tại Hub kỹ thuật</span>
+                  <div className="text-xs uppercase tracking-widest text-blue-600 font-bold mb-1">
+                    Trải nghiệm thực tế
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-200 p-2.5">
-                      <img
-                        className="w-full h-40 object-cover rounded-lg border border-slate-200"
-                        alt="CrystalDiskInfo kiểm tra sức khỏe ổ cứng 100% Good"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC029CoruBnm8fGWkyE63vDItpJxzogQcmjrNCOdfRe7TTfyvWh34tjVM1cLsfj96Au6DIUr7C8S8KBLoU2qf_PNbB5m4_uDEnHsXrmRWfUGcvaRAQ3Imj33rRPWd9Ea3e6KWm8IJr9-eQaPTgVMKQ790bu89u7v9iaqYvqriddhK_gRe63stu7raFwUoj5-Bc6fkcZgKbW-dS4Uqex9BY_rcKNN_yKffyFClJnHV0vl2jMBIPUuRfv"
-                      />
-                      <p className="text-[11px] text-slate-700 mt-2 text-center font-semibold">
-                        100% Ổ cứng mới hoặc tuyển Good 100%
-                      </p>
-                    </div>
-                    <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-200 p-2.5">
-                      <img
-                        className="w-full h-40 object-cover rounded-lg border border-slate-200"
-                        alt="Windows 11 kích hoạt bản quyền số vĩnh viễn"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCgYulbBrii7ddd9JwGC9F1tAjwJXQsAVNEqjDOY9QDXkHW2E_-UVvvv_yRSTfF8khSQXqJhwzL9xyqdLgK0rxsA6wHoY2wzEhsVoVlErALdMl6ffFxdBWQj1Uq4uIBA3pTlJDlX9-Xm1TU9m4wNP0yflZaaCPxg8M5nLPQ9G-SwaKmQ6RJnHVAzM45ACVzVqhR4jjd6mQV8wut27upo3Hcsqy7WQjnJHE8LadmKv3-KfkH_peScHQ"
-                      />
-                      <p className="text-[11px] text-slate-700 mt-2 text-center font-semibold">
-                        Bản quyền số vĩnh viễn (Digital License)
-                      </p>
-                    </div>
-                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    Nhận xét của khách hàng
+                  </h2>
                 </div>
-                <div className="mt-4 p-3 rounded-lg bg-blue-50/70 border border-blue-200 text-xs text-blue-900 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-blue-600 text-base">verified</span>
-                  <span>Khách hàng có quyền yêu cầu mở xem trực tiếp linh kiện bên trong máy trước khi thanh toán.</span>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <div className="flex text-amber-500">
+                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                  </div>
+                  <span className="font-bold text-slate-900">5.0 / 5.0</span>
+                  <span>• Từ khách hàng doanh nghiệp &amp; cá nhân tại Long An</span>
                 </div>
               </div>
 
-              <div className="lg:col-span-5 p-6 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-amber-500 fill-current">grade</span>
-                      <span className="text-xl font-bold text-slate-900">4.9 / 5.0</span>
+              {/* Ticker / Marquee auto-scrolling container */}
+              <div className="relative overflow-hidden w-full py-2">
+                <div className="animate-marquee-slow gap-5 flex items-stretch">
+                  {[...CUSTOMER_REVIEWS, ...CUSTOMER_REVIEWS].map((rev, idx) => (
+                    <div
+                      key={idx}
+                      className="w-[320px] sm:w-[370px] p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-md transition-all shrink-0 flex flex-col justify-between space-y-3"
+                    >
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                              {rev.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="text-xs font-bold text-slate-900 leading-tight">{rev.name}</h3>
+                              <p className="text-[11px] text-slate-500">{rev.role}</p>
+                            </div>
+                          </div>
+                          <div className="text-amber-500 text-xs tracking-tighter">★★★★★</div>
+                        </div>
+                        <p className="text-xs text-slate-600 leading-relaxed italic">
+                          &quot;{rev.comment}&quot;
+                        </p>
+                      </div>
+                      <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                        <span className="text-blue-600 font-semibold">{rev.service}</span>
+                        <span>{rev.location}</span>
+                      </div>
                     </div>
-                    <span className="text-xs text-slate-500">128 đánh giá Google Maps</span>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">Anh Tuấn (Kế toán Xây Dựng - P.2 Tân An)</span>
-                      <div className="text-amber-500 text-xs">★★★★★</div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      &quot;Mua cây Dell 7060 của An Tâm dùng gần 8 tháng nay chạy MISA cực mượt. Có hôm quạt bị kẹt bụi gọi KTV chạy qua vệ sinh tận nhà chỉ sau 40 phút. Dịch vụ rất uy tín!&quot;
-                    </p>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-900">Chị Mai Lan (Thị trấn Thủ Thừa)</span>
-                      <div className="text-amber-500 text-xs">★★★★★</div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      &quot;Gói Spa máy và nâng SSD 256GB làm máy cũ của mình chạy nhanh hơn hẳn, không bị đơ giật như trước. Ưng nhất là giữ nguyên toàn bộ ảnh gia đình và tài liệu.&quot;
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-4 mt-2">
-                  <a
-                    className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-bold"
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Xem tất cả 128 đánh giá thực tế trên Google Maps →
-                  </a>
+                  ))}
                 </div>
               </div>
             </div>
           </section>
 
-          {/* 6. KHỐI 5: FAQ */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-mt-20" id="faq-an-tam">
-            <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+          {/* 6. KHỐI 5: FAQ DẠNG COLLAPSED TAB (CHỈ SHOW CÂU HỎI, CLICK BUNG CÂU TRẢ LỜI) */}
+          <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
+            <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
               <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">
-                Giải Đáp Thắc Mắc &amp; Minh Bạch Quyền Lợi
+                Hỏi đáp &amp; Quyền lợi khách hàng
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Câu Hỏi Thường Gặp Của Khách Hàng
+                Câu hỏi thường gặp
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
-                Những băn khoăn thực tế của cơ quan, văn phòng và người dùng máy tính tại TP. Tân An cùng các huyện lân cận.
+                Nhấn vào từng câu hỏi để xem chi tiết chính sách phục vụ của Vi tính An Tâm.
               </p>
             </div>
 
-            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition-all">
-                <div className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">help</span>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                    Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động thế nào?
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pl-7">
-                  Khi gặp sự cố phần cứng, quý khách chỉ cần nhập SĐT/Service Tag hoặc gọi Hotline 0903.892.100. KTV An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (Tân An, Thủ Thừa, Châu Thành) để đổi mới ngay trong 15-30 phút, tuyệt đối không giữ máy ngâm đồ làm gián đoạn công việc.
-                </p>
-              </div>
+            <div className="space-y-3">
+              {FAQ_ITEMS.map((item, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden transition-all"
+                  >
+                    {/* Collapsed Tab Header (Question only) */}
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                        </div>
+                        <span className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+                          {item.question}
+                        </span>
+                      </div>
+                      <span
+                        className={`material-symbols-outlined text-slate-400 transition-transform duration-200 shrink-0 ${
+                          isOpen ? 'rotate-180 text-blue-600 font-bold' : ''
+                        }`}
+                      >
+                        keyboard_arrow_down
+                      </span>
+                    </button>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition-all">
-                <div className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">security</span>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                    Nâng cấp SSD và cài lại máy có bị mất dữ liệu hóa đơn thuế &amp; MISA không?
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pl-7">
-                  Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình Clone Sector-by-Sector nguyên bản từ ổ cứng cũ sang SSD NVMe mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm kế toán MISA, file Desktop và tài khoản Zalo/trình duyệt đều được giữ nguyên 100%, không cần kích hoạt lại chứng thư số.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition-all">
-                <div className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">schedule</span>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                    Tôi làm giờ hành chính, Vi Tính An Tâm có hỗ trợ ngoài giờ sau 17h30 không?
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pl-7">
-                  Có. Chúng tôi có khung giờ vàng cứu hộ ngoài giờ: <strong>17h30 – 21h00 các ngày trong tuần</strong> và <strong>08h00 – 20h00 cả thứ Bảy, Chủ Nhật</strong>. Kỹ thuật viên qua trực tiếp văn phòng hoặc nhà riêng tại Tân An và các xã lân cận mà không phụ thu bất kỳ khoản phí ngoài giờ nào.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2 hover:border-blue-300 transition-all">
-                <div className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">verified_user</span>
-                  <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                    Máy tính cũ tại An Tâm có được mở nắp xem bên trong trước khi trả tiền không?
-                  </h3>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed pl-7">
-                  Khách hàng được quyền mở nắp thùng máy kiểm tra trực tiếp bo mạch sạch đẹp không sửa chữa, soi quạt tản, xem nhãn SSD/RAM chính hãng nguyên hộp và trực tiếp test CrystalDiskInfo 100% Good, FurMark ép nhiệt độ ổn định trước khi quyết định thanh toán.
-                </p>
-              </div>
+                    {/* Expandable Tab Content (Answer) */}
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed pl-16 border-t border-slate-100 bg-slate-50/40 animate-fade-in">
+                        <p>{item.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </section>
 

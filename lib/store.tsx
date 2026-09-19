@@ -14,6 +14,7 @@ import {
   ServiceTicket,
   OnsiteDispatch,
   ShiftLog,
+  generateCustomerCode,
 } from './supabase';
 import {
   initialCustomers,
@@ -40,6 +41,20 @@ interface StoreContextType {
   canAccessPayroll: () => boolean;
   canAccessSettings: () => boolean;
   canManageUsers: () => boolean;
+  canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
+
+  // Sales & Handover action (Admin & Sales)
+  sellInventoryItem: (params: {
+    itemId: string;
+    customerName: string;
+    customerPhone: string;
+    birthDate: string;
+    customerAddress: string;
+    serialNumber: string;
+    warrantyMonths: number;
+    soldPrice?: number;
+    notes?: string;
+  }) => Promise<{ success: boolean; customerCode: string; message: string }>;
 
   // Member management actions (Admin)
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
@@ -134,6 +149,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const canAccessPayroll = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
+  const canSellAndEditWarranty = () => currentUser.role === 'admin' || currentUser.role === 'sales';
 
   const setCurrentUserRole = (role: UserRole) => {
     const found = users.find((u) => u.role === role) || initialUsers.find((u) => u.role === role) || initialUsers[0];
@@ -575,6 +591,107 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return newShift;
   };
 
+
+  // Sales & Handover implementation (Admin & Sales)
+  const sellInventoryItem = async (params: {
+    itemId: string;
+    customerName: string;
+    customerPhone: string;
+    birthDate: string;
+    customerAddress: string;
+    serialNumber: string;
+    warrantyMonths: number;
+    soldPrice?: number;
+    notes?: string;
+  }): Promise<{ success: boolean; customerCode: string; message: string }> => {
+    if (!canSellAndEditWarranty()) {
+      return {
+        success: false,
+        customerCode: '',
+        message: 'Bạn không có quyền thực hiện bán hàng hoặc điều chỉnh thông tin bảo hành!',
+      };
+    }
+
+    const item = inventory.find((i) => i.id === params.itemId);
+    if (!item) {
+      return { success: false, customerCode: '', message: 'Không tìm thấy thiết bị trong kho!' };
+    }
+
+    // Generate Customer Code: [DDMM] + [4 last digits of phone]
+    const existingCustomerCodes = customers
+      .map((c) => c.customer_code)
+      .filter((code): code is string => Boolean(code));
+    const customerCode = generateCustomerCode(params.birthDate, params.customerPhone, existingCustomerCodes);
+
+    // 1. Update Inventory Item
+    const updatedItem: InventoryItem = {
+      ...item,
+      qc_status: 'sold',
+      customer_name: params.customerName.trim(),
+      customer_phone: params.customerPhone.trim(),
+      serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
+      warranty_months: params.warrantyMonths,
+      handover_date: new Date().toISOString(),
+      retail_price: params.soldPrice || item.retail_price || item.price,
+    };
+
+    setInventory((prev) => {
+      const next = prev.map((i) => (i.id === params.itemId ? updatedItem : i));
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
+
+    // 2. Add or Update Customer with Customer Code and Birth Date
+    const newCustomer: Customer = {
+      id: `c-${Date.now()}`,
+      customer_code: customerCode,
+      full_name: params.customerName.trim(),
+      birth_date: params.birthDate,
+      phone: params.customerPhone.trim(),
+      address: params.customerAddress.trim() || 'TP. Tân An, Long An',
+      customer_tier: 'VIP',
+      notes: `Mua máy ${item.device_model || item.brand} (Tag: ${item.service_tag}, Serial: ${params.serialNumber})`,
+      created_at: new Date().toISOString(),
+    };
+
+    setCustomers((prev) => {
+      const next = [newCustomer, ...prev];
+      saveToLocal(STORAGE_KEYS.customers, next);
+      return next;
+    });
+
+    // 3. Create a Service Ticket record for warranty lookup
+    const warrantyTicket: ServiceTicket = {
+      id: `tck-${Date.now()}`,
+      ticket_code: `#HD-${customerCode}-${item.service_tag.slice(-4)}`,
+      customer_name: params.customerName.trim(),
+      customer_phone: params.customerPhone.trim(),
+      customer_address: params.customerAddress.trim(),
+      device_service_tag: item.service_tag,
+      device_name: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+      technician_name: currentUser.name,
+      status: 'delivered',
+      visual_condition: 'Máy chuẩn A bàn giao mới 100% nguyên bản',
+      technician_note: `Bán hàng thành công. Serial: ${params.serialNumber}. Bảo hành ${params.warrantyMonths} tháng.`,
+      estimated_cost: params.soldPrice || item.retail_price || item.price || 0,
+      total_amount: params.soldPrice || item.retail_price || item.price || 0,
+      created_at: new Date().toISOString(),
+      warranty_until: new Date(Date.now() + params.warrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+
+    setTickets((prev) => {
+      const next = [warrantyTicket, ...prev];
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      customerCode,
+      message: `Bán máy thành công! Mã khách hàng: ${customerCode} (Bảo hành ${params.warrantyMonths} tháng)`,
+    };
+  };
+
   const resetToDefault = () => {
     setUsers(initialUsers);
     setCurrentUser(initialUsers[0]);
@@ -612,6 +729,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         canAccessPayroll,
         canAccessSettings,
         canManageUsers,
+        canSellAndEditWarranty,
+        sellInventoryItem,
         updateUser,
         changeUserPassword,
         addUser,
