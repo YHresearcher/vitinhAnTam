@@ -17,7 +17,7 @@ export function Navbar() {
       <div className="w-full bg-blue-50/90 border-b border-blue-100 text-xs py-1.5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-slate-700 text-xs">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
             <span>
               Phục vụ tận nơi Tân An &amp; Long An • Hotline:{' '}
               <a href="tel:0903892100" className="text-blue-600 font-bold hover:underline">
@@ -110,33 +110,33 @@ export function Navbar() {
             <span>Tra cứu tem</span>
           </Link>
 
-          {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
+          {/* SINGLE UNIFIED LOGIN / USER ACCESS - WHITE & BLUE THEME */}
           {isLoggedIn ? (
             <div className="flex items-center gap-1.5">
               <Link
                 href="/dashboard"
-                className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium transition-all shadow-xs flex items-center gap-2"
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-2"
                 title="Vào hệ thống quản lý"
               >
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     currentUser.role === 'admin'
-                      ? 'bg-blue-400'
+                      ? 'bg-blue-200'
                       : currentUser.role === 'technician'
-                      ? 'bg-emerald-400'
-                      : 'bg-purple-400'
+                      ? 'bg-emerald-300'
+                      : 'bg-purple-300'
                   }`}
                 />
-                <span className="hidden md:inline font-semibold">
+                <span className="hidden md:inline font-bold">
                   {currentUser.name.split(' ').slice(-2).join(' ')}
                 </span>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
                     currentUser.role === 'admin'
-                      ? 'bg-blue-500/30 text-blue-200'
+                      ? 'bg-white/25 text-white'
                       : currentUser.role === 'technician'
-                      ? 'bg-emerald-500/30 text-emerald-200'
-                      : 'bg-purple-500/30 text-purple-200'
+                      ? 'bg-emerald-800 text-white'
+                      : 'bg-purple-800 text-white'
                   }`}
                 >
                   {currentUser.role === 'admin'
@@ -158,7 +158,7 @@ export function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-sm">lock</span>
               <span>Đăng Nhập</span>

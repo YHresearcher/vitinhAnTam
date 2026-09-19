@@ -29,7 +29,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-[#F8FAFC] text-slate-800 antialiased flex flex-col font-sans">
+      <body className="min-h-screen bg-white text-slate-900 antialiased flex flex-col font-sans">
         <ClientProvider>{children}</ClientProvider>
       </body>
     </html>

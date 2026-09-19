@@ -24,7 +24,7 @@ export default function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex font-sans">
+    <div className="min-h-screen bg-white text-slate-900 flex font-sans">
       {/* Sidebar */}
       <AdminSidebar />
 
@@ -98,7 +98,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page Body */}
-        <main className="pt-16 p-8 flex-1 bg-[#F8FAFC]">{children}</main>
+        <main className="pt-16 p-8 flex-1 bg-white">{children}</main>
       </div>
     </div>
   );

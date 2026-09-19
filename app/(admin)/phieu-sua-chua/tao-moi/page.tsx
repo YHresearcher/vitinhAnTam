@@ -392,37 +392,37 @@ export default function TaoPhieuSuaChuaPage() {
           </div>
         </div>
 
-        {/* Multi-tier Warranty Preview Card */}
-        <div className="bg-gradient-to-br from-blue-900 to-indigo-950 text-white p-6 rounded-2xl shadow-lg border border-blue-800">
-          <div className="flex items-center justify-between pb-4 border-b border-blue-800/80">
+        {/* Multi-tier Warranty Preview Card - WHITE & BLUE THEME */}
+        <div className="bg-gradient-to-br from-blue-50/90 to-indigo-50/70 text-slate-800 p-6 rounded-2xl shadow-xs border-2 border-blue-200">
+          <div className="flex items-center justify-between pb-4 border-b border-blue-200">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              <span className="font-bold text-base">Cam Kết Bảo Hành Phân Tầng Điện Tử</span>
+              <ShieldCheck className="w-5 h-5 text-blue-600" />
+              <span className="font-bold text-base text-slate-900">Cam Kết Bảo Hành Phân Tầng Điện Tử</span>
             </div>
             <div className="text-right">
-              <div className="text-xs text-blue-200">Tổng chi phí ước tính:</div>
-              <div className="text-2xl font-black text-amber-400">
+              <div className="text-xs text-slate-500 font-medium">Tổng chi phí ước tính:</div>
+              <div className="text-2xl font-black text-blue-700">
                 {totalCost.toLocaleString('vi-VN')} đ
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-xs">
-            <div className="bg-white/10 p-3 rounded-lg backdrop-blur-xs">
-              <div className="text-emerald-400 font-bold mb-1">Tầng 1: Linh Kiện Mới (36T)</div>
-              <p className="text-blue-100 text-[11px] leading-relaxed">
+            <div className="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-xs">
+              <div className="text-emerald-700 font-bold mb-1">Tầng 1: Linh Kiện Mới (36T)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
                 Đổi mới 1-đổi-1 cho SSD/RAM/Nguồn nếu phát sinh lỗi phần cứng theo serial nhà sản xuất.
               </p>
             </div>
-            <div className="bg-white/10 p-3 rounded-lg backdrop-blur-xs">
-              <div className="text-blue-300 font-bold mb-1">Tầng 2: Keo TF7 & Nhiệt Độ (30N)</div>
-              <p className="text-blue-100 text-[11px] leading-relaxed">
+            <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-xs">
+              <div className="text-blue-700 font-bold mb-1">Tầng 2: Keo TF7 & Nhiệt Độ (30N)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
                 Bảo hành nhiệt độ CPU dưới 70°C khi làm việc văn phòng, miễn phí vệ sinh lại nếu quạt kêu.
               </p>
             </div>
-            <div className="bg-white/10 p-3 rounded-lg backdrop-blur-xs">
-              <div className="text-purple-300 font-bold mb-1">Tầng 3: Cài Đặt Hệ Thống (30N)</div>
-              <p className="text-blue-100 text-[11px] leading-relaxed">
+            <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs">
+              <div className="text-purple-700 font-bold mb-1">Tầng 3: Cài Đặt Hệ Thống (30N)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
                 Hỗ trợ UltraViewer / Anydesk từ xa miễn phí lỗi font chữ, máy in, mạng nội bộ Tân An.
               </p>
             </div>

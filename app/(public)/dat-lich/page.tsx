@@ -117,7 +117,7 @@ export default function AppointmentBookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-xs text-slate-500">

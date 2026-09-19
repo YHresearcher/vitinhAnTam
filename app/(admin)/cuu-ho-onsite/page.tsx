@@ -55,8 +55,8 @@ export default function CuuHoOnsitePage() {
     <div className="space-y-6">
       {/* Toast Notice */}
       {notice && (
-        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl border border-blue-500/50 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-blue-600" />
           <span className="text-sm font-medium">{notice}</span>
         </div>
       )}
@@ -77,17 +77,17 @@ export default function CuuHoOnsitePage() {
         </div>
       </div>
 
-      {/* 10km Coverage Map Info Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-5 rounded-2xl shadow-sm border border-blue-800 flex flex-col md:flex-row items-center justify-between gap-4">
+      {/* 10km Coverage Map Info Banner - WHITE & BLUE THEME */}
+      <div className="bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 text-slate-800 p-5 rounded-2xl shadow-xs border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center flex-shrink-0">
-            <Compass className="w-6 h-6 text-blue-400" />
+          <div className="w-12 h-12 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-xs">
+            <Compass className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <div className="text-sm font-bold text-white flex items-center gap-2">
+            <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
               Trụ Sở Điều Phối: 124 Hùng Vương, P.2, TP. Tân An, Long An
             </div>
-            <div className="text-xs text-blue-200 mt-0.5">
+            <div className="text-xs text-blue-700 font-medium mt-0.5">
               Bán kính phục vụ: Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn, KCN Lợi Bình Nhơn (0-10km).
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function CuuHoOnsitePage() {
         <div className="flex items-center gap-3">
           <a
             href="tel:0918234891"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
           >
             <Phone className="w-3.5 h-3.5" /> Hotline: 0918.234.891
           </a>

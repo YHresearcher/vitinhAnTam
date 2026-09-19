@@ -53,92 +53,97 @@ export default function LoginPage() {
       setSuccessMessage(`Đăng nhập thành công với vai trò ${user.roleTitle} (${user.name})!`);
       setTimeout(() => {
         router.push('/dashboard');
-      }, 700);
-    }, 400);
+      }, 600);
+    }, 350);
   };
 
   const handleQuickLogin = (role: UserRole) => {
     login(role);
     const user = MOCK_USERS[role];
-    setSuccessMessage(`Đăng nhập thành công với vai trò ${user.roleTitle} (${user.name})!`);
+    setSuccessMessage(`Đăng nhập nhanh thành công: ${user.roleTitle} (${user.name})!`);
     setTimeout(() => {
       router.push('/dashboard');
     }, 500);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center relative overflow-hidden">
-      {/* Background Decorative Rings */}
-      <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative overflow-hidden">
+      {/* Soft Blue Ambient Gradient Backdrop */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-blue-50/70 via-sky-50/30 to-transparent pointer-events-none -z-10" />
+      <div className="absolute -top-24 right-1/4 w-72 h-72 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-32 left-1/4 w-80 h-80 bg-sky-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="max-w-xl w-full space-y-8 relative z-10">
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="flex justify-center">
-            <Link href="/" className="inline-block p-3 rounded-2xl bg-white shadow-xl hover:scale-105 transition-transform">
-              <Logo />
-            </Link>
+      <div className="sm:mx-auto sm:w-full sm:max-w-xl space-y-6">
+        {/* Branding */}
+        <div className="flex flex-col items-center text-center">
+          <Link href="/" className="inline-block hover:opacity-95 transition-opacity">
+            <Logo />
+          </Link>
+          <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-bold text-blue-700">
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span>CỔNG ĐĂNG NHẬP HỆ THỐNG NỘI BỘ</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Đăng Nhập Cổng Nội Bộ
+          <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Xác Thực Quyền Truy Cập
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
-            Hệ thống quản lý dịch vụ, kho máy và bảo hành điện tử. Tự động phân quyền theo tài khoản làm việc.
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-md">
+            Hệ thống phân quyền tự động theo vai trò người dùng: Quản Trị Viên (Admin), Kỹ Thuật Viên (Technician), và Kinh Doanh (Sales).
           </p>
         </div>
 
-        {/* Success Alert */}
-        {successMessage && (
-          <div className="bg-emerald-500/20 border border-emerald-400 text-emerald-100 px-4 py-3 rounded-xl text-xs sm:text-sm flex items-center gap-2 animate-fade-in">
-            <span className="material-symbols-outlined text-emerald-400 text-lg">check_circle</span>
-            <span>{successMessage} Đang chuyển tiếp vào hệ thống...</span>
-          </div>
-        )}
+        {/* Main Card Container */}
+        <div className="bg-white border border-slate-200 shadow-xl rounded-3xl p-6 sm:p-8 space-y-6">
+          {/* Success message banner */}
+          {successMessage && (
+            <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-2">
+              <span className="material-symbols-outlined text-blue-600 text-lg">check_circle</span>
+              <span>{successMessage}</span>
+            </div>
+          )}
 
-        {/* Error Alert */}
-        {errorMessage && (
-          <div className="bg-rose-500/20 border border-rose-400 text-rose-100 px-4 py-3 rounded-xl text-xs sm:text-sm flex items-center gap-2">
-            <span className="material-symbols-outlined text-rose-400 text-lg">error</span>
-            <span>{errorMessage}</span>
-          </div>
-        )}
+          {/* Error message banner */}
+          {errorMessage && (
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+              <span className="material-symbols-outlined text-rose-600 text-lg">error</span>
+              <span>{errorMessage}</span>
+            </div>
+          )}
 
-        {/* Role Selection Tabs / Quick Login Cards */}
-        <div className="bg-white/10 backdrop-blur-md border border-white/15 p-6 rounded-2xl shadow-2xl space-y-6 text-white">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-bold uppercase tracking-wider text-blue-300">
-                Chọn Tài Khoản Vai Trò
-              </span>
-              <span className="text-slate-400 text-[11px]">Bấm vào thẻ để đăng nhập nhanh</span>
+          {/* 1-Click Role Access Selector */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-base text-blue-600">badge</span>
+                <span>Chọn Vai Trò Để Đăng Nhập Nhanh</span>
+              </label>
+              <span className="text-[11px] text-slate-400 font-medium">1 chạm vào hệ thống</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2.5">
               {/* Option 1: Admin */}
               <div
                 onClick={() => handleRoleSelect('admin')}
-                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
                   selectedRole === 'admin'
-                    ? 'bg-blue-600/30 border-blue-400 ring-2 ring-blue-500/50'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50/30'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
                   <span className="material-symbols-outlined text-xl">admin_panel_settings</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-white">Quản Trị Viên (Admin)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/30 text-blue-200 border border-blue-400/30 font-semibold">
+                    <h3 className="text-sm font-bold text-slate-900">Quản Trị Viên (Admin)</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold">
                       Toàn Quyền
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
-                    {MOCK_USERS.admin.name} • admin@vitinhantham.vn
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                    {MOCK_USERS.admin.name} • <span className="font-mono text-blue-600">admin@vitinhantham.vn</span>
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1 leading-snug">
-                    ✓ Điều chỉnh số lượng tồn kho • Duyệt bảng lương &amp; ca làm • Quản trị API
+                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+                    ✓ Toàn quyền xem &amp; sửa kho, giá nhập, sửa số lượng tồn, duyệt tính lương tiền công.
                   </p>
                 </div>
                 <button
@@ -147,7 +152,7 @@ export default function LoginPage() {
                     e.stopPropagation();
                     handleQuickLogin('admin');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
+                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
                 >
                   Đăng Nhập
                 </button>
@@ -156,27 +161,27 @@ export default function LoginPage() {
               {/* Option 2: Technician */}
               <div
                 onClick={() => handleRoleSelect('technician')}
-                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
                   selectedRole === 'technician'
-                    ? 'bg-emerald-600/30 border-emerald-400 ring-2 ring-emerald-500/50'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 text-white font-bold">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
                   <span className="material-symbols-outlined text-xl">build</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-white">Kỹ Thuật Viên (Technician)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-200 border border-emerald-400/30 font-semibold">
+                    <h3 className="text-sm font-bold text-slate-900">Kỹ Thuật Viên (Technician)</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold">
                       Kỹ Thuật &amp; QC
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
-                    {MOCK_USERS.technician.name} • ktv@vitinhantham.vn
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                    {MOCK_USERS.technician.name} • <span className="font-mono text-emerald-700">ktv@vitinhantham.vn</span>
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1 leading-snug">
-                    ✓ Chẩn đoán, đổi trạng thái phiếu • Nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn
+                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
+                    ✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn kho
                   </p>
                 </div>
                 <button
@@ -185,7 +190,7 @@ export default function LoginPage() {
                     e.stopPropagation();
                     handleQuickLogin('technician');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
                 >
                   Đăng Nhập
                 </button>
@@ -194,26 +199,26 @@ export default function LoginPage() {
               {/* Option 3: Sales */}
               <div
                 onClick={() => handleRoleSelect('sales')}
-                className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
                   selectedRole === 'sales'
-                    ? 'bg-purple-600/30 border-purple-400 ring-2 ring-purple-500/50'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-purple-300 hover:bg-purple-50/30'
                 }`}
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0 text-white font-bold">
+                <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
                   <span className="material-symbols-outlined text-xl">point_of_sale</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-white">Nhân Viên Kinh Doanh (Sales)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-400/30 font-semibold">
+                    <h3 className="text-sm font-bold text-slate-900">Nhân Viên Kinh Doanh (Sales)</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold">
                       Kinh Doanh &amp; Lập Phiếu
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-300 mt-0.5">
-                    {MOCK_USERS.sales.name} • sales@vitinhantham.vn
+                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                    {MOCK_USERS.sales.name} • <span className="font-mono text-purple-700">sales@vitinhantham.vn</span>
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
                     ✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa &amp; tồn kho
                   </p>
                 </div>
@@ -223,7 +228,7 @@ export default function LoginPage() {
                     e.stopPropagation();
                     handleQuickLogin('sales');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
+                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
                 >
                   Đăng Nhập
                 </button>
@@ -233,21 +238,21 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-white/15"></div>
-            <span className="flex-shrink mx-4 text-[11px] uppercase tracking-widest text-slate-400 font-semibold">
-              Hoặc Đăng Nhập Thủ Công
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-4 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
+              Hoặc Đăng Nhập Bằng Mật Khẩu
             </span>
-            <div className="flex-grow border-t border-white/15"></div>
+            <div className="flex-grow border-t border-slate-200"></div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleFormLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-200 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Email / Tên Đăng Nhập
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 text-lg">
                   mail
                 </span>
                 <input
@@ -256,17 +261,17 @@ export default function LoginPage() {
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="admin@vitinhantham.vn"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/60 border border-white/20 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-200 mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
                 Mật Khẩu
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 text-lg">
                   lock
                 </span>
                 <input
@@ -275,7 +280,7 @@ export default function LoginPage() {
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950/60 border border-white/20 text-white placeholder-slate-500 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                 />
               </div>
             </div>
@@ -283,7 +288,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-lg">login</span>
               <span>{isSubmitting ? 'Đang xác thực...' : 'Xác Nhận Đăng Nhập'}</span>
@@ -295,7 +300,7 @@ export default function LoginPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
             <span>Quay lại trang chủ Vi Tính An Tâm</span>

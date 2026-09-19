@@ -97,8 +97,8 @@ export default function PhieuSuaChuaPage() {
     <div className="space-y-6">
       {/* Toast Notice */}
       {actionNotice && (
-        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-xl border border-blue-500/50 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
+          <CheckCircle2 className="w-5 h-5 text-blue-600" />
           <span className="text-sm font-medium">{actionNotice}</span>
         </div>
       )}

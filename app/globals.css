@@ -5,16 +5,16 @@
   --color-brand-blue: #2563EB;
   --color-brand-blue-hover: #1D4ED8;
   --color-brand-blue-subtle: #EFF6FF;
-  --color-surface-canvas: #F8FAFC;
+  --color-surface-canvas: #FFFFFF;
   --color-surface-card: #FFFFFF;
-  --color-surface-subtle: #F1F5F9;
+  --color-surface-subtle: #F8FAFC;
   --color-border-default: #E2E8F0;
   --color-text-main: #0F172A;
   --color-text-muted: #64748B;
 }
 
 body {
-  background-color: #F8FAFC;
+  background-color: #FFFFFF;
   color: #0F172A;
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
@@ -42,7 +42,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #F8FAFC;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;

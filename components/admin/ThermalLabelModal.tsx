@@ -23,7 +23,7 @@ export function ThermalLabelModal({ item, onClose, isOpen = true }: ThermalLabel
   const qrUrl = getQRCodeUrl(lookupUrl, 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 print:p-0 print:bg-white print:static">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/30 backdrop-blur-xs p-4 print:p-0 print:bg-white print:static">
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 max-w-md w-full relative print:p-0 print:border-none print:shadow-none">
         {/* Controls - Hidden when printing */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 print:hidden">

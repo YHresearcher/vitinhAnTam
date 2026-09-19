@@ -55,11 +55,11 @@ function WarrantyLookupContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+    <div className="min-h-screen bg-white pb-24">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-20 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 text-xs font-medium flex items-center gap-2 animate-bounce">
-          <span className="material-symbols-outlined text-cyan-400 text-base">info</span>
+        <div className="fixed bottom-20 right-4 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 text-xs font-semibold flex items-center gap-2.5 animate-bounce">
+          <span className="material-symbols-outlined text-blue-600 text-lg">check_circle</span>
           <span>{toastMessage}</span>
         </div>
       )}
@@ -340,7 +340,7 @@ export default function WarrantyLookupPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             <p className="text-xs text-slate-500 font-medium">Đang tải cổng tra cứu bảo hành điện tử...</p>
