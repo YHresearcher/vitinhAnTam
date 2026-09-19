@@ -85,6 +85,12 @@ export function Navbar() {
             {isEn ? 'Home' : 'Trang chủ'}
           </Link>
           <a
+            href="/#vi-sao-chon-an-tam"
+            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+          >
+            {isEn ? 'Why Us' : 'Vì sao chọn An Tâm'}
+          </a>
+          <a
             href="/#danh-muc-san-pham"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >

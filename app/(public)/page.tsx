@@ -364,6 +364,203 @@ export default function HomePage() {
             </div>
           </section>
 
+          
+          {/* ========================================================================= */}
+          {/* KHỐI: VÌ SAO CHỌN AN TÂM (ABOUT US & STORYTELLING CHIẾN LƯỢC)            */}
+          {/* ========================================================================= */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="vi-sao-chon-an-tam">
+            {/* Header Section */}
+            <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-50 text-orange-800 border border-orange-200 text-xs font-bold uppercase shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                <span>CÂU CHUYỆN THƯƠNG HIỆU &amp; ĐỊNH VỊ ĐẠI DƯƠNG XANH</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-snug">
+                VÌ SAO HÀNG TRĂM CHỦ DOANH NGHIỆP &amp; GIA ĐÌNH CHỌN <span className="text-blue-700">VI TÍNH AN TÂM</span>?
+              </h2>
+              <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                Chúng tôi không tham gia cuộc chiến dìm giá bằng linh kiện trôi nổi. Chúng tôi thiết lập chuẩn mực mới bằng <strong className="text-slate-900 font-bold">Sự Minh Bạch Kỹ Thuật</strong>, <strong className="text-slate-900 font-bold">Tốc Độ Phản Ứng Trong 2 Giờ</strong> và <strong className="text-slate-900 font-bold">Windows Bản Quyền Sạch Tuyệt Đối</strong>.
+              </p>
+            </div>
+
+            {/* Narrative Card: Nỗi Trăn Trở & Sứ Mệnh */}
+            <div className="p-7 sm:p-10 rounded-3xl bg-gradient-to-br from-blue-50/70 via-white to-orange-50/40 border border-blue-100 shadow-xs mb-12 relative overflow-hidden">
+              <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                <div className="lg:col-span-8 space-y-4 text-xs sm:text-sm text-slate-700 leading-relaxed">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2 font-headline">
+                    <span className="material-symbols-outlined text-orange-500 text-2xl">format_quote</span>
+                    <span>Khởi nguồn từ một trăn trở rất thật tại địa phương</span>
+                  </h3>
+                  <p>
+                    Nhiều năm làm kỹ thuật thực địa dọc tuyến Quốc lộ 1A và các huyện lân cận, chúng tôi đã chứng kiến quá nhiều nghịch lý: <em>Chị kế toán chết đứng vì máy in hóa đơn sập nguồn giữa lúc khách xếp hàng; tiệm thuốc tây hay kho vận tải bị mã hóa toàn bộ dữ liệu do dùng bản Windows Ghost lậu; hay phụ huynh chắt chiu mua máy tính cũ cho con học, dùng chưa đầy 3 tháng đã hỏng vặt, mang ra tiệm thì bị &quot;ngâm máy&quot; cả tuần và lo sợ bị tráo linh kiện zin.</em>
+                  </p>
+                  <p>
+                    Đa số khách hàng chỉ có 2 lựa chọn khắc nghiệt: hoặc bỏ ra <strong>9 - 15 triệu</strong> mua máy mới vượt hạn mức ngân sách, hoặc đánh cược vào những chiếc máy bãi rác đời sâu không rõ lai lịch. <strong>Vi Tính An Tâm</strong> ra đời chính để xóa bỏ nghịch lý đó: <strong className="text-blue-800 font-bold">Mang đến chiếc máy tính nguyên bản tuyển chọn loại A với chi phí hợp lý nhất, và bảo chứng an tâm bằng dịch vụ cứu hộ tận nơi trong 2 giờ.</strong>
+                  </p>
+                </div>
+
+                <div className="lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold shrink-0 shadow-md shadow-orange-500/20">
+                      <span className="material-symbols-outlined text-xl">verified</span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">Cam Kết Chữ Tín</div>
+                      <div className="text-[11px] text-slate-500">Bán bằng tâm để bạn an tâm</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 text-xs text-slate-600">
+                    <div className="flex items-center justify-between">
+                      <span>Tỷ lệ linh kiện SSD/RAM mới:</span>
+                      <strong className="text-emerald-700 font-bold">100% Chính Hãng</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Thời gian giam máy sửa chữa:</span>
+                      <strong className="text-blue-700 font-bold font-mono">0 Ngày (Tại Chỗ)</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Thời gian có mặt sự cố nội thành:</span>
+                      <strong className="text-orange-600 font-bold font-mono">30 - 45 Phút</strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Hệ điều hành kích hoạt:</span>
+                      <strong className="text-blue-700 font-bold">Win 10/11 Pro OEM</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3 Tuyên Ngôn Bất Khả Xâm Phạm (The 3 Uncompromising Pillars) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              {/* Trụ Cột 1 */}
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-2xl">block</span>
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-blue-700">Nguyên Tắc Tuyển Chọn</div>
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    KIÊN QUYẾT TỪ CHỐI MÁY BÃI RÁC ĐỜI SÂU
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Nhiều nơi hạ giá bằng cách bán máy Intel Gen 2, Gen 3 đã 10-12 năm tuổi, bo mạch già cỗi và tỷ lệ phù tụ cực cao. An Tâm <strong>tuyệt đối không làm hàng rác</strong>. Chúng tôi chỉ tuyển chọn dòng máy đồng bộ doanh nghiệp (Dell OptiPlex, HP ProDesk, ThinkPad) <strong>chuẩn Loại A ngoại hình 90-95%</strong>, bo mạch nguyên bản không qua sửa chữa nhiệt.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                  <span className="material-symbols-outlined text-sm">verified</span>
+                  <span>Chỉ bán máy hoạt động 24/7 bền bỉ</span>
+                </div>
+              </div>
+
+              {/* Trụ Cột 2 */}
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-2xl">security</span>
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-indigo-700">An Toàn Dữ Liệu</div>
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    100% WINDOWS BẢN QUYỀN SỐ SẠCH
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Tool bẻ khóa lậu (KMS Tools) và các bản Win Ghost rút gọn là thủ phạm hàng đầu gây xung đột chữ ký số hóa đơn, lỗi màn hình xanh và nhiễm mã độc tống tiền (Ransomware). Toàn bộ thiết bị tại An Tâm đều <strong>kích hoạt Windows Pro bản quyền kỹ thuật số sạch</strong>, an toàn tuyệt đối cho tài khoản ngân hàng và dữ liệu kế toán MISA.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                  <span className="material-symbols-outlined text-sm">verified</span>
+                  <span>Cập nhật bảo mật tự động từ Microsoft</span>
+                </div>
+              </div>
+
+              {/* Trụ Cột 3 */}
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-orange-400 hover:shadow-md transition-all flex flex-col justify-between group">
+                <div className="space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-2xl">visibility</span>
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-orange-600">Trải Nghiệm Minh Bạch</div>
+                  <h3 className="text-base font-bold text-slate-900 leading-snug">
+                    KỸ THUẬT MỞ: LÀM TRỰC TIẾP TRƯỚC MẶT BẠN
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Xóa bỏ hoàn toàn nỗi sợ &quot;bị luộc đồ, tráo linh kiện zin khi để máy qua đêm&quot;. Tại An Tâm, mọi thao tác nâng cấp SSD, nhân bản (clone) dữ liệu hay tra keo gốm tản nhiệt TF7/MX4 đều được thực hiện <strong>trực tiếp trước mặt khách hàng trong 20–30 phút</strong>. Bạn tự tay nhìn báo cáo ổ cứng 100% Good và nghe quạt êm trước khi thanh toán.
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
+                  <span className="material-symbols-outlined text-sm">verified</span>
+                  <span>Không giấu nghề, không mờ ám linh kiện</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Khối Lợi Thế Khung Giờ Vàng (17:30 - 21:00) & Bảo Hành Điện Tử */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Card 1: Khung Giờ Vàng Phục Vụ Ngoài Giờ */}
+              <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-2xl">schedule</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-orange-700">
+                    Thấu Hiểu Nhịp Sống Khách Hàng
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900">
+                    Phục Vụ Tận Nơi Vào Khung Giờ Vàng 17:30 – 21:00 &amp; Cuối Tuần
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Chúng tôi thấu hiểu bạn bận rộn cả ngày tiếp khách, kinh doanh hoặc công tác tại cơ quan. Khi các cửa hàng truyền thống đóng cửa, đội ngũ cơ động An Tâm sẵn sàng tới tận bàn làm việc của bạn từ <strong>17:30 đến 21:00</strong> và trọn ngày Thứ 7, Chủ Nhật để giao máy, bảo dưỡng hoặc cứu hộ khẩn cấp.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Bảo Hành Số Hóa Đa Tầng */}
+              <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                    Minh Bạch Quyền Lợi Tuyệt Đối
+                  </div>
+                  <h4 className="text-base font-bold text-slate-900">
+                    Tra Cứu Bảo Hành Điện Tử Bằng Service Tag (Không Sợ Rách Tem Giấy)
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Mỗi thùng máy bán ra đều được định danh bằng mã Service Tag riêng. Quên đi những tờ tem giấy dán dễ bay màu hay tranh cãi khi máy gặp trục trặc. Chỉ cần quét mã QR hoặc nhập SĐT trên website là hiển thị chính xác từng mốc bảo hành: <strong>SSD/RAM mới 100% bảo hành 36 tháng đổi mới</strong>, thân máy 6 - 12 tháng.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Call to Action Ribbon */}
+            <div className="mt-10 p-6 rounded-2xl bg-blue-700 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg shadow-blue-700/20">
+              <div className="space-y-1 text-center sm:text-left">
+                <h4 className="text-base sm:text-lg font-bold">Bạn Cần Tư Vấn Đúng Cấu Hình &amp; Đúng Nhu Cầu Thực Tế?</h4>
+                <p className="text-xs text-blue-100">
+                  Kỹ thuật viên trưởng sẵn sàng hỗ trợ kiểm tra máy, test cấu hình và giải đáp mọi thắc mắc của bạn.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <a
+                  href="#danh-muc-san-pham"
+                  className="px-5 py-2.5 rounded-xl bg-white text-blue-700 font-bold text-xs hover:bg-blue-50 transition-colors shadow-xs"
+                >
+                  Xem Máy Tuyển Chọn
+                </a>
+                <a
+                  href="tel:0909053058"
+                  className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-md shadow-orange-500/30 transition-all flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-base">phone_in_talk</span>
+                  <span>Hotline: 0909.053.058</span>
+                </a>
+              </div>
+            </div>
+          </section>
+
+
           {/* 2. KHỐI 1: DANH MỤC PC & LAPTOP TUYỂN CHỌN */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="danh-muc-san-pham">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
