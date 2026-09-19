@@ -85,19 +85,41 @@ export function Navbar() {
         </nav>
 
         {/* Right CTAs */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <a
-            href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-orange-50 text-orange-700 font-bold hover:bg-orange-100 transition-colors border border-orange-200 shadow-2xs"
-          >
-            <span className="material-symbols-outlined text-sm">phone_in_talk</span>
-            <span>{systemSettings.hotline}</span>
-          </a>
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Language Switcher Vi / En */}
+          <div className="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setLang('vi')}
+              className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                !isEn
+                  ? "bg-blue-700 text-white shadow-xs"
+                  : "text-slate-600 hover:text-blue-700"
+              }`}
+              title="Tiếng Việt (Mặc định)"
+            >
+              <span>🇻🇳</span>
+              <span>VI</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                isEn
+                  ? "bg-blue-700 text-white shadow-xs"
+                  : "text-slate-600 hover:text-blue-700"
+              }`}
+              title="English"
+            >
+              <span>🇬🇧</span>
+              <span>EN</span>
+            </button>
+          </div>
 
-          {/* Sửa Tra cứu tem -> Kiểm tra bảo hành */}
+          {/* Kiểm tra bảo hành */}
           <Link
             href="/tra-cuu-bao-hanh"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-700 text-white shadow-xs hover:bg-blue-800 transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-700 text-white shadow-xs hover:bg-blue-800 transition-all"
           >
             <span className="material-symbols-outlined text-sm">verified</span>
             <span>{isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}</span>
@@ -105,43 +127,13 @@ export function Navbar() {
 
           {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
           {isLoggedIn ? (
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5">
               <Link
                 href="/dashboard"
-                className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-2"
-                title="Vào hệ thống quản lý"
+                className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+                title="Vào hệ thống quản trị (Dashboard)"
               >
-                <span
-                  className={`w-2 h-2 rounded-full shrink-0 ${
-                    currentUser.role === 'admin'
-                      ? 'bg-blue-200'
-                      : currentUser.role === 'technician'
-                      ? 'bg-emerald-300'
-                      : 'bg-purple-300'
-                  }`}
-                />
-                <span className="material-symbols-outlined text-base">
-                  {currentUser.role === 'admin'
-                    ? 'admin_panel_settings'
-                    : currentUser.role === 'technician'
-                    ? 'build'
-                    : 'point_of_sale'}
-                </span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${
-                    currentUser.role === 'admin'
-                      ? 'bg-white/25 text-white'
-                      : currentUser.role === 'technician'
-                      ? 'bg-emerald-800 text-white'
-                      : 'bg-purple-800 text-white'
-                  }`}
-                >
-                  {currentUser.role === 'admin'
-                    ? 'Admin'
-                    : currentUser.role === 'technician'
-                    ? 'KTV'
-                    : 'Sales'}
-                </span>
+                <span className="material-symbols-outlined text-xl">account_circle</span>
               </Link>
               <button
                 type="button"
@@ -155,10 +147,10 @@ export function Navbar() {
           ) : (
             <Link
               href="/login"
-              className="px-3.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+              className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
+              title={isEn ? "Sign In" : "Đăng nhập"}
             >
-              <span className="material-symbols-outlined text-sm">lock</span>
-              <span>{isEn ? 'Sign In' : 'Đăng Nhập'}</span>
+              <span className="material-symbols-outlined text-xl">login</span>
             </Link>
           )}
         </div>

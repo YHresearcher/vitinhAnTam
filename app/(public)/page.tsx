@@ -180,7 +180,7 @@ export default function HomePage() {
   });
   const [isSearching, setIsSearching] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // Category filter
   const [activeCategory, setActiveCategory] = useState<'all' | 'office' | 'laptop' | 'workstation'>('all');
@@ -312,14 +312,14 @@ export default function HomePage() {
                     className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
                   >
                     <span className="material-symbols-outlined text-lg">computer</span>
-                    <span>Xem Danh Mục Máy Sẵn Có</span>
+                    <span>XEM DANH MỤC MÁY</span>
                   </a>
                   <Link
                     href="/dat-lich"
                     className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">home_repair_service</span>
-                    <span>Đặt Lịch Nâng Cấp / Spa Tại Nhà</span>
+                    <span>ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI</span>
                   </Link>
                 </div>
               </div>
@@ -391,18 +391,13 @@ export default function HomePage() {
 
           {/* 2. KHỐI 1: DANH MỤC PC & LAPTOP TUYỂN CHỌN */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="danh-muc-san-pham">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
-              <div>
-                <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
-                  Thiết Bị Sẵn Hàng - Giao Trong 60 Phút
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
-                </h2>
+            <div className="mb-8">
+              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
+                THIẾT BỊ SẴN HÀNG - GIAO TRONG 60 PHÚT
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-md">
-                Máy nguyên bản đồng bộ, đã qua quy trình test 4 lớp 45 phút, cài sẵn Windows Pro &amp; ứng dụng làm việc sạch.
-              </p>
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
+              </h2>
             </div>
 
             {/* Filter Chips */}
@@ -435,7 +430,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                Laptop Doanh Nhân (Bền Bỉ)
+                Laptop doanh nhân
               </button>
               <button
                 onClick={() => setActiveCategory('workstation')}
@@ -445,7 +440,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                PC Đồ Họa &amp; Kỹ Thuật
+                PC đồ họa &amp; kỹ thuật
               </button>
             </div>
 
@@ -507,7 +502,7 @@ export default function HomePage() {
                       href="tel:0909053058"
                       className="w-full py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
-                      Đặt Lịch Test Máy Tận Nơi
+                      ĐẶT LỊCH TEST MÁY
                     </a>
                   </div>
                 </div>
@@ -987,7 +982,7 @@ export default function HomePage() {
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-16 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
             <span className="font-bold text-sky-300">Zalo:</span>
-            <span>Nhắn Kỹ thuật trực ca</span>
+            <span>Nhắn kỹ thuật trực ca</span>
           </span>
         </a>
 
