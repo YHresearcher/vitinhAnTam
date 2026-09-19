@@ -381,7 +381,7 @@ export default function HomePage() {
                 href="/vi-sao-chon-an-tam"
                 className="text-blue-700 hover:text-blue-800 font-bold flex items-center gap-1 shrink-0 group transition-colors"
               >
-                <span>Chuyện của An Tâm</span>
+                <span>TÌM HIỂU THÊM</span>
                 <span className="material-symbols-outlined text-base group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
               </Link>
             </div>
@@ -397,7 +397,7 @@ export default function HomePage() {
                   Thiết Bị Sẵn Hàng - Giao Trong 60 Phút
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  PC &amp; Laptop Tuyển Chọn Chuẩn Doanh Nghiệp
+                  PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
                 </h2>
               </div>
               <p className="text-xs sm:text-sm text-slate-600 max-w-md">
@@ -572,7 +572,7 @@ export default function HomePage() {
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
                       <span className="material-symbols-outlined text-2xl">ac_unit</span>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">Spa Làm Mát Chuyên Sâu</h3>
+                    <h3 className="text-lg font-bold text-slate-900">SPA LÀM MÁT CHUYÊN SÂU</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
                       Khắc phục triệt để tình trạng quạt hú to, máy nóng bỏng tay, tắt đột ngột khi mở nhiều ứng dụng hoặc làm việc trưa hè.
                     </p>
@@ -644,129 +644,30 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* 4. KHỐI 3: TRA CỨU BẢO HÀNH (SĐT HOẶC SERVICE TAG) */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="tra-cuu-bao-hanh">
-            <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600">
-                Nhập Số điện thoại mua hàng hoặc mã Service Tag trên tem máy để tra cứu quyền lợi bảo hành đa tầng tức thì.
-              </p>
-            </div>
-
-            {/* Search Box - Text/Tag Only as requested */}
-            <div className="max-w-3xl mx-auto p-5 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm mb-8">
-              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-stretch gap-3">
-                <div className="relative flex-1">
-                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
-                    search
-                  </span>
-                  <input
-                    type="text"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Nhập Số điện thoại (vd: 0918...) hoặc Service Tag (vd: ST-8F4K92X)..."
-                    className="w-full pl-11 pr-4 py-3.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-800 placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
-                  />
+          {/* 4. KHỐI 3: BANNER KIỂM TRA BẢO HÀNH ĐIỆN TỬ */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="tra-cuu-bao-hanh">
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg shadow-blue-900/10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center shrink-0 backdrop-blur-xs">
+                  <span className="material-symbols-outlined text-2xl text-orange-400">verified</span>
                 </div>
-                <button
-                  type="submit"
-                  disabled={isSearching}
-                  className="px-7 py-3.5 rounded-lg bg-blue-700 text-white font-semibold text-sm shadow-xs hover:bg-blue-800 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
-                >
-                  <span className="material-symbols-outlined text-lg">verified</span>
-                  <span>{isSearching ? 'Đang tìm...' : 'Kiểm Tra Ngay'}</span>
-                </button>
-              </form>
-            </div>
-
-            {/* Search Result - Multi-tier Display */}
-            {searchResult && (
-              <div
-                id="lookup-result"
-                className="max-w-3xl mx-auto p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-sm transition-all space-y-6"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-slate-900 font-headline">
-                        {searchResult.item?.device_model || searchResult.ticket?.device_name || 'Thiết bị An Tâm'}
-                      </h3>
-                      <span className="px-2.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-xs font-mono text-blue-700 font-semibold">
-                        Tag: {searchResult.item?.service_tag || searchResult.ticket?.device_service_tag || 'ST-XXXX'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500">
-                      Chủ sở hữu: <strong className="text-slate-800">{searchResult.item?.customer_name || searchResult.ticket?.customer_name || 'Khách hàng'}</strong>{' '}
-                      • Bàn giao: {searchResult.item?.handover_date || '15/05/2025'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      ĐANG TRONG HẠN BẢO HÀNH CHÍNH THỨC
-                    </span>
-                  </div>
-                </div>
-
-                {/* Multi-tier Warranty breakdown */}
-                <div className="space-y-3">
-                  <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
-                    Phân Rã Thời Hạn Bảo Hành Đa Tầng (Multi-tier Warranty)
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-xs text-slate-500">Tầng 1: Thân máy &amp; Bo mạch</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">BH 12 Tháng</div>
-                      <div className="text-[11px] text-blue-700 font-semibold mt-0.5">
-                        Còn hiệu lực đến 15/05/2026
-                      </div>
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-xs text-slate-500">Tầng 2: Ổ cứng SSD Mới</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">
-                        Sức khỏe: {searchResult.item?.specs.ssd_health || 100}% ({searchResult.item?.specs.ssd_status || 'Good'})
-                      </div>
-                      <div className="text-[11px] text-emerald-600 font-semibold mt-0.5">
-                        BH Hãng Kingston 36T
-                      </div>
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-xs text-slate-500">Tầng 3: Dịch vụ phần mềm</div>
-                      <div className="text-sm font-bold text-slate-900 mt-1">Hỗ trợ Ultraviewer</div>
-                      <div className="text-[11px] text-emerald-600 font-semibold mt-0.5">
-                        Miễn phí 30 ngày từ xa
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Support CTAs */}
-                <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="text-xs text-slate-600 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-blue-700 text-base">support_agent</span>
-                    <span>KTV phụ trách: <strong className="text-slate-900">Trịnh Minh Tuấn (KTV Tân An)</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                    <a
-                      href="https://zalo.me/0909053058"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-800 font-semibold transition-all text-center border border-slate-200"
-                    >
-                      Nhắn Zalo Kỹ thuật
-                    </a>
-                    <Link
-                      href="/dat-lich"
-                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition-all text-center shadow-xs"
-                    >
-                      Báo Sự Cố Tận Nơi (2 Giờ)
-                    </Link>
-                  </div>
+                <div className="space-y-1">
+                  <h3 className="text-base sm:text-lg font-bold uppercase tracking-tight">
+                    CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
+                  </h3>
+                  <p className="text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
+                    Mọi thiết bị xuất kho đều được định danh bằng Service Tag. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền mà không sợ rách tem giấy.
+                  </p>
                 </div>
               </div>
-            )}
+              <Link
+                href="/tra-cuu-bao-hanh"
+                className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/20 transition-all shrink-0 flex items-center gap-2"
+              >
+                <span>Kiểm Tra Ngay</span>
+                <span className="material-symbols-outlined text-base">arrow_forward</span>
+              </Link>
+            </div>
           </section>
 
           {/* 5. KHỐI 4: QUY TRÌNH KIỂM ĐỊNH & BẰNG CHỨNG */}
@@ -781,47 +682,47 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">01</div>
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">electric_meter</span>
+                  <span className="material-symbols-outlined">bolt</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">KIỂM TRA TỤ &amp; NGUỒN CST</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">NGUỒN ĐIỆN ỔN ĐỊNH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Đo dòng điện tải thực tế, soi tụ điện bo mạch chống phù nổ, bảo đảm nguồn CST cấp điện sạch không sụt áp.
+                  Đo kiểm điện áp tải thực tế, chống sập nguồn hay đơ máy giữa giờ làm việc cao điểm.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">02</div>
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">speed</span>
+                  <span className="material-symbols-outlined">mode_fan</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">STRESS TEST 45 PHÚT</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">TẢN NHIỆT MÁT ÊM</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Chạy toàn tải phần mềm FurMark ép nhiệt độ &amp; MemTest86 kiểm tra triệt để lỗi dump xanh RAM trước khi đóng nắp.
+                  Tra keo gốm tản nhiệt xịn, quạt chạy êm ái, máy mát mẻ khi làm việc liên tục cả ngày.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">03</div>
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">health_and_safety</span>
+                  <span className="material-symbols-outlined">storage</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">KIỂM ĐỊNH CRYSTALDISKINFO</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">Ổ CỨNG 100% SẠCH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Chỉ chấp nhận ổ cứng đạt 100% Good, không có bất kỳ Bad Sector nào. Xuất file log lưu trữ bảo hành.
+                  SSD mới 100% chính hãng, không lỗi Bad Sector, bảo vệ toàn vẹn dữ liệu sổ sách kế toán.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">04</div>
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">verified</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">DÁN TEM BẢO HÀNH</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">BẢO HÀNH ĐỔI MỚI</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Dán tem vỡ niêm phong ốc chống tráo đổi và kích hoạt mã định danh bảo hành điện tử tức thời vào hệ thống CRM.
+                  SSD/RAM mới bảo hành 36 tháng đổi mới, thân máy 6 - 12 tháng, kích hoạt bảo hành điện tử.
                 </p>
               </div>
             </div>
@@ -890,7 +791,7 @@ export default function HomePage() {
                 Hỏi đáp &amp; Quyền lợi khách hàng
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Câu hỏi thường gặp
+                CÂU HỎI THƯỜNG GẶP
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
                 Nhấn vào từng câu hỏi để xem chi tiết chính sách phục vụ của Vi tính An Tâm.
@@ -947,7 +848,7 @@ export default function HomePage() {
                 <div className="space-y-6">
                   <div className="space-y-1">
                                         <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                      Mạng Lưới Kỹ Thuật Lưu Động Long An
+                      MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH
                     </h2>
                   </div>
                   <div className="space-y-3">
@@ -979,7 +880,7 @@ export default function HomePage() {
                   <div className="p-4 rounded-xl bg-amber-50/70 border-l-4 border-amber-500 border border-amber-200">
                     <h4 className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-amber-600 text-base">schedule</span>
-                      Khung Giờ Vàng Cứu Hộ Ngoài Giờ (Dành cho cơ quan &amp; dân văn phòng)
+                      KHUNG GIỜ VÀNG CỨU HỘ NGOÀI GIỜ (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)
                     </h4>
                     <p className="text-xs text-amber-900/90 mt-1 leading-relaxed">
                       Ưu tiên cứu hộ tận nơi: <strong>17h30 – 21h00 các ngày trong tuần</strong> và{' '}

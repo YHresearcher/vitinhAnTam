@@ -15,56 +15,6 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top Banner Bar */}
-      <div className="w-full bg-blue-50/90 border-b border-blue-100 text-xs py-1.5 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-slate-700 text-xs">
-            <span className="inline-block w-2 h-2 rounded-full bg-blue-700 animate-pulse" />
-            <span>
-              {isEn ? 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: ' : 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: '}
-              <a href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`} className="text-orange-600 font-bold hover:underline">
-                {systemSettings.hotline}
-              </a>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 ml-auto">
-            {/* Sync Badge */}
-            <SyncStatusBadge />
-
-            {/* Language Switcher Vi / En */}
-            <div className="inline-flex items-center rounded-lg bg-white border border-slate-200 p-0.5 shadow-2xs text-[11px] font-bold">
-              <button
-                type="button"
-                onClick={() => setLang('vi')}
-                className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                  !isEn
-                    ? 'bg-blue-700 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-blue-700 hover:bg-slate-50'
-                }`}
-                title="Tiếng Việt (Mặc định)"
-              >
-                <span>🇻🇳</span>
-                <span>VI</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setLang('en')}
-                className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
-                  isEn
-                    ? 'bg-blue-700 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-blue-700 hover:bg-slate-50'
-                }`}
-                title="English"
-              >
-                <span>🇬🇧</span>
-                <span>EN</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Header */}
       <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* Logo */}
@@ -170,8 +120,12 @@ export function Navbar() {
                       : 'bg-purple-300'
                   }`}
                 />
-                <span className="hidden md:inline font-bold">
-                  {currentUser.name.split(' ').slice(-2).join(' ')}
+                <span className="material-symbols-outlined text-base">
+                  {currentUser.role === 'admin'
+                    ? 'admin_panel_settings'
+                    : currentUser.role === 'technician'
+                    ? 'build'
+                    : 'point_of_sale'}
                 </span>
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded font-bold uppercase ${

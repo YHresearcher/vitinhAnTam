@@ -1,7 +1,12 @@
+'use client';
+
+import { useViTinhAnTamStore } from '@/lib/store';
 import React from 'react';
 import Link from 'next/link';
 
 export function Footer() {
+  const { currentLang, setLang } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
   return (
     <footer className="w-full bg-white border-t border-slate-200 pt-16 pb-10 text-slate-600 mt-16 shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,7 +42,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-base">home_pin</span>
-                    <span>Hub Kỹ Thuật TP. Tân An</span>
+                    <span>HUB KỸ THUẬT TP. TÂN AN</span>
                   </h3>
                   <p className="text-slate-600 text-xs leading-relaxed">45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An</p>
                   <div className="pt-1 space-y-1.5 text-xs text-slate-600">
@@ -50,7 +55,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-base">near_me</span>
-                    <span>Ranh Giới Dịch Vụ (10km)</span>
+                    <span>RANH GIỚI DỊCH VỤ (10KM)</span>
                   </h3>
                   <p className="text-slate-600 text-xs leading-relaxed">
                     Đội cơ động tiếp nhận kiểm tra &amp; sửa chữa tận nơi có mặt trong 2 giờ:
@@ -78,7 +83,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-base">schedule</span>
-                    <span>Giờ Phục Vụ Linh Hoạt</span>
+                    <span>GIỜ PHỤC VỤ LINH HOẠT</span>
                   </h3>
                   <div className="text-xs space-y-2 text-slate-600">
                     <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
@@ -96,7 +101,7 @@ export function Footer() {
                 <div className="space-y-3">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-base">policy</span>
-                    <span>Chính Sách &amp; Điều Lệ</span>
+                    <span>CHÍNH SÁCH &amp; ĐIỀU LỆ</span>
                   </h3>
                   <ul className="text-xs space-y-2 text-slate-600">
                     <li className="flex items-start gap-1.5">
@@ -121,7 +126,36 @@ export function Footer() {
     
               <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
                 <p>© 2025 Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.</p>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-5">
+                  {/* Language Switcher Vi / En */}
+                  <div className="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5 text-[11px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setLang('vi')}
+                      className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                        !isEn
+                          ? "bg-blue-700 text-white shadow-xs"
+                          : "text-slate-600 hover:text-blue-700"
+                      }`}
+                      title="Tiếng Việt (Mặc định)"
+                    >
+                      <span>🇻🇳</span>
+                      <span>VI</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLang('en')}
+                      className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                        isEn
+                          ? "bg-blue-700 text-white shadow-xs"
+                          : "text-slate-600 hover:text-blue-700"
+                      }`}
+                      title="English"
+                    >
+                      <span>🇬🇧</span>
+                      <span>EN</span>
+                    </button>
+                  </div>
                   <a className="hover:text-blue-700 transition-colors font-medium" href="#chinh-sach">
                     Quy định bảo hành
                   </a>
