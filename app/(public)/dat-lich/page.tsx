@@ -107,10 +107,10 @@ export default function AppointmentBookingPage() {
         location:
           locationType === 'onsite'
             ? address
-            : 'Trụ sở Vi Tính An Tâm (45 Nguyễn Huệ, P.1, TP. Tân An)',
+            : 'Trụ sở Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Long An - Tây Ninh)',
       });
     } catch (err) {
-      setErrorMsg('Có lỗi xảy ra trong quá trình đặt lịch. Vui lòng gọi trực tiếp 0903.892.100!');
+      setErrorMsg('Có lỗi xảy ra trong quá trình đặt lịch. Vui lòng gọi trực tiếp 0909.053.058!');
     } finally {
       setIsSubmitting(false);
     }
@@ -242,7 +242,7 @@ export default function AppointmentBookingPage() {
                     <div>
                       <h4 className="text-sm font-bold text-slate-900">Mang Máy Đến Cửa Hàng</h4>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        45 Nguyễn Huệ, P.1, TP. Tân An (Có chỗ đỗ ô tô, lấy ngay trong 30-45 phút)
+                        45 Nguyễn Huệ, P.1, Long An - Tây Ninh (Có chỗ đỗ ô tô, lấy ngay trong 30-45 phút)
                       </p>
                     </div>
                   </div>
@@ -272,7 +272,7 @@ export default function AppointmentBookingPage() {
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="VD: 0903892100"
+                      placeholder="VD: 0909053058"
                       className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white"
                       required
                     />

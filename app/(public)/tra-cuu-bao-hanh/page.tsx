@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { formatDateVN } from '@/lib/supabase';
 
 function WarrantyLookupContent() {
   const searchParams = useSearchParams();
@@ -32,7 +33,7 @@ function WarrantyLookupContent() {
       setIsSearching(false);
       if (res && (res.item || res.ticket)) {
         setSearchResult(res);
-        showToast('Tra cứu thành công!');
+        showToast('Kiểm tra thành công!');
       } else {
         setSearchResult(null);
         showToast(`Không tìm thấy hồ sơ cho "${q}". Hãy thử ST-8F4K92X hoặc 0918234891!`);
@@ -72,11 +73,11 @@ function WarrantyLookupContent() {
             Cổng Dịch Vụ Khách Hàng Điện Tử
           </span>
           <span className="text-xs text-slate-300">•</span>
-          <span className="text-xs text-slate-500 font-mono">Tân An, Long An</span>
+          <span className="text-xs text-slate-500 font-mono">Long An - Tây Ninh</span>
         </div>
 
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
-          Tra Cứu Bảo Hành Điện Tử &amp; <span className="text-blue-600">Lịch Sử Thiết Bị</span>
+          KIỂM TRA BẢO HÀNH ĐIỆN TỬ &amp; <span className="text-blue-600">LỊCH SỬ THIẾT BỊ</span>
         </h1>
         <p className="mt-2 text-sm text-slate-600 max-w-xl mx-auto">
           Minh bạch từng linh kiện — An tâm trọn vòng đời sử dụng tại Vi tính An Tâm.
@@ -111,7 +112,7 @@ function WarrantyLookupContent() {
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xs transition-all shrink-0 active:scale-95 disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-xl">verified</span>
-                <span>{isSearching ? 'Đang tra cứu...' : 'Tra Cứu Ngay'}</span>
+                <span>{isSearching ? 'Đang kiểm tra...' : 'Kiểm Tra Ngay'}</span>
               </button>
             </form>
           </div>
@@ -179,7 +180,7 @@ function WarrantyLookupContent() {
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="material-symbols-outlined text-sm text-slate-400">calendar_today</span>
-                      <span>Bàn giao: {searchResult.item?.handover_date || '15/05/2025'}</span>
+                      <span>Bàn giao: {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
                     </span>
                   </div>
                 </div>
@@ -230,7 +231,7 @@ function WarrantyLookupContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Chi Tiết Thời Hạn Bảo Hành Đa Tầng (Multi-tier Warranty)
+                  CHI TIẾT THỜI HẠN BẢO HÀNH ĐA TẦNG (Multi-tier Warranty)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Bảo hành độc lập theo từng linh kiện, không làm gián đoạn việc sử dụng của khách hàng
@@ -314,7 +315,7 @@ function WarrantyLookupContent() {
               </div>
               <div className="flex items-center gap-2.5 w-full sm:w-auto">
                 <a
-                  href="https://zalo.me/0903892100"
+                  href="https://zalo.me/0909053058"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-800 font-semibold transition-all text-center border border-slate-200"

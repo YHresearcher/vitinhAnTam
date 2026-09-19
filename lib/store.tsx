@@ -26,7 +26,42 @@ import {
   initialUsers,
 } from './mockData';
 
+
+export interface SystemSettings {
+  hotline: string;
+  zaloNumber: string;
+  zaloLink: string;
+  address: string;
+  serviceAreas: string;
+  workingHoursWeekday: string;
+  workingHoursWeekend: string;
+  primeHours: string;
+  footerAbout: string;
+  footerCopyright: string;
+  storeName: string;
+}
+
+export const initialSystemSettings: SystemSettings = {
+  hotline: '0909.053.058',
+  zaloNumber: '0909053058',
+  zaloLink: 'https://zalo.me/0909053058',
+  address: 'Long An - Tây Ninh',
+  serviceAreas: 'Long An - Tây Ninh',
+  workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
+  workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
+  primeHours: '17:30 - 21:00',
+  footerAbout: 'Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng & dịch vụ xử lý tận nơi trong 2 giờ tại Long An - Tây Ninh.',
+  footerCopyright: '© 2026 Vi Tính An Tâm (vitinhantam.vn) - Giữ trọn chữ tín, an tâm sử dụng.',
+  storeName: 'Vi Tính An Tâm',
+};
+
 interface StoreContextType {
+  // System Settings & Language
+  systemSettings: SystemSettings;
+  updateSystemSettings: (data: Partial<SystemSettings>) => Promise<boolean>;
+  currentLang: 'vi' | 'en';
+  setLang: (lang: 'vi' | 'en') => void;
+
   // RBAC Profile & Auth & Member Management
   currentUser: UserAccount;
   users: UserAccount[];
@@ -133,6 +168,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [spareParts, setSpareParts] = useState<SparePart[]>(initialSpareParts);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>(initialSystemSettings);
+  const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
 
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
@@ -274,6 +311,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
     return true;
+  };
+
+  
+  const updateSystemSettings = async (data: Partial<SystemSettings>): Promise<boolean> => {
+    setSystemSettings((prev) => {
+      const next = { ...prev, ...data };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vtat_system_settings_v2', JSON.stringify(next));
+      }
+      return next;
+    });
+    return true;
+  };
+
+  const setLang = (lang: 'vi' | 'en') => {
+    setCurrentLang(lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vtat_lang_v2', lang);
+    }
   };
 
   const saveToLocal = (key: string, data: unknown) => {
@@ -648,7 +704,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       full_name: params.customerName.trim(),
       birth_date: params.birthDate,
       phone: params.customerPhone.trim(),
-      address: params.customerAddress.trim() || 'TP. Tân An, Long An',
+      address: params.customerAddress.trim() || 'Long An - Tây Ninh',
       customer_tier: 'VIP',
       notes: `Mua máy ${item.device_model || item.brand} (Tag: ${item.service_tag}, Serial: ${params.serialNumber})`,
       created_at: new Date().toISOString(),
@@ -716,6 +772,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   return (
     <StoreContext.Provider
       value={{
+        systemSettings,
+        updateSystemSettings,
+        currentLang,
+        setLang,
         currentUser,
         users,
         isLoggedIn,

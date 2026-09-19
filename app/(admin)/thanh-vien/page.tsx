@@ -150,7 +150,7 @@ export default function MemberManagementPage() {
     await addUser({
       name: newUserForm.name.trim(),
       email: newUserForm.email.trim(),
-      phone: newUserForm.phone.trim() || '0903.892.100',
+      phone: newUserForm.phone.trim() || '0909.053.058',
       role: newUserForm.role,
       roleTitle: defaultTitle,
       password: pwd,

@@ -67,7 +67,7 @@ export default function DashboardPage() {
               </span>
               <span className="text-xs text-slate-500 flex items-center gap-1 font-mono">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                TP. Tân An, Long An
+                Long An - Tây Ninh
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
@@ -155,7 +155,7 @@ export default function DashboardPage() {
               <span className="text-xs text-indigo-600 font-medium">điểm hẹn</span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">P.2 Tân An &amp; Thủ Thừa</span>
+              <span className="text-slate-500">Long An - Tây Ninh</span>
               <span className="px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
                 Đúng tiến độ
               </span>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <span className="px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                QC Hub Tân An
+                QC Hub Long An - Tây Ninh
               </span>
             </div>
 

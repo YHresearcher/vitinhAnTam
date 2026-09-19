@@ -293,3 +293,25 @@ export const generateCustomerCode = (
 
   return code;
 };
+
+// Định dạng hiển thị ngày chuẩn DD/MM/YYYY
+export const formatDateVN = (dateInput: string | Date | undefined | null): string => {
+  if (!dateInput) return '';
+  if (typeof dateInput === 'string') {
+    // Check if it is already DD/MM/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(dateInput)) {
+      return dateInput.slice(0, 10);
+    }
+    // Handle YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
+      const parts = dateInput.split('T')[0].split('-');
+      return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+  }
+  const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+  if (isNaN(d.getTime())) return String(dateInput);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return day + '/' + month + '/' + year;
+};

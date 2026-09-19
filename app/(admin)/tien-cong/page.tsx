@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
-import { ShiftLog } from '@/lib/supabase';
+import { ShiftLog, formatDateVN } from '@/lib/supabase';
 import {
   DollarSign,
   Calendar,
@@ -155,7 +155,7 @@ export default function TienCongPage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Hạch toán tiền công thợ, tiền hoa hồng cứu hộ 10km và trích thưởng doanh số chi nhánh Tân An.
+            Hạch toán tiền công thợ, tiền hoa hồng cứu hộ 10km và trích thưởng doanh số khu vực Long An - Tây Ninh.
           </p>
         </div>
 
@@ -261,7 +261,7 @@ export default function TienCongPage() {
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-600 font-mono text-xs">
-                      {new Date(log.shift_date).toLocaleDateString('vi-VN')}
+                      {formatDateVN(log.shift_date)}
                     </td>
 
                     <td className="py-3.5 px-4">

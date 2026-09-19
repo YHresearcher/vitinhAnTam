@@ -72,7 +72,7 @@ export default function CuuHoOnsitePage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Cam kết có mặt trong 2 giờ tại TP. Tân An, KCN Tân Đức, Thủ Thừa, Bến Lức.
+            Cam kết có mặt trong 2 giờ khu vực Long An - Tây Ninh.
           </p>
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function CuuHoOnsitePage() {
           </div>
           <div>
             <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              Trụ Sở Điều Phối: 124 Hùng Vương, P.2, TP. Tân An, Long An
+              Trụ Sở Điều Phối: Long An - Tây Ninh
             </div>
             <div className="text-xs text-blue-700 font-medium mt-0.5">
               Bán kính phục vụ: Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn, KCN Lợi Bình Nhơn (0-10km).

@@ -9,7 +9,9 @@ import { useViTinhAnTamStore } from '@/lib/store';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { currentUser, isLoggedIn, logout } = useViTinhAnTamStore();
+  const { currentUser, isLoggedIn, logout, systemSettings, currentLang, setLang } = useViTinhAnTamStore();
+
+  const isEn = currentLang === 'en';
 
   return (
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -19,9 +21,9 @@ export function Navbar() {
           <div className="flex items-center gap-2 text-slate-700 text-xs">
             <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
             <span>
-              Phục vụ tận nơi Tân An &amp; Long An • Hotline:{' '}
-              <a href="tel:0903892100" className="text-blue-600 font-bold hover:underline">
-                0903.892.100
+              {isEn ? 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: ' : 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: '}
+              <a href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`} className="text-blue-600 font-bold hover:underline">
+                {systemSettings.hotline}
               </a>
             </span>
           </div>
@@ -29,6 +31,36 @@ export function Navbar() {
           <div className="flex items-center gap-3 ml-auto">
             {/* Sync Badge */}
             <SyncStatusBadge />
+
+            {/* Language Switcher Vi / En */}
+            <div className="inline-flex items-center rounded-lg bg-white border border-slate-200 p-0.5 shadow-2xs text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setLang('vi')}
+                className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                  !isEn
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                }`}
+                title="Tiếng Việt (Mặc định)"
+              >
+                <span>🇻🇳</span>
+                <span>VI</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('en')}
+                className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+                  isEn
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                }`}
+                title="English"
+              >
+                <span>🇬🇧</span>
+                <span>EN</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -50,19 +82,19 @@ export function Navbar() {
                 : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
             }`}
           >
-            Trang chủ
+            {isEn ? 'Home' : 'Trang chủ'}
           </Link>
           <a
             href="/#danh-muc-san-pham"
             className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            Sản phẩm
+            {isEn ? 'Products' : 'Sản phẩm'}
           </a>
           <a
             href="/#dich-vu-spa"
             className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            Dịch vụ tận nơi
+            {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
           </a>
           <Link
             href="/tra-cuu-bao-hanh"
@@ -72,7 +104,7 @@ export function Navbar() {
                 : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
             }`}
           >
-            Tra cứu bảo hành
+            {isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}
           </Link>
           <Link
             href="/dat-lich"
@@ -82,35 +114,36 @@ export function Navbar() {
                 : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
             }`}
           >
-            Đặt lịch hẹn
+            {isEn ? 'Book Schedule' : 'Đặt lịch hẹn'}
           </Link>
           <a
             href="/#chinh-sach"
             className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            Liên hệ
+            {isEn ? 'Contact' : 'Liên hệ'}
           </a>
         </nav>
 
         {/* Right CTAs */}
         <div className="flex items-center gap-2.5 shrink-0">
           <a
-            href="tel:0903892100"
+            href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`}
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
           >
             <span className="material-symbols-outlined text-sm">phone_in_talk</span>
-            <span>0903.892.100</span>
+            <span>{systemSettings.hotline}</span>
           </a>
 
+          {/* Sửa Tra cứu tem -> Kiểm tra bảo hành */}
           <Link
             href="/tra-cuu-bao-hanh"
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-xs hover:bg-blue-700 transition-all"
           >
-            <span className="material-symbols-outlined text-sm">qr_code_scanner</span>
-            <span>Tra cứu tem</span>
+            <span className="material-symbols-outlined text-sm">verified</span>
+            <span>{isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}</span>
           </Link>
 
-          {/* SINGLE UNIFIED LOGIN / USER ACCESS - WHITE & BLUE THEME */}
+          {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
           {isLoggedIn ? (
             <div className="flex items-center gap-1.5">
               <Link
@@ -161,7 +194,7 @@ export function Navbar() {
               className="px-3.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-sm">lock</span>
-              <span>Đăng Nhập</span>
+              <span>{isEn ? 'Sign In' : 'Đăng Nhập'}</span>
             </Link>
           )}
         </div>

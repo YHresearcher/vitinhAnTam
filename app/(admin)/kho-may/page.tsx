@@ -63,7 +63,7 @@ export default function KhoMayPage() {
   const [sellCustomerName, setSellCustomerName] = useState('');
   const [sellCustomerBirthDate, setSellCustomerBirthDate] = useState('1992-05-15');
   const [sellCustomerPhone, setSellCustomerPhone] = useState('0918234891');
-  const [sellCustomerAddress, setSellCustomerAddress] = useState('TP. Tân An, Long An');
+  const [sellCustomerAddress, setSellCustomerAddress] = useState('Long An - Tây Ninh');
   const [sellSerialNumber, setSellSerialNumber] = useState('');
   const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(12);
   const [sellPrice, setSellPrice] = useState<number>(0);
@@ -87,7 +87,7 @@ export default function KhoMayPage() {
     setSellCustomerName(item.customer_name || '');
     setSellCustomerBirthDate('1992-05-15');
     setSellCustomerPhone(item.customer_phone || '0918234891');
-    setSellCustomerAddress('TP. Tân An, Long An');
+    setSellCustomerAddress('Long An - Tây Ninh');
     setSellSerialNumber(item.serial_number || `SN-${item.service_tag}-2025`);
     setSellWarrantyMonths(item.warranty_months || 12);
     setSellPrice(item.price ?? item.retail_price ?? 0);
@@ -271,7 +271,7 @@ export default function KhoMayPage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Theo dõi cấu hình thực tế, vị trí kệ kho Tân An, tỷ lệ sức khỏe SSD và phân quyền sửa tồn kho.
+            Theo dõi cấu hình thực tế, vị trí kệ kho Long An - Tây Ninh, tỷ lệ sức khỏe SSD và phân quyền sửa tồn kho.
           </p>
         </div>
 
@@ -983,7 +983,7 @@ export default function KhoMayPage() {
                       type="text"
                       value={sellCustomerAddress}
                       onChange={(e) => setSellCustomerAddress(e.target.value)}
-                      placeholder="Số nhà, Phường/Xã, TP. Tân An..."
+                      placeholder="Số nhà, Phường/Xã, Long An - Tây Ninh..."
                       className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>

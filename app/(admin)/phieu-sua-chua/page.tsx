@@ -107,13 +107,13 @@ export default function PhieuSuaChuaPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Quản Lý Phiếu Dịch Vụ & Sửa Chữa
+            QUẢN LÝ PHIẾU DỊCH VỤ & SỬA CHỮA
             <span className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full">
               {tickets.length} phiếu
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Theo dõi tiến độ sửa chữa máy bàn, laptop, bảo dưỡng keo tản nhiệt và cứu hộ Tân An 10km.
+            Theo dõi tiến độ sửa chữa máy bàn, laptop, bảo dưỡng keo tản nhiệt và cứu hộ Long An - Tây Ninh 10km.
           </p>
         </div>
 

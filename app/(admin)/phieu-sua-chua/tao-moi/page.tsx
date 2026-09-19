@@ -66,7 +66,7 @@ export default function TaoPhieuSuaChuaPage() {
   const [ticketType, setTicketType] = useState<'counter' | 'onsite'>('counter');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('TP. Tân An, Long An');
+  const [customerAddress, setCustomerAddress] = useState('Long An - Tây Ninh');
   const [deviceModel, setDeviceModel] = useState('');
   const [serviceTag, setServiceTag] = useState('');
   const [windowsPin, setWindowsPin] = useState('');
@@ -250,7 +250,7 @@ export default function TaoPhieuSuaChuaPage() {
                 <input
                   type="text"
                   required
-                  placeholder="VD: 45 Đường Hùng Vương, Phường 2, TP. Tân An, Long An"
+                  placeholder="VD: 45 Đường Hùng Vương, Phường 2, Long An - Tây Ninh"
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"

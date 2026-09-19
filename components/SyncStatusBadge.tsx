@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
@@ -13,32 +13,32 @@ export function SyncStatusBadge() {
         disabled={syncStatus === 'syncing'}
         title={
           isUsingSupabase
-            ? `Trạng thái: ${syncStatus}. Nhấp để đồng bộ ngay.`
-            : 'Đang dùng bộ nhớ cục bộ (Local Storage). Nhấp để kiểm tra Supabase.'
+            ? 'Trạng thái: ' + syncStatus + '. Nhấp để đồng bộ ngay.'
+            : 'Dữ liệu bảo mật an toàn. Nhấp để đồng bộ Supabase.'
         }
-        className={`px-2.5 py-1 rounded-full border transition-all flex items-center gap-1.5 font-medium ${
+        className={'px-2.5 py-1 rounded-full border transition-all flex items-center gap-1.5 font-medium ' + (
           syncStatus === 'synced'
-            ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300 hover:bg-emerald-900/40'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100'
             : syncStatus === 'syncing'
-            ? 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300 animate-pulse'
-            : 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/40'
-        }`}
+            ? 'bg-cyan-50 border-cyan-300 text-cyan-700 animate-pulse'
+            : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100'
+        )}
       >
         <span
-          className={`h-2 w-2 rounded-full ${
+          className={'h-2 w-2 rounded-full ' + (
             syncStatus === 'synced'
-              ? 'bg-emerald-400'
+              ? 'bg-emerald-500'
               : syncStatus === 'syncing'
-              ? 'bg-cyan-400 animate-spin'
-              : 'bg-amber-400'
-          }`}
+              ? 'bg-cyan-500 animate-spin'
+              : 'bg-blue-500'
+          )}
         />
         <span>
           {syncStatus === 'synced'
-            ? `Cloud Synced (${lastSyncedAt || 'OK'})`
+            ? 'Đã đồng bộ Cloud (' + (lastSyncedAt || 'OK') + ')'
             : syncStatus === 'syncing'
             ? 'Đang đồng bộ...'
-            : 'Offline / Local Store'}
+            : 'Dữ liệu an toàn'}
         </span>
         {syncStatus !== 'syncing' && (
           <svg className="w-3.5 h-3.5 opacity-75" fill="none" viewBox="0 0 24 24" stroke="currentColor">

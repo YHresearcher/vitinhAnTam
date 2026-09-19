@@ -109,35 +109,35 @@ const CUSTOMER_REVIEWS: CustomerReview[] = [
     role: 'Kế toán trưởng - Cty Vận Tải',
     comment: 'Trang bị 6 bộ máy Dell OptiPlex cho phòng kế toán dùng phần mềm MISA và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
     service: 'Dell OptiPlex 7060 SFF',
-    location: 'Phường 2, TP. Tân An',
+    location: 'Tân An (Long An - Tây Ninh)',
   },
   {
     name: 'Chị Mai Lan',
     role: 'Giáo viên trường THCS',
     comment: 'Gói bảo dưỡng máy tính và nâng cấp SSD làm dàn máy cũ chạy nhanh như mới. Thích nhất là quy trình làm trực tiếp trước mặt mình, giữ nguyên toàn bộ giáo án và hình ảnh.',
     service: 'Nâng cấp SSD NVMe & Spa máy',
-    location: 'Thị trấn Thủ Thừa',
+    location: 'Thủ Thừa (Long An - Tây Ninh)',
   },
   {
     name: 'Chú Bảy Nam',
     role: 'Khách hàng cá nhân',
     comment: 'Tôi lớn tuổi không rành vi tính, may có cháu kỹ thuật qua tận nhà lúc 18h30 cài lại máy in và kiểm tra nguồn máy. Phục vụ tận tình, giải thích rõ ràng, giá cả phải chăng.',
     service: 'Cứu hộ máy tính tận nơi',
-    location: 'Phường 3, TP. Tân An',
+    location: 'Trảng Bàng (Long An - Tây Ninh)',
   },
   {
     name: 'Anh Quốc Hoàng',
     role: 'Giám đốc Công ty Xây Dựng',
     comment: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ là lý do công ty tôi chọn An Tâm làm đối tác kỹ thuật dài hạn. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
     service: 'Bảo trì hệ thống PC văn phòng',
-    location: 'KCN Lợi Bình Nhơn',
+    location: 'KCN Đức Hòa (Long An - Tây Ninh)',
   },
   {
     name: 'Chị Thúy Nga',
     role: 'Kinh doanh trực tuyến',
     comment: 'Máy tính bị treo nguồn giữa ca tối, gọi hotline được KTV tới kiểm tra ngay trong hơn 1 tiếng. Thay nguồn mới chính hãng bảo hành 36 tháng có tem niêm phong rất yên tâm.',
     service: 'Thay nguồn & Vệ sinh máy',
-    location: 'Phường 4, TP. Tân An',
+    location: 'Gò Dầu (Long An - Tây Ninh)',
   },
 ];
 
@@ -151,7 +151,7 @@ const FAQ_ITEMS: FaqItem[] = [
   {
     icon: 'schedule',
     question: 'Chính sách xử lý nhanh tận nơi trong 2 giờ áp dụng vào thời gian nào?',
-    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag hoặc gọi Hotline 0903.892.100. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (TP. Tân An, Thủ Thừa, Châu Thành) để xử lý ngay. Đặc biệt, dịch vụ xử lý nhanh trong 2 giờ được ưu tiên cao điểm nhất trong khung giờ vàng từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00) nhằm phục vụ quý khách ngoài giờ hành chính mà không làm gián đoạn công việc tại cơ quan hay văn phòng.',
+    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag hoặc gọi Hotline 0909.053.058. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (khu vực Long An - Tây Ninh (Tân An, Bến Lức, Trảng Bàng, Gò Dầu, TP. Tây Ninh)) để xử lý ngay. Đặc biệt, dịch vụ xử lý nhanh trong 2 giờ được ưu tiên cao điểm nhất trong khung giờ vàng từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00) nhằm phục vụ quý khách ngoài giờ hành chính mà không làm gián đoạn công việc tại cơ quan hay văn phòng.',
   },
   {
     icon: 'sync',
@@ -251,25 +251,25 @@ export default function HomePage() {
                 <div className="space-y-4">
                   <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-600 flex items-center gap-2">
                     <span className="w-6 h-0.5 bg-blue-600" />
-                    Đơn vị chuyên máy tính đồng bộ tại Long An
+                    VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM
                   </span>
                   <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
-                    Máy tính cũ tuyển chọn loại 1
+                    MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1
                   </h1>
                   <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
                     <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
                       <span className="material-symbols-outlined text-base">verified_user</span>
-                      <span>Windows bản quyền</span>
+                      <span>WINDOWS BẢN QUYỀN</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs">
                       <span className="material-symbols-outlined text-base">schedule</span>
-                      <span>Dịch vụ xử lý tận nơi trong 2 giờ</span>
+                      <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
                     </span>
                   </div>
                 </div>
 
                 <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-2xl">
-                  Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng &amp; dịch vụ hồi sinh máy tính cấp tốc tại Thành phố Tân An và các huyện lân cận tỉnh Long An.
+                  Chuyên cung cấp PC đồng bộ văn phòng, laptop doanh nhân tuyển chọn kỹ lưỡng &amp; dịch vụ hồi sinh máy tính cấp tốc khu vực Long An - Tây Ninh.
                 </p>
 
                 {/* 3 Trụ Cột Cam Kết */}
@@ -278,7 +278,7 @@ export default function HomePage() {
                     <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-xl">computer</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Máy tính cũ tuyển chọn loại 1</h3>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase">MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
                       Ngoại hình đẹp, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.
                     </p>
@@ -288,7 +288,7 @@ export default function HomePage() {
                     <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-xl">verified_user</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Windows bản quyền</h3>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase">WINDOWS BẢN QUYỀN</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
                       Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.
                     </p>
@@ -298,7 +298,7 @@ export default function HomePage() {
                     <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-xl">schedule</span>
                     </div>
-                    <h3 className="text-sm font-bold text-slate-900">Dịch vụ xử lý tận nơi trong 2 giờ</h3>
+                    <h3 className="text-sm font-bold text-slate-900 uppercase">DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
                     <p className="text-xs text-slate-600 mt-1 leading-snug">
                       Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.
                     </p>
@@ -335,7 +335,7 @@ export default function HomePage() {
                     />
                     <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md px-3 py-1 rounded-md text-[11px] font-bold text-emerald-700 border border-slate-200 shadow-xs flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                      <span>SẴN KHO TÂN AN</span>
+                      <span>SẴN KHO LONG AN - TÂY NINH</span>
                     </div>
                   </div>
 
@@ -479,7 +479,7 @@ export default function HomePage() {
                       </span>
                     </div>
                     <a
-                      href="tel:0903892100"
+                      href="tel:0909053058"
                       className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
                       Đặt Lịch Test Máy Tận Nơi
@@ -494,11 +494,11 @@ export default function HomePage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="dich-vu-spa">
             <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold">
-                  <span className="material-symbols-outlined text-sm text-blue-600">bolt</span> Cứu hộ máy chậm - đơ - sập nguồn
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase">
+                  <span className="material-symbols-outlined text-sm text-blue-600">bolt</span> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  Dịch Vụ Tận Nơi &amp; &quot;Spa Hồi Sinh Máy Cũ&quot; Trong 2 Giờ
+                  DỊCH VỤ TẬN NƠI &amp; &quot;SPA HỒI SINH MÁY CŨ&quot; TRONG 2 GIỜ
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600">
                   Không cần mang vác cồng kềnh ra tiệm. Kỹ thuật viên An Tâm mang trang thiết bị chuyên dụng đến kiểm tra, bảo dưỡng và tối ưu trực tiếp trước sự giám sát của quý khách.
@@ -512,7 +512,7 @@ export default function HomePage() {
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-lg group-hover:rotate-6 transition-transform">
                       x5
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">Gói Hồi Sinh Máy Cũ (Tăng Tốc x5)</h3>
+                    <h3 className="text-lg font-bold text-slate-900">GÓI HỒI SINH MÁY CŨ</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
                       Biến máy tính đang chạy ổ cơ HDD ì ạch trở nên mượt mà như máy mới mua chỉ sau 45 phút.
                     </p>
@@ -579,7 +579,7 @@ export default function HomePage() {
                     <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
                       <span className="material-symbols-outlined text-2xl">security</span>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">Tối Ưu Windows Bản Quyền</h3>
+                    <h3 className="text-lg font-bold text-slate-900">TỐI ƯU WINDOWS BẢN QUYỀN</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
                       Loại bỏ sạch các công cụ crack nguy hiểm tiềm ẩn mã độc đào coin hoặc đánh cắp tài khoản ngân hàng của cơ quan, hộ kinh doanh.
                     </p>
@@ -613,7 +613,7 @@ export default function HomePage() {
                   className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-blue-600 text-white font-bold text-sm sm:text-base tracking-wide shadow-sm hover:bg-blue-700 transition-all hover:scale-[1.01]"
                 >
                   <span className="material-symbols-outlined text-xl">electric_moped</span>
-                  <span>Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0903.892.100)</span>
+                  <span>Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0909.053.058)</span>
                 </Link>
               </div>
             </div>
@@ -624,7 +624,7 @@ export default function HomePage() {
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
               <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">Minh Bạch Tuyệt Đối 24/7</div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Cổng Tra Cứu Bảo Hành Điện Tử
+                CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
                 Nhập Số điện thoại mua hàng hoặc mã Service Tag trên tem máy để tra cứu quyền lợi bảo hành đa tầng tức thì.
@@ -652,7 +652,7 @@ export default function HomePage() {
                   className="px-7 py-3.5 rounded-lg bg-blue-600 text-white font-semibold text-sm shadow-xs hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-lg">verified</span>
-                  <span>{isSearching ? 'Đang tìm...' : 'Tra Cứu Ngay'}</span>
+                  <span>{isSearching ? 'Đang tìm...' : 'Kiểm Tra Ngay'}</span>
                 </button>
               </form>
 
@@ -752,7 +752,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-2.5 w-full sm:w-auto">
                     <a
-                      href="https://zalo.me/0903892100"
+                      href="https://zalo.me/0909053058"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-800 font-semibold transition-all text-center border border-slate-200"
@@ -776,7 +776,7 @@ export default function HomePage() {
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
               <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">Quy Chuẩn Kỹ Thuật Độc Quyền</div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                Quy Trình Kiểm Định 4 Lớp Trước Khi Giao
+                QUY TRÌNH KIỂM ĐỊNH 4 LỚP TRƯỚC KHI GIAO
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
                 Chúng tôi từ chối nhập máy sửa chữa chắp vá. Mỗi linh kiện xuất kho đều phải vượt qua bài kiểm tra áp lực khắt khe.
@@ -789,7 +789,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">electric_meter</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Kiểm Tra Tụ &amp; Nguồn CST</h3>
+                <h3 className="text-sm font-bold text-slate-900">KIỂM TRA TỤ &amp; NGUỒN CST</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   Đo dòng điện tải thực tế, soi tụ điện bo mạch chống phù nổ, bảo đảm nguồn CST cấp điện sạch không sụt áp.
                 </p>
@@ -800,7 +800,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">speed</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Stress Test 45 Phút</h3>
+                <h3 className="text-sm font-bold text-slate-900">STRESS TEST 45 PHÚT</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   Chạy toàn tải phần mềm FurMark ép nhiệt độ &amp; MemTest86 kiểm tra triệt để lỗi dump xanh RAM trước khi đóng nắp.
                 </p>
@@ -811,7 +811,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">health_and_safety</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Kiểm Định CrystalDiskInfo</h3>
+                <h3 className="text-sm font-bold text-slate-900">KIỂM ĐỊNH CRYSTALDISKINFO</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   Chỉ chấp nhận ổ cứng đạt 100% Good, không có bất kỳ Bad Sector nào. Xuất file log lưu trữ bảo hành.
                 </p>
@@ -822,7 +822,7 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">qr_code_2</span>
                 </div>
-                <h3 className="text-sm font-bold text-slate-900">Dán Tem &amp; Cấp Mã Định Danh</h3>
+                <h3 className="text-sm font-bold text-slate-900">DÁN TEM BẢO HÀNH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                   Dán tem vỡ niêm phong ốc chống tráo đổi và kích hoạt mã định danh bảo hành điện tử tức thời vào hệ thống CRM.
                 </p>
@@ -834,10 +834,10 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-widest text-blue-600 font-bold mb-1">
-                    Trải nghiệm thực tế
+                    TRẢI NGHIỆM THỰC TẾ
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    Nhận xét của khách hàng
+                    NHẬN XÉT CỦA KHÁCH HÀNG
                   </h2>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -849,7 +849,7 @@ export default function HomePage() {
                     <span className="material-symbols-outlined text-base fill-current">star</span>
                   </div>
                   <span className="font-bold text-slate-900">5.0 / 5.0</span>
-                  <span>• Từ khách hàng doanh nghiệp &amp; cá nhân tại Long An</span>
+                  <span>• Từ khách hàng doanh nghiệp &amp; cá nhân tại Long An - Tây Ninh</span>
                 </div>
               </div>
 
@@ -999,11 +999,11 @@ export default function HomePage() {
                   <div>
                     <div className="text-xs text-slate-500">Hotline Khẩn Cấp &amp; Zalo Kỹ Thuật:</div>
                     <div className="text-xl sm:text-2xl font-black text-blue-600 tracking-tight font-mono">
-                      0903.892.100
+                      0909.053.058
                     </div>
                   </div>
                   <a
-                    href="tel:0903892100"
+                    href="tel:0909053058"
                     className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-600 text-white font-bold text-xs tracking-wide shadow-xs hover:bg-blue-700 transition-all text-center"
                   >
                     Gọi Trực Tiếp KTV Ca Trực
@@ -1086,7 +1086,7 @@ export default function HomePage() {
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed">45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An</p>
               <div className="pt-1 space-y-1.5 text-xs text-slate-600">
-                <p><strong className="text-slate-900 font-bold">Hotline / Zalo:</strong> <span className="text-blue-600 font-bold">0903.892.100</span></p>
+                <p><strong className="text-slate-900 font-bold">Hotline / Zalo:</strong> <span className="text-blue-600 font-bold">0909.053.058</span></p>
                 <p><strong className="text-slate-900 font-bold">Hỗ trợ kỹ thuật:</strong> 24/7 trực ca tiếp nhận</p>
                 <p><strong className="text-slate-900 font-bold">Email:</strong> lienhe@vitinhantham.vn</p>
               </div>
@@ -1181,22 +1181,22 @@ export default function HomePage() {
 
       {/* FLOATING CIRCULAR ACTION BUTTONS (Góc phải màn hình) */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        {/* Tra cứu tem bảo hành */}
+        {/* Kiểm tra bảo hành */}
         <Link
           href="/tra-cuu-bao-hanh"
           className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-600 border-2 border-blue-600 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Tra cứu bảo hành điện tử"
+          title="Kiểm tra bảo hành điện tử"
         >
           <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span>Tra cứu tem bảo hành</span>
+            <span>Kiểm tra bảo hành</span>
           </span>
         </Link>
 
         {/* Gọi điện Hotline */}
         <a
-          href="tel:0903892100"
+          href="tel:0909053058"
           className="pointer-events-auto w-13 h-13 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
           title="Gọi Hotline kỹ thuật 24/7"
         >
@@ -1204,13 +1204,13 @@ export default function HomePage() {
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-15 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
             <span className="text-emerald-400 font-bold">Hotline:</span>
-            <span>0903.892.100 (24/7)</span>
+            <span>0909.053.058 (24/7)</span>
           </span>
         </a>
 
         {/* Nhắn Zalo Kỹ Thuật */}
         <a
-          href="https://zalo.me/0903892100"
+          href="https://zalo.me/0909053058"
           target="_blank"
           rel="noopener noreferrer"
           className="pointer-events-auto w-14 h-14 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-2xl shadow-blue-500/40 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"

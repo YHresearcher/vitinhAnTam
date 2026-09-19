@@ -61,7 +61,7 @@ export function ThermalLabelModal({ item, onClose, isOpen = true }: ThermalLabel
                   VI TÍNH AN TÂM
                 </div>
                 <div className="text-[6.5px] text-slate-600 print:text-black">
-                  0903.892.100 • Tân An
+                  0909.053.058 • Long An - Tây Ninh
                 </div>
               </div>
 
@@ -95,7 +95,7 @@ export function ThermalLabelModal({ item, onClose, isOpen = true }: ThermalLabel
                 className="w-[17mm] h-[17mm] object-contain border border-slate-300 print:border-black p-0.5"
               />
               <span className="text-[5.5px] text-center font-mono mt-0.5 tracking-tighter">
-                QUÉT TRA CỨU
+                QUÉT KIỂM TRA
               </span>
             </div>
           </div>

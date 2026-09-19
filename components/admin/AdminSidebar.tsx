@@ -8,7 +8,7 @@ import { useViTinhAnTamStore } from '@/lib/store';
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { tickets, currentUser, canAccessPayroll } = useViTinhAnTamStore();
+  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing').length;
 
@@ -52,6 +52,13 @@ export function AdminSidebar() {
       icon: 'manage_accounts',
       badge: canAccessPayroll() ? 'Admin' : 'Khóa',
       badgeColor: canAccessPayroll() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+    },
+    {
+      label: 'Cấu hình hệ thống',
+      href: '/cai-dat',
+      icon: 'settings',
+      badge: canAccessSettings() ? 'Admin' : 'Khóa',
+      badgeColor: canAccessSettings() ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500',
     },
   ];
 
@@ -133,7 +140,7 @@ export function AdminSidebar() {
             className="flex items-center gap-3 px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all text-xs"
           >
             <span className="material-symbols-outlined text-[18px] text-slate-400">verified_user</span>
-            <span>Cổng Tra cứu bảo hành</span>
+            <span>Cổng Kiểm tra bảo hành</span>
           </Link>
 
           <Link
@@ -153,7 +160,7 @@ export function AdminSidebar() {
             <span className="material-symbols-outlined text-blue-600 text-[20px]">support_agent</span>
             <div className="flex flex-col leading-none">
               <span className="text-[11px] font-semibold text-slate-900">Hotline Kỹ thuật</span>
-              <span className="text-[10px] text-slate-500 mt-0.5">0903.892.100</span>
+              <span className="text-[10px] text-slate-500 mt-0.5">{systemSettings.hotline}</span>
             </div>
           </div>
           <span className="text-[10px] font-mono text-blue-600 font-bold">24/7</span>
