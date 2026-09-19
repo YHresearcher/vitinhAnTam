@@ -5,6 +5,7 @@ import {
   ServiceTicket,
   OnsiteDispatch,
   ShiftLog,
+  UserAccount,
 } from './supabase';
 
 export const initialCustomers: Customer[] = [
@@ -423,5 +424,107 @@ export const initialShiftLogs: ShiftLog[] = [
     total_wage: 560000,
     notes: '2 ca cứu hộ Onsite Tân An & Thủ Thừa thành công đúng giờ',
     created_at: '2025-05-20T21:00:00Z',
+  },
+];
+
+
+// ==========================================
+// INITIAL USERS & RBAC STAFF LIST
+// ==========================================
+export const initialUsers: UserAccount[] = [
+  {
+    id: 'u-admin-1',
+    name: 'Nguyễn Văn An',
+    email: 'admin@vitinhantham.vn',
+    phone: '0903.892.100',
+    role: 'admin',
+    roleTitle: 'Quản trị viên trưởng',
+    password: '123456',
+    avatarBg: 'bg-blue-600',
+    status: 'active',
+    created_at: '2024-01-15T08:00:00Z',
+    last_login: '2025-02-24T08:15:00Z',
+    permissions: {
+      can_edit_stock: true,
+      can_update_repair_status: true,
+      can_access_payroll: true,
+      can_manage_users: true,
+    },
+  },
+  {
+    id: 'u-admin-2',
+    name: 'Trần Quốc Bảo',
+    email: 'bao.tran@vitinhantham.vn',
+    phone: '0918.234.891',
+    role: 'admin',
+    roleTitle: 'Phó Quản trị viên (Hệ thống)',
+    password: '123456',
+    avatarBg: 'bg-indigo-600',
+    status: 'active',
+    created_at: '2024-03-10T09:00:00Z',
+    last_login: '2025-02-23T14:30:00Z',
+    permissions: {
+      can_edit_stock: true,
+      can_update_repair_status: true,
+      can_access_payroll: true,
+      can_manage_users: true,
+    },
+  },
+  {
+    id: 'u-tech-1',
+    name: 'Trịnh Minh Tuấn',
+    email: 'ktv@vitinhantham.vn',
+    phone: '0977.123.456',
+    role: 'technician',
+    roleTitle: 'Kỹ thuật viên phần cứng & QC',
+    password: '123456',
+    avatarBg: 'bg-emerald-600',
+    status: 'active',
+    created_at: '2024-02-01T08:30:00Z',
+    last_login: '2025-02-24T07:45:00Z',
+    permissions: {
+      can_edit_stock: false,
+      can_update_repair_status: true,
+      can_access_payroll: false,
+      can_manage_users: false,
+    },
+  },
+  {
+    id: 'u-tech-2',
+    name: 'Lê Hoàng Long',
+    email: 'long.le@vitinhantham.vn',
+    phone: '0988.234.567',
+    role: 'technician',
+    roleTitle: 'Kỹ thuật viên cơ động Onsite',
+    password: '123456',
+    avatarBg: 'bg-teal-600',
+    status: 'active',
+    created_at: '2024-04-12T10:00:00Z',
+    last_login: '2025-02-23T18:20:00Z',
+    permissions: {
+      can_edit_stock: false,
+      can_update_repair_status: true,
+      can_access_payroll: false,
+      can_manage_users: false,
+    },
+  },
+  {
+    id: 'u-sales-1',
+    name: 'Lê Thu Hà',
+    email: 'sales@vitinhantham.vn',
+    phone: '0933.345.678',
+    role: 'sales',
+    roleTitle: 'Chuyên viên bán hàng & CSKH',
+    password: '123456',
+    avatarBg: 'bg-purple-600',
+    status: 'active',
+    created_at: '2024-05-20T08:00:00Z',
+    last_login: '2025-02-24T08:00:00Z',
+    permissions: {
+      can_edit_stock: false,
+      can_update_repair_status: false,
+      can_access_payroll: false,
+      can_manage_users: false,
+    },
   },
 ];

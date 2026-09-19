@@ -21,12 +21,31 @@ export const supabase = isSupabaseConfigured()
 // ==========================================
 export type UserRole = 'admin' | 'technician' | 'sales';
 
+export interface UserPermissions {
+  can_edit_stock: boolean;
+  can_update_repair_status: boolean;
+  can_access_payroll: boolean;
+  can_manage_users: boolean;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   role: UserRole;
   roleTitle: string;
   avatarBg: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface UserAccount extends UserProfile {
+  email: string;
+  phone: string;
+  password: string;
+  status: 'active' | 'suspended';
+  created_at: string;
+  last_login?: string;
+  permissions: UserPermissions;
 }
 
 export const MOCK_USERS: Record<UserRole, UserProfile> = {

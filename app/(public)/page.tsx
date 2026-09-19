@@ -151,7 +151,7 @@ export default function HomePage() {
     : PRODUCTS.filter((p) => p.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-600 selection:text-white pb-24">
+    <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-600 selection:text-white pb-10">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-20 right-4 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 text-xs font-semibold flex items-center gap-2.5 animate-bounce">
@@ -1122,44 +1122,65 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* MOBILE STICKY BAR */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-md py-3 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-          <div className="hidden lg:flex items-center gap-2.5 text-xs text-slate-600">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <span className="material-symbols-outlined text-lg">verified_user</span>
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 leading-tight">Hỗ trợ Kỹ thuật Tân An 24/7</p>
-              <p className="text-[11px] text-slate-500">Đổi mới linh kiện tận nơi trong 2 giờ • Hotline trực ca</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3 w-full md:w-auto">
-            <a
-              className="flex-1 sm:flex-none px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all"
-              href="https://zalo.me/0903892100"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span className="material-symbols-outlined text-base sm:text-lg">chat</span>
-              <span>Nhắn Zalo Kỹ thuật</span>
-            </a>
-            <a
-              className="flex-1 sm:flex-none px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all"
-              href="tel:0903892100"
-            >
-              <span className="material-symbols-outlined text-base sm:text-lg animate-pulse">phone_in_talk</span>
-              <span>Gọi: 0903.892.100</span>
-            </a>
-            <Link
-              className="flex-1 sm:flex-none px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs transition-all border-2 border-blue-600"
-              href="/tra-cuu-bao-hanh"
-            >
-              <span className="material-symbols-outlined text-base sm:text-lg text-blue-600">verified</span>
-              <span>Tra Cứu Tem</span>
-            </Link>
-          </div>
-        </div>
+      {/* FLOATING CIRCULAR ACTION BUTTONS (Góc phải màn hình) */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
+        {/* Tra cứu tem bảo hành */}
+        <Link
+          href="/tra-cuu-bao-hanh"
+          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-600 border-2 border-blue-600 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          title="Tra cứu bảo hành điện tử"
+        >
+          <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
+          {/* Tooltip */}
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
+            <span>Tra cứu tem bảo hành</span>
+          </span>
+        </Link>
+
+        {/* Gọi điện Hotline */}
+        <a
+          href="tel:0903892100"
+          className="pointer-events-auto w-13 h-13 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          title="Gọi Hotline kỹ thuật 24/7"
+        >
+          <span className="material-symbols-outlined text-2xl animate-pulse">phone_in_talk</span>
+          {/* Tooltip */}
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-15 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
+            <span className="text-emerald-400 font-bold">Hotline:</span>
+            <span>0903.892.100 (24/7)</span>
+          </span>
+        </a>
+
+        {/* Nhắn Zalo Kỹ Thuật */}
+        <a
+          href="https://zalo.me/0903892100"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pointer-events-auto w-14 h-14 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-2xl shadow-blue-500/40 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          title="Nhắn tin Zalo kỹ thuật"
+        >
+          <span className="material-symbols-outlined text-2xl">chat</span>
+          {/* Live Online Dot */}
+          <span className="absolute top-0 right-0 flex h-3.5 w-3.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+          </span>
+          {/* Tooltip */}
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-16 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
+            <span className="font-bold text-sky-300">Zalo:</span>
+            <span>Nhắn Kỹ thuật trực ca</span>
+          </span>
+        </a>
+
+        {/* Scroll to Top */}
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="pointer-events-auto w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group relative"
+          title="Lên đầu trang"
+        >
+          <span className="material-symbols-outlined text-lg">arrow_upward</span>
+        </button>
       </div>
     </div>
   );

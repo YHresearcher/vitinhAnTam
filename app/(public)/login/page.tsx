@@ -4,29 +4,24 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { UserRole, MOCK_USERS } from '@/lib/supabase';
+import { UserRole, UserAccount } from '@/lib/supabase';
 import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, currentUser } = useViTinhAnTamStore();
+  const { users, currentUser, loginWithCredentials, setCurrentUserById } = useViTinhAnTamStore();
 
-  const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
-  const [emailInput, setEmailInput] = useState('admin@vitinhantham.vn');
+  const [selectedUserId, setSelectedUserId] = useState<string>(users[0]?.id || 'u-admin-1');
+  const [emailInput, setEmailInput] = useState(users[0]?.email || 'admin@vitinhantham.vn');
   const [passwordInput, setPasswordInput] = useState('123456');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleRoleSelect = (role: UserRole) => {
-    setSelectedRole(role);
-    if (role === 'admin') {
-      setEmailInput('admin@vitinhantham.vn');
-    } else if (role === 'technician') {
-      setEmailInput('ktv@vitinhantham.vn');
-    } else {
-      setEmailInput('sales@vitinhantham.vn');
-    }
+  const handleSelectMember = (user: UserAccount) => {
+    setSelectedUserId(user.id);
+    setEmailInput(user.email);
+    setPasswordInput(user.password || '123456');
     setErrorMessage('');
   };
 
@@ -35,36 +30,74 @@ export default function LoginPage() {
     setErrorMessage('');
     setIsSubmitting(true);
 
-    const email = emailInput.trim().toLowerCase();
-    let detectedRole: UserRole = selectedRole;
-
-    if (email.includes('admin')) {
-      detectedRole = 'admin';
-    } else if (email.includes('ktv') || email.includes('tech') || email.includes('tuan')) {
-      detectedRole = 'technician';
-    } else if (email.includes('sales') || email.includes('ha') || email.includes('kd')) {
-      detectedRole = 'sales';
-    }
-
     setTimeout(() => {
-      login(detectedRole);
+      const res = loginWithCredentials(emailInput, passwordInput);
       setIsSubmitting(false);
-      const user = MOCK_USERS[detectedRole];
-      setSuccessMessage(`Đăng nhập thành công với vai trò ${user.roleTitle} (${user.name})!`);
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 600);
-    }, 350);
+      if (res.success && res.user) {
+        setSuccessMessage(res.message);
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 500);
+      } else {
+        setErrorMessage(res.message);
+      }
+    }, 300);
   };
 
-  const handleQuickLogin = (role: UserRole) => {
-    login(role);
-    const user = MOCK_USERS[role];
+  const handleQuickLoginUser = (user: UserAccount) => {
+    setCurrentUserById(user.id);
     setSuccessMessage(`Đăng nhập nhanh thành công: ${user.roleTitle} (${user.name})!`);
     setTimeout(() => {
       router.push('/dashboard');
-    }, 500);
+    }, 450);
   };
+
+  // Find sample representative for each role from dynamic users
+  const adminMember = users.find((u) => u.role === 'admin') || users[0];
+  const techMember = users.find((u) => u.role === 'technician') || users[1];
+  const salesMember = users.find((u) => u.role === 'sales') || users[2];
+
+  const quickRoles = [
+    {
+      role: 'admin' as UserRole,
+      user: adminMember,
+      label: 'Quản Trị Viên (Admin)',
+      badge: 'Toàn Quyền',
+      badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
+      activeClass: 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs',
+      hoverClass: 'hover:border-blue-300 hover:bg-blue-50/30',
+      btnBg: 'bg-blue-600 hover:bg-blue-700',
+      icon: 'admin_panel_settings',
+      iconBg: 'bg-blue-600',
+      desc: '✓ Toàn quyền xem & sửa kho, mật khẩu, xóa thành viên, tính lương tiền công.',
+    },
+    {
+      role: 'technician' as UserRole,
+      user: techMember,
+      label: 'Kỹ Thuật Viên (Technician)',
+      badge: 'Kỹ Thuật & QC',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
+      hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
+      btnBg: 'bg-emerald-600 hover:bg-emerald-700',
+      icon: 'build',
+      iconBg: 'bg-emerald-600',
+      desc: '✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn',
+    },
+    {
+      role: 'sales' as UserRole,
+      user: salesMember,
+      label: 'Nhân Viên Kinh Doanh (Sales)',
+      badge: 'Kinh Doanh & CSKH',
+      badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
+      activeClass: 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs',
+      hoverClass: 'hover:border-purple-300 hover:bg-purple-50/30',
+      btnBg: 'bg-purple-600 hover:bg-purple-700',
+      icon: 'point_of_sale',
+      iconBg: 'bg-purple-600',
+      desc: '✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa & tồn kho',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative overflow-hidden">
@@ -95,7 +128,7 @@ export default function LoginPage() {
         <div className="bg-white border border-slate-200 shadow-xl rounded-3xl p-6 sm:p-8 space-y-6">
           {/* Success message banner */}
           {successMessage && (
-            <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
               <span className="material-symbols-outlined text-blue-600 text-lg">check_circle</span>
               <span>{successMessage}</span>
             </div>
@@ -103,7 +136,7 @@ export default function LoginPage() {
 
           {/* Error message banner */}
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
               <span className="material-symbols-outlined text-rose-600 text-lg">error</span>
               <span>{errorMessage}</span>
             </div>
@@ -120,119 +153,49 @@ export default function LoginPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-2.5">
-              {/* Option 1: Admin */}
-              <div
-                onClick={() => handleRoleSelect('admin')}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                  selectedRole === 'admin'
-                    ? 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs'
-                    : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50/30'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
-                  <span className="material-symbols-outlined text-xl">admin_panel_settings</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">Quản Trị Viên (Admin)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold">
-                      Toàn Quyền
-                    </span>
+              {quickRoles.map((qr) => {
+                if (!qr.user) return null;
+                const isSelected = selectedUserId === qr.user.id;
+                return (
+                  <div
+                    key={qr.role}
+                    onClick={() => handleSelectMember(qr.user)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
+                      isSelected ? qr.activeClass : `bg-white border-slate-200 ${qr.hoverClass}`
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-xl ${qr.iconBg} flex items-center justify-center shrink-0 text-white font-bold shadow-xs`}
+                    >
+                      <span className="material-symbols-outlined text-xl">{qr.icon}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-slate-900">{qr.label}</h3>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${qr.badgeClass}`}
+                        >
+                          {qr.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600 font-medium mt-0.5">
+                        {qr.user.name} • <span className="font-mono text-slate-700">{qr.user.email}</span>
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-1 leading-snug">{qr.desc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleQuickLoginUser(qr.user);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg ${qr.btnBg} text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center`}
+                    >
+                      Đăng Nhập
+                    </button>
                   </div>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                    {MOCK_USERS.admin.name} • <span className="font-mono text-blue-600">admin@vitinhantham.vn</span>
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-                    ✓ Toàn quyền xem &amp; sửa kho, giá nhập, sửa số lượng tồn, duyệt tính lương tiền công.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickLogin('admin');
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
-                >
-                  Đăng Nhập
-                </button>
-              </div>
-
-              {/* Option 2: Technician */}
-              <div
-                onClick={() => handleRoleSelect('technician')}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                  selectedRole === 'technician'
-                    ? 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs'
-                    : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/30'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
-                  <span className="material-symbols-outlined text-xl">build</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">Kỹ Thuật Viên (Technician)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold">
-                      Kỹ Thuật &amp; QC
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                    {MOCK_USERS.technician.name} • <span className="font-mono text-emerald-700">ktv@vitinhantham.vn</span>
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-                    ✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn kho
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickLogin('technician');
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
-                >
-                  Đăng Nhập
-                </button>
-              </div>
-
-              {/* Option 3: Sales */}
-              <div
-                onClick={() => handleRoleSelect('sales')}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                  selectedRole === 'sales'
-                    ? 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs'
-                    : 'bg-white border-slate-200 hover:border-purple-300 hover:bg-purple-50/30'
-                }`}
-              >
-                <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0 text-white font-bold shadow-xs">
-                  <span className="material-symbols-outlined text-xl">point_of_sale</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">Nhân Viên Kinh Doanh (Sales)</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 font-bold">
-                      Kinh Doanh &amp; Lập Phiếu
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                    {MOCK_USERS.sales.name} • <span className="font-mono text-purple-700">sales@vitinhantham.vn</span>
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1 leading-snug">
-                    ✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa &amp; tồn kho
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleQuickLogin('sales');
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
-                >
-                  Đăng Nhập
-                </button>
-              </div>
+                );
+              })}
             </div>
           </div>
 
@@ -267,9 +230,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Mật Khẩu
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-slate-700">Mật Khẩu</label>
+                <span className="text-[11px] text-slate-400">Mặc định: 123456</span>
+              </div>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 text-lg">
                   lock

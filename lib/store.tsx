@@ -6,6 +6,7 @@ import {
   isSupabaseConfigured,
   UserRole,
   UserProfile,
+  UserAccount,
   MOCK_USERS,
   Customer,
   InventoryItem,
@@ -21,19 +22,30 @@ import {
   initialTickets,
   initialOnsiteDispatches,
   initialShiftLogs,
+  initialUsers,
 } from './mockData';
 
 interface StoreContextType {
-  // RBAC Profile & Auth
-  currentUser: UserProfile;
+  // RBAC Profile & Auth & Member Management
+  currentUser: UserAccount;
+  users: UserAccount[];
   isLoggedIn: boolean;
   setCurrentUserRole: (role: UserRole) => void;
+  setCurrentUserById: (id: string) => void;
   login: (role: UserRole) => void;
+  loginWithCredentials: (email: string, password: string) => { success: boolean; message: string; user?: UserAccount };
   logout: () => void;
   canEditStock: () => boolean;
   canUpdateRepairStatus: () => boolean;
   canAccessPayroll: () => boolean;
   canAccessSettings: () => boolean;
+  canManageUsers: () => boolean;
+
+  // Member management actions (Admin)
+  updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
+  changeUserPassword: (id: string, newPassword: string) => Promise<boolean>;
+  addUser: (user: Omit<UserAccount, 'id' | 'created_at'>) => Promise<UserAccount>;
+  deleteUser: (id: string) => Promise<boolean>;
 
   // Data Collections
   inventory: InventoryItem[];
@@ -82,6 +94,8 @@ const StoreContext = createContext<StoreContextType | null>(null);
 
 const STORAGE_KEYS = {
   role: 'vtat_user_role_v2',
+  userId: 'vtat_user_id_v2',
+  users: 'vtat_users_v2',
   isLoggedIn: 'vtat_is_logged_in_v2',
   inventory: 'vtat_inventory_v2',
   customers: 'vtat_customers_v2',
@@ -92,8 +106,9 @@ const STORAGE_KEYS = {
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  // RBAC State & Login status
-  const [currentUser, setCurrentUser] = useState<UserProfile>(MOCK_USERS.admin);
+  // Members & RBAC State & Login status
+  const [users, setUsers] = useState<UserAccount[]>(initialUsers);
+  const [currentUser, setCurrentUser] = useState<UserAccount>(initialUsers[0]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
 
   // Collections
@@ -111,34 +126,138 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const isUsingSupabase = isSupabaseConfigured();
 
   // Role permissions
-  const canEditStock = () => currentUser.role === 'admin';
-  const canUpdateRepairStatus = () => currentUser.role === 'admin' || currentUser.role === 'technician';
-  const canAccessPayroll = () => currentUser.role === 'admin';
-  const canAccessSettings = () => currentUser.role === 'admin';
+  const canEditStock = () => currentUser.role === 'admin' || currentUser.permissions?.can_edit_stock === true;
+  const canUpdateRepairStatus = () =>
+    currentUser.role === 'admin' ||
+    currentUser.role === 'technician' ||
+    currentUser.permissions?.can_update_repair_status === true;
+  const canAccessPayroll = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
+  const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
+  const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
 
   const setCurrentUserRole = (role: UserRole) => {
-    setCurrentUser(MOCK_USERS[role]);
+    const found = users.find((u) => u.role === role) || initialUsers.find((u) => u.role === role) || initialUsers[0];
+    setCurrentUser(found);
     setIsLoggedIn(true);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.role, role);
+      localStorage.setItem(STORAGE_KEYS.userId, found.id);
       localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
     }
   };
 
+  const setCurrentUserById = (id: string) => {
+    const found = users.find((u) => u.id === id);
+    if (found) {
+      setCurrentUser(found);
+      setIsLoggedIn(true);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.role, found.role);
+        localStorage.setItem(STORAGE_KEYS.userId, found.id);
+        localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
+      }
+    }
+  };
+
   const login = (role: UserRole) => {
-    setCurrentUser(MOCK_USERS[role]);
+    setCurrentUserRole(role);
+  };
+
+  const loginWithCredentials = (email: string, password: string): { success: boolean; message: string; user?: UserAccount } => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const found = users.find((u) => u.email.toLowerCase() === normalizedEmail);
+    if (!found) {
+      return { success: false, message: 'Email không tồn tại trên hệ thống.' };
+    }
+    if (found.password !== password.trim()) {
+      return { success: false, message: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!' };
+    }
+    if (found.status === 'suspended') {
+      return { success: false, message: 'Tài khoản này đang bị tạm khóa. Vui lòng liên hệ Admin!' };
+    }
+    setCurrentUser(found);
     setIsLoggedIn(true);
     if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.role, role);
+      localStorage.setItem(STORAGE_KEYS.role, found.role);
+      localStorage.setItem(STORAGE_KEYS.userId, found.id);
       localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
     }
+    return { success: true, message: `Đăng nhập thành công: ${found.roleTitle} (${found.name})!`, user: found };
   };
 
   const logout = () => {
     setIsLoggedIn(false);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEYS.isLoggedIn);
+      localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'false');
     }
+  };
+
+  // Member Management Actions
+  const updateUser = async (id: string, data: Partial<UserAccount>): Promise<boolean> => {
+    let updated = false;
+    setUsers((prev) => {
+      const next = prev.map((u) => {
+        if (u.id === id) {
+          updated = true;
+          const updatedUser: UserAccount = {
+            ...u,
+            ...data,
+            permissions: {
+              ...u.permissions,
+              ...(data.permissions || {}),
+            },
+          };
+          if (currentUser.id === id) {
+            setCurrentUser(updatedUser);
+          }
+          return updatedUser;
+        }
+        return u;
+      });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
+      }
+      return next;
+    });
+    return updated;
+  };
+
+  const changeUserPassword = async (id: string, newPassword: string): Promise<boolean> => {
+    return updateUser(id, { password: newPassword });
+  };
+
+  const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {
+    const newUser: UserAccount = {
+      ...userData,
+      id: `u-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      permissions: userData.permissions || {
+        can_edit_stock: userData.role === 'admin',
+        can_update_repair_status: userData.role === 'admin' || userData.role === 'technician',
+        can_access_payroll: userData.role === 'admin',
+        can_manage_users: userData.role === 'admin',
+      },
+    };
+    setUsers((prev) => {
+      const next = [newUser, ...prev];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
+      }
+      return next;
+    });
+    return newUser;
+  };
+
+  const deleteUser = async (id: string): Promise<boolean> => {
+    if (id === currentUser.id) return false;
+    setUsers((prev) => {
+      const next = prev.filter((u) => u.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
+      }
+      return next;
+    });
+    return true;
   };
 
   const saveToLocal = (key: string, data: unknown) => {
@@ -156,13 +275,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     async function loadData() {
       setIsLoading(true);
 
-      // Load saved role and login status if any
+      // Load saved users
+      let currentUsersList = initialUsers;
       if (typeof window !== 'undefined') {
+        const savedUsersJson = localStorage.getItem(STORAGE_KEYS.users);
+        if (savedUsersJson) {
+          try {
+            const parsed = JSON.parse(savedUsersJson);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              currentUsersList = parsed;
+              setUsers(parsed);
+            }
+          } catch (e) {
+            console.warn('Failed to parse saved users:', e);
+          }
+        }
+
+        // Load saved user id or role
+        const savedUserId = localStorage.getItem(STORAGE_KEYS.userId);
         const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
         const savedLoggedIn = localStorage.getItem(STORAGE_KEYS.isLoggedIn);
-        if (savedRole && MOCK_USERS[savedRole]) {
-          setCurrentUser(MOCK_USERS[savedRole]);
+
+        if (savedUserId) {
+          const matched = currentUsersList.find((u) => u.id === savedUserId);
+          if (matched) setCurrentUser(matched);
+        } else if (savedRole) {
+          const matched = currentUsersList.find((u) => u.role === savedRole);
+          if (matched) setCurrentUser(matched);
         }
+
         if (savedLoggedIn === 'false') {
           setIsLoggedIn(false);
         } else if (savedLoggedIn === 'true') {
@@ -228,243 +369,215 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     loadData();
   }, [isUsingSupabase]);
 
+  // Sync back to Supabase if configured
   const syncWithSupabase = async () => {
     if (!isUsingSupabase || !supabase) {
       setSyncStatus('local');
       return;
     }
+    setSyncStatus('syncing');
     try {
-      setSyncStatus('syncing');
-      await Promise.all([
-        supabase.from('inventory_items').upsert(inventory),
-        supabase.from('customers').upsert(customers),
-        supabase.from('service_tickets').upsert(tickets),
-        supabase.from('spare_parts').upsert(spareParts),
-        supabase.from('onsite_dispatches').upsert(onsiteDispatches),
-        supabase.from('shift_logs').upsert(shiftLogs),
-      ]);
-      setSyncStatus('synced');
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
+      setSyncStatus('synced');
     } catch (err) {
-      console.warn('Sync failed:', err);
+      console.error('Sync failed:', err);
       setSyncStatus('local');
     }
   };
 
-  // Tra cứu công khai theo SĐT hoặc Service Tag
+  // Public Warranty Finder Helper
   const findWarrantyByTagOrPhone = (query: string) => {
-    const q = query.trim().toLowerCase();
+    const q = query.trim().toUpperCase();
     if (!q) return null;
 
-    // Tìm trong inventory
-    const matchedItem = inventory.find(
-      (item) =>
-        item.service_tag.toLowerCase() === q ||
-        (item.customer_phone && item.customer_phone.replace(/\D/g, '').includes(q.replace(/\D/g, '')))
-    );
-
-    // Tìm trong tickets
-    const matchedTicket = tickets.find(
-      (t) =>
-        (t.device_service_tag && t.device_service_tag.toLowerCase() === q) ||
-        (t.service_tag && t.service_tag.toLowerCase() === q) ||
-        t.ticket_code.toLowerCase() === q ||
-        t.customer_phone.replace(/\D/g, '').includes(q.replace(/\D/g, ''))
-    );
-
-    // Tìm khách hàng
-    const matchedCustomer = customers.find((c) =>
-      c.phone.replace(/\D/g, '').includes(q.replace(/\D/g, ''))
-    );
-
-    if (matchedItem || matchedTicket || matchedCustomer) {
-      return {
-        item: matchedItem,
-        ticket: matchedTicket,
-        customer: matchedCustomer,
-      };
+    // Search by Service Tag
+    const matchedItem = inventory.find((item) => item.service_tag.toUpperCase() === q);
+    if (matchedItem) {
+      const matchedCustomer = customers.find(
+        (c) => c.phone === matchedItem.customer_phone || c.full_name === matchedItem.customer_name
+      );
+      const matchedTicket = tickets.find(
+        (t) =>
+          t.device_service_tag?.toUpperCase() === q ||
+          t.service_tag?.toUpperCase() === q ||
+          t.ticket_code.toUpperCase() === q
+      );
+      return { item: matchedItem, customer: matchedCustomer, ticket: matchedTicket };
     }
-    return null;
-  };
 
-  // Inventory Actions
-  const addInventoryItem = async (
-    itemData: Omit<InventoryItem, 'id' | 'created_at'>
-  ): Promise<InventoryItem> => {
-    const newItem: InventoryItem = {
-      ...itemData,
-      id: 'inv_' + Date.now(),
-      created_at: new Date().toISOString(),
-    };
+    // Search by Phone Number
+    const rawDigits = query.replace(/\D/g, '');
+    if (rawDigits.length >= 7) {
+      const matchedCust = customers.find((c) => c.phone.replace(/\D/g, '').includes(rawDigits));
+      const matchedTicket = tickets.find((t) => t.customer_phone.replace(/\D/g, '').includes(rawDigits));
+      const matchedItemByPhone = inventory.find((i) =>
+        i.customer_phone ? i.customer_phone.replace(/\D/g, '').includes(rawDigits) : false
+      );
 
-    if (isUsingSupabase && supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('inventory_items')
-          .insert(newItem)
-          .select()
-          .single();
-        if (!error && data) {
-          const finalItem = data as InventoryItem;
-          const updated = [finalItem, ...inventory];
-          setInventory(updated);
-          saveToLocal(STORAGE_KEYS.inventory, updated);
-          return finalItem;
-        }
-      } catch (e) {
-        console.warn('Supabase insert error, fallback local:', e);
+      if (matchedCust || matchedTicket || matchedItemByPhone) {
+        return { customer: matchedCust, ticket: matchedTicket, item: matchedItemByPhone };
       }
     }
 
-    const updated = [newItem, ...inventory];
-    setInventory(updated);
-    saveToLocal(STORAGE_KEYS.inventory, updated);
+    // Search by Ticket Code
+    const matchedTicket = tickets.find((t) => t.ticket_code.toUpperCase().includes(q));
+    if (matchedTicket) {
+      const matchedCust = customers.find((c) => c.phone === matchedTicket.customer_phone);
+      const matchedItem = inventory.find(
+        (i) => i.service_tag === matchedTicket.device_service_tag || i.service_tag === matchedTicket.service_tag
+      );
+      return { ticket: matchedTicket, customer: matchedCust, item: matchedItem };
+    }
+
+    return null;
+  };
+
+  // Inventory actions
+  const addInventoryItem = async (itemData: Omit<InventoryItem, 'id' | 'created_at'>): Promise<InventoryItem> => {
+    const newItem: InventoryItem = {
+      ...itemData,
+      id: `inv-${Date.now()}`,
+      created_at: new Date().toISOString(),
+    };
+
+    setInventory((prev) => {
+      const next = [newItem, ...prev];
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('inventory_items').insert([newItem]);
+      } catch (e) {
+        console.warn('Supabase insert failed, local updated:', e);
+      }
+    }
     return newItem;
   };
 
-  const updateInventoryItem = async (id: string, data: Partial<InventoryItem>): Promise<void> => {
-    const updated = inventory.map((item) => (item.id === id ? { ...item, ...data } : item));
-    setInventory(updated);
-    saveToLocal(STORAGE_KEYS.inventory, updated);
+  const updateInventoryItem = async (id: string, data: Partial<InventoryItem>) => {
+    setInventory((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
 
     if (isUsingSupabase && supabase) {
       try {
         await supabase.from('inventory_items').update(data).eq('id', id);
       } catch (e) {
-        console.warn('Supabase update error:', e);
+        console.warn('Supabase update failed:', e);
       }
     }
   };
 
-  // Restricted to Admin
   const updateInventoryStock = async (id: string, newQuantity: number): Promise<boolean> => {
     if (!canEditStock()) {
-      alert('Chỉ Quản trị viên (Admin) mới có quyền điều chỉnh số lượng tồn kho!');
       return false;
     }
-    await updateInventoryItem(id, { quantity: newQuantity });
+    await updateInventoryItem(id, { stock_quantity: newQuantity, quantity: newQuantity });
     return true;
   };
 
-  // Tech & Admin can update testing/ready_to_sell status
-  const updateQcStatus = async (id: string, qc_status: InventoryItem['qc_status']): Promise<void> => {
-    await updateInventoryItem(id, { qc_status });
+  const updateQcStatus = async (id: string, status: InventoryItem['qc_status']) => {
+    if (!canUpdateRepairStatus()) {
+      return;
+    }
+    await updateInventoryItem(id, { qc_status: status });
   };
 
-  // Restricted to Admin
   const deleteInventoryItem = async (id: string): Promise<boolean> => {
     if (!canEditStock()) {
-      alert('Chỉ Quản trị viên (Admin) mới có quyền xóa thiết bị trong kho!');
       return false;
     }
-    const updated = inventory.filter((item) => item.id !== id);
-    setInventory(updated);
-    saveToLocal(STORAGE_KEYS.inventory, updated);
-
+    setInventory((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
     if (isUsingSupabase && supabase) {
       try {
         await supabase.from('inventory_items').delete().eq('id', id);
       } catch (e) {
-        console.warn('Supabase delete error:', e);
+        console.warn('Supabase delete failed:', e);
       }
     }
     return true;
   };
 
-  // Ticket Actions
-  const addServiceTicket = async (
-    ticketData: Omit<ServiceTicket, 'id' | 'created_at'>
-  ): Promise<ServiceTicket> => {
+  // Ticket actions
+  const addServiceTicket = async (ticketData: Omit<ServiceTicket, 'id' | 'created_at'>): Promise<ServiceTicket> => {
     const newTicket: ServiceTicket = {
       ...ticketData,
-      id: 'tk_' + Date.now(),
+      id: `ticket-${Date.now()}`,
       created_at: new Date().toISOString(),
     };
 
+    setTickets((prev) => {
+      const next = [newTicket, ...prev];
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+
     if (isUsingSupabase && supabase) {
       try {
-        const { data, error } = await supabase
-          .from('service_tickets')
-          .insert(newTicket)
-          .select()
-          .single();
-        if (!error && data) {
-          const finalTicket = data as ServiceTicket;
-          const updated = [finalTicket, ...tickets];
-          setTickets(updated);
-          saveToLocal(STORAGE_KEYS.tickets, updated);
-          return finalTicket;
-        }
+        await supabase.from('service_tickets').insert([newTicket]);
       } catch (e) {
-        console.warn('Supabase ticket insert error, fallback local:', e);
+        console.warn('Supabase insert failed:', e);
       }
     }
-
-    const updated = [newTicket, ...tickets];
-    setTickets(updated);
-    saveToLocal(STORAGE_KEYS.tickets, updated);
     return newTicket;
   };
 
-  // Tech & Admin only
   const updateTicketStatus = async (id: string, status: ServiceTicket['status']): Promise<boolean> => {
     if (!canUpdateRepairStatus()) {
-      alert('Tài khoản Kinh doanh (Sales) không có quyền can thiệp thay đổi trạng thái kỹ thuật!');
       return false;
     }
-
-    const updated = tickets.map((t) => (t.id === id ? { ...t, status } : t));
-    setTickets(updated);
-    saveToLocal(STORAGE_KEYS.tickets, updated);
+    setTickets((prev) => {
+      const next = prev.map((t) => (t.id === id ? { ...t, status } : t));
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
 
     if (isUsingSupabase && supabase) {
       try {
         await supabase.from('service_tickets').update({ status }).eq('id', id);
       } catch (e) {
-        console.warn('Supabase ticket status error:', e);
+        console.warn('Supabase ticket status update failed:', e);
       }
     }
     return true;
   };
 
-  // Onsite dispatch update
-  const updateDispatchStatus = async (id: string, status: OnsiteDispatch['status']): Promise<void> => {
-    const updated = onsiteDispatches.map((d) => (d.id === id ? { ...d, status } : d));
-    setOnsiteDispatches(updated);
-    saveToLocal(STORAGE_KEYS.onsiteDispatches, updated);
-
-    if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('onsite_dispatches').update({ status }).eq('id', id);
-      } catch (e) {
-        console.warn('Supabase dispatch update error:', e);
-      }
-    }
+  // Onsite dispatch actions
+  const updateDispatchStatus = async (id: string, status: OnsiteDispatch['status']) => {
+    setOnsiteDispatches((prev) => {
+      const next = prev.map((d) => (d.id === id ? { ...d, status } : d));
+      saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
+      return next;
+    });
   };
 
   // Shift logs (Admin only)
   const addShiftLog = async (shiftData: Omit<ShiftLog, 'id' | 'created_at'>): Promise<ShiftLog> => {
     const newShift: ShiftLog = {
       ...shiftData,
-      id: 's_' + Date.now(),
+      id: `shift-${Date.now()}`,
       created_at: new Date().toISOString(),
     };
 
-    const updated = [newShift, ...shiftLogs];
-    setShiftLogs(updated);
-    saveToLocal(STORAGE_KEYS.shiftLogs, updated);
-
-    if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('shift_logs').insert(newShift);
-      } catch (e) {
-        console.warn('Supabase shift_logs insert error:', e);
-      }
-    }
+    setShiftLogs((prev) => {
+      const next = [newShift, ...prev];
+      saveToLocal(STORAGE_KEYS.shiftLogs, next);
+      return next;
+    });
     return newShift;
   };
 
   const resetToDefault = () => {
+    setUsers(initialUsers);
+    setCurrentUser(initialUsers[0]);
     setInventory(initialInventory);
     setCustomers(initialCustomers);
     setTickets(initialTickets);
@@ -472,6 +585,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setOnsiteDispatches(initialOnsiteDispatches);
     setShiftLogs(initialShiftLogs);
     if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.users);
+      localStorage.removeItem(STORAGE_KEYS.userId);
       localStorage.removeItem(STORAGE_KEYS.inventory);
       localStorage.removeItem(STORAGE_KEYS.customers);
       localStorage.removeItem(STORAGE_KEYS.tickets);
@@ -485,14 +600,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     <StoreContext.Provider
       value={{
         currentUser,
+        users,
         isLoggedIn,
         setCurrentUserRole,
+        setCurrentUserById,
         login,
+        loginWithCredentials,
         logout,
         canEditStock,
         canUpdateRepairStatus,
         canAccessPayroll,
         canAccessSettings,
+        canManageUsers,
+        updateUser,
+        changeUserPassword,
+        addUser,
+        deleteUser,
         inventory,
         customers,
         tickets,

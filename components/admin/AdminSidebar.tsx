@@ -46,6 +46,13 @@ export function AdminSidebar() {
       badge: canAccessPayroll() ? 'Admin' : 'Khóa',
       badgeColor: canAccessPayroll() ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
     },
+    {
+      label: 'Thành viên & Phân quyền',
+      href: '/thanh-vien',
+      icon: 'manage_accounts',
+      badge: canAccessPayroll() ? 'Admin' : 'Khóa',
+      badgeColor: canAccessPayroll() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+    },
   ];
 
   return (
