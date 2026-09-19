@@ -228,11 +228,11 @@ export default function HomePage() {
     : PRODUCTS.filter((p) => p.category === activeCategory);
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-600 selection:text-white pb-10">
+    <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-700 selection:text-white pb-10">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-20 right-4 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 text-xs font-semibold flex items-center gap-2.5 animate-bounce">
-          <span className="material-symbols-outlined text-blue-600 text-lg">check_circle</span>
+        <div className="fixed bottom-20 right-4 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-700 text-blue-700 text-xs font-semibold flex items-center gap-2.5 animate-bounce">
+          <span className="material-symbols-outlined text-blue-700 text-lg">check_circle</span>
           <span>{toastMessage}</span>
         </div>
       )}
@@ -249,8 +249,8 @@ export default function HomePage() {
               {/* Left Column */}
               <div className="lg:col-span-8 space-y-6">
                 <div className="space-y-4">
-                  <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-600 flex items-center gap-2">
-                    <span className="w-6 h-0.5 bg-blue-600" />
+                  <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-700 flex items-center gap-2">
+                    <span className="w-6 h-0.5 bg-blue-700" />
                     VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM
                   </span>
                   <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
@@ -261,8 +261,8 @@ export default function HomePage() {
                       <span className="material-symbols-outlined text-base">verified_user</span>
                       <span>WINDOWS BẢN QUYỀN</span>
                     </span>
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-bold shadow-xs">
-                      <span className="material-symbols-outlined text-base">schedule</span>
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold shadow-xs">
+                      <span className="material-symbols-outlined text-base text-orange-600">bolt</span>
                       <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
                     </span>
                   </div>
@@ -275,7 +275,7 @@ export default function HomePage() {
                 {/* 3 Trụ Cột Cam Kết */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
                   <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-xl">computer</span>
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 uppercase">MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1</h3>
@@ -295,7 +295,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
-                    <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                       <span className="material-symbols-outlined text-xl">schedule</span>
                     </div>
                     <h3 className="text-sm font-bold text-slate-900 uppercase">DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
@@ -309,14 +309,14 @@ export default function HomePage() {
                 <div className="flex flex-wrap items-center gap-3.5 pt-3">
                   <a
                     href="#danh-muc-san-pham"
-                    className="px-6 py-3.5 rounded-lg bg-blue-600 text-white font-semibold text-sm tracking-wide shadow-xs hover:bg-blue-700 transition-all flex items-center gap-2"
+                    className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
                   >
                     <span className="material-symbols-outlined text-lg">computer</span>
                     <span>Xem Danh Mục Máy Sẵn Có</span>
                   </a>
                   <Link
                     href="/dat-lich"
-                    className="px-6 py-3.5 rounded-lg bg-white border border-slate-300 hover:border-blue-400 text-slate-700 hover:text-blue-600 font-semibold text-sm shadow-xs transition-all flex items-center gap-2"
+                    className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">home_repair_service</span>
                     <span>Đặt Lịch Nâng Cấp / Spa Tại Nhà</span>
@@ -343,7 +343,7 @@ export default function HomePage() {
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-slate-600 font-medium">Tiêu chuẩn tuyển chọn máy:</span>
-                      <span className="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      <span className="text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                         Loại A (&gt;95%)
                       </span>
                     </div>
@@ -368,7 +368,7 @@ export default function HomePage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="danh-muc-san-pham">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
               <div>
-                <div className="text-xs uppercase tracking-widest text-blue-600 font-bold mb-1">
+                <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
                   Thiết Bị Sẵn Hàng - Giao Trong 60 Phút
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
@@ -386,8 +386,8 @@ export default function HomePage() {
                 onClick={() => setActiveCategory('all')}
                 className={`px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all shadow-xs ${
                   activeCategory === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
                 Tất cả (28 máy sẵn)
@@ -396,8 +396,8 @@ export default function HomePage() {
                 onClick={() => setActiveCategory('office')}
                 className={`px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all shadow-xs ${
                   activeCategory === 'office'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
                 PC Văn Phòng - Kế Toán (3 - 6tr)
@@ -406,8 +406,8 @@ export default function HomePage() {
                 onClick={() => setActiveCategory('laptop')}
                 className={`px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all shadow-xs ${
                   activeCategory === 'laptop'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
                 Laptop Doanh Nhân (Bền Bỉ)
@@ -416,8 +416,8 @@ export default function HomePage() {
                 onClick={() => setActiveCategory('workstation')}
                 className={`px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm transition-all shadow-xs ${
                   activeCategory === 'workstation'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-600'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
                 PC Đồ Họa &amp; Kỹ Thuật
@@ -438,7 +438,7 @@ export default function HomePage() {
                         alt={prod.name}
                         src={prod.img}
                       />
-                      <span className="absolute top-2 left-2 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs">
+                      <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md shadow-xs">
                         {prod.badge}
                       </span>
                       <span className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-xs text-blue-700 border border-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded">
@@ -449,15 +449,15 @@ export default function HomePage() {
                     <p className="text-xs text-slate-500 mt-1">{prod.desc}</p>
                     <ul className="my-3 space-y-1.5 text-xs text-slate-700">
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-600">memory</span>
+                        <span className="material-symbols-outlined text-sm text-blue-700">memory</span>
                         <span>{prod.specs.cpu}</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-600">developer_board</span>
+                        <span className="material-symbols-outlined text-sm text-blue-700">developer_board</span>
                         <span>{prod.specs.ram}</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-600">storage</span>
+                        <span className="material-symbols-outlined text-sm text-blue-700">storage</span>
                         <span>{prod.specs.storage}</span>
                       </li>
                       <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
@@ -474,13 +474,13 @@ export default function HomePage() {
                   <div className="pt-3 border-t border-slate-100 mt-2">
                     <div className="flex items-baseline justify-between mb-3">
                       <span className="text-xs text-slate-500">Giá trọn bộ niêm yết:</span>
-                      <span className="text-lg font-bold text-blue-600 font-mono">
+                      <span className="text-lg font-black text-orange-600 font-mono">
                         {formatVND(prod.price)}
                       </span>
                     </div>
                     <a
                       href="tel:0909053058"
-                      className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs tracking-wide transition-all text-center block shadow-xs"
+                      className="w-full py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
                       Đặt Lịch Test Máy Tận Nơi
                     </a>
@@ -495,7 +495,7 @@ export default function HomePage() {
             <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase">
-                  <span className="material-symbols-outlined text-sm text-blue-600">bolt</span> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
+                  <span className="material-symbols-outlined text-sm text-blue-700">bolt</span> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                   DỊCH VỤ TẬN NƠI &amp; &quot;SPA HỒI SINH MÁY CŨ&quot; TRONG 2 GIỜ
@@ -533,14 +533,14 @@ export default function HomePage() {
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
                     <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá minh bạch sau kiểm tra</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá minh bạch sau kiểm tra</div>
                     <div className="text-[11px] text-slate-500 mt-0.5">Tư vấn nâng cấp đúng nhu cầu, không vẽ bệnh</div>
                   </div>
                 </div>
 
                 {/* Gói 2 */}
                 <div className="p-6 rounded-2xl bg-blue-50/50 border-2 border-blue-500 shadow-sm flex flex-col justify-between hover:bg-white transition-all group relative">
-                  <div className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-blue-600 text-white font-bold text-[10px] tracking-wide shadow-xs">
+                  <div className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-blue-700 text-white font-bold text-[10px] tracking-wide shadow-xs">
                     ĐƯỢC ĐẶT NHIỀU NHẤT
                   </div>
                   <div className="space-y-3">
@@ -568,7 +568,7 @@ export default function HomePage() {
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
                     <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá tận nơi theo dòng máy</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá tận nơi theo dòng máy</div>
                     <div className="text-[11px] text-slate-500 mt-0.5">Kiểm tra nhiệt độ CPU &amp; cánh quạt miễn phí</div>
                   </div>
                 </div>
@@ -600,7 +600,7 @@ export default function HomePage() {
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6">
                     <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-600">Báo giá theo nhu cầu cài đặt</div>
+                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá theo nhu cầu cài đặt</div>
                     <div className="text-[11px] text-slate-500 mt-0.5">Hỗ trợ phần mềm văn phòng &amp; kết nối máy in</div>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ export default function HomePage() {
               <div className="text-center">
                 <Link
                   href="/dat-lich"
-                  className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-blue-600 text-white font-bold text-sm sm:text-base tracking-wide shadow-sm hover:bg-blue-700 transition-all hover:scale-[1.01]"
+                  className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm sm:text-base tracking-wide shadow-lg shadow-orange-500/30 transition-all hover:scale-[1.02]"
                 >
                   <span className="material-symbols-outlined text-xl">electric_moped</span>
                   <span>Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0909.053.058)</span>
@@ -622,7 +622,7 @@ export default function HomePage() {
           {/* 4. KHỐI 3: TRA CỨU BẢO HÀNH (SĐT HOẶC SERVICE TAG) */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="tra-cuu-bao-hanh">
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-              <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">Minh Bạch Tuyệt Đối 24/7</div>
+              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Minh Bạch Tuyệt Đối 24/7</div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
               </h2>
@@ -649,7 +649,7 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={isSearching}
-                  className="px-7 py-3.5 rounded-lg bg-blue-600 text-white font-semibold text-sm shadow-xs hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                  className="px-7 py-3.5 rounded-lg bg-blue-700 text-white font-semibold text-sm shadow-xs hover:bg-blue-800 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-lg">verified</span>
                   <span>{isSearching ? 'Đang tìm...' : 'Kiểm Tra Ngay'}</span>
@@ -714,14 +714,14 @@ export default function HomePage() {
 
                 {/* Multi-tier Warranty breakdown */}
                 <div className="space-y-3">
-                  <div className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                  <div className="text-xs font-bold uppercase tracking-wider text-blue-700">
                     Phân Rã Thời Hạn Bảo Hành Đa Tầng (Multi-tier Warranty)
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
                       <div className="text-xs text-slate-500">Tầng 1: Thân máy &amp; Bo mạch</div>
                       <div className="text-sm font-bold text-slate-900 mt-1">BH 12 Tháng</div>
-                      <div className="text-[11px] text-blue-600 font-semibold mt-0.5">
+                      <div className="text-[11px] text-blue-700 font-semibold mt-0.5">
                         Còn hiệu lực đến 15/05/2026
                       </div>
                     </div>
@@ -747,7 +747,7 @@ export default function HomePage() {
                 {/* Support CTAs */}
                 <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="text-xs text-slate-600 flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-blue-600 text-base">support_agent</span>
+                    <span className="material-symbols-outlined text-blue-700 text-base">support_agent</span>
                     <span>KTV phụ trách: <strong className="text-slate-900">Trịnh Minh Tuấn (KTV Tân An)</strong></span>
                   </div>
                   <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -761,7 +761,7 @@ export default function HomePage() {
                     </a>
                     <Link
                       href="/dat-lich"
-                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all text-center shadow-xs"
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-700 text-white text-xs font-semibold hover:bg-blue-800 transition-all text-center shadow-xs"
                     >
                       Báo Sự Cố Tận Nơi (2 Giờ)
                     </Link>
@@ -774,7 +774,7 @@ export default function HomePage() {
           {/* 5. KHỐI 4: QUY TRÌNH KIỂM ĐỊNH & BẰNG CHỨNG */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-              <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">Quy Chuẩn Kỹ Thuật Độc Quyền</div>
+              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Quy Chuẩn Kỹ Thuật Độc Quyền</div>
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 QUY TRÌNH KIỂM ĐỊNH 4 LỚP TRƯỚC KHI GIAO
               </h2>
@@ -786,7 +786,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">01</div>
-                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
                   <span className="material-symbols-outlined">electric_meter</span>
                 </div>
                 <h3 className="text-sm font-bold text-slate-900">KIỂM TRA TỤ &amp; NGUỒN CST</h3>
@@ -819,8 +819,8 @@ export default function HomePage() {
 
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:shadow-sm hover:border-blue-300 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">04</div>
-                <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">qr_code_2</span>
+                <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
+                  <span className="material-symbols-outlined">verified</span>
                 </div>
                 <h3 className="text-sm font-bold text-slate-900">DÁN TEM BẢO HÀNH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
@@ -833,7 +833,7 @@ export default function HomePage() {
             <div className="space-y-6 pt-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                  <div className="text-xs uppercase tracking-widest text-blue-600 font-bold mb-1">
+                  <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
                     TRẢI NGHIỆM THỰC TẾ
                   </div>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -879,7 +879,7 @@ export default function HomePage() {
                         </p>
                       </div>
                       <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                        <span className="text-blue-600 font-semibold">{rev.service}</span>
+                        <span className="text-blue-700 font-semibold">{rev.service}</span>
                         <span>{rev.location}</span>
                       </div>
                     </div>
@@ -892,7 +892,7 @@ export default function HomePage() {
           {/* 6. KHỐI 5: FAQ DẠNG COLLAPSED TAB (CHỈ SHOW CÂU HỎI, CLICK BUNG CÂU TRẢ LỜI) */}
           <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
             <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
-              <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">
+              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">
                 Hỏi đáp &amp; Quyền lợi khách hàng
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -918,7 +918,7 @@ export default function HomePage() {
                       className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center gap-3.5">
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
                           <span className="material-symbols-outlined text-lg">{item.icon}</span>
                         </div>
                         <span className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
@@ -927,7 +927,7 @@ export default function HomePage() {
                       </div>
                       <span
                         className={`material-symbols-outlined text-slate-400 transition-transform duration-200 shrink-0 ${
-                          isOpen ? 'rotate-180 text-blue-600 font-bold' : ''
+                          isOpen ? 'rotate-180 text-blue-700 font-bold' : ''
                         }`}
                       >
                         keyboard_arrow_down
@@ -952,7 +952,7 @@ export default function HomePage() {
               <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div className="space-y-6">
                   <div className="space-y-1">
-                    <div className="text-xs uppercase tracking-widest text-blue-600 font-bold">Phủ Sóng Toàn Diện 10KM</div>
+                    <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">Phủ Sóng Toàn Diện 10KM</div>
                     <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                       Mạng Lưới Kỹ Thuật Lưu Động Long An
                     </h2>
@@ -963,22 +963,22 @@ export default function HomePage() {
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-medium">
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">location_on</span> TP. Tân An (P1 - P7)
+                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> TP. Tân An (P1 - P7)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">location_on</span> Khánh Hậu &amp; Tân Khánh
+                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Khánh Hậu &amp; Tân Khánh
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">location_on</span> TT. Thủ Thừa &amp; Xã liền kề
+                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> TT. Thủ Thừa &amp; Xã liền kề
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">location_on</span> Châu Thành (Long An)
+                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Châu Thành (Long An)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">location_on</span> Huyện Tân Trụ (Lân cận)
+                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Huyện Tân Trụ (Lân cận)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-600 text-sm">near_me</span> KCN Tân Hương &amp; Lợi Bình Nhơn
+                        <span className="material-symbols-outlined text-blue-700 text-sm">near_me</span> KCN Tân Hương &amp; Lợi Bình Nhơn
                       </div>
                     </div>
                   </div>
@@ -998,13 +998,13 @@ export default function HomePage() {
                 <div className="pt-6 mt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <div className="text-xs text-slate-500">Hotline Khẩn Cấp &amp; Zalo Kỹ Thuật:</div>
-                    <div className="text-xl sm:text-2xl font-black text-blue-600 tracking-tight font-mono">
+                    <div className="text-xl sm:text-2xl font-black text-blue-700 tracking-tight font-mono">
                       0909.053.058
                     </div>
                   </div>
                   <a
                     href="tel:0909053058"
-                    className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-600 text-white font-bold text-xs tracking-wide shadow-xs hover:bg-blue-700 transition-all text-center"
+                    className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-700 text-white font-bold text-xs tracking-wide shadow-xs hover:bg-blue-800 transition-all text-center"
                   >
                     Gọi Trực Tiếp KTV Ca Trực
                   </a>
@@ -1021,7 +1021,7 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 <div className="relative p-6 space-y-2">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-600 text-white text-[10px] font-bold shadow-xs">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-700 text-white text-[10px] font-bold shadow-xs">
                     TRỤ SỞ CHÍNH
                   </span>
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">
@@ -1032,7 +1032,7 @@ export default function HomePage() {
                   </p>
                   <div className="pt-2">
                     <a
-                      className="inline-flex items-center gap-1.5 text-xs text-blue-600 font-bold hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs text-blue-700 font-bold hover:underline"
                       href="https://maps.google.com"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1053,7 +1053,7 @@ export default function HomePage() {
           <div className="pb-10 border-b border-slate-200">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20">
+                <div className="w-11 h-11 rounded-2xl bg-blue-700 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20">
                   <span className="material-symbols-outlined text-2xl">verified_user</span>
                 </div>
                 <div>
@@ -1063,15 +1063,15 @@ export default function HomePage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="px-4 py-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-xs flex items-center gap-2.5 text-slate-700 font-medium">
-                  <span className="material-symbols-outlined text-blue-600 text-base">verified_user</span>
+                  <span className="material-symbols-outlined text-blue-700 text-base">verified_user</span>
                   <span>100% Win bản quyền sạch</span>
                 </div>
                 <div className="px-4 py-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-xs flex items-center gap-2.5 text-slate-700 font-medium">
-                  <span className="material-symbols-outlined text-blue-600 text-base">sync</span>
+                  <span className="material-symbols-outlined text-blue-700 text-base">sync</span>
                   <span>Bảo hành 1 đổi 1 trong 15 phút</span>
                 </div>
                 <div className="px-4 py-2.5 rounded-xl bg-blue-50/70 border border-blue-200 text-xs flex items-center gap-2.5 text-slate-700 font-medium">
-                  <span className="material-symbols-outlined text-blue-600 text-base">memory</span>
+                  <span className="material-symbols-outlined text-blue-700 text-base">memory</span>
                   <span>SSD/RAM mới bảo hành 36T</span>
                 </div>
               </div>
@@ -1080,20 +1080,20 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 py-10 text-sm">
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-base">home_pin</span>
                 <span>Hub Kỹ Thuật TP. Tân An</span>
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed">45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An</p>
               <div className="pt-1 space-y-1.5 text-xs text-slate-600">
-                <p><strong className="text-slate-900 font-bold">Hotline / Zalo:</strong> <span className="text-blue-600 font-bold">0909.053.058</span></p>
+                <p><strong className="text-slate-900 font-bold">Hotline / Zalo:</strong> <span className="text-blue-700 font-bold">0909.053.058</span></p>
                 <p><strong className="text-slate-900 font-bold">Hỗ trợ kỹ thuật:</strong> 24/7 trực ca tiếp nhận</p>
                 <p><strong className="text-slate-900 font-bold">Email:</strong> lienhe@vitinhantham.vn</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-base">near_me</span>
                 <span>Ranh Giới Dịch Vụ (10km)</span>
               </h3>
@@ -1102,26 +1102,26 @@ export default function HomePage() {
               </p>
               <ul className="text-xs space-y-1.5 text-slate-600">
                 <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                   <span>Thành phố Tân An (nội thành &amp; ngoại thành)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                   <span>Huyện Thủ Thừa (thị trấn &amp; xã liền kề)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                   <span>Huyện Châu Thành (bán kính kết nối)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
                   <span>Huyện Tân Trụ (khu vực lân cận)</span>
                 </li>
               </ul>
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-base">schedule</span>
                 <span>Giờ Phục Vụ Linh Hoạt</span>
               </h3>
@@ -1139,7 +1139,7 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-base">policy</span>
                 <span>Chính Sách &amp; Điều Lệ</span>
               </h3>
@@ -1167,11 +1167,11 @@ export default function HomePage() {
           <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
             <p>© 2025 Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.</p>
             <div className="flex items-center gap-6">
-              <a className="hover:text-blue-600 transition-colors font-medium" href="#chinh-sach">
+              <a className="hover:text-blue-700 transition-colors font-medium" href="#chinh-sach">
                 Quy định bảo hành
               </a>
-              <Link className="hover:text-blue-600 transition-colors flex items-center gap-1 font-medium" href="/login">
-                <span className="material-symbols-outlined text-sm text-blue-600">lock</span>
+              <Link className="hover:text-blue-700 transition-colors flex items-center gap-1 font-medium" href="/login">
+                <span className="material-symbols-outlined text-sm text-blue-700">lock</span>
                 <span>Đăng nhập nội bộ</span>
               </Link>
             </div>
@@ -1184,7 +1184,7 @@ export default function HomePage() {
         {/* Kiểm tra bảo hành */}
         <Link
           href="/tra-cuu-bao-hanh"
-          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-600 border-2 border-blue-600 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-700 border-2 border-blue-700 text-blue-700 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
           title="Kiểm tra bảo hành điện tử"
         >
           <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
@@ -1197,13 +1197,13 @@ export default function HomePage() {
         {/* Gọi điện Hotline */}
         <a
           href="tel:0909053058"
-          className="pointer-events-auto w-13 h-13 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-xl shadow-emerald-600/30 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          className="pointer-events-auto w-13 h-13 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/35 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
           title="Gọi Hotline kỹ thuật 24/7"
         >
           <span className="material-symbols-outlined text-2xl animate-pulse">phone_in_talk</span>
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-15 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span className="text-emerald-400 font-bold">Hotline:</span>
+            <span className="text-orange-400 font-bold">Hotline:</span>
             <span>0909.053.058 (24/7)</span>
           </span>
         </a>

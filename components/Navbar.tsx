@@ -19,10 +19,10 @@ export function Navbar() {
       <div className="w-full bg-blue-50/90 border-b border-blue-100 text-xs py-1.5 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-slate-700 text-xs">
-            <span className="inline-block w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="inline-block w-2 h-2 rounded-full bg-blue-700 animate-pulse" />
             <span>
               {isEn ? 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: ' : 'Phục vụ tận nơi Long An - Tây Ninh • Hotline: '}
-              <a href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`} className="text-blue-600 font-bold hover:underline">
+              <a href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`} className="text-orange-600 font-bold hover:underline">
                 {systemSettings.hotline}
               </a>
             </span>
@@ -39,8 +39,8 @@ export function Navbar() {
                 onClick={() => setLang('vi')}
                 className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                   !isEn
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                    ? 'bg-blue-700 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-700 hover:bg-slate-50'
                 }`}
                 title="Tiếng Việt (Mặc định)"
               >
@@ -52,8 +52,8 @@ export function Navbar() {
                 onClick={() => setLang('en')}
                 className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                   isEn
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-50'
+                    ? 'bg-blue-700 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-blue-700 hover:bg-slate-50'
                 }`}
                 title="English"
               >
@@ -78,21 +78,21 @@ export function Navbar() {
             href="/"
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/'
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
+                ? 'bg-blue-50 text-blue-800 font-bold'
+                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
             {isEn ? 'Home' : 'Trang chủ'}
           </Link>
           <a
             href="/#danh-muc-san-pham"
-            className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {isEn ? 'Products' : 'Sản phẩm'}
           </a>
           <a
             href="/#dich-vu-spa"
-            className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
           </a>
@@ -100,8 +100,8 @@ export function Navbar() {
             href="/tra-cuu-bao-hanh"
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               pathname === '/tra-cuu-bao-hanh'
-                ? 'bg-blue-50 text-blue-700 font-semibold'
-                : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
+                ? 'bg-blue-50 text-blue-800 font-bold font-semibold'
+                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
             {isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}
@@ -110,15 +110,15 @@ export function Navbar() {
             href="/dat-lich"
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
               pathname === '/dat-lich'
-                ? 'bg-blue-50 text-blue-700 font-semibold'
-                : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100'
+                ? 'bg-blue-50 text-blue-800 font-bold font-semibold'
+                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
             {isEn ? 'Book Schedule' : 'Đặt lịch hẹn'}
           </Link>
           <a
             href="/#chinh-sach"
-            className="text-xs font-medium text-slate-600 hover:text-blue-600 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {isEn ? 'Contact' : 'Liên hệ'}
           </a>
@@ -128,7 +128,7 @@ export function Navbar() {
         <div className="flex items-center gap-2.5 shrink-0">
           <a
             href={`tel:${systemSettings.hotline.replace(/\D/g, '')}`}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100 transition-colors border border-blue-200"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-orange-50 text-orange-700 font-bold hover:bg-orange-100 transition-colors border border-orange-200 shadow-2xs"
           >
             <span className="material-symbols-outlined text-sm">phone_in_talk</span>
             <span>{systemSettings.hotline}</span>
@@ -137,7 +137,7 @@ export function Navbar() {
           {/* Sửa Tra cứu tem -> Kiểm tra bảo hành */}
           <Link
             href="/tra-cuu-bao-hanh"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white shadow-xs hover:bg-blue-700 transition-all"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-700 text-white shadow-xs hover:bg-blue-800 transition-all"
           >
             <span className="material-symbols-outlined text-sm">verified</span>
             <span>{isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}</span>
@@ -148,7 +148,7 @@ export function Navbar() {
             <div className="flex items-center gap-1.5">
               <Link
                 href="/dashboard"
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-2"
+                className="px-3 py-1.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold transition-all shadow-xs flex items-center gap-2"
                 title="Vào hệ thống quản lý"
               >
                 <span
