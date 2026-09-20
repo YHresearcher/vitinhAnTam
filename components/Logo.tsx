@@ -1,11 +1,24 @@
+'use client';
+
 import React from 'react';
+import { useViTinhAnTamStore } from '@/lib/store';
+import { TRANSLATIONS } from '@/lib/translations';
 
 interface LogoProps {
   className?: string;
   variant?: 'light' | 'dark';
+  tagline?: string;
+  slogan?: string;
 }
 
-export function Logo({ className = 'h-10 w-auto', variant = 'light' }: LogoProps) {
+export function Logo({ className = 'h-10 w-auto', variant = 'light', tagline, slogan }: LogoProps) {
+  const { currentLang } = useViTinhAnTamStore();
+  const currentSlogan =
+    slogan ||
+    tagline ||
+    TRANSLATIONS[currentLang || 'vi']?.navbar?.slogan ||
+    (currentLang === 'en' ? 'Dedicated Care • Peace of Mind' : 'Bán bằng tâm để bạn an tâm');
+
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {/* Sắc Cam Năng Lượng - Biểu tượng Chiếc Khiên Công Nghệ An Tâm */}
@@ -45,7 +58,7 @@ export function Logo({ className = 'h-10 w-auto', variant = 'light' }: LogoProps
           </span>
         </div>
         <span className={`text-[10px] font-bold tracking-wider uppercase mt-0.5 ${variant === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-          Bán bằng tâm để bạn an tâm
+          {currentSlogan}
         </span>
       </div>
     </div>

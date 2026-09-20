@@ -4,6 +4,7 @@ export const TRANSLATIONS = {
   vi: {
     navbar: {
       tagline: 'Chuyên Nghiệp & Tận Tâm',
+      slogan: 'Bán bằng tâm để bạn an tâm',
       home: 'Trang chủ',
       whyUs: 'Vì sao chọn An Tâm',
       products: 'Sản phẩm',
@@ -395,6 +396,7 @@ export const TRANSLATIONS = {
   en: {
     navbar: {
       tagline: 'Professional & Dedicated',
+      slogan: 'Dedicated Care • Peace of Mind',
       home: 'Home',
       whyUs: 'Why Choose An Tam',
       products: 'Certified PCs',
