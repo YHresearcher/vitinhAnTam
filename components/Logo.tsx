@@ -15,7 +15,7 @@ export function Logo({ className = 'h-10 w-auto', variant = 'light', slogan }: L
   const currentSlogan =
     slogan ||
     TRANSLATIONS[currentLang || 'vi']?.navbar?.slogan ||
-    (currentLang === 'en' ? 'Sold from the Heart, Safe from the Start' : 'Bán bằng tâm để bạn an tâm');
+    (currentLang === 'en' ? 'Sold with Care, Keeping You Carefree' : 'Bán bằng tâm để bạn an tâm');
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>

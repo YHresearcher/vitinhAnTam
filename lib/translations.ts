@@ -394,7 +394,7 @@ export const TRANSLATIONS = {
   },
   en: {
     navbar: {
-      slogan: 'Sold from the Heart, Safe from the Start',
+      slogan: 'Sold with Care, Keeping You Carefree',
       home: 'Home',
       whyUs: 'Why Choose An Tam',
       products: 'Certified PCs',
