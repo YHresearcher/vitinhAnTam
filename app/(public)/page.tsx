@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND, InventoryItem } from '@/lib/supabase';
+import { translations } from '@/lib/i18n';
 
 interface ShowcaseItem {
   id: string;
@@ -58,7 +59,10 @@ interface ShowcaseItem {
 
 export default function HomePage() {
   const router = useRouter();
-  const { inventory, faqs, reviews, findWarrantyByTagOrPhone } = useViTinhAnTamStore();
+  const { inventory, faqs, reviews, currentLang } = useViTinhAnTamStore();
+
+  const isEn = currentLang === 'en';
+  const t = translations[currentLang];
 
   // Search state for quick warranty lookup
   const [searchInput, setSearchInput] = useState('ST-8F4K92X');
@@ -80,33 +84,35 @@ export default function HomePage() {
     if (e) e.preventDefault();
     const query = searchInput.trim();
     if (!query) {
-      showToast('Vui lòng nhập S/N Service Tag hoặc Số điện thoại!');
+      showToast(isEn ? 'Please enter a Service Tag S/N or Phone Number!' : 'Vui lòng nhập S/N Service Tag hoặc Số điện thoại!');
       return;
     }
     router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
   };
 
-  // Build live showcase products mapped with real inventory
+  // Build live showcase products mapped with real inventory and translated specs
   const showcaseProducts: ShowcaseItem[] = [
     {
       id: 'p1',
       name: 'Dell OptiPlex 7060 SFF',
       serviceTag: 'ST-8F4K92X',
-      badge: 'LOẠI A >95% NGUYÊN BẢN',
-      subBadge: 'Win 11 Pro Bản Quyền Số',
-      desc: 'Đồng bộ siêu êm, tối ưu tác vụ văn phòng, kế toán MISA đa nhiệm.',
+      badge: isEn ? 'GRADE-A >95% ORIGINAL' : 'LOẠI A >95% NGUYÊN BẢN',
+      subBadge: isEn ? 'Digital Win 11 Pro License' : 'Win 11 Pro Bản Quyền Số',
+      desc: isEn
+        ? 'Ultra-quiet enterprise SFF, optimized for multi-tasking, MISA accounting and office suites.'
+        : 'Đồng bộ siêu êm, tối ưu tác vụ văn phòng, kế toán MISA đa nhiệm.',
       img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD_XqyuhdmpmXoCW362MXDLpcj2fNG91cxGDOoIMY0LGcYQAskQWuyJGtcsSnW0pBpyLO7bw1OrQ8wi9mVpOdu-SK1yucTaIPtmGcTUId2_FdxPu1gMtxhRdNoVedwLcITop_byvLpE2nKuxZpLreAdydKpuBCXJR75xOyyXcpwwH66s-vVPj1s4vIPbbmFtAedHsuaex4ZmglXWeieUbZdSc15AyrCaOY-zQ7eyOf4Okia2O9UINYf',
       category: 'office',
       specs: {
-        cpu: 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
-        ram: 'RAM 16GB DDR4 Bus 2666 (Nâng max 64GB)',
-        storage: 'SSD NVMe 256GB Kingston Mới 100% (BH 36T)',
-        highlight: 'Thân máy BH 12 tháng • Đổi mới tận nơi 2h',
-        gift: 'Tặng combo phím chuột & lót chuột văn phòng',
+        cpu: isEn ? 'Intel Core i5-8500 (6C/6T up to 4.10GHz)' : 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
+        ram: isEn ? '16GB DDR4 RAM 2666MHz (Max 64GB)' : 'RAM 16GB DDR4 Bus 2666 (Nâng max 64GB)',
+        storage: isEn ? 'New 256GB Kingston NVMe SSD (36M Warranty)' : 'SSD NVMe 256GB Kingston Mới 100% (BH 36T)',
+        highlight: isEn ? '12-Month Chassis Warranty • 2H On-Site Swap' : 'Thân máy BH 12 tháng • Đổi mới tận nơi 2h',
+        gift: isEn ? 'Complimentary Business Keyboard, Mouse & Pad' : 'Tặng combo phím chuột & lót chuột văn phòng',
       },
       price: 4950000,
       stockCount: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.quantity ?? 1,
-      shelfLocation: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.shelf_location || 'Kệ Bàn Giao',
+      shelfLocation: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.shelf_location || (isEn ? 'Dispatch Shelf' : 'Kệ Bàn Giao'),
       qcStatus: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.qc_status || 'ready_to_sell',
       burnInDuration: 45,
     },
@@ -114,21 +120,23 @@ export default function HomePage() {
       id: 'p2',
       name: 'HP ProDesk 400 G5 Mini',
       serviceTag: 'HP-400G5M',
-      badge: 'SIÊU GỌN 1 LÍT • TIẾT KIỆM ĐIỆN',
-      subBadge: 'Quầy Thu Ngân / Kế Toán',
-      desc: 'Gọn gàng trong lòng bàn tay, gắn lưng màn hình, hoạt động 24/7 êm ái.',
+      badge: isEn ? 'ULTRA-COMPACT 1L • ENERGY SAVING' : 'SIÊU GỌN 1 LÍT • TIẾT KIỆM ĐIỆN',
+      subBadge: isEn ? 'POS Cashier / Accounting' : 'Quầy Thu Ngân / Kế Toán',
+      desc: isEn
+        ? 'Palm-sized desktop, mountable behind displays, 24/7 whisper-quiet reliability.'
+        : 'Gọn gàng trong lòng bàn tay, gắn lưng màn hình, hoạt động 24/7 êm ái.',
       img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHypgTcRCO_QFnVWMl5MSGKNjC1WqxTCuKKxWunkvUn9ZMEKWhqPlSEBdDO0-9BpqFr3znjewmjJWd9I1QDCFVWp3bfTpdOUeo3AQP7c9L6A9d1dnWmkW-L1qmwyjqOaRtFcxgODM3sVpYEKKoh4_yX-gbUvpBxNV7XFwOPJERylPsS7sp62N0fT1Ive8lwSLth1DrVYuXtwPUfP4C1iAyKWy-1Dd2jt2azAeCeaSDwZus9pJuDtWB',
       category: 'office',
       specs: {
-        cpu: 'Core i3-8100T mát êm, tiêu thụ điện chỉ 35W',
-        ram: 'RAM 8GB DDR4 Bus 2666 (Nâng cấp tối đa 32GB)',
-        storage: 'SSD 128GB M.2 Mới BH 36T + 500GB HDD dữ liệu',
-        highlight: 'Thân máy BH 12 tháng • Cài sẵn Win 10/11 Pro OEM',
-        gift: 'Tích hợp sẵn Wifi 2 băng tần + Bluetooth',
+        cpu: isEn ? 'Core i3-8100T (Cool 35W Power Draw)' : 'Core i3-8100T mát êm, tiêu thụ điện chỉ 35W',
+        ram: isEn ? '8GB DDR4 RAM 2666MHz (Up to 32GB)' : 'RAM 8GB DDR4 Bus 2666 (Nâng cấp tối đa 32GB)',
+        storage: isEn ? '128GB M.2 SSD (36M Warranty) + 500GB Data HDD' : 'SSD 128GB M.2 Mới BH 36T + 500GB HDD dữ liệu',
+        highlight: isEn ? '12-Month Warranty • Pre-installed Win 10/11 Pro' : 'Thân máy BH 12 tháng • Cài sẵn Win 10/11 Pro OEM',
+        gift: isEn ? 'Integrated Dual-band Wi-Fi + Bluetooth' : 'Tích hợp sẵn Wifi 2 băng tần + Bluetooth',
       },
       price: 3400000,
       stockCount: inventory.find((i) => i.service_tag === 'HP-400G5M')?.quantity ?? 5,
-      shelfLocation: inventory.find((i) => i.service_tag === 'HP-400G5M')?.shelf_location || 'Kệ A1 - Tầng 2',
+      shelfLocation: inventory.find((i) => i.service_tag === 'HP-400G5M')?.shelf_location || (isEn ? 'Shelf A1 - Level 2' : 'Kệ A1 - Tầng 2'),
       qcStatus: inventory.find((i) => i.service_tag === 'HP-400G5M')?.qc_status || 'ready_to_sell',
       burnInDuration: 45,
     },
@@ -136,21 +144,23 @@ export default function HomePage() {
       id: 'p3',
       name: 'ThinkPad T480s (Mỏng Nhẹ)',
       serviceTag: 'TP-994L2A',
-      badge: 'CHUẨN QUÂN ĐỘI MỸ • VỎ CARBON',
-      subBadge: 'Pin Zin 4-5H (Sức khỏe >85%)',
-      desc: 'Bàn phím gõ êm số 1, vỏ sợi carbon siêu nhẹ 1.3kg, cực kỳ bền bỉ.',
+      badge: isEn ? 'MIL-SPEC TOUGH • CARBON FIBER' : 'CHUẨN QUÂN ĐỘI MỸ • VỎ CARBON',
+      subBadge: isEn ? 'Genuine Battery 4-5H (>85% Health)' : 'Pin Zin 4-5H (Sức khỏe >85%)',
+      desc: isEn
+        ? 'Legendary tactile keyboard, ultra-light 1.3kg carbon chassis, outstanding durability.'
+        : 'Bàn phím gõ êm số 1, vỏ sợi carbon siêu nhẹ 1.3kg, cực kỳ bền bỉ.',
       img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAY3Z2OKz-xUCFThbDz7BYlPSSjEDsLAhCI4x2H1Up8nZwKBKYBuh7yIYXl6t4mtKIB4g3G0C-18V4mCSHCutXdsJkFacBrXKtB0j-Clmzr9Mog8CnHDhmvjqywzWS7jrpznsTqmR-iZ6hx6bZXeJn_qkONjyUPHu5grKL2C1QIFfRrIGT3llnDDr9RplUzoBtcP9rwwmdNGC5r1nR4joN0h_J9lWRXkR1ZVe8A_ZvdRivoFKlk7oAa',
       category: 'laptop',
       specs: {
-        cpu: 'Core i5-8250U (4 nhân 8 luồng mạnh mẽ)',
-        ram: 'RAM 16GB DDR4 đa nhiệm lướt web thả ga',
-        storage: 'SSD 256GB NVMe siêu tốc (BH 36T đổi mới)',
-        highlight: 'Kèm sạc Type-C Zin 65W • BH máy 06 tháng',
-        gift: 'Màn 14" FHD IPS chống chói + Tặng túi chống sốc',
+        cpu: isEn ? 'Core i5-8250U (4C/8T High Efficiency)' : 'Core i5-8250U (4 nhân 8 luồng mạnh mẽ)',
+        ram: isEn ? '16GB DDR4 RAM for effortless multi-tasking' : 'RAM 16GB DDR4 đa nhiệm lướt web thả ga',
+        storage: isEn ? '256GB Ultra-Fast NVMe SSD (36M Swap Warranty)' : 'SSD 256GB NVMe siêu tốc (BH 36T đổi mới)',
+        highlight: isEn ? 'Genuine 65W Type-C Charger • 6-Month Warranty' : 'Kèm sạc Type-C Zin 65W • BH máy 06 tháng',
+        gift: isEn ? '14" FHD IPS Anti-Glare + Shockproof Sleeve' : 'Màn 14" FHD IPS chống chói + Tặng túi chống sốc',
       },
       price: 6200000,
       stockCount: inventory.find((i) => i.service_tag === 'TP-994L2A')?.quantity ?? 2,
-      shelfLocation: inventory.find((i) => i.service_tag === 'TP-994L2A')?.shelf_location || 'Kệ Laptop B2',
+      shelfLocation: inventory.find((i) => i.service_tag === 'TP-994L2A')?.shelf_location || (isEn ? 'Laptop Shelf B2' : 'Kệ Laptop B2'),
       qcStatus: inventory.find((i) => i.service_tag === 'TP-994L2A')?.qc_status || 'ready_to_sell',
       burnInDuration: 45,
     },
@@ -158,25 +168,94 @@ export default function HomePage() {
       id: 'p4',
       name: 'Dell Vostro 3670 MT (Core i7)',
       serviceTag: 'DV-3670I7',
-      badge: 'CASE LỚN THOÁNG MÁT • DỄ NÂNG CẤP',
-      subBadge: 'Đồ Họa & Kỹ Thuật',
-      desc: 'Chuyên AutoCAD, Photoshop, Corel, Render video & mở 50 tab Chrome.',
+      badge: isEn ? 'ROOMY MID-TOWER • EASY TO UPGRADE' : 'CASE LỚN THOÁNG MÁT • DỄ NÂNG CẤP',
+      subBadge: isEn ? 'CAD & Graphics Workstation' : 'Đồ Họa & Kỹ Thuật',
+      desc: isEn
+        ? 'Dedicated AutoCAD, Photoshop, Corel, video rendering, handles 50+ Chrome tabs.'
+        : 'Chuyên AutoCAD, Photoshop, Corel, Render video & mở 50 tab Chrome.',
       img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHGuIrduG_aQa0fIxHB2G8eJVrnLqRVQXGS9uKbJZzSO6i-Q-8scMRHwCrMKPFIoZUU3F92-ySxJkq9bjUm9EBp59F9wGDuzXaegpW9yq3CGs57uhUJbuaBwppDhw7A9lT_ko5HNGgFq_6H2s-OeM6ET7FICEqiBPxQBAYsf0V1gzfIBV-57d46Z5chBxyUxqQtR5JDcy6MKxeinRLSv36JnAhn4o7AIb0WwwPPZodOycfilrkCRJX',
       category: 'workstation',
       specs: {
-        cpu: 'Core i7-8700 (6 nhân 12 luồng Turbo 4.60GHz)',
-        ram: 'RAM 16GB DDR4 kênh đôi tản nhiệt tốt',
-        storage: 'SSD 512GB NVMe Mới 100% (BH 36 Tháng)',
-        highlight: 'Nguồn CST chuẩn 80 Plus • BH 12 tháng',
-        gift: 'Card rời GTX 1050Ti 4GB GDDR5 chuyên đồ họa',
+        cpu: isEn ? 'Core i7-8700 (6C/12T Turbo up to 4.60GHz)' : 'Core i7-8700 (6 nhân 12 luồng Turbo 4.60GHz)',
+        ram: isEn ? '16GB Dual-Channel DDR4 RAM' : 'RAM 16GB DDR4 kênh đôi tản nhiệt tốt',
+        storage: isEn ? '512GB Kingston NVMe SSD (36M Warranty)' : 'SSD 512GB NVMe Mới 100% (BH 36 Tháng)',
+        highlight: isEn ? '80 Plus Certified PSU • 12-Month Warranty' : 'Nguồn CST chuẩn 80 Plus • BH 12 tháng',
+        gift: isEn ? 'Dedicated GTX 1050Ti 4GB GDDR5 GPU' : 'Card rời GTX 1050Ti 4GB GDDR5 chuyên đồ họa',
       },
       price: 7500000,
       stockCount: inventory.find((i) => i.service_tag === 'DV-3670I7')?.quantity ?? 3,
-      shelfLocation: inventory.find((i) => i.service_tag === 'DV-3670I7')?.shelf_location || 'Kệ Workstation W1',
+      shelfLocation: inventory.find((i) => i.service_tag === 'DV-3670I7')?.shelf_location || (isEn ? 'Workstation Shelf W1' : 'Kệ Workstation W1'),
       qcStatus: inventory.find((i) => i.service_tag === 'DV-3670I7')?.qc_status || 'ready_to_sell',
       burnInDuration: 45,
     },
   ];
+
+  // Localized English reviews fallback
+  const displayReviews = isEn
+    ? [
+        {
+          name: 'Mr. Minh Tuan',
+          role: 'Chief Accountant - Logistics Corp',
+          comment: 'Equipped 6 Dell OptiPlex desktops for our accounting department running MISA and electronic invoicing. The computers boot in 5 seconds and operate silently. On-site technical support is extremely attentive.',
+          service: 'Dell OptiPlex 7060 SFF',
+          location: 'Tan An City',
+        },
+        {
+          name: 'Ms. Mai Lan',
+          role: 'Secondary School Teacher',
+          comment: 'The PC maintenance package and SSD upgrade made my old computer run like brand new. I loved that the technician worked right in front of me, keeping all my lesson plans and student files completely intact.',
+          service: 'NVMe SSD Upgrade & Thermal Spa',
+          location: 'Thu Thua District',
+        },
+        {
+          name: 'Mr. Bay Nam',
+          role: 'Personal Client',
+          comment: 'I am elderly and not tech-savvy. Luckily, the technician came right to my home at 18:30 to reinstall my printer drivers and check the power supply. Courteous service, crystal clear explanations, very reasonable pricing.',
+          service: 'On-site Home PC Rescue',
+          location: 'Trang Bang (Tay Ninh)',
+        },
+        {
+          name: 'Mr. Quoc Hoang',
+          role: 'Managing Director - Construction Co.',
+          comment: 'The 1-to-1 immediate on-site replacement within 2 hours is the exact reason our company chose An Tam as our long-term technical partner. Absolute peace of mind regarding internal data security.',
+          service: 'Corporate PC Maintenance Contract',
+          location: 'Duc Hoa Industrial Park',
+        },
+        {
+          name: 'Ms. Thuy Nga',
+          role: 'Online Business Owner',
+          comment: 'My power supply failed in the middle of an evening shift. Called the hotline and a technician arrived within an hour with a genuine sealed power supply backed by a 36-month warranty. Outstanding service!',
+          service: 'PSU Replacement & Cleaning',
+          location: 'Go Dau District',
+        },
+      ]
+    : reviews;
+
+  // Localized English FAQ fallback
+  const displayFaqs = isEn
+    ? [
+        {
+          id: 'faq-1',
+          question: 'When does the rapid 2-hour on-site service apply?',
+          answer: 'When your computer encounters an issue or requires replacement parts, simply enter your Phone / Service Tag or call Hotline 0909.053.058. An Tam mobile IT response units bring testing tools and replacement hardware directly to your site within a 10km radius (Tan An, Thu Thua, Chau Thanh, Tan Tru, and surrounding industrial parks). In particular, our 2-hour rapid dispatch is prioritized during Golden Hours from 17:30 to 21:00 on weekdays (and full day Saturday & Sunday from 08:00 to 21:00) so corporate operations are never interrupted during business hours.',
+        },
+        {
+          id: 'faq-2',
+          question: 'How does the 1-to-1 immediate on-site hardware swap operate?',
+          answer: 'For hardware components (SSDs, RAM, power supplies, cooling fans) that develop faults, our technicians bring brand-new authentic replacement parts directly to your desk and swap them on-site in 15 - 30 minutes. We never hold your machine hostage in a repair queue.',
+        },
+        {
+          id: 'faq-3',
+          question: 'Will upgrading SSDs or servicing my PC cause loss of accounting data, MISA, or tax tokens?',
+          answer: 'Absolutely not! Our certified engineers perform a byte-for-byte exact clone from your old drive to the new SSD. All digital signatures, electronic tax certificates, MISA accounting databases, desktop shortcuts, and saved browser logins are 100% preserved without requiring reinstallation.',
+        },
+        {
+          id: 'faq-4',
+          question: 'Can I inspect the internal hardware before finalizing payment?',
+          answer: 'You have full authority to request our technician open the chassis to inspect the clean, unblemished motherboard, verify brand-new sealed RAM/SSD packaging, and run CrystalDiskInfo showing 100% Good health before making any payment.',
+        },
+      ]
+    : faqs;
 
   const filteredProducts =
     activeCategory === 'all'
@@ -207,25 +286,25 @@ export default function HomePage() {
               <div className="space-y-4">
                 <span className="text-xs uppercase tracking-[0.2em] font-bold text-blue-700 flex items-center gap-2">
                   <span className="w-6 h-0.5 bg-blue-700" />
-                  VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM
+                  {t.hero.badgePre}
                 </span>
                 <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-900 tracking-tight leading-[1.2]">
-                  MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1
+                  {t.hero.title}
                 </h1>
                 <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
                     <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
-                    <span>WINDOWS BẢN QUYỀN</span>
+                    <span>{t.hero.badgeWin}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold shadow-xs">
                     <Zap className="w-4 h-4 text-orange-600 shrink-0" />
-                    <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
+                    <span>{t.hero.badge2h}</span>
                   </span>
                 </div>
               </div>
 
               <p className="text-lg sm:text-xl text-slate-700 font-medium leading-relaxed">
-                Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, ThinkPad nguyên bản loại A, kiểm định 24 bước kỹ thuật nghiêm ngặt.
+                {t.hero.desc}
               </p>
 
               {/* 3 Trụ Cột Nổi Bật */}
@@ -234,9 +313,9 @@ export default function HomePage() {
                   <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <Monitor className="w-5 h-5 text-blue-700" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 uppercase">DELL, HP, IBM NGUYÊN BẢN</h3>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">{t.hero.pillar1Title}</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
-                    Ngoại hình đẹp &gt;95%, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.
+                    {t.hero.pillar1Desc}
                   </p>
                 </div>
 
@@ -244,9 +323,9 @@ export default function HomePage() {
                   <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <ShieldCheck className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 uppercase">WINDOWS BẢN QUYỀN</h3>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">{t.hero.pillar2Title}</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
-                    Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.
+                    {t.hero.pillar2Desc}
                   </p>
                 </div>
 
@@ -254,9 +333,9 @@ export default function HomePage() {
                   <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
                     <Clock className="w-5 h-5 text-orange-600" />
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900 uppercase">XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase">{t.hero.pillar3Title}</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
-                    Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.
+                    {t.hero.pillar3Desc}
                   </p>
                 </div>
               </div>
@@ -269,20 +348,20 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-2 text-blue-800 shrink-0 font-bold text-xs sm:text-sm pl-1">
                     <Search className="w-4 h-4 text-blue-600" />
-                    <span>Tra Cứu Nhanh S/N:</span>
+                    <span>{t.hero.quickSearchTitle}</span>
                   </div>
                   <input
                     type="text"
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    placeholder="Nhập Service Tag dập trên thân máy (VD: ST-8F4K92X, HP-400G5M) hoặc SĐT..."
+                    placeholder={t.hero.quickSearchPlaceholder}
                     className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
                   />
                   <button
                     type="submit"
                     className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center justify-center gap-1.5"
                   >
-                    <span>Tra Cứu Hồ Sơ</span>
+                    <span>{t.hero.quickSearchBtn}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
@@ -295,14 +374,14 @@ export default function HomePage() {
                   className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
                 >
                   <Monitor className="w-4 h-4" />
-                  <span>XEM DANH MỤC MÁY SẴN HÀNG</span>
+                  <span>{t.hero.ctaCatalog}</span>
                 </a>
                 <Link
                   href="/dat-lich"
                   className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
                 >
                   <Wrench className="w-4 h-4" />
-                  <span>ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI</span>
+                  <span>{t.hero.ctaBooking}</span>
                 </Link>
               </div>
             </div>
@@ -314,14 +393,14 @@ export default function HomePage() {
               <div>
                 <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1 flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-blue-700" />
-                  <span>KHO THIẾT BỊ ĐÃ KIỂM ĐỊNH QC - SẴN SÀNG BÀN GIAO TRONG 60 PHÚT</span>
+                  <span>{t.products.preHeader}</span>
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
+                  {t.products.title}
                 </h2>
               </div>
               <div className="text-xs text-slate-500 font-medium">
-                Đang có <strong className="text-blue-700 font-bold">{totalReadyStock} máy</strong> sẵn sàng giao tận nơi
+                {t.products.readyCount(totalReadyStock)}
               </div>
             </div>
 
@@ -335,7 +414,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                Tất cả ({totalReadyStock} máy sẵn)
+                {t.products.filterAll(totalReadyStock)}
               </button>
               <button
                 onClick={() => setActiveCategory('office')}
@@ -345,7 +424,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                PC Văn Phòng - Kế Toán (3 - 6tr)
+                {t.products.filterOffice}
               </button>
               <button
                 onClick={() => setActiveCategory('laptop')}
@@ -355,7 +434,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                Laptop Doanh Nhân
+                {t.products.filterLaptop}
               </button>
               <button
                 onClick={() => setActiveCategory('workstation')}
@@ -365,7 +444,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                PC Đồ Họa &amp; Kỹ Thuật
+                {t.products.filterWorkstation}
               </button>
             </div>
 
@@ -392,7 +471,7 @@ export default function HomePage() {
                       {/* Real stock badge */}
                       <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
                         <Check className="w-3 h-3" />
-                        <span>Sẵn {prod.stockCount} máy</span>
+                        <span>{t.products.readyBadge(prod.stockCount)}</span>
                       </span>
                     </div>
 
@@ -430,7 +509,7 @@ export default function HomePage() {
 
                   <div className="pt-3 border-t border-slate-100 mt-2 space-y-2">
                     <div className="flex items-baseline justify-between">
-                      <span className="text-xs text-slate-500">Giá trọn bộ niêm yết:</span>
+                      <span className="text-xs text-slate-500">{t.products.listedPrice}</span>
                       <span className="text-lg font-black text-orange-600 font-mono">
                         {formatVND(prod.price)}
                       </span>
@@ -442,13 +521,13 @@ export default function HomePage() {
                         onClick={() => setSelectedProduct(prod)}
                         className="w-full py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                       >
-                        Xem QC &amp; S/N
+                        {t.products.viewQcBtn}
                       </button>
                       <Link
-                        href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent('Đặt mua máy có sẵn')}`}
+                        href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent(isEn ? 'Purchase In-Stock PC' : 'Đặt mua máy có sẵn')}`}
                         className="w-full py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                       >
-                        Đặt Mua Ngay
+                        {t.products.orderNowBtn}
                       </Link>
                     </div>
                   </div>
@@ -462,13 +541,13 @@ export default function HomePage() {
             <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase">
-                  <Zap className="w-4 h-4 text-blue-700" /> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
+                  <Zap className="w-4 h-4 text-blue-700" /> {t.services.preHeader}
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                  DỊCH VỤ TẬN NƠI &amp; &quot;SPA HỒI SINH MÁY CŨ&quot; TRONG 2 GIỜ
+                  {t.services.title}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600">
-                  Không cần mang vác cồng kềnh ra tiệm. Kỹ thuật viên An Tâm mang trang thiết bị chuyên dụng đến kiểm tra, bảo dưỡng và tối ưu trực tiếp trước sự giám sát của quý khách.
+                  {t.services.desc}
                 </p>
               </div>
 
@@ -479,35 +558,35 @@ export default function HomePage() {
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black text-lg group-hover:rotate-6 transition-transform">
                       x5
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">GÓI HỒI SINH MÁY CŨ</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{t.services.pkg1Title}</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Biến máy tính đang chạy ổ cơ HDD ì ạch trở nên mượt mà như máy mới mua chỉ sau 45 phút.
+                      {t.services.pkg1Desc}
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Thay SSD NVMe/SATA 256GB mới 100% Kingston chính hãng</span>
+                        <span>{t.services.pkg1F1}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Nâng RAM DDR3/DDR4 chính hãng theo bo mạch</span>
+                        <span>{t.services.pkg1F2}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span><strong>Clone Windows bản quyền:</strong> Giữ nguyên 100% phần mềm MISA, Zalo, tài liệu.</span>
+                        <span>{t.services.pkg1F3}</span>
                       </div>
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
                     <div>
-                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá minh bạch sau kiểm tra</div>
+                      <div className="text-xs text-slate-500 font-medium">{t.services.pkg1PriceLabel}</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">{t.services.pkg1PriceValue}</div>
                     </div>
                     <Link
-                      href={`/dat-lich?service=${encodeURIComponent('Gói Hồi Sinh Máy Cũ')}`}
+                      href={`/dat-lich?service=${encodeURIComponent(isEn ? 'PC Rejuvenation Package' : 'Gói Hồi Sinh Máy Cũ')}`}
                       className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
-                      Đặt Lịch Gói Này
+                      {t.services.bookPkgBtn}
                     </Link>
                   </div>
                 </div>
@@ -515,41 +594,41 @@ export default function HomePage() {
                 {/* Gói 2 */}
                 <div className="p-6 rounded-2xl bg-blue-50/50 border-2 border-blue-500 shadow-sm flex flex-col justify-between hover:bg-white transition-all group relative">
                   <div className="absolute -top-3.5 right-6 px-3.5 py-1 rounded-full bg-blue-700 text-white font-bold text-[10px] tracking-wide shadow-xs">
-                    ĐƯỢC ĐẶT NHIỀU NHẤT
+                    {t.services.pkg2Badge}
                   </div>
                   <div className="space-y-3">
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
                       <Flame className="w-6 h-6 text-blue-700" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">SPA LÀM MÁT CHUYÊN SÂU</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{t.services.pkg2Title}</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Khắc phục triệt để tình trạng quạt hú to, máy nóng bỏng tay, tắt đột ngột khi mở nhiều ứng dụng hoặc làm việc trưa hè.
+                      {t.services.pkg2Desc}
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Thổi bụi công nghiệp sạch sâu buồng linh kiện &amp; cánh quạt</span>
+                        <span>{t.services.pkg2F1}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Tra keo tản nhiệt cao cấp <strong className="text-slate-900">Thermalright TF7 / Arctic MX4</strong></span>
+                        <span>{t.services.pkg2F2}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Hạ nhiệt 15 - 20°C lập tức, bảo vệ tuổi thọ bo mạch &amp; chip CPU.</span>
+                        <span>{t.services.pkg2F3}</span>
                       </div>
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
                     <div>
-                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá tận nơi theo dòng máy</div>
+                      <div className="text-xs text-slate-500 font-medium">{t.services.pkg2PriceLabel}</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">{t.services.pkg2PriceValue}</div>
                     </div>
                     <Link
-                      href={`/dat-lich?service=${encodeURIComponent('Spa Làm Mát Chuyên Sâu')}`}
+                      href={`/dat-lich?service=${encodeURIComponent(isEn ? 'Deep Cooling & Thermal Spa' : 'Spa Làm Mát Chuyên Sâu')}`}
                       className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
-                      Đặt Lịch Gói Này
+                      {t.services.bookPkgBtn}
                     </Link>
                   </div>
                 </div>
@@ -560,35 +639,35 @@ export default function HomePage() {
                     <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
                       <ShieldCheck className="w-6 h-6 text-indigo-700" />
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900">TỐI ƯU WINDOWS BẢN QUYỀN</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{t.services.pkg3Title}</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      Loại bỏ sạch các công cụ crack nguy hiểm tiềm ẩn mã độc đào coin hoặc đánh cắp tài khoản ngân hàng của cơ quan, hộ kinh doanh.
+                      {t.services.pkg3Desc}
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Cài đặt Win 10/11 Pro sạch gốc từ Microsoft</span>
+                        <span>{t.services.pkg3F1}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Office OEM ổn định, chặn đứng virus quảng cáo nhảy popup</span>
+                        <span>{t.services.pkg3F2}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>Tắt bỏ các tiến trình ngầm rác của Windows cho máy cấu hình yếu</span>
+                        <span>{t.services.pkg3F3}</span>
                       </div>
                     </div>
                   </div>
                   <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
                     <div>
-                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá theo nhu cầu cài đặt</div>
+                      <div className="text-xs text-slate-500 font-medium">{t.services.pkg3PriceLabel}</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">{t.services.pkg3PriceValue}</div>
                     </div>
                     <Link
-                      href={`/dat-lich?service=${encodeURIComponent('Tối Ưu Windows Bản Quyền')}`}
+                      href={`/dat-lich?service=${encodeURIComponent(isEn ? 'Licensed Windows & Security' : 'Tối Ưu Windows Bản Quyền')}`}
                       className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                     >
-                      Đặt Lịch Gói Này
+                      {t.services.bookPkgBtn}
                     </Link>
                   </div>
                 </div>
@@ -601,7 +680,7 @@ export default function HomePage() {
                   className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm sm:text-base tracking-wide shadow-lg shadow-orange-500/30 transition-all hover:scale-[1.02]"
                 >
                   <Zap className="w-5 h-5 text-white" />
-                  <span>Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0909.053.058)</span>
+                  <span>{t.services.bigCta}</span>
                 </Link>
               </div>
             </div>
@@ -616,10 +695,10 @@ export default function HomePage() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-bold uppercase tracking-tight">
-                    CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ THEO S/N
+                    {t.warrantyBanner.title}
                   </h3>
                   <p className="text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-                    Mọi thiết bị xuất xưởng đều được định danh bằng Service Tag dập sẵn trên thân máy. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền mà không cần giữ hoá đơn giấy.
+                    {t.warrantyBanner.desc}
                   </p>
                 </div>
               </div>
@@ -627,7 +706,7 @@ export default function HomePage() {
                 href="/tra-cuu-bao-hanh"
                 className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/20 transition-all shrink-0 flex items-center gap-2"
               >
-                <span>Kiểm Tra Ngay</span>
+                <span>{t.warrantyBanner.checkNowBtn}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -637,10 +716,10 @@ export default function HomePage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
               <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                QUY TRÌNH KIỂM ĐỊNH 4 LỚP TRƯỚC KHI GIAO
+                {t.inspection.title}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
-                Chúng tôi từ chối nhập máy sửa chữa chắp vá. Mỗi linh kiện xuất kho đều phải vượt qua bài kiểm tra áp lực khắt khe.
+                {t.inspection.desc}
               </p>
             </div>
 
@@ -650,9 +729,9 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
                   <Zap className="w-5 h-5 text-blue-700" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">NGUỒN ĐIỆN ỔN ĐỊNH</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">{t.inspection.s1Title}</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Đo kiểm điện áp tải thực tế, chống sập nguồn hay đơ máy giữa giờ làm việc cao điểm.
+                  {t.inspection.s1Desc}
                 </p>
               </div>
 
@@ -661,9 +740,9 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
                   <Flame className="w-5 h-5 text-indigo-600" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">TẢN NHIỆT MÁT ÊM</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">{t.inspection.s2Title}</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Tra keo gốm tản nhiệt xịn, quạt chạy êm ái, máy mát mẻ khi làm việc liên tục cả ngày.
+                  {t.inspection.s2Desc}
                 </p>
               </div>
 
@@ -672,9 +751,9 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
                   <HardDrive className="w-5 h-5 text-emerald-600" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">Ổ CỨNG 100% SẠCH</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">{t.inspection.s3Title}</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  SSD mới 100% chính hãng, không lỗi Bad Sector, bảo vệ toàn vẹn dữ liệu sổ sách kế toán.
+                  {t.inspection.s3Desc}
                 </p>
               </div>
 
@@ -683,9 +762,9 @@ export default function HomePage() {
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
                   <ShieldCheck className="w-5 h-5 text-orange-600" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase">BẢO HÀNH ĐỔI MỚI</h3>
+                <h3 className="text-sm font-bold text-slate-900 uppercase">{t.inspection.s4Title}</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Bảo hành thiết bị và linh kiện từ 3 đến 36 tháng, kích hoạt bảo hành điện tử theo S/N.
+                  {t.inspection.s4Desc}
                 </p>
               </div>
             </div>
@@ -695,7 +774,7 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                    NHẬN XÉT CỦA KHÁCH HÀNG
+                    {t.reviews.title}
                   </h2>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -705,14 +784,14 @@ export default function HomePage() {
                     ))}
                   </div>
                   <span className="font-bold text-slate-900">5.0 / 5.0</span>
-                  <span>• Từ khách hàng doanh nghiệp &amp; cá nhân tại Long An - Tây Ninh</span>
+                  <span>• {t.reviews.ratingText}</span>
                 </div>
               </div>
 
               {/* Ticker / Marquee auto-scrolling container */}
               <div className="relative overflow-hidden w-full py-2">
                 <div className="animate-marquee-slow gap-5 flex items-stretch">
-                  {[...reviews, ...reviews].map((rev, idx) => (
+                  {[...displayReviews, ...displayReviews].map((rev, idx) => (
                     <div
                       key={idx}
                       className="w-[320px] sm:w-[370px] p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-md transition-all shrink-0 flex flex-col justify-between space-y-3"
@@ -753,18 +832,18 @@ export default function HomePage() {
           <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
             <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
               <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">
-                Hỏi đáp &amp; Quyền lợi khách hàng
+                {t.faq.preHeader}
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                CÂU HỎI THƯỜNG GẶP
+                {t.faq.title}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
-                Nhấn vào từng câu hỏi để xem chi tiết chính sách phục vụ của Vi tính An Tâm.
+                {t.faq.desc}
               </p>
             </div>
 
             <div className="space-y-3">
-              {faqs.map((item, idx) => {
+              {displayFaqs.map((item, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
@@ -811,12 +890,12 @@ export default function HomePage() {
                 <div className="space-y-6">
                   <div className="space-y-1">
                     <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                      MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH
+                      {t.coverage.title}
                     </h2>
                   </div>
                   <div className="space-y-3">
                     <p className="text-xs text-slate-600">
-                      Đội cơ động tiếp nhận kiểm tra, giao máy và đổi mới linh kiện tận nơi trong vòng 30 - 60 phút tại các khu vực:
+                      {t.coverage.desc}
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-medium">
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
@@ -843,18 +922,17 @@ export default function HomePage() {
                   <div className="p-4 rounded-xl bg-amber-50/70 border-l-4 border-amber-500 border border-amber-200">
                     <h4 className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                      KHUNG GIỜ VÀNG CỨU HỘ NGOÀI GIỜ (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)
+                      {t.coverage.goldenHourTitle}
                     </h4>
                     <p className="text-xs text-amber-900/90 mt-1 leading-relaxed">
-                      Ưu tiên cứu hộ tận nơi: <strong>17h30 – 21h00 các ngày trong tuần</strong> và{' '}
-                      <strong>08h00 – 20h00 Thứ Bảy &amp; Chủ Nhật</strong>. Không phụ thu phí ngoài giờ.
+                      {t.coverage.goldenHourDesc}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-6 mt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
-                    <div className="text-xs text-slate-500">Hotline Khẩn Cấp &amp; Zalo Kỹ Thuật:</div>
+                    <div className="text-xs text-slate-500">{t.coverage.hotlineLabel}</div>
                     <div className="text-xl sm:text-2xl font-black text-blue-700 tracking-tight font-mono">
                       0909.053.058
                     </div>
@@ -863,7 +941,7 @@ export default function HomePage() {
                     href="tel:0909053058"
                     className="w-full sm:w-auto px-6 py-3 rounded-lg bg-blue-700 text-white font-bold text-xs tracking-wide shadow-xs hover:bg-blue-800 transition-all text-center"
                   >
-                    Gọi Trực Tiếp KTV Ca Trực
+                    {t.coverage.callTechBtn}
                   </a>
                 </div>
               </div>
@@ -879,13 +957,13 @@ export default function HomePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent" />
                 <div className="relative p-6 space-y-2">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-700 text-white text-[10px] font-bold shadow-xs">
-                    TRỤ SỞ CHÍNH
+                    {t.coverage.hqBadge}
                   </span>
                   <h3 className="text-lg font-bold text-slate-900 leading-tight">
-                    Vi Tính An Tâm - Hub Tân An
+                    {t.coverage.hqTitle}
                   </h3>
                   <p className="text-xs text-slate-700">
-                    45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An (Có bãi đỗ ô tô thuận tiện)
+                    {t.coverage.hqAddress}
                   </p>
                   <div className="pt-2">
                     <a
@@ -894,7 +972,7 @@ export default function HomePage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <MapPin className="w-3.5 h-3.5" /> Chỉ đường trên Google Maps
+                      <MapPin className="w-3.5 h-3.5" /> {t.coverage.hqMapsLink}
                     </a>
                   </div>
                 </div>
@@ -910,12 +988,12 @@ export default function HomePage() {
         <Link
           href="/tra-cuu-bao-hanh"
           className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-700 border-2 border-blue-700 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Tra cứu bảo hành bằng S/N máy"
+          title={t.floating.warrantyTitle}
         >
           <ShieldCheck className="w-6 h-6 text-blue-700" />
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span>Tra cứu bảo hành S/N</span>
+            <span>{t.floating.warrantyTooltip}</span>
           </span>
         </Link>
 
@@ -923,7 +1001,7 @@ export default function HomePage() {
         <a
           href="tel:0909053058"
           className="pointer-events-auto w-13 h-13 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/35 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Gọi Hotline kỹ thuật 24/7"
+          title={t.floating.hotlineTitle}
         >
           <Phone className="w-6 h-6 animate-pulse" />
           {/* Tooltip */}
@@ -939,7 +1017,7 @@ export default function HomePage() {
           target="_blank"
           rel="noopener noreferrer"
           className="pointer-events-auto w-14 h-14 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-2xl shadow-blue-500/40 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Nhắn tin Zalo kỹ thuật"
+          title={t.floating.zaloTitle}
         >
           <MessageSquare className="w-6 h-6" />
           {/* Live Online Dot */}
@@ -950,7 +1028,7 @@ export default function HomePage() {
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-16 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
             <span className="font-bold text-sky-300">Zalo:</span>
-            <span>Nhắn kỹ thuật trực ca</span>
+            <span>{t.floating.zaloTooltip}</span>
           </span>
         </a>
 
@@ -959,7 +1037,7 @@ export default function HomePage() {
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="pointer-events-auto w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group relative"
-          title="Lên đầu trang"
+          title={t.floating.scrollTop}
         >
           <ArrowUp className="w-4 h-4 text-slate-600" />
         </button>
@@ -981,15 +1059,15 @@ export default function HomePage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold mb-1.5">
                   <BadgeCheck className="w-3.5 h-3.5" />
-                  <span>HỒ SƠ KIỂM ĐỊNH QC 24 BƯỚC • ĐẠT TIÊU CHUẨN</span>
+                  <span>{t.products.qcModalHeader}</span>
                 </div>
                 <h3 className="text-xl font-black text-slate-900">{selectedProduct.name}</h3>
                 <div className="text-xs text-slate-500 font-mono mt-0.5">
-                  S/N Service Tag: <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{selectedProduct.serviceTag}</span>
+                  {t.products.qcSnTag} <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{selectedProduct.serviceTag}</span>
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-xs text-slate-400">Giá bán niêm yết:</div>
+                <div className="text-xs text-slate-400">{t.products.qcListedPrice}</div>
                 <div className="text-xl font-black text-orange-600 font-mono">{formatVND(selectedProduct.price)}</div>
               </div>
             </div>
@@ -999,25 +1077,25 @@ export default function HomePage() {
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="font-bold text-slate-800 flex items-center gap-1.5">
                   <Cpu className="w-4 h-4 text-blue-600" />
-                  <span>Vi xử lý &amp; Bộ nhớ:</span>
+                  <span>{t.products.qcCpuRamTitle}</span>
                 </div>
                 <p className="text-slate-600">{selectedProduct.specs.cpu}</p>
                 <p className="text-slate-600">{selectedProduct.specs.ram}</p>
                 <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 pt-1 border-t border-slate-200/60">
                   <Check className="w-3.5 h-3.5" />
-                  <span>Prime95 Stress Test: Ổn định (Max 68°C)</span>
+                  <span>{t.products.qcPrime95}</span>
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="font-bold text-slate-800 flex items-center gap-1.5">
                   <HardDrive className="w-4 h-4 text-emerald-600" />
-                  <span>Lưu Trữ &amp; Sức Khỏe Ổ Cứng:</span>
+                  <span>{t.products.qcStorageTitle}</span>
                 </div>
                 <p className="text-slate-600">{selectedProduct.specs.storage}</p>
                 <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 pt-1 border-t border-slate-200/60">
                   <Check className="w-3.5 h-3.5" />
-                  <span>CrystalDiskInfo: 100% Good (0 Giờ Dùng)</span>
+                  <span>{t.products.qcCrystalDisk}</span>
                 </div>
               </div>
             </div>
@@ -1027,38 +1105,38 @@ export default function HomePage() {
               <div className="font-bold text-blue-900 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
                   <Server className="w-4 h-4 text-blue-700" />
-                  <span>Trạng Thái Kho &amp; Bảo Hành:</span>
+                  <span>{t.products.qcWarehouseTitle}</span>
                 </span>
                 <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">
-                  Sẵn {selectedProduct.stockCount} máy tại kho
+                  {t.products.qcStockCount(selectedProduct.stockCount)}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-slate-700 text-[11px]">
-                <div>• Vị trí kệ: <strong>{selectedProduct.shelfLocation}</strong></div>
-                <div>• Thời gian Burn-in test: <strong>{selectedProduct.burnInDuration} phút</strong></div>
-                <div>• Bản quyền: <strong>Windows Pro Bản Quyền Số</strong></div>
-                <div>• Chính sách: <strong>Bảo hành 12 tháng 1 đổi 1 tận nơi 2h</strong></div>
+                <div>• {t.products.qcShelf} <strong>{selectedProduct.shelfLocation}</strong></div>
+                <div>• {t.products.qcBurnIn} <strong>{selectedProduct.burnInDuration} {isEn ? 'minutes' : 'phút'}</strong></div>
+                <div>• {t.products.qcLicense} <strong>Windows Pro {isEn ? 'Digital License' : 'Bản Quyền Số'}</strong></div>
+                <div>• {t.products.qcPolicy} <strong>{isEn ? '12-Month 1-to-1 On-Site Swap in 2 Hours' : 'Bảo hành 12 tháng 1 đổi 1 tận nơi 2h'}</strong></div>
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href={`/dat-lich?device=${encodeURIComponent(selectedProduct.name)}&service=${encodeURIComponent('Đặt mua máy có sẵn')}`}
+                href={`/dat-lich?device=${encodeURIComponent(selectedProduct.name)}&service=${encodeURIComponent(isEn ? 'Purchase In-Stock PC' : 'Đặt mua máy có sẵn')}`}
                 onClick={() => setSelectedProduct(null)}
                 className="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm text-center transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <span>Đặt Giữ Máy / Giao Tận Nơi</span>
+                <span>{t.products.qcBookDelivery}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
-                href={`https://zalo.me/0909053058?text=${encodeURIComponent(`Chào An Tâm, tôi quan tâm máy ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})`)}`}
+                href={`https://zalo.me/0909053058?text=${encodeURIComponent(isEn ? `Hello An Tam, I am interested in ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm text-center transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Chat Zalo Xem Ảnh Thật Máy</span>
+                <span>{t.products.qcChatZalo}</span>
               </a>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { Logo } from './Logo';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
+import { translations } from '@/lib/i18n';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isEn = currentLang === 'en';
+  const t = translations[currentLang].nav;
 
   return (
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -34,7 +36,7 @@ export function Navbar() {
                 : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
-            {isEn ? 'Home' : 'Trang chủ'}
+            {t.home}
           </Link>
           <Link
             href="/vi-sao-chon-an-tam"
@@ -44,25 +46,25 @@ export function Navbar() {
                 : "text-slate-600 hover:text-blue-700 hover:bg-slate-100"
             }`}
           >
-            {isEn ? "Why Us" : "Vì sao chọn An Tâm"}
+            {t.whyUs}
           </Link>
           <a
             href="/#danh-muc-san-pham"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            {isEn ? 'Products' : 'Sản phẩm'}
+            {t.products}
           </a>
           <a
             href="/#dich-vu-spa"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
+            {t.services}
           </a>
           <a
             href="/#chinh-sach"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
-            {isEn ? 'Contact' : 'Liên hệ'}
+            {t.contact}
           </a>
         </nav>
 
@@ -104,14 +106,14 @@ export function Navbar() {
               <Link
                 href="/dashboard"
                 className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
-                title="Vào hệ thống quản trị (Dashboard)"
+                title={t.dashboard}
               >
                 <User className="w-5 h-5" />
               </Link>
               <button
                 type="button"
                 onClick={() => logout()}
-                title="Đăng xuất"
+                title={t.signOut}
                 className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
@@ -121,7 +123,7 @@ export function Navbar() {
             <Link
               href="/login"
               className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
-              title={isEn ? "Sign In" : "Đăng nhập"}
+              title={t.signIn}
             >
               <LogIn className="w-5 h-5" />
             </Link>
@@ -153,7 +155,7 @@ export function Navbar() {
               pathname === '/' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            {isEn ? 'Home' : 'Trang chủ'}
+            {t.home}
           </Link>
           <Link
             href="/vi-sao-chon-an-tam"
@@ -162,28 +164,28 @@ export function Navbar() {
               pathname === '/vi-sao-chon-an-tam' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
             }`}
           >
-            {isEn ? 'Why Us' : 'Vì sao chọn An Tâm'}
+            {t.whyUs}
           </Link>
           <a
             href="/#danh-muc-san-pham"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
-            {isEn ? 'Products' : 'Sản phẩm'}
+            {t.products}
           </a>
           <a
             href="/#dich-vu-spa"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
-            {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
+            {t.services}
           </a>
           <a
             href="/#chinh-sach"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
-            {isEn ? 'Contact' : 'Liên hệ'}
+            {t.contact}
           </a>
         </div>
       )}

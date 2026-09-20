@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { translations } from '@/lib/i18n';
 import { formatDateVN } from '@/lib/supabase';
 import {
   Search,
@@ -28,7 +29,9 @@ function WarrantyLookupContent() {
   const searchParams = useSearchParams();
   const urlTag = searchParams.get('tag') || '';
 
-  const { findWarrantyByTagOrPhone, systemSettings } = useViTinhAnTamStore();
+  const { findWarrantyByTagOrPhone, systemSettings, currentLang } = useViTinhAnTamStore();
+  const t = translations[currentLang].warrantyPage;
+
   const [searchInput, setSearchInput] = useState(urlTag || 'ST-8F4K92X');
   const [searchResult, setSearchResult] = useState<any>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -43,7 +46,7 @@ function WarrantyLookupContent() {
   const executeSearch = (query: string) => {
     const q = query.trim();
     if (!q) {
-      showToast('Vui lòng nhập Số Serial (S/N) dập trên máy hoặc Số điện thoại!');
+      showToast(t.toastEnterQuery);
       return;
     }
     setIsSearching(true);
@@ -53,10 +56,10 @@ function WarrantyLookupContent() {
       setIsSearching(false);
       if (res && (res.item || res.ticket)) {
         setSearchResult(res);
-        showToast('Tìm thấy hồ sơ thiết bị thành công!');
+        showToast(t.toastFound);
       } else {
         setSearchResult(null);
-        showToast(`Không tìm thấy hồ sơ cho "${q}". Vui lòng kiểm tra lại S/N hoặc SĐT!`);
+        showToast(t.toastNotFound(q));
       }
     }, 250);
   };
@@ -87,15 +90,15 @@ function WarrantyLookupContent() {
 
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-3">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-3 shadow-2xs">
           <ShieldCheck className="w-4 h-4 text-blue-600" />
-          <span>CỔNG BẢO HÀNH ĐIỆN TỬ THEO SỐ SERIAL (S/N)</span>
+          <span>{t.badgePre}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-          TRA CỨU BẢO HÀNH &amp; <span className="text-blue-600">LỊCH SỬ THIẾT BỊ</span>
+          {t.title} <span className="text-blue-600">{t.titleHighlight}</span>
         </h1>
         <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-          Không cần giữ phiếu giấy hay tem dán rách. Hệ thống đối chiếu trực tiếp theo <strong>Số Serial (S/N) dập sẵn trên thân máy</strong> hoặc <strong>Số điện thoại mua hàng</strong>.
+          {t.subtitle}
         </p>
 
         {/* Input Box - SĐT hoặc Serial Number / Service Tag */}
@@ -114,7 +117,7 @@ function WarrantyLookupContent() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Nhập S/N dập trên máy (VD: ST-8F4K92X) hoặc SĐT (0918...)"
+                  placeholder={t.searchPlaceholder}
                   className="w-full bg-transparent px-3 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none font-medium"
                 />
               </div>
@@ -125,31 +128,31 @@ function WarrantyLookupContent() {
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-all shrink-0 active:scale-95 disabled:opacity-50"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{isSearching ? 'Đang kiểm tra...' : 'Kiểm Tra Ngay'}</span>
+                <span>{isSearching ? t.searchingBtn : t.searchBtn}</span>
               </button>
             </form>
           </div>
 
           {/* Preset Quick Chips */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-            <span>Thử nhanh mẫu S/N:</span>
+            <span>{t.presetPrompt}</span>
             <button
               onClick={() => handlePreset('ST-8F4K92X')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              ST-8F4K92X (Dell OptiPlex)
+              {t.tagDellLabel}
             </button>
             <button
               onClick={() => handlePreset('TP-994L2A')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              TP-994L2A (ThinkPad T480s)
+              {t.tagThinkPadLabel}
             </button>
             <button
               onClick={() => handlePreset('0918234891')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              0918234891 (SĐT khách)
+              {t.tagPhoneLabel}
             </button>
           </div>
         </div>
@@ -172,12 +175,12 @@ function WarrantyLookupContent() {
                       {searchResult.item?.device_model || searchResult.ticket?.device_name}
                     </h2>
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-semibold">
-                      Nguyên bản tuyển chọn
+                      {t.deviceSelectedBadge}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-xs text-slate-600">
                     <span className="flex items-center gap-1 font-mono">
-                      <span className="text-slate-500 font-semibold">Số Serial (S/N):</span>
+                      <span className="text-slate-500 font-semibold">{t.snLabel}</span>
                       <span className="text-blue-700 font-black bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
                         {searchResult.item?.service_tag || searchResult.ticket?.device_service_tag}
                       </span>
@@ -185,12 +188,12 @@ function WarrantyLookupContent() {
                     <span className="flex items-center gap-1">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <span>
-                        {searchResult.item?.customer_name || searchResult.ticket?.customer_name || 'Khách hàng cá nhân'}
+                        {searchResult.item?.customer_name || searchResult.ticket?.customer_name || t.customerLabel}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Bàn giao: {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
+                      <span>{t.handoverDateLabel} {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
                     </span>
                   </div>
                 </div>
@@ -204,11 +207,11 @@ function WarrantyLookupContent() {
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
                   </span>
                   <span className="text-xs font-bold tracking-wide uppercase">
-                    Đang trong thời hạn bảo hành chính thức
+                    {t.statusActiveBadge}
                   </span>
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  Xác thực hệ thống Vi Tính An Tâm • 1 Đổi 1 Tận Nơi 2H
+                  {t.authSubtitle}
                 </span>
               </div>
             </div>
@@ -216,22 +219,22 @@ function WarrantyLookupContent() {
             {/* Quick Summary Ribbon */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-100 bg-slate-50/70 rounded-2xl p-4">
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Gói dịch vụ</span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">An Tâm Care Gold (12T)</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonPackage}</span>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">An Tâm Care Gold (12M)</p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Sức khỏe Ổ cứng SSD</span>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonSsd}</span>
                 <p className="text-sm font-bold text-emerald-600 mt-0.5">
-                  100% Good (0% Bad Sector)
+                  100% Good (0% Bad)
                 </p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Bản quyền Hệ điều hành</span>
-                <p className="text-sm font-bold text-blue-600 mt-0.5">Win 11 Pro Kỹ Thuật Số</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonOs}</span>
+                <p className="text-sm font-bold text-blue-600 mt-0.5">Win 11 Pro OEM Digital</p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">Chính sách đặc quyền</span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">1 Đổi 1 Trong 2H Tận Nơi</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonPrivilege}</span>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">{currentLang === 'en' ? '2-Hour On-Site Swap' : '1 Đổi 1 Tận Nơi 2H'}</p>
               </div>
             </div>
           </div>
@@ -241,14 +244,14 @@ function WarrantyLookupContent() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  CHI TIẾT THỜI HẠN BẢO HÀNH ĐA TẦNG (Multi-tier Warranty)
+                  {t.multiTierTitle}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Bảo hành độc lập theo từng linh kiện, đối chiếu theo S/N máy mà không làm gián đoạn công việc
+                  {t.multiTierSubtitle}
                 </p>
               </div>
               <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                3 Tầng Bảo Hành
+                {t.multiTierBadge}
               </span>
             </div>
 
@@ -260,16 +263,16 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
                       1
                     </span>
-                    <span className="font-bold text-slate-900">Thân máy, Mainboard &amp; Nguồn CST</span>
-                    <span className="text-slate-500 font-mono">(Hạn đến 15/05/2026)</span>
+                    <span className="font-bold text-slate-900">{t.tier1Title}</span>
+                    <span className="text-slate-500 font-mono">(15/05/2026)</span>
                   </div>
-                  <span className="font-semibold text-blue-700">Còn 115 ngày bảo hành</span>
+                  <span className="font-semibold text-blue-700">{t.tier1Remaining}</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div className="bg-blue-600 h-full rounded-full" style={{ width: '70%' }} />
                 </div>
                 <p className="text-[11px] text-slate-500 leading-snug">
-                  * Hỗ trợ đổi ngay bo mạch hoặc nguồn trong 15 phút tại quầy hoặc trong 2 giờ tận nơi tại Tân An.
+                  {t.tier1Note}
                 </p>
               </div>
 
@@ -280,16 +283,16 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">
                       2
                     </span>
-                    <span className="font-bold text-slate-900">Ổ cứng SSD NVMe &amp; RAM Mới 100%</span>
-                    <span className="text-slate-500 font-mono">(Hạn đến 15/05/2028)</span>
+                    <span className="font-bold text-slate-900">{t.tier2Title}</span>
+                    <span className="text-slate-500 font-mono">(15/05/2028)</span>
                   </div>
-                  <span className="font-semibold text-emerald-700">Bảo hành hãng 36 tháng</span>
+                  <span className="font-semibold text-emerald-700">{t.tier2Remaining}</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div className="bg-emerald-500 h-full rounded-full" style={{ width: '15%' }} />
                 </div>
                 <p className="text-[11px] text-slate-500 leading-snug">
-                  * Bảo hành đổi mới 100% nguyên hộp bởi nhà phân phối chính hãng.
+                  {t.tier2Note}
                 </p>
               </div>
 
@@ -300,16 +303,16 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
                       3
                     </span>
-                    <span className="font-bold text-slate-900">Hỗ trợ Kỹ thuật &amp; Phần mềm Ultraviewer</span>
-                    <span className="text-slate-500 font-mono">(30 ngày miễn phí)</span>
+                    <span className="font-bold text-slate-900">{t.tier3Title}</span>
+                    <span className="text-slate-500 font-mono">(30D)</span>
                   </div>
-                  <span className="font-semibold text-indigo-700">Trực ca 24/7</span>
+                  <span className="font-semibold text-indigo-700">{t.tier3Remaining}</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
                   <div className="bg-indigo-600 h-full rounded-full" style={{ width: '85%' }} />
                 </div>
                 <p className="text-[11px] text-slate-500 leading-snug">
-                  * Hỗ trợ cài máy in hoá đơn, chữ ký số thuế, MISA và xử lý lỗi phát sinh qua mạng.
+                  {t.tier3Note}
                 </p>
               </div>
             </div>
@@ -319,8 +322,8 @@ function WarrantyLookupContent() {
               <div className="text-xs text-slate-600 flex items-center gap-1.5">
                 <Headset className="w-4 h-4 text-blue-600" />
                 <span>
-                  Kỹ thuật viên phụ trách:{' '}
-                  <strong className="text-slate-900">Trịnh Minh Tuấn (KTV Trưởng)</strong>
+                  {t.techLeaderLabel}{' '}
+                  <strong className="text-slate-900">Trịnh Minh Tuấn (Lead Engineer)</strong>
                 </span>
               </div>
               <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -330,13 +333,13 @@ function WarrantyLookupContent() {
                   rel="noopener noreferrer"
                   className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-800 font-semibold transition-all text-center border border-slate-200"
                 >
-                  Nhắn Zalo Kỹ thuật
+                  {t.zaloTechBtn}
                 </a>
                 <Link
                   href="/dat-lich"
                   className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all text-center shadow-xs"
                 >
-                  Đặt Lịch Bảo Dưỡng / Sửa Chữa
+                  {t.bookServiceBtn}
                 </Link>
               </div>
             </div>
@@ -350,10 +353,10 @@ function WarrantyLookupContent() {
               <HelpCircle className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              Không Tìm Thấy Thông Tin Cho &quot;{searchInput}&quot;
+              {t.emptyTitle(searchInput)}
             </h3>
             <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-              Bạn có thể tìm Số Serial (S/N) hoặc Service Tag in trên nhãn dập ở mặt đáy laptop hoặc mặt sau/hông thùng máy PC (Dell: tem Service Tag 7 ký tự; ThinkPad: Serial Number; HP: S/N).
+              {t.emptyDesc}
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <a
@@ -361,7 +364,7 @@ function WarrantyLookupContent() {
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>Gọi Hotline Kỹ Thuật: 0909.053.058</span>
+                <span>{t.callHotlineBtn}</span>
               </a>
               <a
                 href={systemSettings.zaloLink}
@@ -369,7 +372,7 @@ function WarrantyLookupContent() {
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold"
               >
-                Hỗ trợ qua Zalo
+                {t.supportZaloBtn}
               </a>
             </div>
           </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { translations } from '@/lib/i18n';
 import {
   Calendar,
   Clock,
@@ -25,18 +26,19 @@ function AppointmentBookingContent() {
   const prefilledService = searchParams.get('service') || '';
   const prefilledDevice = searchParams.get('device') || '';
 
-  const { addServiceTicket, systemSettings } = useViTinhAnTamStore();
+  const { addServiceTicket, systemSettings, currentLang } = useViTinhAnTamStore();
+  const t = translations[currentLang].bookingPage;
 
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [locationType, setLocationType] = useState<'counter' | 'onsite'>('onsite');
   const [address, setAddress] = useState('');
-  const [deviceType, setDeviceType] = useState(prefilledDevice || 'PC Đồng bộ Dell/HP');
+  const [deviceType, setDeviceType] = useState(prefilledDevice || (currentLang === 'en' ? 'Dell/HP Workstation' : 'PC Đồng bộ Dell/HP'));
   const [serviceNeeded, setServiceNeeded] = useState(prefilledService || '');
   const [appointmentDate, setAppointmentDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [timeSlot, setTimeSlot] = useState('Khung giờ vàng (17:30 - 21:00)');
+  const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ vàng (17:30 - 21:00)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{
     code: string;
@@ -58,21 +60,6 @@ function AppointmentBookingContent() {
     }
   }, [prefilledService, prefilledDevice]);
 
-  const quickServices = [
-    'Nâng cấp SSD NVMe Kingston 256GB (Tăng tốc x5)',
-    'Spa làm mát tra keo Thermalright TF7 (Hạ 15-20°C)',
-    'Cài lại Windows 10/11 Pro sạch không crack',
-    'Máy tính bật không lên nguồn / Kêu tít tít',
-    'Khắc phục máy chậm, đơ khi mở phần mềm MISA/Excel',
-  ];
-
-  const timeSlots = [
-    { label: 'Sáng (08:00 - 11:30)', desc: 'Tiếp nhận giờ hành chính', icon: '🌅' },
-    { label: 'Chiều (13:30 - 17:30)', desc: 'Xử lý trong ngày', icon: '🌤️' },
-    { label: 'Khung giờ vàng (17:30 - 21:00)', desc: 'Ưu tiên cứu hộ sau giờ làm', icon: '⚡' },
-    { label: 'Cứu hộ khẩn cấp (Trong 60 phút)', desc: 'Đội cơ động xuất phát ngay', icon: '🚨' },
-  ];
-
   const handleSelectQuickService = (serv: string) => {
     if (serviceNeeded) {
       if (!serviceNeeded.includes(serv)) {
@@ -86,12 +73,12 @@ function AppointmentBookingContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !customerPhone.trim() || !serviceNeeded.trim()) {
-      setErrorMsg('Vui lòng điền đầy đủ Họ tên, Số điện thoại và Nhu cầu dịch vụ!');
+      setErrorMsg(t.validationError);
       return;
     }
 
     if (locationType === 'onsite' && !address.trim()) {
-      setErrorMsg('Vui lòng nhập địa chỉ cụ thể tại Tân An hoặc các huyện lân cận (Long An - Tây Ninh)!');
+      setErrorMsg(t.addressError);
       return;
     }
 
@@ -144,11 +131,13 @@ function AppointmentBookingContent() {
         location:
           locationType === 'onsite'
             ? address
+            : currentLang === 'en'
+            ? 'Vi Tính An Tâm Hub (45 Nguyen Hue, Ward 1, Tan An City)'
             : 'Trụ sở Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Long An - Tây Ninh)',
         service: serviceNeeded,
       });
     } catch (err) {
-      setErrorMsg('Có lỗi xảy ra trong quá trình đặt lịch. Vui lòng gọi trực tiếp 0909.053.058!');
+      setErrorMsg(currentLang === 'en' ? 'An error occurred during booking. Please call our hotline +84 909.053.058 directly!' : 'Có lỗi xảy ra trong quá trình đặt lịch. Vui lòng gọi trực tiếp 0909.053.058!');
     } finally {
       setIsSubmitting(false);
     }
@@ -161,28 +150,28 @@ function AppointmentBookingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50/50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/" className="hover:text-blue-600">
-            Trang chủ
+          <Link href="/" className="hover:text-blue-600 transition-colors">
+            {t.breadcrumbHome}
           </Link>
           <span>/</span>
-          <span className="text-slate-800 font-semibold">Đặt lịch dịch vụ</span>
+          <span className="text-slate-800 font-semibold">{t.breadcrumbCurrent}</span>
         </div>
 
         {/* Title */}
         <div className="text-center mb-8">
-          <span className="text-xs uppercase tracking-widest text-blue-700 font-bold bg-blue-50 border border-blue-200 px-3.5 py-1 rounded-full inline-flex items-center gap-1.5">
+          <span className="text-xs uppercase tracking-widest text-blue-700 font-bold bg-blue-50 border border-blue-200 px-3.5 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
             <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-            <span>Cứu Hộ Tận Nơi Trong 2 Giờ (Bán Kính 10KM)</span>
+            <span>{t.badge2h}</span>
           </span>
           <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mt-3 tracking-tight">
-            Đặt Lịch Sửa Chữa &amp; Nâng Cấp Máy Tính
+            {t.title}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl mx-auto">
-            Kỹ thuật viên An Tâm mang đầy đủ trang thiết bị chuyên dụng đến kiểm tra, bảo dưỡng và xử lý trực tiếp trước sự giám sát của quý khách.
+          <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl mx-auto leading-relaxed">
+            {t.subtitle}
           </p>
         </div>
 
@@ -194,34 +183,34 @@ function AppointmentBookingContent() {
             </div>
             <div className="space-y-2">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                Đặt Lịch Thành Công!
+                {t.successTitle}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
-                Cảm ơn <strong>{bookingSuccess.name}</strong>, kỹ thuật viên trực ca sẽ liên hệ xác nhận trong vòng 10 phút.
+                {t.successSubtitle(bookingSuccess.name)}
               </p>
             </div>
 
             <div className="bg-slate-50 rounded-2xl p-5 text-xs text-left max-w-md mx-auto space-y-2.5 border border-slate-200">
               <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-                <span className="text-slate-500">Mã phiếu tiếp nhận:</span>
+                <span className="text-slate-500">{t.ticketLabel}</span>
                 <span className="font-mono font-black text-sm text-blue-700">{bookingSuccess.code}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Khách hàng:</span>
+                <span className="text-slate-500">{t.customerLabel}</span>
                 <span className="font-semibold text-slate-800">{bookingSuccess.name} ({bookingSuccess.phone})</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Dịch vụ yêu cầu:</span>
+                <span className="text-slate-500">{t.serviceLabel}</span>
                 <span className="font-semibold text-slate-800 text-right max-w-[220px]">{bookingSuccess.service}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Thời gian hẹn:</span>
+                <span className="text-slate-500">{t.appointmentLabel}</span>
                 <span className="font-semibold text-blue-700">
                   {bookingSuccess.slot} • {bookingSuccess.date}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Địa điểm:</span>
+                <span className="text-slate-500">{t.locationLabel}</span>
                 <span className="font-semibold text-slate-800 text-right max-w-[220px]">
                   {bookingSuccess.location}
                 </span>
@@ -236,19 +225,19 @@ function AppointmentBookingContent() {
                 className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Gửi Xác Nhận Qua Zalo Kỹ Thuật</span>
+                <span>{t.sendZaloBtn}</span>
               </a>
               <button
                 onClick={() => setBookingSuccess(null)}
                 className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors"
               >
-                Đặt thêm lịch khác
+                {t.bookAnotherBtn}
               </button>
               <Link
                 href="/"
                 className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors"
               >
-                Về trang chủ
+                {t.backHomeBtn}
               </Link>
             </div>
           </div>
@@ -266,7 +255,7 @@ function AppointmentBookingContent() {
               {/* 1. Hình thức phục vụ */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5">
-                  1. Chọn hình thức phục vụ
+                  {t.modeTitle}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div
@@ -281,9 +270,9 @@ function AppointmentBookingContent() {
                       <Bike className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900">KTV Đến Tận Nơi (Trong 2 Giờ)</h4>
+                      <h4 className="text-sm font-bold text-slate-900">{t.modeOnsiteTitle}</h4>
                       <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                        Phục vụ tận nhà/văn phòng tại Tân An và bán kính 10km (Long An - Tây Ninh)
+                        {t.modeOnsiteDesc}
                       </p>
                     </div>
                   </div>
@@ -300,9 +289,9 @@ function AppointmentBookingContent() {
                       <Store className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900">Mang Máy Đến Cửa Hàng</h4>
+                      <h4 className="text-sm font-bold text-slate-900">{t.modeCounterTitle}</h4>
                       <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                        45 Nguyễn Huệ, P.1, Tân An (Có chỗ đỗ xe, kiểm tra &amp; lấy ngay sau 30 phút)
+                        {t.modeCounterDesc}
                       </p>
                     </div>
                   </div>
@@ -312,27 +301,27 @@ function AppointmentBookingContent() {
               {/* 2. Thông tin liên hệ */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  2. Thông tin khách hàng
+                  {t.clientInfoTitle}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <span className="text-xs text-slate-500 mb-1 block">Họ và tên *</span>
+                    <span className="text-xs text-slate-500 mb-1 block">{t.clientNameLabel}</span>
                     <input
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="VD: Nguyễn Văn An"
+                      placeholder={t.clientNamePlaceholder}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
                       required
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-slate-500 mb-1 block">Số điện thoại / Zalo *</span>
+                    <span className="text-xs text-slate-500 mb-1 block">{t.clientPhoneLabel}</span>
                     <input
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="VD: 0909053058"
+                      placeholder={t.clientPhonePlaceholder}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
                       required
                     />
@@ -341,12 +330,12 @@ function AppointmentBookingContent() {
 
                 {locationType === 'onsite' && (
                   <div>
-                    <span className="text-xs text-slate-500 mb-1 block">Địa chỉ tiếp nhận tận nơi *</span>
+                    <span className="text-xs text-slate-500 mb-1 block">{t.clientAddressLabel}</span>
                     <input
                       type="text"
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Số nhà, tên đường, phường/xã (VD: 42 Hùng Vương, P.2, Tân An)"
+                      placeholder={t.clientAddressPlaceholder}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
                       required={locationType === 'onsite'}
                     />
@@ -357,24 +346,24 @@ function AppointmentBookingContent() {
               {/* 3. Dòng máy & Nhu cầu */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  3. Nhu cầu sửa chữa / Nâng cấp
+                  {t.serviceTitle}
                 </label>
 
                 <div>
-                  <span className="text-xs text-slate-500 mb-1 block">Dòng máy / Thiết bị</span>
+                  <span className="text-xs text-slate-500 mb-1 block">{t.deviceModelLabel}</span>
                   <input
                     type="text"
                     value={deviceType}
                     onChange={(e) => setDeviceType(e.target.value)}
-                    placeholder="VD: PC Dell OptiPlex 7060, ThinkPad T480s, Laptop HP..."
+                    placeholder={t.deviceModelPlaceholder}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors mb-2"
                   />
                 </div>
 
                 {/* Quick Service Pills */}
-                <span className="text-[11px] text-slate-500 block">Bấm chọn nhanh gói dịch vụ:</span>
+                <span className="text-[11px] text-slate-500 block">{t.quickSelectPrompt}</span>
                 <div className="flex flex-wrap gap-2">
-                  {quickServices.map((qs, idx) => (
+                  {t.quickServices.map((qs, idx) => (
                     <button
                       key={idx}
                       type="button"
@@ -390,7 +379,7 @@ function AppointmentBookingContent() {
                   rows={3}
                   value={serviceNeeded}
                   onChange={(e) => setServiceNeeded(e.target.value)}
-                  placeholder="Mô tả cụ thể hiện trạng máy (VD: Máy đang chạy chậm, cần nâng SSD 256GB và cài Win sạch)..."
+                  placeholder={t.issueDescPlaceholder}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
                   required
                 />
@@ -399,11 +388,11 @@ function AppointmentBookingContent() {
               {/* 4. Thời gian hẹn */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  4. Chọn ngày &amp; khung giờ tiếp nhận
+                  {t.timeSelectTitle}
                 </label>
 
                 <div>
-                  <span className="text-xs text-slate-500 mb-1 block">Ngày hẹn</span>
+                  <span className="text-xs text-slate-500 mb-1 block">{t.dateLabel}</span>
                   <input
                     type="date"
                     value={appointmentDate}
@@ -414,7 +403,7 @@ function AppointmentBookingContent() {
 
                 {/* Time slot chips */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                  {timeSlots.map((ts) => {
+                  {t.timeSlots.map((ts) => {
                     const isSelected = timeSlot === ts.label;
                     return (
                       <div
@@ -445,10 +434,10 @@ function AppointmentBookingContent() {
                   className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>{isSubmitting ? 'Đang gửi yêu cầu tiếp nhận...' : 'Xác Nhận Đặt Lịch Hẹn Ngay'}</span>
+                  <span>{isSubmitting ? t.submittingBtn : t.submitBtn}</span>
                 </button>
                 <p className="text-[11px] text-slate-500 text-center mt-2.5">
-                  Cam kết: Kỹ thuật viên có mặt đúng hẹn • Minh bạch linh kiện • Báo giá trước khi thực hiện.
+                  {t.reassuranceNote}
                 </p>
               </div>
             </form>

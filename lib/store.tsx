@@ -444,6 +444,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const savedShf = localStorage.getItem(STORAGE_KEYS.shiftLogs);
         const savedFaqs = localStorage.getItem(STORAGE_KEYS.faqs);
         const savedRevs = localStorage.getItem(STORAGE_KEYS.reviews);
+        const savedLang = localStorage.getItem('vtat_lang_v2');
 
         if (savedInv) setInventory(JSON.parse(savedInv));
         if (savedCus) setCustomers(JSON.parse(savedCus));
@@ -453,6 +454,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedShf) setShiftLogs(JSON.parse(savedShf));
         if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
         if (savedRevs) setReviews(JSON.parse(savedRevs));
+        if (savedLang === 'vi' || savedLang === 'en') setCurrentLang(savedLang);
       }
 
       setSyncStatus('local');
