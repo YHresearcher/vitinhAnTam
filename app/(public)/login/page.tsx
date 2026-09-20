@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { UserRole, UserAccount } from '@/lib/supabase';
+import { Shield, Wrench, BadgeDollarSign, Mail, Lock, LogIn, ArrowLeft } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
@@ -67,7 +68,7 @@ export default function LoginPage() {
       activeClass: 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs',
       hoverClass: 'hover:border-blue-300 hover:bg-blue-50/30',
       btnBg: 'bg-blue-600 hover:bg-blue-700',
-      icon: 'admin_panel_settings',
+      Icon: Shield,
       iconBg: 'bg-blue-600',
       desc: '✓ Toàn quyền xem & sửa kho, mật khẩu, xóa thành viên, tính lương tiền công.',
     },
@@ -80,7 +81,7 @@ export default function LoginPage() {
       activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
       hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
       btnBg: 'bg-emerald-600 hover:bg-emerald-700',
-      icon: 'build',
+      Icon: Wrench,
       iconBg: 'bg-emerald-600',
       desc: '✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn',
     },
@@ -93,7 +94,7 @@ export default function LoginPage() {
       activeClass: 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs',
       hoverClass: 'hover:border-purple-300 hover:bg-purple-50/30',
       btnBg: 'bg-purple-600 hover:bg-purple-700',
-      icon: 'point_of_sale',
+      Icon: BadgeDollarSign,
       iconBg: 'bg-purple-600',
       desc: '✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa & tồn kho',
     },
@@ -119,43 +120,41 @@ export default function LoginPage() {
           <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Xác Thực Quyền Truy Cập
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500 max-w-md">
-            Hệ thống phân quyền tự động theo vai trò người dùng: Quản Trị Viên (Admin), Kỹ Thuật Viên (Technician), và Kinh Doanh (Sales).
+          <p className="mt-1 text-xs sm:text-sm text-slate-600">
+            Chọn tài khoản mẫu theo vai trò để đăng nhập nhanh, hoặc nhập thông tin được cấp.
           </p>
         </div>
 
-        {/* Main Card Container */}
-        <div className="bg-white border border-slate-200 shadow-xl rounded-3xl p-6 sm:p-8 space-y-6">
-          {/* Success message banner */}
-          {successMessage && (
-            <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-              <span className="material-symbols-outlined text-blue-600 text-lg">check_circle</span>
-              <span>{successMessage}</span>
-            </div>
-          )}
+        {/* Notifications */}
+        {errorMessage && (
+          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-shake">
+            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+        {successMessage && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-pulse">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+            <span>{successMessage}</span>
+          </div>
+        )}
 
-          {/* Error message banner */}
-          {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
-              <span className="material-symbols-outlined text-rose-600 text-lg">error</span>
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* 1-Click Role Access Selector */}
+        {/* Card Container */}
+        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-900/5 border border-slate-200 space-y-6">
+          {/* Quick Login Role Cards */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-base text-blue-600">badge</span>
-                <span>Chọn Vai Trò Để Đăng Nhập Nhanh</span>
-              </label>
-              <span className="text-[11px] text-slate-400 font-medium">1 chạm vào hệ thống</span>
+              <span className="text-xs uppercase tracking-wider font-bold text-slate-500">
+                1. Đăng Nhập 1-Chạm (Demo / Phân Quyền)
+              </span>
+              <span className="text-[11px] text-blue-600 font-semibold">Tự động điền mật khẩu</span>
             </div>
 
-            <div className="grid grid-cols-1 gap-2.5">
+            <div className="space-y-2.5">
               {quickRoles.map((qr) => {
                 if (!qr.user) return null;
                 const isSelected = selectedUserId === qr.user.id;
+                const RoleIcon = qr.Icon;
                 return (
                   <div
                     key={qr.role}
@@ -167,7 +166,7 @@ export default function LoginPage() {
                     <div
                       className={`w-10 h-10 rounded-xl ${qr.iconBg} flex items-center justify-center shrink-0 text-white font-bold shadow-xs`}
                     >
-                      <span className="material-symbols-outlined text-xl">{qr.icon}</span>
+                      <RoleIcon className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
@@ -215,9 +214,7 @@ export default function LoginPage() {
                 Email / Tên Đăng Nhập
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 text-lg">
-                  mail
-                </span>
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
                 <input
                   type="text"
                   required
@@ -235,9 +232,7 @@ export default function LoginPage() {
                 <span className="text-[11px] text-slate-400">Mặc định: 123456</span>
               </div>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 text-lg">
-                  lock
-                </span>
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
                 <input
                   type="password"
                   required
@@ -254,7 +249,7 @@ export default function LoginPage() {
               disabled={isSubmitting}
               className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
-              <span className="material-symbols-outlined text-lg">login</span>
+              <LogIn className="w-4 h-4" />
               <span>{isSubmitting ? 'Đang xác thực...' : 'Xác Nhận Đăng Nhập'}</span>
             </button>
           </form>
@@ -266,7 +261,7 @@ export default function LoginPage() {
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors"
           >
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Quay lại trang chủ Vi Tính An Tâm</span>
           </Link>
         </div>

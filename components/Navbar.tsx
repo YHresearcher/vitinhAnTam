@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -105,7 +106,7 @@ export function Navbar() {
                 className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
                 title="Vào hệ thống quản trị (Dashboard)"
               >
-                <span className="material-symbols-outlined text-xl">account_circle</span>
+                <User className="w-5 h-5" />
               </Link>
               <button
                 type="button"
@@ -113,7 +114,7 @@ export function Navbar() {
                 title="Đăng xuất"
                 className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
-                <span className="material-symbols-outlined text-base">logout</span>
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           ) : (
@@ -122,7 +123,7 @@ export function Navbar() {
               className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
               title={isEn ? "Sign In" : "Đăng nhập"}
             >
-              <span className="material-symbols-outlined text-xl">login</span>
+              <LogIn className="w-5 h-5" />
             </Link>
           )}
 
@@ -133,9 +134,11 @@ export function Navbar() {
             className="md:hidden p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
             aria-label="Toggle Navigation Menu"
           >
-            <span className="material-symbols-outlined text-2xl">
-              {isMobileMenuOpen ? 'close' : 'menu'}
-            </span>
+            {isMobileMenuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </button>
         </div>
       </div>

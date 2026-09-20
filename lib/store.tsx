@@ -24,6 +24,10 @@ import {
   initialOnsiteDispatches,
   initialShiftLogs,
   initialUsers,
+  FaqItem,
+  CustomerReview,
+  initialFaqs,
+  initialCustomerReviews,
 } from './mockData';
 
 
@@ -136,6 +140,15 @@ interface StoreContextType {
   // Shift & Payroll (Admin Only)
   addShiftLog: (shift: Omit<ShiftLog, 'id' | 'created_at'>) => Promise<ShiftLog>;
 
+  // FAQ & Reviews (Admin Management)
+  faqs: FaqItem[];
+  addFaq: (faq: Omit<FaqItem, 'id'>) => Promise<FaqItem>;
+  updateFaq: (id: string, data: Partial<FaqItem>) => Promise<boolean>;
+  deleteFaq: (id: string) => Promise<boolean>;
+  reviews: CustomerReview[];
+  addReview: (review: Omit<CustomerReview, 'id'>) => Promise<CustomerReview>;
+  deleteReview: (id: string) => Promise<boolean>;
+
   // Reset
   resetToDefault: () => void;
 }
@@ -153,6 +166,8 @@ const STORAGE_KEYS = {
   spareParts: 'vtat_spare_parts_v2',
   onsiteDispatches: 'vtat_onsite_dispatches_v2',
   shiftLogs: 'vtat_shift_logs_v2',
+  faqs: 'vtat_faqs_v2',
+  reviews: 'vtat_reviews_v2',
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -164,6 +179,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // Collections
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
   const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [faqs, setFaqs] = useState<FaqItem[]>(initialFaqs);
+  const [reviews, setReviews] = useState<CustomerReview[]>(initialCustomerReviews);
   const [tickets, setTickets] = useState<ServiceTicket[]>(initialTickets);
   const [spareParts, setSpareParts] = useState<SparePart[]>(initialSpareParts);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
@@ -425,6 +442,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const savedSp = localStorage.getItem(STORAGE_KEYS.spareParts);
         const savedOns = localStorage.getItem(STORAGE_KEYS.onsiteDispatches);
         const savedShf = localStorage.getItem(STORAGE_KEYS.shiftLogs);
+        const savedFaqs = localStorage.getItem(STORAGE_KEYS.faqs);
+        const savedRevs = localStorage.getItem(STORAGE_KEYS.reviews);
 
         if (savedInv) setInventory(JSON.parse(savedInv));
         if (savedCus) setCustomers(JSON.parse(savedCus));
@@ -432,6 +451,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedSp) setSpareParts(JSON.parse(savedSp));
         if (savedOns) setOnsiteDispatches(JSON.parse(savedOns));
         if (savedShf) setShiftLogs(JSON.parse(savedShf));
+        if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
+        if (savedRevs) setReviews(JSON.parse(savedRevs));
       }
 
       setSyncStatus('local');
@@ -748,6 +769,61 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  // FAQ CRUD
+  const addFaq = async (faqData: Omit<FaqItem, 'id'>): Promise<FaqItem> => {
+    const newFaq: FaqItem = {
+      ...faqData,
+      id: `faq-${Date.now()}`,
+    };
+    setFaqs((prev) => {
+      const next = [...prev, newFaq];
+      saveToLocal(STORAGE_KEYS.faqs, next);
+      return next;
+    });
+    return newFaq;
+  };
+
+  const updateFaq = async (id: string, data: Partial<FaqItem>): Promise<boolean> => {
+    setFaqs((prev) => {
+      const next = prev.map((f) => (f.id === id ? { ...f, ...data } : f));
+      saveToLocal(STORAGE_KEYS.faqs, next);
+      return next;
+    });
+    return true;
+  };
+
+  const deleteFaq = async (id: string): Promise<boolean> => {
+    setFaqs((prev) => {
+      const next = prev.filter((f) => f.id !== id);
+      saveToLocal(STORAGE_KEYS.faqs, next);
+      return next;
+    });
+    return true;
+  };
+
+  // Review CRUD
+  const addReview = async (revData: Omit<CustomerReview, 'id'>): Promise<CustomerReview> => {
+    const newRev: CustomerReview = {
+      ...revData,
+      id: `rev-${Date.now()}`,
+    };
+    setReviews((prev) => {
+      const next = [newRev, ...prev];
+      saveToLocal(STORAGE_KEYS.reviews, next);
+      return next;
+    });
+    return newRev;
+  };
+
+  const deleteReview = async (id: string): Promise<boolean> => {
+    setReviews((prev) => {
+      const next = prev.filter((r) => r.id !== id);
+      saveToLocal(STORAGE_KEYS.reviews, next);
+      return next;
+    });
+    return true;
+  };
+
   const resetToDefault = () => {
     setUsers(initialUsers);
     setCurrentUser(initialUsers[0]);
@@ -757,6 +833,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setSpareParts(initialSpareParts);
     setOnsiteDispatches(initialOnsiteDispatches);
     setShiftLogs(initialShiftLogs);
+    setFaqs(initialFaqs);
+    setReviews(initialCustomerReviews);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.users);
       localStorage.removeItem(STORAGE_KEYS.userId);
@@ -766,6 +844,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.spareParts);
       localStorage.removeItem(STORAGE_KEYS.onsiteDispatches);
       localStorage.removeItem(STORAGE_KEYS.shiftLogs);
+      localStorage.removeItem(STORAGE_KEYS.faqs);
+      localStorage.removeItem(STORAGE_KEYS.reviews);
     }
   };
 
@@ -801,6 +881,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         spareParts,
         onsiteDispatches,
         shiftLogs,
+        faqs,
+        addFaq,
+        updateFaq,
+        deleteFaq,
+        reviews,
+        addReview,
+        deleteReview,
         isUsingSupabase,
         isLoading,
         syncStatus,

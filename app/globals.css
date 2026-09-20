@@ -73,3 +73,13 @@ body {
 .animate-marquee-slow:hover {
   animation-play-state: paused;
 }
+
+/* Hide Next.js Dev Badge / Indicators */
+nextjs-portal,
+[data-nextjs-dev-overlay],
+[data-nextjs-toast] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

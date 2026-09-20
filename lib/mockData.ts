@@ -528,3 +528,95 @@ export const initialUsers: UserAccount[] = [
     },
   },
 ];
+
+export interface FaqItem {
+  id: string;
+  icon: string;
+  question: string;
+  answer: string;
+}
+
+export const initialFaqs: FaqItem[] = [
+  {
+    id: 'faq-1',
+    icon: 'Clock',
+    question: 'Chính sách xử lý nhanh tận nơi trong 2 giờ áp dụng vào thời gian nào?',
+    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag (S/N) hoặc gọi Hotline 0909.053.058. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (khu vực Long An - Tây Ninh (Tân An, Bến Lức, Trảng Bàng, Gò Dầu, TP. Tây Ninh)) để xử lý ngay. Đặc biệt, dịch vụ xử lý nhanh trong 2 giờ được ưu tiên cao điểm nhất trong khung giờ vàng từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00) nhằm phục vụ quý khách ngoài giờ hành chính mà không làm gián đoạn công việc tại cơ quan hay văn phòng.',
+  },
+  {
+    id: 'faq-2',
+    icon: 'RefreshCw',
+    question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 15 phút hoạt động ra sao?',
+    answer: 'Đối với linh kiện phần cứng (SSD, RAM, nguồn, quạt) phát sinh lỗi, kỹ thuật viên mang linh kiện mới chính hãng nguyên tem đến tận nơi thay thế ngay tại chỗ trong 15 - 30 phút theo Số Serial (S/N) lưu trong hệ thống, cam kết không giữ máy ngâm đồ làm ảnh hưởng đến tiến độ công việc của khách hàng.',
+  },
+  {
+    id: 'faq-3',
+    icon: 'ShieldCheck',
+    question: 'Nâng cấp SSD và cài lại máy có bị mất dữ liệu hóa đơn thuế & MISA không?',
+    answer: 'Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình sao lưu và Clone nguyên bản từ ổ cứng cũ sang SSD mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm kế toán MISA, file ngoài màn hình Desktop và tài khoản Zalo / trình duyệt đều được giữ nguyên 100%, không cần cài đặt lại từ đầu.',
+  },
+  {
+    id: 'faq-4',
+    icon: 'CheckCircle2',
+    question: 'Máy tính cũ tại An Tâm có được mở nắp kiểm tra linh kiện bên trong không?',
+    answer: 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp bo mạch sạch đẹp nguyên bản, đối chiếu Số Serial (S/N) trên bo mạch và vỏ máy, xem nhãn SSD / RAM chính hãng mới nguyên hộp và chạy phần mềm kiểm tra sức khỏe ổ cứng CrystalDiskInfo 100% Good trước khi quyết định thanh toán.',
+  },
+];
+
+export interface CustomerReview {
+  id: string;
+  name: string;
+  role: string;
+  comment: string;
+  service: string;
+  location: string;
+  rating?: number;
+}
+
+export const initialCustomerReviews: CustomerReview[] = [
+  {
+    id: 'rev-1',
+    name: 'Anh Minh Tuấn',
+    role: 'Kế toán trưởng - Cty Vận Tải',
+    comment: 'Trang bị 6 bộ máy Dell OptiPlex cho phòng kế toán dùng phần mềm MISA và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
+    service: 'Dell OptiPlex 7060 SFF',
+    location: 'Tân An (Long An - Tây Ninh)',
+    rating: 5,
+  },
+  {
+    id: 'rev-2',
+    name: 'Chị Mai Lan',
+    role: 'Giáo viên trường THCS',
+    comment: 'Gói bảo dưỡng máy tính và nâng cấp SSD làm dàn máy cũ chạy nhanh như mới. Thích nhất là quy trình làm trực tiếp trước mặt mình, giữ nguyên toàn bộ giáo án và hình ảnh.',
+    service: 'Nâng cấp SSD NVMe & Spa máy',
+    location: 'Thủ Thừa (Long An - Tây Ninh)',
+    rating: 5,
+  },
+  {
+    id: 'rev-3',
+    name: 'Chú Bảy Nam',
+    role: 'Khách hàng cá nhân',
+    comment: 'Tôi lớn tuổi không rành vi tính, may có cháu kỹ thuật qua tận nhà lúc 18h30 cài lại máy in và kiểm tra nguồn máy. Phục vụ tận tình, giải thích rõ ràng, giá cả phải chăng.',
+    service: 'Cứu hộ máy tính tận nơi',
+    location: 'Trảng Bàng (Long An - Tây Ninh)',
+    rating: 5,
+  },
+  {
+    id: 'rev-4',
+    name: 'Anh Quốc Hoàng',
+    role: 'Giám đốc Công ty Xây Dựng',
+    comment: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ và tra cứu bảo hành theo S/N máy rất minh bạch. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
+    service: 'Bảo trì hệ thống PC văn phòng',
+    location: 'KCN Đức Hòa (Long An - Tây Ninh)',
+    rating: 5,
+  },
+  {
+    id: 'rev-5',
+    name: 'Chị Thúy Nga',
+    role: 'Kinh doanh trực tuyến',
+    comment: 'Máy tính bị treo nguồn giữa ca tối, gọi hotline được KTV tới kiểm tra ngay trong hơn 1 tiếng. Thay nguồn mới chính hãng bảo hành 36 tháng đối chiếu S/N rất yên tâm.',
+    service: 'Thay nguồn & Vệ sinh máy',
+    location: 'Gò Dầu (Long An - Tây Ninh)',
+    rating: 5,
+  },
+];

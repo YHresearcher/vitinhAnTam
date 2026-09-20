@@ -1,8 +1,9 @@
 'use client';
 
-import { useViTinhAnTamStore } from '@/lib/store';
 import React from 'react';
 import Link from 'next/link';
+import { useViTinhAnTamStore } from '@/lib/store';
+import { MapPin, Send, Clock, ShieldCheck, CheckCircle, Lock } from 'lucide-react';
 
 export function Footer() {
   const { currentLang, setLang } = useViTinhAnTamStore();
@@ -13,7 +14,7 @@ export function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 text-sm">
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">home_pin</span>
+              <MapPin className="w-4 h-4 text-blue-700 shrink-0" />
               <span>HUB KỸ THUẬT TP. TÂN AN</span>
             </h3>
             <p className="text-slate-600 text-xs leading-relaxed">45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An</p>
@@ -26,7 +27,7 @@ export function Footer() {
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">near_me</span>
+              <Send className="w-4 h-4 text-blue-700 shrink-0" />
               <span>RANH GIỚI DỊCH VỤ (10KM)</span>
             </h3>
             <p className="text-slate-600 text-xs leading-relaxed">
@@ -54,7 +55,7 @@ export function Footer() {
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">schedule</span>
+              <Clock className="w-4 h-4 text-blue-700 shrink-0" />
               <span>GIỜ PHỤC VỤ LINH HOẠT</span>
             </h3>
             <div className="text-xs space-y-2 text-slate-600">
@@ -72,35 +73,35 @@ export function Footer() {
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">policy</span>
+              <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
               <span>CHÍNH SÁCH &amp; ĐIỀU LỆ</span>
             </h3>
             <ul className="text-xs space-y-2 text-slate-600">
               <li className="flex items-start gap-1.5">
-                <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0 mt-0.5">check_circle</span>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <span>Chính sách 1 đổi 1 tận nơi nhanh chóng</span>
               </li>
               <li className="flex items-start gap-1.5">
-                <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0 mt-0.5">check_circle</span>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <span>Cam kết tuyệt đối bảo mật dữ liệu khách hàng</span>
               </li>
             </ul>
           </div>
         </div>
-    
-              <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-                <p>© 2025 Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.</p>
-                <div className="flex flex-wrap items-center gap-5">
-                  <a className="hover:text-blue-700 transition-colors font-medium" href="#chinh-sach">
-                    Quy định bảo hành
-                  </a>
-                  <Link className="hover:text-blue-700 transition-colors flex items-center gap-1 font-medium" href="/login">
-                    <span className="material-symbols-outlined text-sm text-blue-700">lock</span>
-                    <span>Đăng nhập nội bộ</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </footer>
+
+        <div className="pt-8 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© 2025 Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.</p>
+          <div className="flex flex-wrap items-center gap-5">
+            <a className="hover:text-blue-700 transition-colors font-medium" href="#chinh-sach">
+              Quy định bảo hành
+            </a>
+            <Link className="hover:text-blue-700 transition-colors flex items-center gap-1.5 font-medium" href="/login">
+              <Lock className="w-3.5 h-3.5 text-blue-700" />
+              <span>Đăng nhập nội bộ</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 }

@@ -5,6 +5,26 @@ import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { ThermalLabelModal } from '@/components/admin/ThermalLabelModal';
 import { InventoryItem, OnsiteDispatch } from '@/lib/supabase';
+import {
+  Monitor,
+  ArrowUp,
+  Wrench,
+  Bike,
+  AlertTriangle,
+  Navigation,
+  MapPin,
+  AlertCircle,
+  Phone,
+  Map,
+  CheckCircle,
+  Cpu,
+  Laptop,
+  Printer,
+  PlusCircle,
+  FilePlus,
+  Send,
+  ShieldCheck,
+} from 'lucide-react';
 
 export default function DashboardPage() {
   const {
@@ -93,15 +113,15 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <span className="text-xs font-medium text-slate-500">Máy sẵn sàng bán</span>
               <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                <span className="material-symbols-outlined text-[20px]">desktop_windows</span>
+                <Monitor className="w-5 h-5 text-blue-600" />
               </span>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
               <span className="text-3xl font-bold text-slate-900 font-headline tracking-tight">
                 {readyToSellCount + 9}
               </span>
-              <span className="text-xs text-emerald-600 font-semibold flex items-center">
-                <span className="material-symbols-outlined text-[14px]">arrow_upward</span> +3 hôm nay
+              <span className="text-xs text-emerald-600 font-semibold flex items-center gap-0.5">
+                <ArrowUp className="w-3.5 h-3.5" /> +3 hôm nay
               </span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
@@ -120,7 +140,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <span className="text-xs font-medium text-slate-500">Phiếu đang xử lý</span>
               <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
-                <span className="material-symbols-outlined text-[20px]">precision_manufacturing</span>
+                <Wrench className="w-5 h-5 text-blue-600" />
               </span>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
@@ -145,7 +165,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <span className="text-xs font-medium text-slate-500">Lịch cứu hộ Onsite</span>
               <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-                <span className="material-symbols-outlined text-[20px]">two_wheeler</span>
+                <Bike className="w-5 h-5 text-indigo-600" />
               </span>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
@@ -170,7 +190,7 @@ export default function DashboardPage() {
             <div className="flex items-start justify-between">
               <span className="text-xs font-medium text-slate-500">Cảnh báo hết hạn BH</span>
               <span className="p-2 rounded-lg bg-red-50 text-red-600">
-                <span className="material-symbols-outlined text-[20px]">notification_important</span>
+                <AlertTriangle className="w-5 h-5 text-red-600" />
               </span>
             </div>
             <div className="mt-4 flex items-baseline gap-2">
@@ -201,7 +221,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-                  <span className="material-symbols-outlined text-[22px]">route</span>
+                  <Navigation className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-slate-900">
@@ -230,7 +250,7 @@ export default function DashboardPage() {
                       <div>
                         <h3 className="text-sm font-semibold text-slate-900">{disp.customer_name}</h3>
                         <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[14px] text-slate-400">location_on</span>
+                          <MapPin className="w-3.5 h-3.5 text-slate-400" />
                           {disp.address}
                         </p>
                       </div>
@@ -270,9 +290,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200/70 flex items-start gap-2.5">
-                    <span className="material-symbols-outlined text-amber-600 text-[18px] mt-0.5 shrink-0">
-                      power_off
-                    </span>
+                    <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
                     <div className="text-xs leading-relaxed">
                       <span className="font-semibold text-slate-900">Tình trạng: </span>
                       <span className="text-slate-600">{disp.issue_description}</span>
@@ -288,7 +306,7 @@ export default function DashboardPage() {
                           href={`tel:${tel}`}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
                         >
-                          <span className="material-symbols-outlined text-[16px]">call</span>
+                          <Phone className="w-3.5 h-3.5" />
                           <span>Gọi {dispPhone}</span>
                         </a>
                       );
@@ -299,14 +317,14 @@ export default function DashboardPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200"
                     >
-                      <span className="material-symbols-outlined text-[16px] text-slate-500">map</span>
+                      <Map className="w-3.5 h-3.5 text-slate-500" />
                       <span>Mở Google Maps</span>
                     </a>
                     <button
                       onClick={() => handleUpdateDispatch(disp.id, disp.status)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 ml-auto"
                     >
-                      <span className="material-symbols-outlined text-[16px] text-emerald-600">check_circle</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Cập nhật bước tiếp theo</span>
                     </button>
                   </div>
@@ -320,7 +338,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-                  <span className="material-symbols-outlined text-[22px]">memory</span>
+                  <Cpu className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-slate-900">
@@ -342,7 +360,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3.5">
                     <div className="w-12 h-12 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                      <span className="material-symbols-outlined text-[28px]">computer</span>
+                      <Monitor className="w-6 h-6 text-blue-600" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -403,7 +421,7 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3.5">
                     <div className="w-12 h-12 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 shrink-0">
-                      <span className="material-symbols-outlined text-[28px]">laptop_mac</span>
+                      <Laptop className="w-6 h-6 text-slate-700" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -418,7 +436,7 @@ export default function DashboardPage() {
 
                   <div className="text-left sm:text-right">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <span className="material-symbols-outlined text-[14px]">task_alt</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                       Đã hoàn tất kiểm tra
                     </span>
                     <div className="text-[11px] text-slate-500 mt-1 font-mono">100% bài test đạt chuẩn</div>
@@ -448,10 +466,10 @@ export default function DashboardPage() {
                         const itm = inventory.find((i) => i.service_tag === 'TP-994L2A');
                         if (itm) setSelectedItemForLabel(itm);
                       }}
-                      className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-blue-600 hover:border-blue-300 transition-colors flex items-center gap-1.5"
                     >
-                      <span className="material-symbols-outlined text-[15px]">print</span>
-                      <span>In tem 50x30mm</span>
+                      <Printer className="w-3.5 h-3.5 text-slate-600" />
+                      <span>In tem S/N 50x30mm</span>
                     </button>
                     <Link
                       href="/kho-may"
@@ -478,28 +496,28 @@ export default function DashboardPage() {
                 href="/phieu-sua-chua/tao-moi"
                 className="p-3.5 rounded-xl bg-blue-50/60 hover:bg-blue-50 border border-blue-200 text-blue-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-2xl">add_circle</span>
+                <PlusCircle className="w-6 h-6 text-blue-600" />
                 <span className="text-xs font-bold">Tiếp Nhận Máy Mới</span>
               </Link>
               <Link
                 href="/kho-may"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-2xl">post_add</span>
+                <FilePlus className="w-6 h-6 text-slate-700" />
                 <span className="text-xs font-bold">Nhập Máy Vào Kho</span>
               </Link>
               <Link
                 href="/cuu-ho-onsite"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-2xl">near_me</span>
+                <Send className="w-6 h-6 text-slate-700" />
                 <span className="text-xs font-bold">Điều Phối 10km</span>
               </Link>
               <Link
                 href="/tra-cuu-bao-hanh"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
-                <span className="material-symbols-outlined text-2xl">verified</span>
+                <ShieldCheck className="w-6 h-6 text-slate-700" />
                 <span className="text-xs font-bold">Tra Cứu Khách</span>
               </Link>
             </div>

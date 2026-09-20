@@ -19,6 +19,9 @@ import {
   Trash2,
   LogIn,
   Search,
+  Shield,
+  Wrench,
+  BadgeDollarSign,
 } from 'lucide-react';
 
 export default function MemberManagementPage() {
@@ -286,7 +289,7 @@ export default function MemberManagementPage() {
             <p className="text-2xl font-black text-blue-700 mt-0.5">{adminCount}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-            <span className="material-symbols-outlined text-xl">admin_panel_settings</span>
+            <Shield className="w-5 h-5 text-blue-600" />
           </div>
         </div>
 
@@ -296,7 +299,7 @@ export default function MemberManagementPage() {
             <p className="text-2xl font-black text-emerald-700 mt-0.5">{techCount}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-            <span className="material-symbols-outlined text-xl">build</span>
+            <Wrench className="w-5 h-5 text-emerald-600" />
           </div>
         </div>
 
@@ -306,7 +309,7 @@ export default function MemberManagementPage() {
             <p className="text-2xl font-black text-purple-700 mt-0.5">{salesCount}</p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-            <span className="material-symbols-outlined text-xl">point_of_sale</span>
+            <BadgeDollarSign className="w-5 h-5 text-purple-600" />
           </div>
         </div>
       </div>

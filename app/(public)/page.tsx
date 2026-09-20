@@ -2,12 +2,41 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Modal } from 'antd';
+import {
+  CheckCircle,
+  Cpu,
+  HardDrive,
+  ShieldCheck,
+  Zap,
+  Laptop,
+  Monitor,
+  Sparkles,
+  Clock,
+  Wrench,
+  Search,
+  ArrowRight,
+  ArrowUp,
+  Star,
+  Phone,
+  MessageSquare,
+  ChevronDown,
+  Gift,
+  Server,
+  Activity,
+  Check,
+  MapPin,
+  Flame,
+  BadgeCheck,
+} from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { formatVND } from '@/lib/supabase';
+import { formatVND, InventoryItem } from '@/lib/supabase';
 
-interface ProductShowcase {
+interface ShowcaseItem {
   id: string;
   name: string;
+  serviceTag: string;
   badge: string;
   subBadge: string;
   desc: string;
@@ -21,218 +50,147 @@ interface ProductShowcase {
     gift: string;
   };
   price: number;
+  stockCount: number;
+  shelfLocation: string;
+  qcStatus: string;
+  burnInDuration: number;
 }
-
-const PRODUCTS: ProductShowcase[] = [
-  {
-    id: 'p1',
-    name: 'Dell OptiPlex 7060 SFF',
-    badge: 'LOẠI A >95% NGUYÊN BẢN',
-    subBadge: 'Win 11 Pro Bản Quyền Số',
-    desc: 'Đồng bộ siêu êm, tối ưu tác vụ văn phòng, kế toán MISA đa nhiệm.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD_XqyuhdmpmXoCW362MXDLpcj2fNG91cxGDOoIMY0LGcYQAskQWuyJGtcsSnW0pBpyLO7bw1OrQ8wi9mVpOdu-SK1yucTaIPtmGcTUId2_FdxPu1gMtxhRdNoVedwLcITop_byvLpE2nKuxZpLreAdydKpuBCXJR75xOyyXcpwwH66s-vVPj1s4vIPbbmFtAedHsuaex4ZmglXWeieUbZdSc15AyrCaOY-zQ7eyOf4Okia2O9UINYf',
-    category: 'office',
-    specs: {
-      cpu: 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
-      ram: 'RAM 16GB DDR4 Bus 2666 (Nâng max 64GB)',
-      storage: 'SSD NVMe 256GB Mới 100% (BH 36T)',
-      highlight: 'Thân máy BH 12 tháng • Đổi mới tận nơi 2h',
-      gift: 'Tặng combo phím chuột & lót chuột văn phòng',
-    },
-    price: 4950000,
-  },
-  {
-    id: 'p2',
-    name: 'HP ProDesk 400 G5 Mini',
-    badge: 'SIÊU GỌN 1 LÍT • TIẾT KIỆM ĐIỆN',
-    subBadge: 'Quầy Thu Ngân / Kế Toán',
-    desc: 'Gọn gàng trong lòng bàn tay, gắn lưng màn hình, hoạt động 24/7 êm ái.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHypgTcRCO_QFnVWMl5MSGKNjC1WqxTCuKKxWunkvUn9ZMEKWhqPlSEBdDO0-9BpqFr3znjewmjJWd9I1QDCFVWp3bfTpdOUeo3AQP7c9L6A9d1dnWmkW-L1qmwyjqOaRtFcxgODM3sVpYEKKoh4_yX-gbUvpBxNV7XFwOPJERylPsS7sp62N0fT1Ive8lwSLth1DrVYuXtwPUfP4C1iAyKWy-1Dd2jt2azAeCeaSDwZus9pJuDtWB',
-    category: 'office',
-    specs: {
-      cpu: 'Core i3-8100T mát êm, tiêu thụ điện chỉ 35W',
-      ram: 'RAM 8GB DDR4 Bus 2666 (Nâng cấp tối đa 32GB)',
-      storage: 'SSD 128GB M.2 Mới BH 36T + 500GB HDD dữ liệu',
-      highlight: 'Thân máy BH 12 tháng • Cài sẵn Win 10/11 Pro OEM',
-      gift: 'Tích hợp sẵn Wifi 2 băng tần + Bluetooth',
-    },
-    price: 3400000,
-  },
-  {
-    id: 'p3',
-    name: 'ThinkPad T480s (Mỏng Nhẹ)',
-    badge: 'CHUẨN QUÂN ĐỘI MỸ • VỎ CARBON',
-    subBadge: 'Pin Zin 4-5H (Sức khỏe >85%)',
-    desc: 'Bàn phím gõ êm số 1, vỏ sợi carbon siêu nhẹ 1.3kg, cực kỳ bền bỉ.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAY3Z2OKz-xUCFThbDz7BYlPSSjEDsLAhCI4x2H1Up8nZwKBKYBuh7yIYXl6t4mtKIB4g3G0C-18V4mCSHCutXdsJkFacBrXKtB0j-Clmzr9Mog8CnHDhmvjqywzWS7jrpznsTqmR-iZ6hx6bZXeJn_qkONjyUPHu5grKL2C1QIFfRrIGT3llnDDr9RplUzoBtcP9rwwmdNGC5r1nR4joN0h_J9lWRXkR1ZVe8A_ZvdRivoFKlk7oAa',
-    category: 'laptop',
-    specs: {
-      cpu: 'Core i5-8250U (4 nhân 8 luồng mạnh mẽ)',
-      ram: 'RAM 16GB DDR4 đa nhiệm lướt web thả ga',
-      storage: 'SSD 256GB NVMe siêu tốc (BH 36T đổi mới)',
-      highlight: 'Kèm sạc Type-C Zin 65W • BH máy 06 tháng',
-      gift: 'Màn 14" FHD IPS chống chói + Tặng túi chống sốc',
-    },
-    price: 6200000,
-  },
-  {
-    id: 'p4',
-    name: 'Dell Vostro 3670 MT (Core i7)',
-    badge: 'CASE LỚN THOÁNG MÁT • DỄ NÂNG CẤP',
-    subBadge: 'Đồ Họa & Kỹ Thuật',
-    desc: 'Chuyên AutoCAD, Photoshop, Corel, Render video & mở 50 tab Chrome.',
-    img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHGuIrduG_aQa0fIxHB2G8eJVrnLqRVQXGS9uKbJZzSO6i-Q-8scMRHwCrMKPFIoZUU3F92-ySxJkq9bjUm9EBp59F9wGDuzXaegpW9yq3CGs57uhUJbuaBwppDhw7A9lT_ko5HNGgFq_6H2s-OeM6ET7FICEqiBPxQBAYsf0V1gzfIBV-57d46Z5chBxyUxqQtR5JDcy6MKxeinRLSv36JnAhn4o7AIb0WwwPPZodOycfilrkCRJX',
-    category: 'workstation',
-    specs: {
-      cpu: 'Core i7-8700 (6 nhân 12 luồng Turbo 4.60GHz)',
-      ram: 'RAM 16GB DDR4 kênh đôi tản nhiệt tốt',
-      storage: 'SSD 512GB NVMe Mới 100% (BH 36 Tháng)',
-      highlight: 'Nguồn CST chuẩn 80 Plus • BH 12 tháng',
-      gift: 'Card rời GTX 1050Ti 4GB GDDR5 chuyên đồ họa',
-    },
-    price: 7500000,
-  },
-];
-
-
-interface CustomerReview {
-  name: string;
-  role: string;
-  comment: string;
-  service: string;
-  location: string;
-}
-
-const CUSTOMER_REVIEWS: CustomerReview[] = [
-  {
-    name: 'Anh Minh Tuấn',
-    role: 'Kế toán trưởng - Cty Vận Tải',
-    comment: 'Trang bị 6 bộ máy Dell OptiPlex cho phòng kế toán dùng phần mềm MISA và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
-    service: 'Dell OptiPlex 7060 SFF',
-    location: 'Tân An (Long An - Tây Ninh)',
-  },
-  {
-    name: 'Chị Mai Lan',
-    role: 'Giáo viên trường THCS',
-    comment: 'Gói bảo dưỡng máy tính và nâng cấp SSD làm dàn máy cũ chạy nhanh như mới. Thích nhất là quy trình làm trực tiếp trước mặt mình, giữ nguyên toàn bộ giáo án và hình ảnh.',
-    service: 'Nâng cấp SSD NVMe & Spa máy',
-    location: 'Thủ Thừa (Long An - Tây Ninh)',
-  },
-  {
-    name: 'Chú Bảy Nam',
-    role: 'Khách hàng cá nhân',
-    comment: 'Tôi lớn tuổi không rành vi tính, may có cháu kỹ thuật qua tận nhà lúc 18h30 cài lại máy in và kiểm tra nguồn máy. Phục vụ tận tình, giải thích rõ ràng, giá cả phải chăng.',
-    service: 'Cứu hộ máy tính tận nơi',
-    location: 'Trảng Bàng (Long An - Tây Ninh)',
-  },
-  {
-    name: 'Anh Quốc Hoàng',
-    role: 'Giám đốc Công ty Xây Dựng',
-    comment: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ là lý do công ty tôi chọn An Tâm làm đối tác kỹ thuật dài hạn. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
-    service: 'Bảo trì hệ thống PC văn phòng',
-    location: 'KCN Đức Hòa (Long An - Tây Ninh)',
-  },
-  {
-    name: 'Chị Thúy Nga',
-    role: 'Kinh doanh trực tuyến',
-    comment: 'Máy tính bị treo nguồn giữa ca tối, gọi hotline được KTV tới kiểm tra ngay trong hơn 1 tiếng. Thay nguồn mới chính hãng bảo hành 36 tháng có tem niêm phong rất yên tâm.',
-    service: 'Thay nguồn & Vệ sinh máy',
-    location: 'Gò Dầu (Long An - Tây Ninh)',
-  },
-];
-
-interface FaqItem {
-  question: string;
-  answer: string;
-  icon: string;
-}
-
-const FAQ_ITEMS: FaqItem[] = [
-  {
-    icon: 'schedule',
-    question: 'Chính sách xử lý nhanh tận nơi trong 2 giờ áp dụng vào thời gian nào?',
-    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag hoặc gọi Hotline 0909.053.058. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi trong bán kính 10km (khu vực Long An - Tây Ninh (Tân An, Bến Lức, Trảng Bàng, Gò Dầu, TP. Tây Ninh)) để xử lý ngay. Đặc biệt, dịch vụ xử lý nhanh trong 2 giờ được ưu tiên cao điểm nhất trong khung giờ vàng từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00) nhằm phục vụ quý khách ngoài giờ hành chính mà không làm gián đoạn công việc tại cơ quan hay văn phòng.',
-  },
-  {
-    icon: 'sync',
-    question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 15 phút hoạt động ra sao?',
-    answer: 'Đối với linh kiện phần cứng (SSD, RAM, nguồn, quạt) phát sinh lỗi, kỹ thuật viên mang linh kiện mới chính hãng nguyên tem đến tận nơi thay thế ngay tại chỗ trong 15 - 30 phút, cam kết không giữ máy ngâm đồ làm ảnh hưởng đến tiến độ công việc của khách hàng.',
-  },
-  {
-    icon: 'security',
-    question: 'Nâng cấp SSD và cài lại máy có bị mất dữ liệu hóa đơn thuế & MISA không?',
-    answer: 'Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình sao lưu và Clone nguyên bản từ ổ cứng cũ sang SSD mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm kế toán MISA, file ngoài màn hình Desktop và tài khoản Zalo / trình duyệt đều được giữ nguyên 100%, không cần cài đặt lại từ đầu.',
-  },
-  {
-    icon: 'verified_user',
-    question: 'Máy tính cũ tại An Tâm có được mở nắp kiểm tra linh kiện bên trong không?',
-    answer: 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp bo mạch sạch đẹp nguyên bản, xem nhãn SSD / RAM chính hãng mới nguyên hộp và chạy phần mềm kiểm tra sức khỏe ổ cứng CrystalDiskInfo 100% Good trước khi quyết định thanh toán.',
-  },
-];
 
 export default function HomePage() {
-  const { findWarrantyByTagOrPhone } = useViTinhAnTamStore();
+  const router = useRouter();
+  const { inventory, faqs, reviews, findWarrantyByTagOrPhone } = useViTinhAnTamStore();
 
-  // Search state
+  // Search state for quick warranty lookup
   const [searchInput, setSearchInput] = useState('ST-8F4K92X');
-  const [searchResult, setSearchResult] = useState<any>(() => {
-    return findWarrantyByTagOrPhone('ST-8F4K92X');
-  });
-  const [isSearching, setIsSearching] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // Category filter
   const [activeCategory, setActiveCategory] = useState<'all' | 'office' | 'laptop' | 'workstation'>('all');
 
+  // Modal for QC & S/N inspection
+  const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleSearch = (e?: React.FormEvent) => {
+  const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const query = searchInput.trim();
     if (!query) {
-      showToast('Vui lòng nhập Service Tag hoặc Số điện thoại!');
+      showToast('Vui lòng nhập S/N Service Tag hoặc Số điện thoại!');
       return;
     }
-
-    setIsSearching(true);
-    setTimeout(() => {
-      const res = findWarrantyByTagOrPhone(query);
-      setIsSearching(false);
-      if (res && (res.item || res.ticket)) {
-        setSearchResult(res);
-        showToast('Tra cứu thành công!');
-        document.getElementById('lookup-result')?.scrollIntoView({ behavior: 'smooth' });
-      } else {
-        setSearchResult(null);
-        showToast(`Không tìm thấy hồ sơ cho "${query}". Hãy thử ST-8F4K92X hoặc 0918234891!`);
-      }
-    }, 300);
+    router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
   };
 
-  const handleSelectPreset = (tag: string) => {
-    setSearchInput(tag);
-    const res = findWarrantyByTagOrPhone(tag);
-    if (res) {
-      setSearchResult(res);
-      showToast(`Đã tải hồ sơ: ${tag}`);
-      document.getElementById('lookup-result')?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  // Build live showcase products mapped with real inventory
+  const showcaseProducts: ShowcaseItem[] = [
+    {
+      id: 'p1',
+      name: 'Dell OptiPlex 7060 SFF',
+      serviceTag: 'ST-8F4K92X',
+      badge: 'LOẠI A >95% NGUYÊN BẢN',
+      subBadge: 'Win 11 Pro Bản Quyền Số',
+      desc: 'Đồng bộ siêu êm, tối ưu tác vụ văn phòng, kế toán MISA đa nhiệm.',
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD_XqyuhdmpmXoCW362MXDLpcj2fNG91cxGDOoIMY0LGcYQAskQWuyJGtcsSnW0pBpyLO7bw1OrQ8wi9mVpOdu-SK1yucTaIPtmGcTUId2_FdxPu1gMtxhRdNoVedwLcITop_byvLpE2nKuxZpLreAdydKpuBCXJR75xOyyXcpwwH66s-vVPj1s4vIPbbmFtAedHsuaex4ZmglXWeieUbZdSc15AyrCaOY-zQ7eyOf4Okia2O9UINYf',
+      category: 'office',
+      specs: {
+        cpu: 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
+        ram: 'RAM 16GB DDR4 Bus 2666 (Nâng max 64GB)',
+        storage: 'SSD NVMe 256GB Kingston Mới 100% (BH 36T)',
+        highlight: 'Thân máy BH 12 tháng • Đổi mới tận nơi 2h',
+        gift: 'Tặng combo phím chuột & lót chuột văn phòng',
+      },
+      price: 4950000,
+      stockCount: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.quantity ?? 1,
+      shelfLocation: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.shelf_location || 'Kệ Bàn Giao',
+      qcStatus: inventory.find((i) => i.service_tag === 'ST-8F4K92X')?.qc_status || 'ready_to_sell',
+      burnInDuration: 45,
+    },
+    {
+      id: 'p2',
+      name: 'HP ProDesk 400 G5 Mini',
+      serviceTag: 'HP-400G5M',
+      badge: 'SIÊU GỌN 1 LÍT • TIẾT KIỆM ĐIỆN',
+      subBadge: 'Quầy Thu Ngân / Kế Toán',
+      desc: 'Gọn gàng trong lòng bàn tay, gắn lưng màn hình, hoạt động 24/7 êm ái.',
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHypgTcRCO_QFnVWMl5MSGKNjC1WqxTCuKKxWunkvUn9ZMEKWhqPlSEBdDO0-9BpqFr3znjewmjJWd9I1QDCFVWp3bfTpdOUeo3AQP7c9L6A9d1dnWmkW-L1qmwyjqOaRtFcxgODM3sVpYEKKoh4_yX-gbUvpBxNV7XFwOPJERylPsS7sp62N0fT1Ive8lwSLth1DrVYuXtwPUfP4C1iAyKWy-1Dd2jt2azAeCeaSDwZus9pJuDtWB',
+      category: 'office',
+      specs: {
+        cpu: 'Core i3-8100T mát êm, tiêu thụ điện chỉ 35W',
+        ram: 'RAM 8GB DDR4 Bus 2666 (Nâng cấp tối đa 32GB)',
+        storage: 'SSD 128GB M.2 Mới BH 36T + 500GB HDD dữ liệu',
+        highlight: 'Thân máy BH 12 tháng • Cài sẵn Win 10/11 Pro OEM',
+        gift: 'Tích hợp sẵn Wifi 2 băng tần + Bluetooth',
+      },
+      price: 3400000,
+      stockCount: inventory.find((i) => i.service_tag === 'HP-400G5M')?.quantity ?? 5,
+      shelfLocation: inventory.find((i) => i.service_tag === 'HP-400G5M')?.shelf_location || 'Kệ A1 - Tầng 2',
+      qcStatus: inventory.find((i) => i.service_tag === 'HP-400G5M')?.qc_status || 'ready_to_sell',
+      burnInDuration: 45,
+    },
+    {
+      id: 'p3',
+      name: 'ThinkPad T480s (Mỏng Nhẹ)',
+      serviceTag: 'TP-994L2A',
+      badge: 'CHUẨN QUÂN ĐỘI MỸ • VỎ CARBON',
+      subBadge: 'Pin Zin 4-5H (Sức khỏe >85%)',
+      desc: 'Bàn phím gõ êm số 1, vỏ sợi carbon siêu nhẹ 1.3kg, cực kỳ bền bỉ.',
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAY3Z2OKz-xUCFThbDz7BYlPSSjEDsLAhCI4x2H1Up8nZwKBKYBuh7yIYXl6t4mtKIB4g3G0C-18V4mCSHCutXdsJkFacBrXKtB0j-Clmzr9Mog8CnHDhmvjqywzWS7jrpznsTqmR-iZ6hx6bZXeJn_qkONjyUPHu5grKL2C1QIFfRrIGT3llnDDr9RplUzoBtcP9rwwmdNGC5r1nR4joN0h_J9lWRXkR1ZVe8A_ZvdRivoFKlk7oAa',
+      category: 'laptop',
+      specs: {
+        cpu: 'Core i5-8250U (4 nhân 8 luồng mạnh mẽ)',
+        ram: 'RAM 16GB DDR4 đa nhiệm lướt web thả ga',
+        storage: 'SSD 256GB NVMe siêu tốc (BH 36T đổi mới)',
+        highlight: 'Kèm sạc Type-C Zin 65W • BH máy 06 tháng',
+        gift: 'Màn 14" FHD IPS chống chói + Tặng túi chống sốc',
+      },
+      price: 6200000,
+      stockCount: inventory.find((i) => i.service_tag === 'TP-994L2A')?.quantity ?? 2,
+      shelfLocation: inventory.find((i) => i.service_tag === 'TP-994L2A')?.shelf_location || 'Kệ Laptop B2',
+      qcStatus: inventory.find((i) => i.service_tag === 'TP-994L2A')?.qc_status || 'ready_to_sell',
+      burnInDuration: 45,
+    },
+    {
+      id: 'p4',
+      name: 'Dell Vostro 3670 MT (Core i7)',
+      serviceTag: 'DV-3670I7',
+      badge: 'CASE LỚN THOÁNG MÁT • DỄ NÂNG CẤP',
+      subBadge: 'Đồ Họa & Kỹ Thuật',
+      desc: 'Chuyên AutoCAD, Photoshop, Corel, Render video & mở 50 tab Chrome.',
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAHGuIrduG_aQa0fIxHB2G8eJVrnLqRVQXGS9uKbJZzSO6i-Q-8scMRHwCrMKPFIoZUU3F92-ySxJkq9bjUm9EBp59F9wGDuzXaegpW9yq3CGs57uhUJbuaBwppDhw7A9lT_ko5HNGgFq_6H2s-OeM6ET7FICEqiBPxQBAYsf0V1gzfIBV-57d46Z5chBxyUxqQtR5JDcy6MKxeinRLSv36JnAhn4o7AIb0WwwPPZodOycfilrkCRJX',
+      category: 'workstation',
+      specs: {
+        cpu: 'Core i7-8700 (6 nhân 12 luồng Turbo 4.60GHz)',
+        ram: 'RAM 16GB DDR4 kênh đôi tản nhiệt tốt',
+        storage: 'SSD 512GB NVMe Mới 100% (BH 36 Tháng)',
+        highlight: 'Nguồn CST chuẩn 80 Plus • BH 12 tháng',
+        gift: 'Card rời GTX 1050Ti 4GB GDDR5 chuyên đồ họa',
+      },
+      price: 7500000,
+      stockCount: inventory.find((i) => i.service_tag === 'DV-3670I7')?.quantity ?? 3,
+      shelfLocation: inventory.find((i) => i.service_tag === 'DV-3670I7')?.shelf_location || 'Kệ Workstation W1',
+      qcStatus: inventory.find((i) => i.service_tag === 'DV-3670I7')?.qc_status || 'ready_to_sell',
+      burnInDuration: 45,
+    },
+  ];
 
-  const filteredProducts = activeCategory === 'all'
-    ? PRODUCTS
-    : PRODUCTS.filter((p) => p.category === activeCategory);
+  const filteredProducts =
+    activeCategory === 'all'
+      ? showcaseProducts
+      : showcaseProducts.filter((p) => p.category === activeCategory);
+
+  const totalReadyStock = showcaseProducts.reduce((sum, item) => sum + item.stockCount, 0);
 
   return (
     <div className="min-h-screen bg-white text-slate-800 antialiased selection:bg-blue-700 selection:text-white pb-10">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-20 right-4 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-700 text-blue-700 text-xs font-semibold flex items-center gap-2.5 animate-bounce">
-          <span className="material-symbols-outlined text-blue-700 text-lg">check_circle</span>
+          <CheckCircle className="w-4 h-4 text-blue-700 shrink-0" />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -256,25 +214,25 @@ export default function HomePage() {
                 </h1>
                 <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-bold shadow-xs">
-                    <span className="material-symbols-outlined text-base">verified_user</span>
+                    <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
                     <span>WINDOWS BẢN QUYỀN</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-orange-50 border border-orange-200 text-orange-800 text-xs sm:text-sm font-bold shadow-xs">
-                    <span className="material-symbols-outlined text-base text-orange-600">bolt</span>
+                    <Zap className="w-4 h-4 text-orange-600 shrink-0" />
                     <span>DỊCH VỤ XỬ LÝ TẬN NƠI TRONG 2 GIỜ</span>
                   </span>
                 </div>
               </div>
 
               <p className="text-lg sm:text-xl text-slate-700 font-medium leading-relaxed">
-                Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, IBM
+                Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, ThinkPad nguyên bản loại A, kiểm định 24 bước kỹ thuật nghiêm ngặt.
               </p>
 
               {/* 3 Trụ Cột Nổi Bật */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
                 <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                   <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-xl">computer</span>
+                    <Monitor className="w-5 h-5 text-blue-700" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 uppercase">DELL, HP, IBM NGUYÊN BẢN</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
@@ -284,7 +242,7 @@ export default function HomePage() {
 
                 <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                   <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-xl">verified_user</span>
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 uppercase">WINDOWS BẢN QUYỀN</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
@@ -294,7 +252,7 @@ export default function HomePage() {
 
                 <div className="p-4 rounded-xl bg-white border border-blue-100 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group">
                   <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-2.5 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-xl">schedule</span>
+                    <Clock className="w-5 h-5 text-orange-600" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 uppercase">XỬ LÝ TẬN NƠI TRONG 2 GIỜ</h3>
                   <p className="text-xs text-slate-600 mt-1 leading-snug">
@@ -303,37 +261,68 @@ export default function HomePage() {
                 </div>
               </div>
 
+              {/* Quick Warranty Lookup Bar */}
+              <div className="pt-2">
+                <form
+                  onSubmit={handleSearchSubmit}
+                  className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50/90 to-sky-50/70 border border-blue-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
+                >
+                  <div className="flex items-center gap-2 text-blue-800 shrink-0 font-bold text-xs sm:text-sm pl-1">
+                    <Search className="w-4 h-4 text-blue-600" />
+                    <span>Tra Cứu Nhanh S/N:</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Nhập Service Tag dập trên thân máy (VD: ST-8F4K92X, HP-400G5M) hoặc SĐT..."
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                  />
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <span>Tra Cứu Hồ Sơ</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              </div>
+
               {/* Dual CTA Buttons */}
-              <div className="flex flex-wrap items-center gap-3.5 pt-3">
+              <div className="flex flex-wrap items-center gap-3.5 pt-1">
                 <a
                   href="#danh-muc-san-pham"
                   className="px-6 py-3.5 rounded-xl bg-orange-500 text-white font-bold text-sm tracking-wide shadow-lg shadow-orange-500/25 hover:bg-orange-600 transition-all flex items-center gap-2 hover:scale-[1.02]"
                 >
-                  <span className="material-symbols-outlined text-lg">computer</span>
-                  <span>XEM DANH MỤC MÁY</span>
+                  <Monitor className="w-4 h-4" />
+                  <span>XEM DANH MỤC MÁY SẴN HÀNG</span>
                 </a>
                 <Link
                   href="/dat-lich"
                   className="px-6 py-3.5 rounded-xl bg-white border-2 border-blue-700 hover:border-blue-800 text-blue-700 hover:text-blue-800 font-bold text-sm shadow-xs transition-all flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">home_repair_service</span>
+                  <Wrench className="w-4 h-4" />
                   <span>ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI</span>
                 </Link>
               </div>
             </div>
           </section>
 
-
-
           {/* 2. KHỐI 1: DANH MỤC PC & LAPTOP TUYỂN CHỌN */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="danh-muc-san-pham">
-            <div className="mb-8">
-              <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1">
-                THIẾT BỊ SẴN HÀNG - GIAO TRONG 60 PHÚT
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-blue-700 font-bold mb-1 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-blue-700" />
+                  <span>KHO THIẾT BỊ ĐÃ KIỂM ĐỊNH QC - SẴN SÀNG BÀN GIAO TRONG 60 PHÚT</span>
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+                  PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
+                </h2>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
-                PC &amp; LAPTOP TUYỂN CHỌN CHUẨN DOANH NGHIỆP
-              </h2>
+              <div className="text-xs text-slate-500 font-medium">
+                Đang có <strong className="text-blue-700 font-bold">{totalReadyStock} máy</strong> sẵn sàng giao tận nơi
+              </div>
             </div>
 
             {/* Filter Chips */}
@@ -346,7 +335,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                Tất cả (28 máy sẵn)
+                Tất cả ({totalReadyStock} máy sẵn)
               </button>
               <button
                 onClick={() => setActiveCategory('office')}
@@ -366,7 +355,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                Laptop doanh nhân
+                Laptop Doanh Nhân
               </button>
               <button
                 onClick={() => setActiveCategory('workstation')}
@@ -376,7 +365,7 @@ export default function HomePage() {
                     : 'bg-white border border-slate-200 text-slate-700 hover:border-blue-400 hover:text-blue-700'
                 }`}
               >
-                PC đồ họa &amp; kỹ thuật
+                PC Đồ Họa &amp; Kỹ Thuật
               </button>
             </div>
 
@@ -400,46 +389,68 @@ export default function HomePage() {
                       <span className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-xs text-blue-700 border border-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded">
                         {prod.subBadge}
                       </span>
+                      {/* Real stock badge */}
+                      <span className="absolute top-2 right-2 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1">
+                        <Check className="w-3 h-3" />
+                        <span>Sẵn {prod.stockCount} máy</span>
+                      </span>
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 leading-snug">{prod.name}</h3>
-                    <p className="text-xs text-slate-500 mt-1">{prod.desc}</p>
+
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <h3 className="text-base font-bold text-slate-900 leading-snug">{prod.name}</h3>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 font-semibold shrink-0">
+                        S/N: {prod.serviceTag}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-slate-500">{prod.desc}</p>
                     <ul className="my-3 space-y-1.5 text-xs text-slate-700">
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-700">memory</span>
+                        <Cpu className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                         <span>{prod.specs.cpu}</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-700">developer_board</span>
+                        <Activity className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                         <span>{prod.specs.ram}</span>
                       </li>
                       <li className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sm text-blue-700">storage</span>
+                        <HardDrive className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                         <span>{prod.specs.storage}</span>
                       </li>
                       <li className="flex items-center gap-1.5 text-emerald-700 font-medium">
-                        <span className="material-symbols-outlined text-sm text-emerald-600">verified</span>
+                        <BadgeCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>{prod.specs.highlight}</span>
                       </li>
                       <li className="flex items-center gap-1.5 text-slate-600">
-                        <span className="material-symbols-outlined text-sm text-amber-500">card_giftcard</span>
+                        <Gift className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                         <span>{prod.specs.gift}</span>
                       </li>
                     </ul>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 mt-2">
-                    <div className="flex items-baseline justify-between mb-3">
+                  <div className="pt-3 border-t border-slate-100 mt-2 space-y-2">
+                    <div className="flex items-baseline justify-between">
                       <span className="text-xs text-slate-500">Giá trọn bộ niêm yết:</span>
                       <span className="text-lg font-black text-orange-600 font-mono">
                         {formatVND(prod.price)}
                       </span>
                     </div>
-                    <a
-                      href="tel:0909053058"
-                      className="w-full py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
-                    >
-                      ĐẶT LỊCH TEST MÁY
-                    </a>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProduct(prod)}
+                        className="w-full py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                      >
+                        Xem QC &amp; S/N
+                      </button>
+                      <Link
+                        href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent('Đặt mua máy có sẵn')}`}
+                        className="w-full py-2 rounded-lg bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                      >
+                        Đặt Mua Ngay
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -451,7 +462,7 @@ export default function HomePage() {
             <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-sm relative overflow-hidden">
               <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold uppercase">
-                  <span className="material-symbols-outlined text-sm text-blue-700">bolt</span> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
+                  <Zap className="w-4 h-4 text-blue-700" /> DỊCH VỤ CỨU HỘ &amp; BẢO DƯỠNG MÁY TÍNH TẬN NƠI
                 </div>
                 <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                   DỊCH VỤ TẬN NƠI &amp; &quot;SPA HỒI SINH MÁY CŨ&quot; TRONG 2 GIỜ
@@ -474,23 +485,30 @@ export default function HomePage() {
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Thay SSD NVMe/SATA 256GB mới 100% Kingston chính hãng</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Nâng RAM DDR3/DDR4 chính hãng theo bo mạch</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span><strong>Clone Windows bản quyền:</strong> Giữ nguyên 100% phần mềm MISA, Zalo, tài liệu.</span>
                       </div>
                     </div>
                   </div>
-                  <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá minh bạch sau kiểm tra</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Tư vấn nâng cấp đúng nhu cầu, không vẽ bệnh</div>
+                  <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
+                    <div>
+                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá minh bạch sau kiểm tra</div>
+                    </div>
+                    <Link
+                      href={`/dat-lich?service=${encodeURIComponent('Gói Hồi Sinh Máy Cũ')}`}
+                      className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                    >
+                      Đặt Lịch Gói Này
+                    </Link>
                   </div>
                 </div>
 
@@ -501,7 +519,7 @@ export default function HomePage() {
                   </div>
                   <div className="space-y-3">
                     <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
-                      <span className="material-symbols-outlined text-2xl">ac_unit</span>
+                      <Flame className="w-6 h-6 text-blue-700" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">SPA LÀM MÁT CHUYÊN SÂU</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
@@ -509,23 +527,30 @@ export default function HomePage() {
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Thổi bụi công nghiệp sạch sâu buồng linh kiện &amp; cánh quạt</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Tra keo tản nhiệt cao cấp <strong className="text-slate-900">Thermalright TF7 / Arctic MX4</strong></span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Hạ nhiệt 15 - 20°C lập tức, bảo vệ tuổi thọ bo mạch &amp; chip CPU.</span>
                       </div>
                     </div>
                   </div>
-                  <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá tận nơi theo dòng máy</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Kiểm tra nhiệt độ CPU &amp; cánh quạt miễn phí</div>
+                  <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
+                    <div>
+                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá tận nơi theo dòng máy</div>
+                    </div>
+                    <Link
+                      href={`/dat-lich?service=${encodeURIComponent('Spa Làm Mát Chuyên Sâu')}`}
+                      className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                    >
+                      Đặt Lịch Gói Này
+                    </Link>
                   </div>
                 </div>
 
@@ -533,7 +558,7 @@ export default function HomePage() {
                 <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex flex-col justify-between hover:border-blue-300 hover:bg-white transition-all group">
                   <div className="space-y-3">
                     <div className="w-12 h-12 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg group-hover:rotate-6 transition-transform">
-                      <span className="material-symbols-outlined text-2xl">security</span>
+                      <ShieldCheck className="w-6 h-6 text-indigo-700" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">TỐI ƯU WINDOWS BẢN QUYỀN</h3>
                     <p className="text-xs text-slate-600 leading-relaxed">
@@ -541,23 +566,30 @@ export default function HomePage() {
                     </p>
                     <div className="pt-2 space-y-2 text-xs text-slate-700">
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Cài đặt Win 10/11 Pro sạch gốc từ Microsoft</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Office OEM ổn định, chặn đứng virus quảng cáo nhảy popup</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0">check</span>
+                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>Tắt bỏ các tiến trình ngầm rác của Windows cho máy cấu hình yếu</span>
                       </div>
                     </div>
                   </div>
-                  <div className="pt-6 border-t border-slate-200 mt-6">
-                    <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
-                    <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá theo nhu cầu cài đặt</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">Hỗ trợ phần mềm văn phòng &amp; kết nối máy in</div>
+                  <div className="pt-6 border-t border-slate-200 mt-6 space-y-3">
+                    <div>
+                      <div className="text-xs text-slate-500 font-medium">Chi phí dịch vụ:</div>
+                      <div className="text-base sm:text-lg font-bold text-blue-700">Báo giá theo nhu cầu cài đặt</div>
+                    </div>
+                    <Link
+                      href={`/dat-lich?service=${encodeURIComponent('Tối Ưu Windows Bản Quyền')}`}
+                      className="w-full py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                    >
+                      Đặt Lịch Gói Này
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -568,7 +600,7 @@ export default function HomePage() {
                   href="/dat-lich"
                   className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm sm:text-base tracking-wide shadow-lg shadow-orange-500/30 transition-all hover:scale-[1.02]"
                 >
-                  <span className="material-symbols-outlined text-xl">electric_moped</span>
+                  <Zap className="w-5 h-5 text-white" />
                   <span>Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0909.053.058)</span>
                 </Link>
               </div>
@@ -580,14 +612,14 @@ export default function HomePage() {
             <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900 to-blue-800 text-white shadow-lg shadow-blue-900/10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center shrink-0 backdrop-blur-xs">
-                  <span className="material-symbols-outlined text-2xl text-orange-400">verified</span>
+                  <ShieldCheck className="w-6 h-6 text-orange-400" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base sm:text-lg font-bold uppercase tracking-tight">
-                    CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ
+                    CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ THEO S/N
                   </h3>
                   <p className="text-xs sm:text-sm text-blue-100 max-w-xl leading-relaxed">
-                    Mọi thiết bị xuất kho đều được định danh bằng Service Tag. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền mà không sợ rách tem giấy.
+                    Mọi thiết bị xuất xưởng đều được định danh bằng Service Tag dập sẵn trên thân máy. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền mà không cần giữ hoá đơn giấy.
                   </p>
                 </div>
               </div>
@@ -596,7 +628,7 @@ export default function HomePage() {
                 className="px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm shadow-md shadow-orange-500/20 transition-all shrink-0 flex items-center gap-2"
               >
                 <span>Kiểm Tra Ngay</span>
-                <span className="material-symbols-outlined text-base">arrow_forward</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </section>
@@ -604,7 +636,7 @@ export default function HomePage() {
           {/* 5. KHỐI 4: QUY TRÌNH KIỂM ĐỊNH & BẰNG CHỨNG */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-                            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
                 QUY TRÌNH KIỂM ĐỊNH 4 LỚP TRƯỚC KHI GIAO
               </h2>
               <p className="text-xs sm:text-sm text-slate-600">
@@ -616,7 +648,7 @@ export default function HomePage() {
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">01</div>
                 <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">bolt</span>
+                  <Zap className="w-5 h-5 text-blue-700" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase">NGUỒN ĐIỆN ỔN ĐỊNH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
@@ -627,7 +659,7 @@ export default function HomePage() {
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">02</div>
                 <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">mode_fan</span>
+                  <Flame className="w-5 h-5 text-indigo-600" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase">TẢN NHIỆT MÁT ÊM</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
@@ -638,7 +670,7 @@ export default function HomePage() {
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">03</div>
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">storage</span>
+                  <HardDrive className="w-5 h-5 text-emerald-600" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase">Ổ CỨNG 100% SẠCH</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
@@ -649,30 +681,28 @@ export default function HomePage() {
               <div className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition-all relative">
                 <div className="text-3xl font-black text-slate-200 absolute top-4 right-4">04</div>
                 <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center mb-3">
-                  <span className="material-symbols-outlined">verified</span>
+                  <ShieldCheck className="w-5 h-5 text-orange-600" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase">BẢO HÀNH ĐỔI MỚI</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  Bảo hành thiết bị và linh kiện từ 3 đến 36 tháng, kích hoạt bảo hành điện tử.
+                  Bảo hành thiết bị và linh kiện từ 3 đến 36 tháng, kích hoạt bảo hành điện tử theo S/N.
                 </p>
               </div>
             </div>
 
-            {/* NHẬN XÉT CỦA KHÁCH HÀNG (DẠNG CUỘN NGANG TỰ ĐỘNG CHẬM RÃI, 5 REVIEW) */}
+            {/* NHẬN XÉT CỦA KHÁCH HÀNG (DẠNG CUỘN NGANG TỰ ĐỘNG CHẬM RÃI, ĐỒNG BỘ STORE) */}
             <div className="space-y-6 pt-6">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     NHẬN XÉT CỦA KHÁCH HÀNG
                   </h2>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500">
                   <div className="flex text-amber-500">
-                    <span className="material-symbols-outlined text-base fill-current">star</span>
-                    <span className="material-symbols-outlined text-base fill-current">star</span>
-                    <span className="material-symbols-outlined text-base fill-current">star</span>
-                    <span className="material-symbols-outlined text-base fill-current">star</span>
-                    <span className="material-symbols-outlined text-base fill-current">star</span>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-4 h-4 fill-current" />
+                    ))}
                   </div>
                   <span className="font-bold text-slate-900">5.0 / 5.0</span>
                   <span>• Từ khách hàng doanh nghiệp &amp; cá nhân tại Long An - Tây Ninh</span>
@@ -682,7 +712,7 @@ export default function HomePage() {
               {/* Ticker / Marquee auto-scrolling container */}
               <div className="relative overflow-hidden w-full py-2">
                 <div className="animate-marquee-slow gap-5 flex items-stretch">
-                  {[...CUSTOMER_REVIEWS, ...CUSTOMER_REVIEWS].map((rev, idx) => (
+                  {[...reviews, ...reviews].map((rev, idx) => (
                     <div
                       key={idx}
                       className="w-[320px] sm:w-[370px] p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-md transition-all shrink-0 flex flex-col justify-between space-y-3"
@@ -698,7 +728,11 @@ export default function HomePage() {
                               <p className="text-[11px] text-slate-500">{rev.role}</p>
                             </div>
                           </div>
-                          <div className="text-amber-500 text-xs tracking-tighter">★★★★★</div>
+                          <div className="flex text-amber-500">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} className="w-3 h-3 fill-current" />
+                            ))}
+                          </div>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed italic">
                           &quot;{rev.comment}&quot;
@@ -715,7 +749,7 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* 6. KHỐI 5: FAQ DẠNG COLLAPSED TAB (CHỈ SHOW CÂU HỎI, CLICK BUNG CÂU TRẢ LỜI) */}
+          {/* 6. KHỐI 5: FAQ DẠNG COLLAPSED ACCORDION (ĐỒNG BỘ TỪ ADMIN) */}
           <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
             <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
               <div className="text-xs uppercase tracking-widest text-blue-700 font-bold">
@@ -730,14 +764,14 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-3">
-              {FAQ_ITEMS.map((item, idx) => {
+              {faqs.map((item, idx) => {
                 const isOpen = openFaqIndex === idx;
                 return (
                   <div
-                    key={idx}
+                    key={item.id || idx}
                     className="rounded-2xl bg-white border border-slate-200 shadow-xs overflow-hidden transition-all"
                   >
-                    {/* Collapsed Tab Header (Question only) */}
+                    {/* Collapsed Header */}
                     <button
                       type="button"
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
@@ -745,22 +779,20 @@ export default function HomePage() {
                     >
                       <div className="flex items-center gap-3.5">
                         <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-lg">{item.icon}</span>
+                          <ShieldCheck className="w-5 h-5 text-blue-700" />
                         </div>
                         <span className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
                           {item.question}
                         </span>
                       </div>
-                      <span
-                        className={`material-symbols-outlined text-slate-400 transition-transform duration-200 shrink-0 ${
-                          isOpen ? 'rotate-180 text-blue-700 font-bold' : ''
+                      <ChevronDown
+                        className={`w-5 h-5 text-slate-400 transition-transform duration-200 shrink-0 ${
+                          isOpen ? 'rotate-180 text-blue-700' : ''
                         }`}
-                      >
-                        keyboard_arrow_down
-                      </span>
+                      />
                     </button>
 
-                    {/* Expandable Tab Content (Answer) */}
+                    {/* Expandable Content */}
                     {isOpen && (
                       <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 leading-relaxed pl-16 border-t border-slate-100 bg-slate-50/40 animate-fade-in">
                         <p>{item.answer}</p>
@@ -778,7 +810,7 @@ export default function HomePage() {
               <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div className="space-y-6">
                   <div className="space-y-1">
-                                        <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                       MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH
                     </h2>
                   </div>
@@ -788,29 +820,29 @@ export default function HomePage() {
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs font-medium">
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> TP. Tân An (P1 - P7)
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> TP. Tân An (P1 - P7)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Khánh Hậu &amp; Tân Khánh
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> Khánh Hậu &amp; Tân Khánh
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> TT. Thủ Thừa &amp; Xã liền kề
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> TT. Thủ Thừa &amp; Xã liền kề
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Châu Thành (Long An)
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> Châu Thành (Long An)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">location_on</span> Huyện Tân Trụ (Lân cận)
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> Huyện Tân Trụ (Lân cận)
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-blue-700 text-sm">near_me</span> KCN Tân Hương &amp; Lợi Bình Nhơn
+                        <MapPin className="w-4 h-4 text-blue-700 shrink-0" /> KCN Tân Hương &amp; Lợi Bình Nhơn
                       </div>
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-amber-50/70 border-l-4 border-amber-500 border border-amber-200">
                     <h4 className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-amber-600 text-base">schedule</span>
+                      <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                       KHUNG GIỜ VÀNG CỨU HỘ NGOÀI GIỜ (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)
                     </h4>
                     <p className="text-xs text-amber-900/90 mt-1 leading-relaxed">
@@ -862,7 +894,7 @@ export default function HomePage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <span className="material-symbols-outlined text-sm">directions</span> Chỉ đường trên Google Maps
+                      <MapPin className="w-3.5 h-3.5" /> Chỉ đường trên Google Maps
                     </a>
                   </div>
                 </div>
@@ -872,18 +904,18 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* FLOATING CIRCULAR ACTION BUTTONS (Góc phải màn hình) */}
+      {/* FLOATING CIRCULAR ACTION BUTTONS (Góc phải màn hình - Sử dụng Lucide Icons) */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        {/* Kiểm tra bảo hành */}
+        {/* Kiểm tra bảo hành theo S/N */}
         <Link
           href="/tra-cuu-bao-hanh"
-          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-700 border-2 border-blue-700 text-blue-700 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Kiểm tra bảo hành điện tử"
+          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-blue-50 text-blue-700 border-2 border-blue-700 shadow-xl shadow-blue-600/15 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
+          title="Tra cứu bảo hành bằng S/N máy"
         >
-          <span className="material-symbols-outlined text-2xl">qr_code_scanner</span>
+          <ShieldCheck className="w-6 h-6 text-blue-700" />
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span>Kiểm tra bảo hành</span>
+            <span>Tra cứu bảo hành S/N</span>
           </span>
         </Link>
 
@@ -893,7 +925,7 @@ export default function HomePage() {
           className="pointer-events-auto w-13 h-13 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/35 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
           title="Gọi Hotline kỹ thuật 24/7"
         >
-          <span className="material-symbols-outlined text-2xl animate-pulse">phone_in_talk</span>
+          <Phone className="w-6 h-6 animate-pulse" />
           {/* Tooltip */}
           <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-15 px-3 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
             <span className="text-orange-400 font-bold">Hotline:</span>
@@ -909,7 +941,7 @@ export default function HomePage() {
           className="pointer-events-auto w-14 h-14 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-2xl shadow-blue-500/40 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
           title="Nhắn tin Zalo kỹ thuật"
         >
-          <span className="material-symbols-outlined text-2xl">chat</span>
+          <MessageSquare className="w-6 h-6" />
           {/* Live Online Dot */}
           <span className="absolute top-0 right-0 flex h-3.5 w-3.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -929,9 +961,109 @@ export default function HomePage() {
           className="pointer-events-auto w-9 h-9 rounded-full bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200 shadow-md flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group relative"
           title="Lên đầu trang"
         >
-          <span className="material-symbols-outlined text-lg">arrow_upward</span>
+          <ArrowUp className="w-4 h-4 text-slate-600" />
         </button>
       </div>
+
+      {/* QC & S/N INSPECTION MODAL */}
+      <Modal
+        open={!!selectedProduct}
+        onCancel={() => setSelectedProduct(null)}
+        footer={null}
+        centered
+        width={680}
+        title={null}
+        className="qc-detail-modal"
+      >
+        {selectedProduct && (
+          <div className="p-2 sm:p-4 space-y-6">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold mb-1.5">
+                  <BadgeCheck className="w-3.5 h-3.5" />
+                  <span>HỒ SƠ KIỂM ĐỊNH QC 24 BƯỚC • ĐẠT TIÊU CHUẨN</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900">{selectedProduct.name}</h3>
+                <div className="text-xs text-slate-500 font-mono mt-0.5">
+                  S/N Service Tag: <span className="font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{selectedProduct.serviceTag}</span>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-xs text-slate-400">Giá bán niêm yết:</div>
+                <div className="text-xl font-black text-orange-600 font-mono">{formatVND(selectedProduct.price)}</div>
+              </div>
+            </div>
+
+            {/* Hardware & Test Evidence Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-blue-600" />
+                  <span>Vi xử lý &amp; Bộ nhớ:</span>
+                </div>
+                <p className="text-slate-600">{selectedProduct.specs.cpu}</p>
+                <p className="text-slate-600">{selectedProduct.specs.ram}</p>
+                <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 pt-1 border-t border-slate-200/60">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Prime95 Stress Test: Ổn định (Max 68°C)</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                  <HardDrive className="w-4 h-4 text-emerald-600" />
+                  <span>Lưu Trữ &amp; Sức Khỏe Ổ Cứng:</span>
+                </div>
+                <p className="text-slate-600">{selectedProduct.specs.storage}</p>
+                <div className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 pt-1 border-t border-slate-200/60">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>CrystalDiskInfo: 100% Good (0 Giờ Dùng)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Warehouse & QC Meta */}
+            <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 text-xs space-y-2">
+              <div className="font-bold text-blue-900 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Server className="w-4 h-4 text-blue-700" />
+                  <span>Trạng Thái Kho &amp; Bảo Hành:</span>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-bold">
+                  Sẵn {selectedProduct.stockCount} máy tại kho
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-slate-700 text-[11px]">
+                <div>• Vị trí kệ: <strong>{selectedProduct.shelfLocation}</strong></div>
+                <div>• Thời gian Burn-in test: <strong>{selectedProduct.burnInDuration} phút</strong></div>
+                <div>• Bản quyền: <strong>Windows Pro Bản Quyền Số</strong></div>
+                <div>• Chính sách: <strong>Bảo hành 12 tháng 1 đổi 1 tận nơi 2h</strong></div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                href={`/dat-lich?device=${encodeURIComponent(selectedProduct.name)}&service=${encodeURIComponent('Đặt mua máy có sẵn')}`}
+                onClick={() => setSelectedProduct(null)}
+                className="flex-1 py-3 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm text-center transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <span>Đặt Giữ Máy / Giao Tận Nơi</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href={`https://zalo.me/0909053058?text=${encodeURIComponent(`Chào An Tâm, tôi quan tâm máy ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm text-center transition-all shadow-md flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Chat Zalo Xem Ảnh Thật Máy</span>
+              </a>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

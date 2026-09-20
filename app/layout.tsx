@@ -150,6 +150,8 @@ const jsonLd = {
   ],
 };
 
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -171,7 +173,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#F8FAFC] text-[#334155] font-sans antialiased flex flex-col selection:bg-orange-100 selection:text-orange-900">
-        <ClientProvider>{children}</ClientProvider>
+        <AntdRegistry>
+          <ClientProvider>{children}</ClientProvider>
+        </AntdRegistry>
       </body>
     </html>
   );
