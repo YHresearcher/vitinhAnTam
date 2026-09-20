@@ -4,14 +4,13 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
-import { SyncStatusBadge } from './SyncStatusBadge';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TRANSLATIONS } from '@/lib/translations';
 import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { currentUser, isLoggedIn, logout, currentLang, setLang } = useViTinhAnTamStore();
+  const { isLoggedIn, logout, currentLang, setLang } = useViTinhAnTamStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isEn = currentLang === 'en';
@@ -50,24 +49,24 @@ export function Navbar() {
           >
             {t.whyUs}
           </Link>
-          <a
+          <Link
             href="/#danh-muc-san-pham"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {t.products}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#dich-vu-spa"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {t.services}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#chinh-sach"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
           >
             {t.contact}
-          </a>
+          </Link>
         </nav>
 
         {/* Right CTAs */}
@@ -168,27 +167,27 @@ export function Navbar() {
           >
             {t.whyUs}
           </Link>
-          <a
+          <Link
             href="/#danh-muc-san-pham"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
             {t.products}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#dich-vu-spa"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
             {t.services}
-          </a>
-          <a
+          </Link>
+          <Link
             href="/#chinh-sach"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
           >
             {t.contact}
-          </a>
+          </Link>
         </div>
       )}
     </header>

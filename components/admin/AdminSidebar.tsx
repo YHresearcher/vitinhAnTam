@@ -18,6 +18,7 @@ import {
   ArrowLeft,
   Headset,
   X,
+  UserCheck,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -27,7 +28,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings } = useViTinhAnTamStore();
+  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings, customers } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing').length;
 
@@ -37,6 +38,13 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       href: '/dashboard',
       icon: LayoutDashboard,
       badge: null,
+    },
+    {
+      label: 'Khách hàng & CRM',
+      href: '/khach-hang',
+      icon: UserCheck,
+      badge: `${customers.length}`,
+      badgeColor: 'bg-emerald-100 text-emerald-800',
     },
     {
       label: 'Phiếu sửa chữa',

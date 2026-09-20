@@ -4,18 +4,13 @@ import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { OnsiteDispatch } from '@/lib/supabase';
 import {
-  Truck,
   MapPin,
-  Clock,
   Phone,
   User,
   Navigation,
   CheckCircle2,
-  AlertCircle,
-  Plus,
   Compass,
-  Radio,
-  Calendar
+  Radio
 } from 'lucide-react';
 
 const STATUS_CONFIG: Record<
@@ -33,7 +28,7 @@ const STATUS_CONFIG: Record<
 };
 
 export default function CuuHoOnsitePage() {
-  const { onsiteDispatches, updateDispatchStatus, currentUser } = useStore();
+  const { onsiteDispatches, updateDispatchStatus } = useStore();
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [notice, setNotice] = useState<string | null>(null);
 

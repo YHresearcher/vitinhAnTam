@@ -33,7 +33,6 @@ export default function DashboardPage() {
     onsiteDispatches,
     updateDispatchStatus,
     updateQcStatus,
-    currentUser,
   } = useViTinhAnTamStore();
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
@@ -42,7 +41,6 @@ export default function DashboardPage() {
   const readyToSellCount = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
   const inProgressTicketsCount = tickets.filter((t) => t.status === 'processing').length;
   const onsiteCount = onsiteDispatches.filter((d) => d.status !== 'completed').length;
-  const testingItems = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test');
 
   const handleUpdateDispatch = async (id: string, currentStatus: OnsiteDispatch['status']) => {
     const nextStatus: Record<string, OnsiteDispatch['status']> = {

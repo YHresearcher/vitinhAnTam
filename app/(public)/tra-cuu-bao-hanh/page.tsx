@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { formatDateVN } from '@/lib/supabase';
+import { formatDateVN, InventoryItem, ServiceTicket, Customer } from '@/lib/supabase';
 import { TRANSLATIONS } from '@/lib/translations';
 import {
   Search,
@@ -18,6 +18,12 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
+interface SearchResultData {
+  item?: InventoryItem;
+  ticket?: ServiceTicket;
+  customer?: Customer;
+}
+
 function WarrantyLookupContent() {
   const searchParams = useSearchParams();
   const urlTag = searchParams.get('tag') || '';
@@ -25,18 +31,18 @@ function WarrantyLookupContent() {
   const { findWarrantyByTagOrPhone, systemSettings, currentLang } = useViTinhAnTamStore();
   const t = TRANSLATIONS[currentLang || 'vi'].warrantyLookup;
 
-  const [searchInput, setSearchInput] = useState(urlTag || 'ST-8F4K92X');
-  const [searchResult, setSearchResult] = useState<any>(null);
+  const [searchInput, setSearchInput] = useState(urlTag);
+  const [searchResult, setSearchResult] = useState<SearchResultData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (msg: string) => {
+  const showToast = useCallback((msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
-  };
+  }, []);
 
-  const executeSearch = (query: string) => {
+  const executeSearch = useCallback((query: string) => {
     const q = query.trim();
     if (!q) {
       showToast(t.toastEmpty);
@@ -55,21 +61,15 @@ function WarrantyLookupContent() {
         showToast(t.toastNotFound);
       }
     }, 250);
-  };
+  }, [findWarrantyByTagOrPhone, showToast, t.toastEmpty, t.toastNotFound, t.toastSuccess]);
 
   useEffect(() => {
-    if (urlTag) {
-      setSearchInput(urlTag);
+    if (!urlTag) return;
+    const timer = setTimeout(() => {
       executeSearch(urlTag);
-    } else {
-      executeSearch('ST-8F4K92X');
-    }
-  }, [urlTag]);
-
-  const handlePreset = (tag: string) => {
-    setSearchInput(tag);
-    executeSearch(tag);
-  };
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [urlTag, executeSearch]);
 
   return (
     <div className="min-h-screen bg-white pb-24">
@@ -124,29 +124,6 @@ function WarrantyLookupContent() {
                 <span>{isSearching ? t.checking : t.btnCheck}</span>
               </button>
             </form>
-          </div>
-
-          {/* Preset Quick Chips */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-            <span>{t.quickChipsLabel}</span>
-            <button
-              onClick={() => handlePreset('ST-8F4K92X')}
-              className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
-            >
-              ST-8F4K92X (Dell OptiPlex)
-            </button>
-            <button
-              onClick={() => handlePreset('TP-994L2A')}
-              className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
-            >
-              TP-994L2A (ThinkPad T480s)
-            </button>
-            <button
-              onClick={() => handlePreset('0918234891')}
-              className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
-            >
-              0918234891 ({t.clientPhoneLabel})
-            </button>
           </div>
         </div>
       </section>

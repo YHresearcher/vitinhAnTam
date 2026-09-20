@@ -29,14 +29,31 @@ import {
   ArrowLeft,
   RotateCcw,
   Save,
-  CheckCircle2,
   Phone,
   Clock,
   MapPin,
   Star,
+  KeyRound,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
+import { UserAccount } from '@/lib/supabase';
 
 const { TextArea } = Input;
+
+interface FaqFormValues {
+  question: string;
+  answer: string;
+}
+
+interface ReviewFormValues {
+  name: string;
+  role: string;
+  comment: string;
+  service: string;
+  location?: string;
+  rating?: number;
+}
 
 export default function CaiDatPage() {
   const {
@@ -50,6 +67,8 @@ export default function CaiDatPage() {
     reviews,
     addReview,
     deleteReview,
+    users,
+    changeUserPassword,
   } = useViTinhAnTamStore();
 
   const [formData, setFormData] = useState<SystemSettings>({
@@ -65,6 +84,11 @@ export default function CaiDatPage() {
   // Review Modal states
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForm] = Form.useForm();
+
+  // Member Password Modal states
+  const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
+  const [memberNewPassword, setMemberNewPassword] = useState('');
+  const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
 
   const handleChange = (field: keyof SystemSettings, val: string) => {
     setFormData((prev) => ({
@@ -124,7 +148,7 @@ export default function CaiDatPage() {
     setIsFaqModalOpen(true);
   };
 
-  const handleSaveFaq = async (values: any) => {
+  const handleSaveFaq = async (values: FaqFormValues) => {
     if (editingFaq) {
       await updateFaq(editingFaq.id, {
         question: values.question,
@@ -154,7 +178,7 @@ export default function CaiDatPage() {
     setIsReviewModalOpen(true);
   };
 
-  const handleSaveReview = async (values: any) => {
+  const handleSaveReview = async (values: ReviewFormValues) => {
     await addReview({
       name: values.name,
       role: values.role,
@@ -165,6 +189,24 @@ export default function CaiDatPage() {
     });
     message.success('Đã thêm đánh giá khách hàng mới!');
     setIsReviewModalOpen(false);
+  };
+
+  const handleSaveMemberPassword = async () => {
+    if (!memberForPassword) return;
+    if (!memberNewPassword.trim() || memberNewPassword.trim().length < 4) {
+      message.error('Mật khẩu phải có tối thiểu 4 ký tự!');
+      return;
+    }
+    setIsChangingMemberPassword(true);
+    const ok = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
+    setIsChangingMemberPassword(false);
+    if (ok) {
+      message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
+      setMemberForPassword(null);
+      setMemberNewPassword('');
+    } else {
+      message.error('Không thể cập nhật mật khẩu.');
+    }
   };
 
   const handleDeleteReview = async (id: string) => {
@@ -215,7 +257,7 @@ export default function CaiDatPage() {
       title: 'Hành động',
       key: 'actions',
       width: 140,
-      render: (_: any, record: FaqItem) => (
+      render: (_: unknown, record: FaqItem) => (
         <Space size="small">
           <Button
             size="small"
@@ -244,7 +286,7 @@ export default function CaiDatPage() {
     {
       title: 'Khách hàng',
       key: 'customer',
-      render: (_: any, record: CustomerReview) => (
+      render: (_: unknown, record: CustomerReview) => (
         <div>
           <div className="font-bold text-slate-900 text-xs sm:text-sm">{record.name}</div>
           <div className="text-[11px] text-slate-500">{record.role}</div>
@@ -279,7 +321,7 @@ export default function CaiDatPage() {
       title: 'Xóa',
       key: 'action',
       width: 80,
-      render: (_: any, record: CustomerReview) => (
+      render: (_: unknown, record: CustomerReview) => (
         <Popconfirm
           title="Xác nhận xóa"
           description="Bạn có chắc chắn muốn xóa đánh giá này?"
@@ -526,6 +568,99 @@ export default function CaiDatPage() {
               </Card>
             ),
           },
+          {
+            key: 'security',
+            label: (
+              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
+                <KeyRound className="w-4 h-4 text-amber-600" />
+                <span>Bảo Mật &amp; Mật Khẩu Thành Viên</span>
+              </span>
+            ),
+            children: (
+              <Card className="rounded-2xl border-slate-200 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Quản Lý &amp; Đổi Mật Khẩu Thành Viên</h3>
+                    <p className="text-xs text-slate-500">
+                      Quản trị viên có quyền sửa đổi mật khẩu đăng nhập của tất cả nhân sự trong hệ thống.
+                    </p>
+                  </div>
+                  <Link
+                    href="/thanh-vien"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Quản lý phân quyền chi tiết</span>
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-slate-100">
+                  {users.map((u) => (
+                    <div
+                      key={u.id}
+                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-xl ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs shadow-xs`}
+                        >
+                          {u.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs sm:text-sm text-slate-900">{u.name}</span>
+                            <Tag
+                              color={
+                                u.role === 'admin'
+                                  ? 'blue'
+                                  : u.role === 'technician'
+                                  ? 'green'
+                                  : 'purple'
+                              }
+                              className="text-[10px] m-0 font-bold"
+                            >
+                              {u.role === 'admin'
+                                ? 'ADMIN'
+                                : u.role === 'technician'
+                                ? 'KỸ THUẬT'
+                                : 'KINH DOANH'}
+                            </Tag>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
+                            <span>
+                              Tên đăng nhập:{' '}
+                              <strong className="font-mono text-slate-800">{u.email}</strong>
+                            </span>
+                            <span>•</span>
+                            <span>
+                              SĐT: <span className="font-mono text-slate-700">{u.phone}</span>
+                            </span>
+                            <span>•</span>
+                            <span>
+                              Mật khẩu: <span className="font-mono text-blue-600 font-bold">••••••</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <Button
+                          icon={<KeyRound className="w-3.5 h-3.5" />}
+                          onClick={() => {
+                            setMemberForPassword(u);
+                            setMemberNewPassword('');
+                          }}
+                          className="text-xs font-semibold hover:border-amber-500 hover:text-amber-600"
+                        >
+                          Đổi Mật Khẩu
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ),
+          },
         ]}
       />
 
@@ -621,6 +756,88 @@ export default function CaiDatPage() {
             </Button>
           </div>
         </Form>
+      </Modal>
+
+      {/* Modal Đổi Mật Khẩu Thành Viên */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-amber-600">
+            <KeyRound className="w-5 h-5" />
+            <span>Đổi Mật Khẩu Thành Viên</span>
+          </div>
+        }
+        open={Boolean(memberForPassword)}
+        onCancel={() => {
+          setMemberForPassword(null);
+          setMemberNewPassword('');
+        }}
+        footer={null}
+        destroyOnClose
+      >
+        {memberForPassword && (
+          <div className="space-y-4 pt-2">
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Họ và tên:</span>
+                <strong className="text-slate-900">{memberForPassword.name}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Tên đăng nhập (Email):</span>
+                <strong className="font-mono text-slate-900">{memberForPassword.email}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Vai trò:</span>
+                <strong className="text-blue-700 uppercase">{memberForPassword.role}</strong>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-bold text-slate-700">Mật khẩu mới</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+                    let res = '';
+                    for (let i = 0; i < 8; i++) {
+                      res += chars.charAt(Math.floor(Math.random() * chars.length));
+                    }
+                    setMemberNewPassword(res);
+                  }}
+                  className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span>Tạo ngẫu nhiên</span>
+                </button>
+              </div>
+              <Input.Password
+                value={memberNewPassword}
+                onChange={(e) => setMemberNewPassword(e.target.value)}
+                placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)..."
+                className="font-mono text-xs"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                onClick={() => {
+                  setMemberForPassword(null);
+                  setMemberNewPassword('');
+                }}
+              >
+                Hủy
+              </Button>
+              <Button
+                type="primary"
+                loading={isChangingMemberPassword}
+                onClick={handleSaveMemberPassword}
+                className="bg-amber-600 hover:bg-amber-700"
+              >
+                Cập Nhật Mật Khẩu
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

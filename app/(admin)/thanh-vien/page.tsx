@@ -13,9 +13,7 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
-  AlertCircle,
   Sparkles,
-  Copy,
   Trash2,
   LogIn,
   Search,
@@ -42,6 +40,7 @@ export default function MemberManagementPage() {
 
   // Modal States
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
+  const [editUserPassword, setEditUserPassword] = useState('');
   const [passwordModalUser, setPasswordModalUser] = useState<UserAccount | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -110,20 +109,31 @@ export default function MemberManagementPage() {
       avatarBg = 'bg-purple-600';
     }
 
-    const ok = await updateUser(editingUser.id, {
+    const updatePayload: Partial<UserAccount> = {
       name: editingUser.name,
-      email: editingUser.email,
+      email: editingUser.email.trim(),
       phone: editingUser.phone,
       role: editingUser.role,
       roleTitle: defaultTitle,
       avatarBg,
       status: editingUser.status,
       permissions: editingUser.permissions,
-    });
+    };
+
+    if (editUserPassword.trim()) {
+      if (editUserPassword.trim().length < 4) {
+        showToast('Mật khẩu mới phải có tối thiểu 4 ký tự!');
+        return;
+      }
+      updatePayload.password = editUserPassword.trim();
+    }
+
+    const ok = await updateUser(editingUser.id, updatePayload);
 
     if (ok) {
       showToast(`Đã lưu thay đổi thông tin thành viên ${editingUser.name}!`);
       setEditingUser(null);
+      setEditUserPassword('');
     }
   };
 
@@ -463,11 +473,14 @@ export default function MemberManagementPage() {
                 <div className="flex items-center gap-1.5 flex-1">
                   {/* Edit Profile & Role */}
                   <button
-                    onClick={() => setEditingUser(member)}
+                    onClick={() => {
+                      setEditingUser(member);
+                      setEditUserPassword('');
+                    }}
                     className="flex-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center gap-1 border border-blue-200 transition-colors"
                   >
                     <UserCog className="w-3.5 h-3.5" />
-                    <span>Sửa vai trò</span>
+                    <span>Sửa thông tin</span>
                   </button>
 
                   {/* Change Password */}
@@ -639,7 +652,7 @@ export default function MemberManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Đăng Nhập</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Tên Đăng Nhập (Email)</label>
                   <input
                     type="email"
                     required
@@ -657,6 +670,19 @@ export default function MemberManagementPage() {
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Đổi Mật Khẩu Đăng Nhập <span className="font-normal text-slate-400">(Bỏ trống nếu giữ nguyên mật khẩu cũ)</span>
+                </label>
+                <input
+                  type="text"
+                  value={editUserPassword}
+                  onChange={(e) => setEditUserPassword(e.target.value)}
+                  placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)..."
+                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                />
               </div>
 
               {/* Role Selection */}

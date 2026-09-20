@@ -10,13 +10,10 @@ import {
   Truck,
   User,
   Phone,
-  Barcode,
   Laptop,
   CheckSquare,
   Square,
   ShieldCheck,
-  Calculator,
-  Plus,
   Wrench,
   CheckCircle2
 } from 'lucide-react';
@@ -58,6 +55,10 @@ const COMMON_SERVICES = [
     category: 'Bộ nguồn',
   },
 ];
+
+function generateTicketCode(): string {
+  return `TK-${Math.floor(1000 + Math.random() * 9000)}`;
+}
 
 export default function TaoPhieuSuaChuaPage() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function TaoPhieuSuaChuaPage() {
 
     setIsSubmitting(true);
     try {
-      const code = `TK-${Math.floor(1000 + Math.random() * 9000)}`;
+      const code = generateTicketCode();
       const parts = selectedServices.map((sId) => {
         const item = COMMON_SERVICES.find((s) => s.id === sId)!;
         return {
@@ -140,8 +141,8 @@ export default function TaoPhieuSuaChuaPage() {
       });
 
       router.push('/phieu-sua-chua');
-    } catch (err: any) {
-      alert('Lỗi tạo phiếu: ' + (err.message || 'Thử lại'));
+    } catch (err: unknown) {
+      alert('Lỗi tạo phiếu: ' + (err instanceof Error ? err.message : 'Thử lại'));
       setIsSubmitting(false);
     }
   };

@@ -6,7 +6,6 @@ import { InventoryItem, generateCustomerCode } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import {
   Search,
-  Filter,
   Plus,
   Printer,
   ShieldCheck,
@@ -16,9 +15,6 @@ import {
   Lock,
   ShoppingBag,
   UserCheck,
-  Calendar,
-  Hash,
-  Sparkles,
   Edit2,
   Trash2,
   CheckCircle2,
@@ -26,8 +22,7 @@ import {
   Clock,
   MapPin,
   Barcode,
-  X,
-  RefreshCw
+  X
 } from 'lucide-react';
 
 export default function KhoMayPage() {
@@ -237,8 +232,8 @@ export default function KhoMayPage() {
         qc_status: 'testing',
         warranty_months: 12,
       });
-    } catch (err: any) {
-      alert('Lỗi: ' + (err.message || 'Không thể thêm máy'));
+    } catch (err: unknown) {
+      alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm máy'));
     }
   };
 
@@ -278,7 +273,7 @@ export default function KhoMayPage() {
         {/* Action Button: Accessible to Admin, KTV, and Sales */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
         >
           <Plus className="w-4 h-4" />
           Nhập Máy Mới Về Kho
@@ -441,7 +436,6 @@ export default function KhoMayPage() {
                 filteredInventory.map((item) => {
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
-                  const isSold = item.qc_status === 'sold';
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">

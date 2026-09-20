@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Bad Request', message: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Invalid request payload';
+    return NextResponse.json({ error: 'Bad Request', message }, { status: 400 });
   }
 }

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Modal } from 'antd';
 import {
@@ -10,7 +11,6 @@ import {
   HardDrive,
   ShieldCheck,
   Zap,
-  Laptop,
   Monitor,
   Sparkles,
   Clock,
@@ -444,12 +444,14 @@ export default function HomePage() {
                 >
                   <div>
                     <div className="relative h-44 rounded-lg overflow-hidden mb-3.5 bg-slate-100 border border-slate-100">
-                      <img
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      <Image
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                         alt={prod.name}
                         src={prod.img}
                       />
-                      <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md shadow-xs">
+                      <span className="absolute top-2 left-2 bg-orange-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-md shadow-xs z-10">
                         {prod.badge}
                       </span>
                       <span className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-xs text-blue-700 border border-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded">

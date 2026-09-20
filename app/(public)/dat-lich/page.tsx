@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
@@ -44,15 +44,6 @@ function AppointmentBookingContent() {
     service: string;
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
-
-  useEffect(() => {
-    if (prefilledService && !serviceNeeded) {
-      setServiceNeeded(prefilledService);
-    }
-    if (prefilledDevice) {
-      setDeviceType(prefilledDevice);
-    }
-  }, [prefilledService, prefilledDevice]);
 
   const handleSelectQuickService = (serv: string) => {
     if (serviceNeeded) {
@@ -128,7 +119,7 @@ function AppointmentBookingContent() {
             : (currentLang === 'en' ? 'Vi Tinh An Tam Hub (45 Nguyen Hue, Ward 1, Tan An)' : 'Trụ sở Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Long An - Tây Ninh)'),
         service: serviceNeeded,
       });
-    } catch (err) {
+    } catch {
       setErrorMsg(t.errGeneric);
     } finally {
       setIsSubmitting(false);

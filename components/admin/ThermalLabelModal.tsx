@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { InventoryItem } from '@/lib/supabase';
-import { Printer, Tag, X, CheckCircle2 } from 'lucide-react';
+import { Printer, Tag, X } from 'lucide-react';
 
 interface ThermalLabelModalProps {
   item: InventoryItem | null;

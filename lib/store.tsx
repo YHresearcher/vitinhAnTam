@@ -5,9 +5,7 @@ import {
   supabase,
   isSupabaseConfigured,
   UserRole,
-  UserProfile,
   UserAccount,
-  MOCK_USERS,
   Customer,
   InventoryItem,
   SparePart,
@@ -81,6 +79,12 @@ interface StoreContextType {
   canAccessSettings: () => boolean;
   canManageUsers: () => boolean;
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
+  canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
+
+  // CRM Customer actions
+  addCustomer: (customer: Omit<Customer, 'id' | 'created_at'>) => Promise<Customer>;
+  updateCustomer: (id: string, updates: Partial<Customer>) => Promise<boolean>;
+  deleteCustomer: (id: string) => Promise<boolean>;
 
   // Sales & Handover action (Admin & Sales)
   sellInventoryItem: (params: {
@@ -204,6 +208,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canSellAndEditWarranty = () => currentUser.role === 'admin' || currentUser.role === 'sales';
+  const canAccessCRM = () => currentUser.role === 'admin' || currentUser.role === 'sales';
 
   const setCurrentUserRole = (role: UserRole) => {
     const found = users.find((u) => u.role === role) || initialUsers.find((u) => u.role === role) || initialUsers[0];
@@ -774,6 +779,62 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  // CRM Customer Management
+  const addCustomer = async (customerData: Omit<Customer, 'id' | 'created_at'>): Promise<Customer> => {
+    const existingCodes = customers
+      .map((c) => c.customer_code)
+      .filter((code): code is string => Boolean(code));
+    const customerCode =
+      customerData.customer_code ||
+      generateCustomerCode(customerData.birth_date || '1990-01-01', customerData.phone, existingCodes);
+
+    const newCustomer: Customer = {
+      ...customerData,
+      id: `cus-${Date.now()}`,
+      customer_code: customerCode,
+      created_at: new Date().toISOString(),
+    };
+
+    setCustomers((prev) => {
+      const next = [newCustomer, ...prev];
+      saveToLocal(STORAGE_KEYS.customers, next);
+      return next;
+    });
+
+    return newCustomer;
+  };
+
+  const updateCustomer = async (id: string, updates: Partial<Customer>): Promise<boolean> => {
+    let updated = false;
+    setCustomers((prev) => {
+      const next = prev.map((c) => {
+        if (c.id === id) {
+          updated = true;
+          return { ...c, ...updates };
+        }
+        return c;
+      });
+      if (updated) {
+        saveToLocal(STORAGE_KEYS.customers, next);
+      }
+      return next;
+    });
+    return updated;
+  };
+
+  const deleteCustomer = async (id: string): Promise<boolean> => {
+    let deleted = false;
+    setCustomers((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      if (next.length !== prev.length) {
+        deleted = true;
+        saveToLocal(STORAGE_KEYS.customers, next);
+      }
+      return next;
+    });
+    return deleted;
+  };
+
   // FAQ CRUD
   const addFaq = async (faqData: Omit<FaqItem, 'id'>): Promise<FaqItem> => {
     const newFaq: FaqItem = {
@@ -875,11 +936,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         canAccessSettings,
         canManageUsers,
         canSellAndEditWarranty,
+        canAccessCRM,
         sellInventoryItem,
         updateUser,
         changeUserPassword,
         addUser,
         deleteUser,
+        addCustomer,
+        updateCustomer,
+        deleteCustomer,
         inventory,
         customers,
         tickets,

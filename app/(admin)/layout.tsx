@@ -111,7 +111,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page Body */}
-        <main className="pt-16 p-4 sm:p-6 lg:p-8 flex-1 bg-white">{children}</main>
+        <main className="mt-16 p-4 sm:p-6 lg:p-8 flex-1 bg-white">{children}</main>
       </div>
     </div>
   );

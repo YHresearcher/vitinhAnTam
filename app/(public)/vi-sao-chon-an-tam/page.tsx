@@ -13,19 +13,16 @@ import {
   Briefcase,
   Phone,
   Calendar,
-  ShieldCheck,
-  Cpu,
-  Clock,
   ThumbsUp,
 } from 'lucide-react';
+
+type SegmentKey = 'all' | 'business' | 'student' | 'officer';
 
 export default function WhyUsPage() {
   const { currentLang } = useViTinhAnTamStore();
   const t = TRANSLATIONS[currentLang || 'vi'].whyUs;
 
-  const [selectedSegment, setSelectedSegment] = useState<'all' | 'business' | 'student' | 'officer'>('all');
-
-  const comparisonIcons = [Cpu, ShieldCheck, CheckCircle2, Clock];
+  const [selectedSegment, setSelectedSegment] = useState<SegmentKey>('all');
 
   const segments = [
     {
@@ -96,8 +93,7 @@ export default function WhyUsPage() {
           </div>
 
           <div className="space-y-4">
-            {t.comparisons.map((item, idx) => {
-              const Icon = comparisonIcons[idx % comparisonIcons.length];
+            {t.comparisons.map((item) => {
               return (
                 <div
                   key={item.id}
@@ -145,7 +141,7 @@ export default function WhyUsPage() {
                 <button
                   key={seg.key}
                   type="button"
-                  onClick={() => setSelectedSegment(seg.key as any)}
+                  onClick={() => setSelectedSegment(seg.key as SegmentKey)}
                   className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shadow-xs ${
                     isSelected
                       ? 'bg-blue-600 text-white shadow-blue-500/25 ring-2 ring-blue-400'

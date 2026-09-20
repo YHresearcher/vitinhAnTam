@@ -10,7 +10,6 @@ import {
   Wrench,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Phone,
   Barcode,
   Truck,
@@ -19,7 +18,6 @@ import {
   Calendar,
   DollarSign,
   User,
-  Filter,
   X
 } from 'lucide-react';
 
@@ -119,7 +117,7 @@ export default function PhieuSuaChuaPage() {
 
         <Link
           href="/phieu-sua-chua/tao-moi"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
         >
           <Plus className="w-4 h-4" />
           Tạo Phiếu Tiếp Nhận Mới
@@ -298,7 +296,7 @@ export default function PhieuSuaChuaPage() {
                         </div>
                         <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
                           <Calendar className="w-3 h-3" />
-                          {new Date(ticket.created_at || Date.now()).toLocaleDateString('vi-VN')}
+                          {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('vi-VN') : 'Hôm nay'}
                         </div>
                       </td>
 
