@@ -3,7 +3,6 @@ export type SupportedLang = 'vi' | 'en';
 export const TRANSLATIONS = {
   vi: {
     navbar: {
-      tagline: 'Chuyên Nghiệp & Tận Tâm',
       slogan: 'Bán bằng tâm để bạn an tâm',
       home: 'Trang chủ',
       whyUs: 'Vì sao chọn An Tâm',
@@ -395,7 +394,6 @@ export const TRANSLATIONS = {
   },
   en: {
     navbar: {
-      tagline: 'Professional & Dedicated',
       slogan: 'Sold from the Heart, Safe from the Start',
       home: 'Home',
       whyUs: 'Why Choose An Tam',

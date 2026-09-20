@@ -7,15 +7,13 @@ import { TRANSLATIONS } from '@/lib/translations';
 interface LogoProps {
   className?: string;
   variant?: 'light' | 'dark';
-  tagline?: string;
   slogan?: string;
 }
 
-export function Logo({ className = 'h-10 w-auto', variant = 'light', tagline, slogan }: LogoProps) {
+export function Logo({ className = 'h-10 w-auto', variant = 'light', slogan }: LogoProps) {
   const { currentLang } = useViTinhAnTamStore();
   const currentSlogan =
     slogan ||
-    tagline ||
     TRANSLATIONS[currentLang || 'vi']?.navbar?.slogan ||
     (currentLang === 'en' ? 'Sold from the Heart, Safe from the Start' : 'Bán bằng tâm để bạn an tâm');
 

@@ -21,14 +21,11 @@ export function Navbar() {
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
       {/* Main Header */}
       <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-        {/* Logo */}
+        {/* Logo with Slogan */}
         <div className="flex items-center gap-2.5">
           <Link href="/" className="shrink-0">
             <Logo />
           </Link>
-          <span className="hidden xl:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase tracking-wider">
-            {t.tagline}
-          </span>
         </div>
 
         {/* Desktop Navigation */}
