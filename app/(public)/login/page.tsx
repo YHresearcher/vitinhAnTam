@@ -4,13 +4,15 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { TRANSLATIONS } from '@/lib/translations';
 import { UserRole, UserAccount } from '@/lib/supabase';
 import { Shield, Wrench, BadgeDollarSign, Mail, Lock, LogIn, ArrowLeft } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { users, currentUser, loginWithCredentials, setCurrentUserById } = useViTinhAnTamStore();
+  const { users, loginWithCredentials, setCurrentUserById, currentLang } = useViTinhAnTamStore();
+  const t = TRANSLATIONS[currentLang || 'vi'].login;
 
   const [selectedUserId, setSelectedUserId] = useState<string>(users[0]?.id || 'u-admin-1');
   const [emailInput, setEmailInput] = useState(users[0]?.email || 'admin@vitinhantham.vn');
@@ -47,7 +49,7 @@ export default function LoginPage() {
 
   const handleQuickLoginUser = (user: UserAccount) => {
     setCurrentUserById(user.id);
-    setSuccessMessage(`Đăng nhập nhanh thành công: ${user.roleTitle} (${user.name})!`);
+    setSuccessMessage(currentLang === 'en' ? `Quick sign-in successful: ${user.roleTitle} (${user.name})!` : `Đăng nhập nhanh thành công: ${user.roleTitle} (${user.name})!`);
     setTimeout(() => {
       router.push('/dashboard');
     }, 450);
@@ -62,41 +64,41 @@ export default function LoginPage() {
     {
       role: 'admin' as UserRole,
       user: adminMember,
-      label: 'Quản Trị Viên (Admin)',
-      badge: 'Toàn Quyền',
+      label: currentLang === 'en' ? 'System Administrator (Admin)' : 'Quản Trị Viên (Admin)',
+      badge: currentLang === 'en' ? 'Full Control' : 'Toàn Quyền',
       badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
       activeClass: 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs',
       hoverClass: 'hover:border-blue-300 hover:bg-blue-50/30',
       btnBg: 'bg-blue-600 hover:bg-blue-700',
       Icon: Shield,
       iconBg: 'bg-blue-600',
-      desc: '✓ Toàn quyền xem & sửa kho, mật khẩu, xóa thành viên, tính lương tiền công.',
+      desc: currentLang === 'en' ? '✓ Full authority to manage inventory, credentials, remove staff, view payroll & revenue.' : '✓ Toàn quyền xem & sửa kho, mật khẩu, xóa thành viên, tính lương tiền công.',
     },
     {
       role: 'technician' as UserRole,
       user: techMember,
-      label: 'Kỹ Thuật Viên (Technician)',
-      badge: 'Kỹ Thuật & QC',
+      label: currentLang === 'en' ? 'Technical Lead (Technician)' : 'Kỹ Thuật Viên (Technician)',
+      badge: currentLang === 'en' ? 'Engineering & QC' : 'Kỹ Thuật & QC',
       badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
       activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
       hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
       btnBg: 'bg-emerald-600 hover:bg-emerald-700',
       Icon: Wrench,
       iconBg: 'bg-emerald-600',
-      desc: '✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn',
+      desc: currentLang === 'en' ? '✓ Diagnostics, ticket status dispatch, warehouse receiving • 🔒 Stock editing restricted' : '✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn',
     },
     {
       role: 'sales' as UserRole,
       user: salesMember,
-      label: 'Nhân Viên Kinh Doanh (Sales)',
-      badge: 'Kinh Doanh & CSKH',
+      label: currentLang === 'en' ? 'Sales Consultant (Sales)' : 'Nhân Viên Kinh Doanh (Sales)',
+      badge: currentLang === 'en' ? 'Sales & CS' : 'Kinh Doanh & CSKH',
       badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
       activeClass: 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs',
       hoverClass: 'hover:border-purple-300 hover:bg-purple-50/30',
       btnBg: 'bg-purple-600 hover:bg-purple-700',
       Icon: BadgeDollarSign,
       iconBg: 'bg-purple-600',
-      desc: '✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa & tồn kho',
+      desc: currentLang === 'en' ? '✓ Browse live stock, initiate customer service tickets • 🔒 Technical dispatch locked' : '✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa & tồn kho',
     },
   ];
 
@@ -115,13 +117,13 @@ export default function LoginPage() {
           </Link>
           <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-bold text-blue-700">
             <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span>CỔNG ĐĂNG NHẬP HỆ THỐNG NỘI BỘ</span>
+            <span>{t.badge}</span>
           </div>
           <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Xác Thực Quyền Truy Cập
+            {t.title}
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-slate-600">
-            Chọn tài khoản mẫu theo vai trò để đăng nhập nhanh, hoặc nhập thông tin được cấp.
+            {t.subtitle}
           </p>
         </div>
 
@@ -145,9 +147,9 @@ export default function LoginPage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs uppercase tracking-wider font-bold text-slate-500">
-                1. Đăng Nhập 1-Chạm (Demo / Phân Quyền)
+                {t.oneClickTitle}
               </span>
-              <span className="text-[11px] text-blue-600 font-semibold">Tự động điền mật khẩu</span>
+              <span className="text-[11px] text-blue-600 font-semibold">{t.oneClickAuto}</span>
             </div>
 
             <div className="space-y-2.5">
@@ -190,7 +192,7 @@ export default function LoginPage() {
                       }}
                       className={`px-3 py-1.5 rounded-lg ${qr.btnBg} text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center`}
                     >
-                      Đăng Nhập
+                      {t.btnQuickLogin}
                     </button>
                   </div>
                 );
@@ -202,7 +204,7 @@ export default function LoginPage() {
           <div className="relative flex py-1 items-center">
             <div className="flex-grow border-t border-slate-200"></div>
             <span className="flex-shrink mx-4 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
-              Hoặc Đăng Nhập Bằng Mật Khẩu
+              {t.orDivider}
             </span>
             <div className="flex-grow border-t border-slate-200"></div>
           </div>
@@ -211,7 +213,7 @@ export default function LoginPage() {
           <form onSubmit={handleFormLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                Email / Tên Đăng Nhập
+                {t.emailLabel}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
@@ -228,8 +230,8 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-slate-700">Mật Khẩu</label>
-                <span className="text-[11px] text-slate-400">Mặc định: 123456</span>
+                <label className="block text-xs font-bold text-slate-700">{t.passwordLabel}</label>
+                <span className="text-[11px] text-slate-400">{t.defaultPasswordHint}</span>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
@@ -250,7 +252,7 @@ export default function LoginPage() {
               className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
               <LogIn className="w-4 h-4" />
-              <span>{isSubmitting ? 'Đang xác thực...' : 'Xác Nhận Đăng Nhập'}</span>
+              <span>{isSubmitting ? t.verifying : t.btnSubmit}</span>
             </button>
           </form>
         </div>
@@ -262,7 +264,7 @@ export default function LoginPage() {
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Quay lại trang chủ Vi Tính An Tâm</span>
+            <span>{t.backToHome}</span>
           </Link>
         </div>
       </div>

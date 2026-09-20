@@ -3,12 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { TRANSLATIONS } from '@/lib/translations';
 import { MapPin, Send, Clock, ShieldCheck, CheckCircle, Lock } from 'lucide-react';
-import { translations } from '@/lib/i18n';
 
 export function Footer() {
   const { currentLang } = useViTinhAnTamStore();
-  const t = translations[currentLang].footer;
+  const t = TRANSLATIONS[currentLang || 'vi'].footer;
 
   return (
     <footer className="w-full bg-white border-t border-slate-200 pt-10 pb-10 text-slate-600 mt-16 shadow-[0_-4px_24px_rgba(0,0,0,0.02)]">
@@ -21,36 +21,34 @@ export function Footer() {
             </h3>
             <p className="text-slate-600 text-xs leading-relaxed">{t.hubAddress}</p>
             <div className="pt-1 space-y-1.5 text-xs text-slate-600">
-              <p><strong className="text-slate-900 font-bold">{t.hotlineZalo}</strong></p>
-              <p><strong className="text-slate-900 font-bold">{t.supportHours}</strong></p>
-              <p><strong className="text-slate-900 font-bold">{t.email}</strong></p>
+              <p><strong className="text-slate-900 font-bold">{t.hotlineLabel}</strong> <span className="text-blue-700 font-bold">0909.053.058</span></p>
+              <p><strong className="text-slate-900 font-bold">{t.techSupportLabel}</strong> {t.techSupportValue}</p>
+              <p><strong className="text-slate-900 font-bold">{t.emailLabel}</strong> lienhe@vitinhantham.vn</p>
             </div>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
               <Send className="w-4 h-4 text-blue-700 shrink-0" />
-              <span>{t.serviceRadiusTitle}</span>
+              <span>{t.radiusTitle}</span>
             </h3>
-            <p className="text-slate-600 text-xs leading-relaxed">
-              {t.serviceRadiusDesc}
-            </p>
+            <p className="text-slate-600 text-xs leading-relaxed">{t.radiusDesc}</p>
             <ul className="text-xs space-y-1.5 text-slate-600">
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
-                <span>{t.radius1}</span>
+                <span>{t.tanAn}</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
-                <span>{t.radius2}</span>
+                <span>{t.thuThua}</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
-                <span>{t.radius3}</span>
+                <span>{t.chauThanh}</span>
               </li>
               <li className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-700" />
-                <span>{t.radius4}</span>
+                <span>{t.tanTru}</span>
               </li>
             </ul>
           </div>
@@ -62,13 +60,13 @@ export function Footer() {
             </h3>
             <div className="text-xs space-y-2 text-slate-600">
               <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <strong className="text-slate-900 font-bold block mb-0.5">{t.weekdays}</strong>
-                <span>{t.weekdaysReception}</span><br />
-                <span className="text-blue-700 font-semibold">{t.weekdaysPriority}</span>
+                <strong className="text-slate-900 font-bold block mb-0.5">{t.weekdayTitle}</strong>
+                <span>{t.weekdayIntake}</span><br />
+                <span className="text-blue-700 font-semibold">{t.weekdayPriority}</span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-                <strong className="text-slate-900 font-bold block mb-0.5">{t.weekends}</strong>
-                <span>{t.weekendsFull}</span>
+                <strong className="text-slate-900 font-bold block mb-0.5">{t.weekendTitle}</strong>
+                <span>{t.weekendHours}</span>
               </div>
             </div>
           </div>
@@ -76,16 +74,16 @@ export function Footer() {
           <div className="space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
-              <span>{t.policyTitle}</span>
+              <span>{t.policiesTitle}</span>
             </h3>
             <ul className="text-xs space-y-2 text-slate-600">
               <li className="flex items-start gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                <span>{t.policy1}</span>
+                <span>{t.swapPolicy}</span>
               </li>
               <li className="flex items-start gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                <span>{t.policy2}</span>
+                <span>{t.privacyPolicy}</span>
               </li>
             </ul>
           </div>
@@ -99,7 +97,7 @@ export function Footer() {
             </a>
             <Link className="hover:text-blue-700 transition-colors flex items-center gap-1.5 font-medium" href="/login">
               <Lock className="w-3.5 h-3.5 text-blue-700" />
-              <span>{t.adminLogin}</span>
+              <span>{t.internalLogin}</span>
             </Link>
           </div>
         </div>

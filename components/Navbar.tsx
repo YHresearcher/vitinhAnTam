@@ -6,16 +6,16 @@ import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { SyncStatusBadge } from './SyncStatusBadge';
 import { useViTinhAnTamStore } from '@/lib/store';
+import { TRANSLATIONS } from '@/lib/translations';
 import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
-import { translations } from '@/lib/i18n';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { currentUser, isLoggedIn, logout, systemSettings, currentLang, setLang } = useViTinhAnTamStore();
+  const { currentUser, isLoggedIn, logout, currentLang, setLang } = useViTinhAnTamStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isEn = currentLang === 'en';
-  const t = translations[currentLang].nav;
+  const t = TRANSLATIONS[currentLang || 'vi'].navbar;
 
   return (
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -41,9 +41,9 @@ export function Navbar() {
           <Link
             href="/vi-sao-chon-an-tam"
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-              pathname === "/vi-sao-chon-an-tam"
-                ? "bg-blue-50 text-blue-800 font-bold"
-                : "text-slate-600 hover:text-blue-700 hover:bg-slate-100"
+              pathname === '/vi-sao-chon-an-tam'
+                ? 'bg-blue-50 text-blue-800 font-bold'
+                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
             }`}
           >
             {t.whyUs}
@@ -77,8 +77,8 @@ export function Navbar() {
               onClick={() => setLang('vi')}
               className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                 !isEn
-                  ? "bg-blue-700 text-white shadow-xs"
-                  : "text-slate-600 hover:text-blue-700"
+                  ? 'bg-blue-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-blue-700'
               }`}
               title="Tiếng Việt (Mặc định)"
             >
@@ -90,10 +90,10 @@ export function Navbar() {
               onClick={() => setLang('en')}
               className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                 isEn
-                  ? "bg-blue-700 text-white shadow-xs"
-                  : "text-slate-600 hover:text-blue-700"
+                  ? 'bg-blue-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-blue-700'
               }`}
-              title="English"
+              title="English (Professional)"
             >
               <span>🇬🇧</span>
               <span>EN</span>
@@ -106,14 +106,14 @@ export function Navbar() {
               <Link
                 href="/dashboard"
                 className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
-                title={t.dashboard}
+                title={t.adminPortal}
               >
                 <User className="w-5 h-5" />
               </Link>
               <button
                 type="button"
                 onClick={() => logout()}
-                title={t.signOut}
+                title={t.logout}
                 className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />

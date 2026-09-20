@@ -4,8 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { translations } from '@/lib/i18n';
 import { formatDateVN } from '@/lib/supabase';
+import { TRANSLATIONS } from '@/lib/translations';
 import {
   Search,
   Monitor,
@@ -13,16 +13,9 @@ import {
   Calendar,
   User,
   ShieldCheck,
-  HardDrive,
-  Cpu,
-  Layers,
-  Wrench,
   Headset,
   Phone,
-  ArrowRight,
-  AlertCircle,
   HelpCircle,
-  Hash,
 } from 'lucide-react';
 
 function WarrantyLookupContent() {
@@ -30,7 +23,7 @@ function WarrantyLookupContent() {
   const urlTag = searchParams.get('tag') || '';
 
   const { findWarrantyByTagOrPhone, systemSettings, currentLang } = useViTinhAnTamStore();
-  const t = translations[currentLang].warrantyPage;
+  const t = TRANSLATIONS[currentLang || 'vi'].warrantyLookup;
 
   const [searchInput, setSearchInput] = useState(urlTag || 'ST-8F4K92X');
   const [searchResult, setSearchResult] = useState<any>(null);
@@ -46,7 +39,7 @@ function WarrantyLookupContent() {
   const executeSearch = (query: string) => {
     const q = query.trim();
     if (!q) {
-      showToast(t.toastEnterQuery);
+      showToast(t.toastEmpty);
       return;
     }
     setIsSearching(true);
@@ -56,10 +49,10 @@ function WarrantyLookupContent() {
       setIsSearching(false);
       if (res && (res.item || res.ticket)) {
         setSearchResult(res);
-        showToast(t.toastFound);
+        showToast(t.toastSuccess);
       } else {
         setSearchResult(null);
-        showToast(t.toastNotFound(q));
+        showToast(t.toastNotFound);
       }
     }, 250);
   };
@@ -90,15 +83,15 @@ function WarrantyLookupContent() {
 
       {/* Hero Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-8 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-3 shadow-2xs">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold uppercase tracking-wider mb-3">
           <ShieldCheck className="w-4 h-4 text-blue-600" />
-          <span>{t.badgePre}</span>
+          <span>{t.badge}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-          {t.title} <span className="text-blue-600">{t.titleHighlight}</span>
+          {t.titleMain} <span className="text-blue-600">{t.titleHighlight}</span>
         </h1>
         <p className="mt-2 text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-          {t.subtitle}
+          {t.description}
         </p>
 
         {/* Input Box - SĐT hoặc Serial Number / Service Tag */}
@@ -117,7 +110,7 @@ function WarrantyLookupContent() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder={t.searchPlaceholder}
+                  placeholder={t.placeholder}
                   className="w-full bg-transparent px-3 py-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none font-medium"
                 />
               </div>
@@ -128,31 +121,31 @@ function WarrantyLookupContent() {
                 className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-all shrink-0 active:scale-95 disabled:opacity-50"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>{isSearching ? t.searchingBtn : t.searchBtn}</span>
+                <span>{isSearching ? t.checking : t.btnCheck}</span>
               </button>
             </form>
           </div>
 
           {/* Preset Quick Chips */}
           <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
-            <span>{t.presetPrompt}</span>
+            <span>{t.quickChipsLabel}</span>
             <button
               onClick={() => handlePreset('ST-8F4K92X')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              {t.tagDellLabel}
+              ST-8F4K92X (Dell OptiPlex)
             </button>
             <button
               onClick={() => handlePreset('TP-994L2A')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              {t.tagThinkPadLabel}
+              TP-994L2A (ThinkPad T480s)
             </button>
             <button
               onClick={() => handlePreset('0918234891')}
               className="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-mono text-[11px] border border-slate-200 transition-colors"
             >
-              {t.tagPhoneLabel}
+              0918234891 ({t.clientPhoneLabel})
             </button>
           </div>
         </div>
@@ -175,12 +168,12 @@ function WarrantyLookupContent() {
                       {searchResult.item?.device_model || searchResult.ticket?.device_name}
                     </h2>
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-semibold">
-                      {t.deviceSelectedBadge}
+                      {t.originalSelected}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2 text-xs text-slate-600">
                     <span className="flex items-center gap-1 font-mono">
-                      <span className="text-slate-500 font-semibold">{t.snLabel}</span>
+                      <span className="text-slate-500 font-semibold">{t.serialLabel}</span>
                       <span className="text-blue-700 font-black bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
                         {searchResult.item?.service_tag || searchResult.ticket?.device_service_tag}
                       </span>
@@ -188,12 +181,12 @@ function WarrantyLookupContent() {
                     <span className="flex items-center gap-1">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <span>
-                        {searchResult.item?.customer_name || searchResult.ticket?.customer_name || t.customerLabel}
+                        {searchResult.item?.customer_name || searchResult.ticket?.customer_name || t.personalCustomer}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{t.handoverDateLabel} {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
+                      <span>{t.handoverDate} {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
                     </span>
                   </div>
                 </div>
@@ -207,11 +200,11 @@ function WarrantyLookupContent() {
                     <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600" />
                   </span>
                   <span className="text-xs font-bold tracking-wide uppercase">
-                    {t.statusActiveBadge}
+                    {t.activeStatus}
                   </span>
                 </div>
                 <span className="text-[11px] text-slate-500">
-                  {t.authSubtitle}
+                  {t.verifiedBySystem}
                 </span>
               </div>
             </div>
@@ -219,22 +212,22 @@ function WarrantyLookupContent() {
             {/* Quick Summary Ribbon */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-100 bg-slate-50/70 rounded-2xl p-4">
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonPackage}</span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">An Tâm Care Gold (12M)</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.packageLabel}</span>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">{t.packageValue}</p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonSsd}</span>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ssdHealthLabel}</span>
                 <p className="text-sm font-bold text-emerald-600 mt-0.5">
-                  100% Good (0% Bad)
+                  {t.ssdHealthValue}
                 </p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonOs}</span>
-                <p className="text-sm font-bold text-blue-600 mt-0.5">Win 11 Pro OEM Digital</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.osLicenseLabel}</span>
+                <p className="text-sm font-bold text-blue-600 mt-0.5">{t.osLicenseValue}</p>
               </div>
               <div>
-                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ribbonPrivilege}</span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">{currentLang === 'en' ? '2-Hour On-Site Swap' : '1 Đổi 1 Tận Nơi 2H'}</p>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.privilegeLabel}</span>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">{t.privilegeValue}</p>
               </div>
             </div>
           </div>
@@ -247,11 +240,11 @@ function WarrantyLookupContent() {
                   {t.multiTierTitle}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {t.multiTierSubtitle}
+                  {t.multiTierDesc}
                 </p>
               </div>
               <span className="px-3 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                {t.multiTierBadge}
+                {t.tiersBadge}
               </span>
             </div>
 
@@ -263,8 +256,8 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-blue-600 text-white font-bold flex items-center justify-center text-xs">
                       1
                     </span>
-                    <span className="font-bold text-slate-900">{t.tier1Title}</span>
-                    <span className="text-slate-500 font-mono">(15/05/2026)</span>
+                    <span className="font-bold text-slate-900">{t.tier1Name}</span>
+                    <span className="text-slate-500 font-mono">{t.tier1Expire}</span>
                   </div>
                   <span className="font-semibold text-blue-700">{t.tier1Remaining}</span>
                 </div>
@@ -283,8 +276,8 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">
                       2
                     </span>
-                    <span className="font-bold text-slate-900">{t.tier2Title}</span>
-                    <span className="text-slate-500 font-mono">(15/05/2028)</span>
+                    <span className="font-bold text-slate-900">{t.tier2Name}</span>
+                    <span className="text-slate-500 font-mono">{t.tier2Expire}</span>
                   </div>
                   <span className="font-semibold text-emerald-700">{t.tier2Remaining}</span>
                 </div>
@@ -303,8 +296,8 @@ function WarrantyLookupContent() {
                     <span className="w-6 h-6 rounded-md bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">
                       3
                     </span>
-                    <span className="font-bold text-slate-900">{t.tier3Title}</span>
-                    <span className="text-slate-500 font-mono">(30D)</span>
+                    <span className="font-bold text-slate-900">{t.tier3Name}</span>
+                    <span className="text-slate-500 font-mono">{t.tier3Expire}</span>
                   </div>
                   <span className="font-semibold text-indigo-700">{t.tier3Remaining}</span>
                 </div>
@@ -322,8 +315,8 @@ function WarrantyLookupContent() {
               <div className="text-xs text-slate-600 flex items-center gap-1.5">
                 <Headset className="w-4 h-4 text-blue-600" />
                 <span>
-                  {t.techLeaderLabel}{' '}
-                  <strong className="text-slate-900">Trịnh Minh Tuấn (Lead Engineer)</strong>
+                  {t.leadTechLabel}{' '}
+                  <strong className="text-slate-900">{t.leadTechName}</strong>
                 </span>
               </div>
               <div className="flex items-center gap-2.5 w-full sm:w-auto">
@@ -333,13 +326,13 @@ function WarrantyLookupContent() {
                   rel="noopener noreferrer"
                   className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs text-slate-800 font-semibold transition-all text-center border border-slate-200"
                 >
-                  {t.zaloTechBtn}
+                  {t.btnZaloTech}
                 </a>
                 <Link
                   href="/dat-lich"
                   className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-all text-center shadow-xs"
                 >
-                  {t.bookServiceBtn}
+                  {t.btnScheduleMaintenance}
                 </Link>
               </div>
             </div>
@@ -353,10 +346,10 @@ function WarrantyLookupContent() {
               <HelpCircle className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              {t.emptyTitle(searchInput)}
+              {t.notFoundTitle} &quot;{searchInput}&quot;
             </h3>
             <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-              {t.emptyDesc}
+              {t.notFoundDesc}
             </p>
             <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <a
@@ -364,7 +357,7 @@ function WarrantyLookupContent() {
                 className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>{t.callHotlineBtn}</span>
+                <span>{t.btnCallHotline}</span>
               </a>
               <a
                 href={systemSettings.zaloLink}
@@ -372,7 +365,7 @@ function WarrantyLookupContent() {
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold"
               >
-                {t.supportZaloBtn}
+                {t.btnZaloSupport}
               </a>
             </div>
           </div>
