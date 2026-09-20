@@ -653,7 +653,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 uppercase">BẢO HÀNH ĐỔI MỚI</h3>
                 <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-                  SSD/RAM mới bảo hành 36 tháng đổi mới, thân máy 6 - 12 tháng, kích hoạt bảo hành điện tử.
+                  Bảo hành thiết bị và linh kiện từ 3 đến 36 tháng, kích hoạt bảo hành điện tử.
                 </p>
               </div>
             </div>

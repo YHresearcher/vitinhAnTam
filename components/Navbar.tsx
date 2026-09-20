@@ -57,26 +57,6 @@ export function Navbar() {
           >
             {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
           </a>
-          <Link
-            href="/tra-cuu-bao-hanh"
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              pathname === '/tra-cuu-bao-hanh'
-                ? 'bg-blue-50 text-blue-800 font-bold'
-                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
-            }`}
-          >
-            {isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}
-          </Link>
-          <Link
-            href="/dat-lich"
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              pathname === '/dat-lich'
-                ? 'bg-blue-50 text-blue-800 font-bold'
-                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
-            }`}
-          >
-            {isEn ? 'Book Schedule' : 'Đặt lịch hẹn'}
-          </Link>
           <a
             href="/#chinh-sach"
             className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
@@ -116,15 +96,6 @@ export function Navbar() {
               <span>EN</span>
             </button>
           </div>
-
-          {/* Kiểm tra bảo hành */}
-          <Link
-            href="/tra-cuu-bao-hanh"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-700 text-white shadow-xs hover:bg-blue-800 transition-all"
-          >
-            <span className="material-symbols-outlined text-sm">verified</span>
-            <span>{isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}</span>
-          </Link>
 
           {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
           {isLoggedIn ? (
@@ -204,24 +175,6 @@ export function Navbar() {
           >
             {isEn ? 'On-site Services' : 'Dịch vụ tận nơi'}
           </a>
-          <Link
-            href="/tra-cuu-bao-hanh"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
-              pathname === '/tra-cuu-bao-hanh' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            {isEn ? 'Check Warranty' : 'Kiểm tra bảo hành'}
-          </Link>
-          <Link
-            href="/dat-lich"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
-              pathname === '/dat-lich' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            {isEn ? 'Book Schedule' : 'Đặt lịch hẹn'}
-          </Link>
           <a
             href="/#chinh-sach"
             onClick={() => setIsMobileMenuOpen(false)}
