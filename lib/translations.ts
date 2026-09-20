@@ -396,7 +396,7 @@ export const TRANSLATIONS = {
   en: {
     navbar: {
       tagline: 'Professional & Dedicated',
-      slogan: 'Dedicated Care • Peace of Mind',
+      slogan: 'Sold from the Heart, Safe from the Start',
       home: 'Home',
       whyUs: 'Why Choose An Tam',
       products: 'Certified PCs',

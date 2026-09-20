@@ -17,7 +17,7 @@ export function Logo({ className = 'h-10 w-auto', variant = 'light', tagline, sl
     slogan ||
     tagline ||
     TRANSLATIONS[currentLang || 'vi']?.navbar?.slogan ||
-    (currentLang === 'en' ? 'Dedicated Care • Peace of Mind' : 'Bán bằng tâm để bạn an tâm');
+    (currentLang === 'en' ? 'Sold from the Heart, Safe from the Start' : 'Bán bằng tâm để bạn an tâm');
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
