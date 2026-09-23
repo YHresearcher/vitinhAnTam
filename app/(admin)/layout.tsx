@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { RoleSwitcher } from '@/components/admin/RoleSwitcher';
-import { SyncStatusBadge } from '@/components/SyncStatusBadge';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { useViTinhAnTamStore } from '@/lib/store';
 
@@ -121,7 +119,7 @@ export default function AdminLayout({
       <div className="pl-0 lg:pl-72 flex flex-col min-h-screen w-full">
         {/* Topbar */}
         <header className="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-xs">
-          <div className="flex items-center gap-3 flex-1 max-w-lg">
+          <div className="flex items-center gap-3">
             {/* Mobile Toggle */}
             <button
               type="button"
@@ -131,40 +129,15 @@ export default function AdminLayout({
             >
               Menu
             </button>
-
-            {/* Quick Search Button / Input triggering Command Palette */}
-            <button
-              type="button"
-              onClick={() => setIsCommandPaletteOpen(true)}
-              className="relative w-full h-9 px-3 pr-16 rounded-lg bg-slate-100 hover:bg-slate-200/70 border border-slate-200 text-slate-400 text-xs flex items-center justify-between transition-all text-left"
-            >
-              <span>Tra cứu S/N, SĐT, chuyển trang nhanh...</span>
-              <div className="hidden sm:flex items-center gap-0.5">
-                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-300 text-slate-600 font-mono font-bold">
-                  Ctrl
-                </kbd>
-                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-300 text-slate-600 font-mono font-bold">
-                  K
-                </kbd>
-              </div>
-            </button>
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Branch Pill */}
-            <div className="hidden xl:flex items-center px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <div className="flex flex-col text-left leading-none">
-                <span className="text-[10px] text-slate-400">Khu vực</span>
-                <span className="text-xs font-semibold text-slate-800 mt-0.5">Long An - Tây Ninh</span>
-              </div>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Current User Role Only */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <span className="text-slate-400">Vai trò:</span>
+              <span className="font-bold text-slate-800">{currentUser.roleTitle}</span>
             </div>
-
-            {/* Sync Badge */}
-            <SyncStatusBadge />
-
-            {/* Interactive Role Switcher (RBAC) */}
-            <RoleSwitcher />
 
             {/* Create Ticket Button */}
             <Link
@@ -183,7 +156,6 @@ export default function AdminLayout({
               </div>
               <div className="hidden md:flex flex-col leading-tight text-left">
                 <span className="text-xs font-bold text-slate-900">{currentUser.name}</span>
-                <span className="text-[10px] text-slate-500">{currentUser.roleTitle}</span>
               </div>
               <button
                 type="button"

@@ -14,9 +14,10 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, canAccessPayroll, canAccessSettings, customers, logout } = useViTinhAnTamStore();
+  const { tickets, currentUser, customers, onsiteDispatches, logout } = useViTinhAnTamStore();
 
-  const pendingTicketsCount = tickets.filter((t) => t.status === 'processing').length;
+  const pendingTicketsCount = tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received').length;
+  const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed' && d.status !== 'cancelled').length;
 
   const navItems = [
     {
@@ -28,13 +29,13 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       label: 'Khách hàng',
       href: '/khach-hang',
       badge: `${customers.length}`,
-      badgeColor: 'bg-emerald-100 text-emerald-800',
+      badgeColor: 'bg-slate-100 text-slate-700 font-mono',
     },
     {
       label: 'Phiếu sửa chữa',
       href: '/phieu-sua-chua',
       badge: pendingTicketsCount > 0 ? `${pendingTicketsCount}` : null,
-      badgeColor: 'bg-blue-100 text-blue-700',
+      badgeColor: 'bg-blue-100 text-blue-700 font-mono',
     },
     {
       label: 'Kho hàng',
@@ -44,26 +45,23 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     {
       label: 'Cứu hộ tận nơi',
       href: '/cuu-ho-onsite',
-      badge: 'Khẩn',
-      badgeColor: 'bg-red-100 text-red-700',
+      badge: pendingDispatchesCount > 0 ? `${pendingDispatchesCount}` : null,
+      badgeColor: 'bg-amber-100 text-amber-800 font-mono',
     },
     {
       label: 'Tiền công',
       href: '/tien-cong',
-      badge: canAccessPayroll() ? 'Admin' : 'Khóa',
-      badgeColor: canAccessPayroll() ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
+      badge: null,
     },
     {
       label: 'Nhân sự',
       href: '/thanh-vien',
-      badge: canAccessPayroll() ? 'Admin' : 'Khóa',
-      badgeColor: canAccessPayroll() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
+      badge: null,
     },
     {
       label: 'Cài đặt',
       href: '/cai-dat',
-      badge: canAccessSettings() ? 'Admin' : 'Khóa',
-      badgeColor: canAccessSettings() ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500',
+      badge: null,
     },
   ];
 
@@ -85,32 +83,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           )}
         </div>
 
-        {/* Technician Live Shift Badge */}
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between px-3.5 py-2.5 rounded-lg bg-slate-50 border border-slate-200/80">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <div className="flex flex-col leading-none">
-                <span className="text-[11px] font-semibold text-slate-900">
-                  {currentUser.role === 'admin'
-                    ? 'Admin Trực ban'
-                    : currentUser.role === 'technician'
-                    ? 'KTV Trực ca'
-                    : 'Kinh doanh'}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-medium mt-0.5">
-                  Trực tuyến
-                </span>
-              </div>
-            </div>
-            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">
-              Ca 1
-            </span>
-          </div>
-        </div>
-
         {/* Navigation links */}
-        <nav className="flex flex-col gap-1 px-3 mt-1">
+        <nav className="flex flex-col gap-1 px-3 mt-3">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             return (
