@@ -228,7 +228,11 @@ export interface ServiceTicket {
     | 'delivered'
     | 'cancelled';
   technician_note?: string;
-  estimated_completion?: string;
+  service_category?: 'sua_chua' | 'bao_hanh'; // 'sua_chua' = Sửa chữa, 'bao_hanh' = Bảo hành
+  warranty_duration_months?: number; // Thời gian bảo hành (tháng)
+  estimated_completion?: string; // Thời gian hoàn tất / hẹn trả dự kiến
+  repair_deadline?: string;
+  warranty_deadline?: string;
   completed_at?: string;
   warranty_until?: string;
   created_at?: string;

@@ -402,6 +402,12 @@ export const initialSoftwareLicenses: SoftwareLicense[] = [
   },
 ];
 
+// Dynamic helper for mock ticket completion deadlines
+const getMockDate = (hoursFromNow: number) => {
+  const d = new Date(Date.now() + hoursFromNow * 3600000);
+  return d.toISOString();
+};
+
 export const initialTickets: ServiceTicket[] = [
   {
     id: 'tk-1',
@@ -414,6 +420,7 @@ export const initialTickets: ServiceTicket[] = [
     device_name: 'Dell OptiPlex 7060 SFF',
     reception_mode: 'counter',
     technician_name: 'Trịnh Minh Tuấn',
+    service_category: 'sua_chua',
     selected_services: [
       { id: 'srv-1', name: 'Nâng cấp SSD NVMe Kingston 256GB', price: 550000, warranty_tier: 'BH Hãng 36T' },
       { id: 'srv-2', name: 'Gói Spa Làm Mát Chuyên Sâu Keo TF7', price: 100000, warranty_tier: 'Hạ 18°C' },
@@ -433,9 +440,9 @@ export const initialTickets: ServiceTicket[] = [
     ],
     status: 'completed',
     technician_note: 'Đã test CrystalDiskInfo 100% Good, nhiệt độ FurMark ổn định 62°C',
-    estimated_completion: '11:00 15/05/2025',
-    completed_at: '2025-05-15T11:00:00Z',
-    created_at: '2025-05-15T08:30:00Z',
+    estimated_completion: getMockDate(-72),
+    completed_at: getMockDate(-48),
+    created_at: getMockDate(-96),
   },
   {
     id: 'tk-2',
@@ -448,6 +455,7 @@ export const initialTickets: ServiceTicket[] = [
     device_name: 'PC Gaming Core i5 13400F',
     reception_mode: 'counter',
     technician_name: 'Trịnh Minh Tuấn',
+    service_category: 'sua_chua',
     selected_services: [
       { id: 'srv-4', name: 'Vệ sinh tản nhiệt nước & Tra keo TF7', price: 150000, warranty_tier: 'BH 03 Tháng' },
       { id: 'srv-5', name: 'Tối ưu Win 11 Pro sạch không rác', price: 120000, warranty_tier: 'Hỗ trợ 30 ngày' },
@@ -463,8 +471,8 @@ export const initialTickets: ServiceTicket[] = [
     visual_condition: 'Vỏ case kính cường lực sáng đẹp, bám bụi lưới lọc đáy',
     status: 'ready_deliver',
     technician_note: 'Khách hẹn chiều 17h qua lấy',
-    estimated_completion: '16:00 20/05/2025',
-    created_at: '2025-05-20T09:00:00Z',
+    estimated_completion: getMockDate(18), // Còn 18 giờ (< 3 ngày)
+    created_at: getMockDate(-30),
   },
   {
     id: 'tk-3',
@@ -478,6 +486,7 @@ export const initialTickets: ServiceTicket[] = [
     reception_mode: 'mobile',
     dispatch_address: 'Ngã 3 Thủ Thừa, Long An - Tây Ninh',
     technician_name: 'Huỳnh Minh Trí',
+    service_category: 'sua_chua',
     selected_services: [
       { id: 'srv-6', name: 'Cứu hộ Onsite kiểm tra kêu tít tít lỏng RAM', price: 150000, warranty_tier: 'Bảo hành 30 ngày' },
       { id: 'srv-7', name: 'Vệ sinh chân đồng & kiểm tra cổng COM máy in', price: 100000, warranty_tier: 'BH 01 Tháng' },
@@ -490,10 +499,54 @@ export const initialTickets: ServiceTicket[] = [
     },
     total_amount: 250000,
     visual_condition: 'Vỏ máy hơi dính dầu mỡ buôn bán, chân cắm nguồn chắc chắn',
-    status: 'processing',
-    technician_note: 'KTV Trí đang di chuyển qua Tân Tây',
-    estimated_completion: '16:45 20/05/2025',
-    created_at: '2025-05-20T14:30:00Z',
+    status: 'in_progress',
+    technician_note: 'KTV Trí đang di chuyển qua Tân Tây kiểm tra RAM',
+    estimated_completion: getMockDate(44), // Còn 1 ngày 20 giờ (< 3 ngày)
+    created_at: getMockDate(-10),
+  },
+  {
+    id: 'tk-4',
+    ticket_code: '#TK-2025-0593',
+    customer_id: 'c3',
+    customer_name: 'Anh Hoàng (Đại lý VLXD Tân An)',
+    customer_phone: '0903124578',
+    customer_address: 'QL1A, P.5, Long An - Tây Ninh',
+    device_service_tag: 'DELL-VOSTRO-3681',
+    device_name: 'Dell Vostro 3681 SFF',
+    reception_mode: 'counter',
+    technician_name: 'Trịnh Minh Tuấn',
+    service_category: 'bao_hanh',
+    selected_services: [
+      { id: 'srv-bh-1', name: 'Bảo hành SSD NVMe Kingston 500GB lỗi không nhận', price: 0, warranty_tier: 'BH Đổi Mới 1-1' },
+    ],
+    total_amount: 0,
+    visual_condition: 'Máy còn nguyên tem bảo hành Vi Tính An Tâm dán ốc hông',
+    status: 'received',
+    technician_note: 'Tiếp nhận bảo hành SSD đổi mới, gửi hãng test tốc độ đọc ghi',
+    estimated_completion: getMockDate(52), // Còn 2 ngày 4 giờ (< 3 ngày)
+    created_at: getMockDate(-6),
+  },
+  {
+    id: 'tk-5',
+    ticket_code: '#TK-2025-0594',
+    customer_id: 'c5',
+    customer_name: 'Trường Tiểu Học Hướng Thọ Phú',
+    customer_phone: '02723829101',
+    customer_address: 'Xã Hướng Thọ Phú, Long An - Tây Ninh',
+    device_service_tag: 'HP-PRO-DESK-600',
+    device_name: 'HP ProDesk 600 G3 SFF',
+    reception_mode: 'counter',
+    technician_name: 'Huỳnh Minh Trí',
+    service_category: 'sua_chua',
+    selected_services: [
+      { id: 'srv-9', name: 'Sửa nguồn máy bộ HP bật không lên đèn', price: 250000, warranty_tier: 'BH 03 Tháng' },
+    ],
+    total_amount: 250000,
+    visual_condition: 'Vỏ thùng trầy xước theo thời gian, có tem phòng máy trường học',
+    status: 'in_progress',
+    technician_note: 'Đã báo giá thay tụ nguồn, hẹn bàn giao sáng nay',
+    estimated_completion: getMockDate(-4), // Đã quá hạn 4 giờ! (< 0 giờ)
+    created_at: getMockDate(-52),
   },
 ];
 

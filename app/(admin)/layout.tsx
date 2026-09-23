@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { RoleSwitcher } from '@/components/admin/RoleSwitcher';
 import { SyncStatusBadge } from '@/components/SyncStatusBadge';
+import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 export default function AdminLayout({
@@ -255,6 +256,9 @@ export default function AdminLayout({
           </div>
         </div>
       )}
+
+      {/* DEADLINE TRACKING WIDGET (Hạn chót sửa chữa / bảo hành < 3 ngày) */}
+      <DeadlineTrackingWidget />
     </div>
   );
 }

@@ -305,16 +305,37 @@ export default function PhieuSuaChuaPage() {
                         )}
                       </td>
 
-                      {/* Ticket Type */}
-                      <td className="py-3.5 px-4">
-                        {ticket.ticket_type === 'onsite' || ticket.reception_mode === 'mobile' ? (
-                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
-                            Tận nơi
+                      {/* Ticket Type & Service Category */}
+                      <td className="py-3.5 px-4 space-y-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            ticket.service_category === 'bao_hanh'
+                              ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                              : 'bg-blue-100 text-blue-700 border border-blue-200'
+                          }`}>
+                            {ticket.service_category === 'bao_hanh' ? 'Bảo Hành' : 'Sửa Chữa'}
                           </span>
-                        ) : (
-                          <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                            Tại quầy
-                          </span>
+
+                          {ticket.ticket_type === 'onsite' || ticket.reception_mode === 'mobile' ? (
+                            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded">
+                              Tận nơi
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                              Tại quầy
+                            </span>
+                          )}
+                        </div>
+
+                        {ticket.estimated_completion && (
+                          <div className="text-[10px] text-slate-500 font-mono">
+                            Hạn: {(() => {
+                              const d = new Date(ticket.estimated_completion);
+                              return !isNaN(d.getTime())
+                                ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} ${d.toLocaleDateString('vi-VN')}`
+                                : ticket.estimated_completion;
+                            })()}
+                          </div>
                         )}
                       </td>
 
