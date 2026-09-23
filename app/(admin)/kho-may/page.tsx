@@ -732,13 +732,13 @@ export default function KhoMayPage() {
 
         {/* Status Filter Pill Row */}
         <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-          <span className="text-slate-400 font-medium">Trạng thái QC:</span>
+          <span className="text-slate-400 font-medium">Hàng hóa:</span>
           {(
             [
-              { id: 'all', label: 'Tất cả trạng thái' },
-              { id: 'ready_to_sell', label: 'Sẵn sàng bán (Ready)' },
-              { id: 'testing', label: 'Đang kiểm tra (QC)' },
-              { id: 'sold', label: 'Đã xuất bán' },
+              { id: 'all', label: 'Tất cả' },
+              { id: 'ready_to_sell', label: 'RTS' },
+              { id: 'testing', label: 'QC' },
+              { id: 'sold', label: 'Sold' },
             ] as const
           ).map((s) => (
             <button
