@@ -9,7 +9,6 @@ import {
   User,
   Navigation,
   CheckCircle2,
-  Compass,
   Radio
 } from 'lucide-react';
 
@@ -67,33 +66,8 @@ export default function CuuHoOnsitePage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Điều phối kỹ thuật viên cứu hộ hỏa tốc trong bán kính 5km.
+            Theo dõi và cập nhật trạng thái các ca xử lý tận nơi.
           </p>
-        </div>
-      </div>
-
-      {/* Coverage Info Banner */}
-      <div className="bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 text-slate-800 p-4 rounded-xl shadow-xs border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-xs">
-            <Compass className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <div className="text-sm font-bold text-slate-900">
-              Phạm Vi Phục Vụ: Bán Kính 5km
-            </div>
-            <div className="text-xs text-blue-700 mt-0.5">
-              Hỗ trợ TP. Tân An và các khu vực lân cận theo lịch hẹn.
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <a
-            href="tel:0909053058"
-            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
-          >
-            <Phone className="w-3.5 h-3.5" /> 0909.053.058
-          </a>
         </div>
       </div>
 

@@ -164,7 +164,7 @@ export default function DashboardPage() {
               <span className="text-xs text-indigo-600 font-medium">điểm hẹn</span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">Bán kính 5km</span>
+              <span className="text-slate-500">Tận nơi</span>
               <span className="px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
                 Đang xử lý
               </span>
@@ -216,7 +216,7 @@ export default function DashboardPage() {
                   <h2 className="text-base sm:text-lg font-bold text-slate-900">
                     Lịch Cứu Hộ Tận Nơi
                   </h2>
-                  <p className="text-xs text-slate-500">Điều phối kỹ thuật viên trong bán kính 5km</p>
+                  <p className="text-xs text-slate-500">Điều phối kỹ thuật viên theo lịch hẹn</p>
                 </div>
               </div>
               <span className="self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">

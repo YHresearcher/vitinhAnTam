@@ -241,7 +241,7 @@ export default function KhachHangCrmPage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Hồ sơ 360°, theo dõi lịch sử thiết bị, phiếu sửa chữa, phân hạng thành viên (VIP/Thân thiết) và tương tác Zalo/Gọi điện.
+            Danh sách khách hàng và lịch sử dịch vụ.
           </p>
         </div>
 
@@ -259,11 +259,11 @@ export default function KhachHangCrmPage() {
 
       {/* RBAC Notice for KTV */}
       {!canAccessCRM() && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3.5 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
           <div className="text-xs text-amber-800">
-            <span className="font-semibold">Phân quyền vai trò ({currentUser.name} - Kỹ thuật viên):</span>{' '}
-            Bạn có quyền tra cứu thông tin khách hàng và xem lịch sử thiết bị/phiếu sửa chữa để hỗ trợ xử lý sự cố. Quyền chỉnh sửa thông tin khách hàng thuộc về Quản trị viên và Nhân viên bán hàng.
+            <span className="font-semibold">{currentUser.name} (Kỹ thuật viên):</span>{' '}
+            Chế độ chỉ xem lịch sử và tra cứu. Quyền cập nhật dành cho Quản trị viên và Bán hàng.
           </div>
         </div>
       )}

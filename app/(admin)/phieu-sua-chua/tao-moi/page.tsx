@@ -246,7 +246,7 @@ export default function TaoPhieuSuaChuaPage() {
             {ticketType === 'onsite' && (
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Địa Chỉ Cứu Hộ Tận Nơi (Hỏa tốc TP. Tân An / Theo hẹn huyện lân cận) *
+                  Địa Chỉ Cứu Hộ Tận Nơi *
                 </label>
                 <input
                   type="text"
@@ -424,7 +424,7 @@ export default function TaoPhieuSuaChuaPage() {
             <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs">
               <div className="text-purple-700 font-bold mb-1">Tầng 3: Cài Đặt Hệ Thống (30N)</div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                Hỗ trợ UltraViewer / Anydesk từ xa miễn phí lỗi font chữ, máy in, mạng nội bộ Tân An.
+                Hỗ trợ UltraViewer / Anydesk từ xa miễn phí lỗi font chữ, máy in, mạng nội bộ.
               </p>
             </div>
           </div>
