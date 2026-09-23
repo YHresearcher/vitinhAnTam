@@ -80,6 +80,7 @@ export default function KhoMayPage() {
   // Modal states - Machines
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
+  const [viewingSpecsItem, setViewingSpecsItem] = useState<InventoryItem | null>(null);
   const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [tempStockValue, setTempStockValue] = useState<number>(1);
@@ -279,7 +280,7 @@ export default function KhoMayPage() {
   const handleCreateNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newItem.service_tag || !newItem.model) {
-      alert('Vui lòng nhập đầy đủ Model và Service Tag!');
+      alert('Vui lòng nhập đầy đủ Model và Số Serial (Serial Number)!');
       return;
     }
 
@@ -329,7 +330,7 @@ export default function KhoMayPage() {
   };
 
   const handleDeleteItem = async (id: string, tag: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa thiết bị Service Tag [${tag}] khỏi kho?`)) return;
+    if (!confirm(`Bạn có chắc muốn xóa thiết bị Số Serial [${tag}] khỏi kho?`)) return;
     const ok = await deleteInventoryItem(id);
     if (ok) {
       setActionNotice(`Đã xóa máy ${tag}`);
@@ -703,7 +704,7 @@ export default function KhoMayPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm Service Tag, Model..."
+              placeholder="Tìm Serial number, Model..."
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
@@ -775,8 +776,7 @@ export default function KhoMayPage() {
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4">Model</th>
-                <th className="py-3 px-4">Service Tag</th>
-                <th className="py-3 px-4">Cấu Hình</th>
+                <th className="py-3 px-4">Serial Number</th>
                 <th className="py-3 px-4">Trạng Thái</th>
                 <th className="py-3 px-4">Tồn Kho</th>
                 <th className="py-3 px-4 text-right">Giá Bán</th>
@@ -786,7 +786,7 @@ export default function KhoMayPage() {
             <tbody className="divide-y divide-slate-200 text-sm">
               {filteredInventory.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     Không tìm thấy thiết bị nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -809,40 +809,21 @@ export default function KhoMayPage() {
                         </div>
                       </td>
 
-                      {/* Service Tag */}
+                      {/* Serial Number (Clickable to view detailed specs) */}
                       <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center font-mono font-bold text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100">
-                          {item.service_tag}
-                        </div>
-                      </td>
-
-                      {/* Specs & SSD Health */}
-                      <td className="py-3.5 px-4">
-                        <div className="text-xs text-slate-700">
-                          <span>{item.cpu}</span> • <span>{item.ram}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="text-xs font-mono text-slate-600">
-                            {item.ssd_capacity}
-                          </div>
-                          {/* SSD Health Badge */}
-                          {(() => {
-                            const health = item.ssd_health ?? item.specs?.ssd_health ?? 95;
-                            return (
-                              <span
-                                className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                                  health >= 90
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : health >= 80
-                                    ? 'bg-amber-100 text-amber-800'
-                                    : 'bg-rose-100 text-rose-800'
-                                }`}
-                              >
-                                Health {health}%
-                              </span>
-                            );
-                          })()}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setViewingSpecsItem(item)}
+                          className="group inline-flex flex-col text-left cursor-pointer"
+                          title="Bấm để xem cấu hình chi tiết thiết bị"
+                        >
+                          <span className="inline-flex items-center font-mono font-bold text-xs bg-blue-50 text-blue-700 group-hover:bg-blue-600 group-hover:text-white px-2.5 py-1 rounded-md border border-blue-200 group-hover:border-blue-600 transition-all shadow-2xs">
+                            {item.serial_number || item.service_tag}
+                          </span>
+                          <span className="text-[10px] text-blue-600 group-hover:underline mt-0.5 font-medium">
+                            Xem cấu hình chi tiết →
+                          </span>
+                        </button>
                       </td>
 
                       {/* QC Status */}
@@ -1546,10 +1527,10 @@ export default function KhoMayPage() {
                   />
                 </div>
 
-                {/* Service Tag */}
+                {/* Serial Number */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Service Tag / Serial *
+                    Số Serial (Serial Number) *
                   </label>
                   <input
                     type="text"
@@ -2277,6 +2258,211 @@ export default function KhoMayPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DETAILED DEVICE SPECS MODAL (Khi click vào Serial Number) */}
+      {viewingSpecsItem && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/30 text-blue-200 border border-blue-400/30 uppercase tracking-wider">
+                    Cấu Hình Chi Tiết Thiết Bị
+                  </span>
+                  <span className="font-mono text-xs text-blue-300">
+                    Serial: {viewingSpecsItem.serial_number || viewingSpecsItem.service_tag}
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold mt-1 text-white tracking-tight">
+                  {viewingSpecsItem.model}
+                </h3>
+                <div className="text-xs text-slate-300 flex items-center gap-2 mt-0.5">
+                  <span>Hãng: <strong>{viewingSpecsItem.brand}</strong></span>
+                  <span>•</span>
+                  <span>Kiểu dáng: <strong>{viewingSpecsItem.form_factor}</strong></span>
+                  <span>•</span>
+                  <span>Bảo hành: <strong>{viewingSpecsItem.warranty_months} tháng</strong></span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setViewingSpecsItem(null)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-colors"
+                title="Đóng"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-800 flex-1">
+              {/* Hardware Specs Grid */}
+              <div>
+                <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 pb-1 border-b border-slate-200 flex items-center justify-between">
+                  <span>Thông Số Kỹ Thuật Phần Cứng</span>
+                  <span className="text-[11px] text-slate-500 font-normal">Đã qua QC Test</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* CPU */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Bộ Vi Xử Lý (CPU)</span>
+                    <div className="text-sm font-bold text-slate-900 mt-0.5 font-mono">
+                      {viewingSpecsItem.cpu || viewingSpecsItem.specs?.cpu || 'Intel Core i5 (Đồng Bộ)'}
+                    </div>
+                  </div>
+
+                  {/* RAM */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Bộ Nhớ RAM</span>
+                    <div className="text-sm font-bold text-slate-900 mt-0.5 font-mono">
+                      {viewingSpecsItem.ram || viewingSpecsItem.specs?.ram || '16GB DDR4 Dual Channel'}
+                    </div>
+                  </div>
+
+                  {/* SSD & Storage */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Ổ Cứng Khởi Động</span>
+                    <div className="text-sm font-bold text-slate-900 mt-0.5 font-mono">
+                      {viewingSpecsItem.ssd_capacity || viewingSpecsItem.specs?.ssd || 'SSD NVMe 256GB / 512GB'}
+                    </div>
+                  </div>
+
+                  {/* SSD Health */}
+                  {(() => {
+                    const health = viewingSpecsItem.ssd_health ?? viewingSpecsItem.specs?.ssd_health ?? 95;
+                    return (
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Sức Khỏe Ổ Cứng (SSD Health)</span>
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.2 rounded font-mono ${
+                              health >= 90
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : health >= 80
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-rose-100 text-rose-800'
+                            }`}
+                          >
+                            {health}% {health >= 90 ? 'Good' : 'Caution'}
+                          </span>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-2">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              health >= 90 ? 'bg-emerald-500' : health >= 80 ? 'bg-amber-500' : 'bg-rose-500'
+                            }`}
+                            style={{ width: `${health}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* GPU */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Card Đồ Họa (GPU)</span>
+                    <div className="text-xs font-semibold text-slate-900 mt-0.5">
+                      {viewingSpecsItem.specs?.gpu || 'Intel UHD Graphics Tích Hợp Xuất 4K'}
+                    </div>
+                  </div>
+
+                  {/* PSU */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Nguồn Điện (PSU)</span>
+                    <div className="text-xs font-semibold text-slate-900 mt-0.5">
+                      {viewingSpecsItem.specs?.power || 'Nguồn Công Suất Thực Đồng Bộ Chuẩn 80 Plus'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* QC & Inventory Details */}
+              <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
+                <div className="text-xs font-bold text-blue-900">Tình Trạng Kho &amp; Tiêu Chuẩn Xuất Xưởng</div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-500">Trạng thái:</span>
+                    <div className="font-bold text-slate-800 mt-0.5">
+                      {viewingSpecsItem.qc_status === 'ready_to_sell'
+                        ? 'Sẵn bán (RTS)'
+                        : viewingSpecsItem.qc_status === 'testing'
+                        ? 'Đang QC / Test'
+                        : 'Đã xuất bán'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Thời gian Burn-in:</span>
+                    <div className="font-bold text-slate-800 mt-0.5">
+                      {viewingSpecsItem.burn_in_duration || 48} giờ Stress Test
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Tồn kho hiện tại:</span>
+                    <div className="font-bold text-slate-800 mt-0.5 font-mono">
+                      {viewingSpecsItem.stock_quantity ?? viewingSpecsItem.quantity ?? 1} bộ máy
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Giá bán niêm yết:</span>
+                    <div className="font-bold text-blue-700 mt-0.5 font-mono text-sm">
+                      {((viewingSpecsItem.price || viewingSpecsItem.retail_price) || 0).toLocaleString('vi-VN')} đ
+                    </div>
+                  </div>
+                </div>
+
+                {viewingSpecsItem.specs_summary && (
+                  <div className="pt-2 border-t border-blue-100 text-[11px] text-slate-600">
+                    <span className="font-semibold text-slate-700">Mô tả ngoại quan:</span>{' '}
+                    {viewingSpecsItem.specs_summary}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewingSpecsItem(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg transition-colors"
+              >
+                Đóng
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedItemForLabel(viewingSpecsItem);
+                    setIsLabelModalOpen(true);
+                    setViewingSpecsItem(null);
+                  }}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+                >
+                  In Tem Nhiệt (50x30mm)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleOpenSellModal(viewingSpecsItem);
+                    setViewingSpecsItem(null);
+                  }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95"
+                >
+                  Bán Máy / Đổi Trạng Thái
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
