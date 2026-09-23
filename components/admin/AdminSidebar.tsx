@@ -19,6 +19,7 @@ import {
   Headset,
   X,
   UserCheck,
+  LogOut,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -28,7 +29,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings, customers } = useViTinhAnTamStore();
+  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings, customers, logout } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing').length;
 
@@ -187,6 +188,18 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             <ArrowLeft className="w-4 h-4 text-slate-400" />
             <span>Xem Website khách hàng</span>
           </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onCloseMobile) onCloseMobile();
+              logout();
+            }}
+            className="flex items-center gap-3 px-3.5 py-2 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all text-xs font-semibold w-full text-left"
+          >
+            <LogOut className="w-4 h-4 text-rose-500" />
+            <span>Đăng xuất tài khoản</span>
+          </button>
         </nav>
       </div>
 

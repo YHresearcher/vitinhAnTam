@@ -160,10 +160,10 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | null>(null);
 
 const STORAGE_KEYS = {
-  role: 'vtat_user_role_v2',
-  userId: 'vtat_user_id_v2',
-  users: 'vtat_users_v2',
-  isLoggedIn: 'vtat_is_logged_in_v2',
+  role: 'vtat_user_role_v3',
+  userId: 'vtat_user_id_v3',
+  users: 'vtat_users_v3',
+  isLoggedIn: 'vtat_is_logged_in_v3',
   inventory: 'vtat_inventory_v2',
   customers: 'vtat_customers_v2',
   tickets: 'vtat_tickets_v2',
@@ -175,10 +175,10 @@ const STORAGE_KEYS = {
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  // Members & RBAC State & Login status
+  // Members & RBAC State & Login status (Mặc định khi mở web là KHÁCH, CHƯA ĐĂNG NHẬP)
   const [users, setUsers] = useState<UserAccount[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<UserAccount>(initialUsers[0]);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   // Collections
   const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
@@ -238,11 +238,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCurrentUserRole(role);
   };
 
-  const loginWithCredentials = (email: string, password: string): { success: boolean; message: string; user?: UserAccount } => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const found = users.find((u) => u.email.toLowerCase() === normalizedEmail);
+  const loginWithCredentials = (
+    identifier: string,
+    password: string
+  ): { success: boolean; message: string; user?: UserAccount } => {
+    const raw = identifier.trim().toLowerCase();
+    const cleanPhone = identifier.replace(/\D/g, '');
+    const found = users.find((u) => {
+      const uUsername = u.username?.toLowerCase();
+      const uEmail = u.email?.toLowerCase();
+      const uPhone = u.phone?.replace(/\D/g, '');
+      return (
+        (uUsername && uUsername === raw) ||
+        (uEmail && uEmail === raw) ||
+        (cleanPhone.length >= 8 && uPhone && uPhone === cleanPhone)
+      );
+    });
+
     if (!found) {
-      return { success: false, message: 'Email không tồn tại trên hệ thống.' };
+      return { success: false, message: 'Tên đăng nhập hoặc Email không tồn tại trên hệ thống.' };
     }
     if (found.password !== password.trim()) {
       return { success: false, message: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!' };
@@ -264,6 +278,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setIsLoggedIn(false);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'false');
+      localStorage.removeItem(STORAGE_KEYS.userId);
+      localStorage.removeItem(STORAGE_KEYS.role);
     }
   };
 
@@ -304,6 +320,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {
     const newUser: UserAccount = {
       ...userData,
+      username: userData.username || userData.email.split('@')[0],
       id: `u-${Date.now()}`,
       created_at: new Date().toISOString(),
       permissions: userData.permissions || {
@@ -385,23 +402,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Load saved user id or role
-        const savedUserId = localStorage.getItem(STORAGE_KEYS.userId);
-        const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
+        // Load saved user id or role ONLY if user is already logged in
         const savedLoggedIn = localStorage.getItem(STORAGE_KEYS.isLoggedIn);
-
-        if (savedUserId) {
-          const matched = currentUsersList.find((u) => u.id === savedUserId);
-          if (matched) setCurrentUser(matched);
-        } else if (savedRole) {
-          const matched = currentUsersList.find((u) => u.role === savedRole);
-          if (matched) setCurrentUser(matched);
-        }
-
-        if (savedLoggedIn === 'false') {
-          setIsLoggedIn(false);
-        } else if (savedLoggedIn === 'true') {
+        if (savedLoggedIn === 'true') {
           setIsLoggedIn(true);
+          const savedUserId = localStorage.getItem(STORAGE_KEYS.userId);
+          const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
+          if (savedUserId) {
+            const matched = currentUsersList.find((u) => u.id === savedUserId);
+            if (matched) setCurrentUser(matched);
+          } else if (savedRole) {
+            const matched = currentUsersList.find((u) => u.role === savedRole);
+            if (matched) setCurrentUser(matched);
+          }
+        } else {
+          setIsLoggedIn(false);
         }
       }
 

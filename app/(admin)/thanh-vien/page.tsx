@@ -161,6 +161,7 @@ export default function MemberManagementPage() {
     }
 
     await addUser({
+      username: newUserForm.email.trim().split('@')[0],
       name: newUserForm.name.trim(),
       email: newUserForm.email.trim(),
       phone: newUserForm.phone.trim() || '0909.053.058',
@@ -414,6 +415,10 @@ export default function MemberManagementPage() {
 
                 {/* Contact & Status details */}
                 <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Tài khoản:</span>
+                    <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">@{member.username || member.email.split('@')[0]}</span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Email:</span>
                     <span className="font-mono font-medium text-slate-900">{member.email}</span>

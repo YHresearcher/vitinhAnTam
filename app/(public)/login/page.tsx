@@ -15,7 +15,7 @@ export default function LoginPage() {
   const t = TRANSLATIONS[currentLang || 'vi'].login;
 
   const [selectedUserId, setSelectedUserId] = useState<string>(users[0]?.id || 'u-admin-1');
-  const [emailInput, setEmailInput] = useState(users[0]?.email || 'admin@vitinhantham.vn');
+  const [emailInput, setEmailInput] = useState(users[0]?.username || 'thanhphan');
   const [passwordInput, setPasswordInput] = useState('123456');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,7 +23,7 @@ export default function LoginPage() {
 
   const handleSelectMember = (user: UserAccount) => {
     setSelectedUserId(user.id);
-    setEmailInput(user.email);
+    setEmailInput(user.username || user.email);
     setPasswordInput(user.password || '123456');
     setErrorMessage('');
   };
@@ -56,49 +56,49 @@ export default function LoginPage() {
   };
 
   // Find sample representative for each role from dynamic users
-  const adminMember = users.find((u) => u.role === 'admin') || users[0];
-  const techMember = users.find((u) => u.role === 'technician') || users[1];
-  const salesMember = users.find((u) => u.role === 'sales') || users[2];
+  const adminMember = users.find((u) => u.role === 'admin' || u.username === 'thanhphan') || users[0];
+  const salesMember = users.find((u) => u.role === 'sales' || u.username === 'sales01') || users[1];
+  const techMember = users.find((u) => u.role === 'technician' || u.username === 'tech01') || users[2];
 
   const quickRoles = [
     {
       role: 'admin' as UserRole,
       user: adminMember,
       label: currentLang === 'en' ? 'System Administrator (Admin)' : 'Quản Trị Viên (Admin)',
-      badge: currentLang === 'en' ? 'Full Control' : 'Toàn Quyền',
-      badgeClass: 'bg-blue-100 text-blue-800 border-blue-200',
+      badge: 'admin = thanhphan',
+      badgeClass: 'bg-blue-100 text-blue-800 border-blue-200 font-mono',
       activeClass: 'bg-blue-50/80 border-2 border-blue-600 ring-2 ring-blue-100 shadow-xs',
       hoverClass: 'hover:border-blue-300 hover:bg-blue-50/30',
       btnBg: 'bg-blue-600 hover:bg-blue-700',
       Icon: Shield,
       iconBg: 'bg-blue-600',
-      desc: currentLang === 'en' ? '✓ Full authority to manage inventory, credentials, remove staff, view payroll & revenue.' : '✓ Toàn quyền xem & sửa kho, mật khẩu, xóa thành viên, tính lương tiền công.',
-    },
-    {
-      role: 'technician' as UserRole,
-      user: techMember,
-      label: currentLang === 'en' ? 'Technical Lead (Technician)' : 'Kỹ Thuật Viên (Technician)',
-      badge: currentLang === 'en' ? 'Engineering & QC' : 'Kỹ Thuật & QC',
-      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
-      hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
-      btnBg: 'bg-emerald-600 hover:bg-emerald-700',
-      Icon: Wrench,
-      iconBg: 'bg-emerald-600',
-      desc: currentLang === 'en' ? '✓ Diagnostics, ticket status dispatch, warehouse receiving • 🔒 Stock editing restricted' : '✓ Chẩn đoán, đổi trạng thái phiếu, nhập máy mới về kho • 🔒 Khóa quyền sửa số lượng tồn',
+      desc: currentLang === 'en' ? '✓ Full authority to manage inventory, credentials, remove staff, view payroll & revenue.' : '✓ Toàn quyền quản trị: cấu hình, xem/sửa kho, quản lý tài khoản, doanh thu và lương.',
     },
     {
       role: 'sales' as UserRole,
       user: salesMember,
       label: currentLang === 'en' ? 'Sales Consultant (Sales)' : 'Nhân Viên Kinh Doanh (Sales)',
-      badge: currentLang === 'en' ? 'Sales & CS' : 'Kinh Doanh & CSKH',
-      badgeClass: 'bg-purple-100 text-purple-800 border-purple-200',
+      badge: 'sales = sales01',
+      badgeClass: 'bg-purple-100 text-purple-800 border-purple-200 font-mono',
       activeClass: 'bg-purple-50/80 border-2 border-purple-600 ring-2 ring-purple-100 shadow-xs',
       hoverClass: 'hover:border-purple-300 hover:bg-purple-50/30',
       btnBg: 'bg-purple-600 hover:bg-purple-700',
       Icon: BadgeDollarSign,
       iconBg: 'bg-purple-600',
-      desc: currentLang === 'en' ? '✓ Browse live stock, initiate customer service tickets • 🔒 Technical dispatch locked' : '✓ Xem kho hàng, lập phiếu tiếp nhận • 🔒 Khóa sửa trạng thái sửa chữa & tồn kho',
+      desc: currentLang === 'en' ? '✓ Browse live stock, sell & issue warranty, CRM • 🔒 Technical dispatch locked' : '✓ Bán máy, xuất phiếu bảo hành, quản lý khách hàng (CRM), xem tồn kho.',
+    },
+    {
+      role: 'technician' as UserRole,
+      user: techMember,
+      label: currentLang === 'en' ? 'Technical Lead (Technician)' : 'Kỹ Thuật Viên (Kỹ thuật)',
+      badge: 'Kỹ thuật = tech01',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200 font-mono',
+      activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
+      hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
+      btnBg: 'bg-emerald-600 hover:bg-emerald-700',
+      Icon: Wrench,
+      iconBg: 'bg-emerald-600',
+      desc: currentLang === 'en' ? '✓ Diagnostics, ticket status dispatch, warehouse receiving • 🔒 Stock editing restricted' : '✓ Tiếp nhận sửa chữa, xử lý phiếu cứu hộ tận nơi, kiểm tra QC phần cứng.',
     },
   ];
 
@@ -180,7 +180,7 @@ export default function LoginPage() {
                         </span>
                       </div>
                       <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                        {qr.user.name} • <span className="font-mono text-slate-700">{qr.user.email}</span>
+                        {qr.user.name} • Tên đăng nhập: <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">@{qr.user.username || qr.user.email.split('@')[0]}</span>
                       </p>
                       <p className="text-[10px] text-slate-500 mt-1 leading-snug">{qr.desc}</p>
                     </div>
@@ -222,7 +222,7 @@ export default function LoginPage() {
                   required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="admin@vitinhantham.vn"
+                  placeholder="thanhphan, sales01, tech01 hoặc email..."
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
                 />
               </div>
@@ -231,7 +231,7 @@ export default function LoginPage() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-xs font-bold text-slate-700">{t.passwordLabel}</label>
-                <span className="text-[11px] text-slate-400">{t.defaultPasswordHint}</span>
+                <span className="text-[11px] text-blue-600 font-semibold">{t.defaultPasswordHint}</span>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />

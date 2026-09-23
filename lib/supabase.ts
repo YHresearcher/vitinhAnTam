@@ -31,6 +31,7 @@ export interface UserPermissions {
 export interface UserProfile {
   id: string;
   name: string;
+  username?: string;
   role: UserRole;
   roleTitle: string;
   avatarBg: string;
@@ -39,6 +40,7 @@ export interface UserProfile {
 }
 
 export interface UserAccount extends UserProfile {
+  username?: string;
   email: string;
   phone: string;
   password: string;
@@ -51,24 +53,33 @@ export interface UserAccount extends UserProfile {
 export const MOCK_USERS: Record<UserRole, UserProfile> = {
   admin: {
     id: 'u-admin-1',
-    name: 'Nguyễn Văn An',
+    username: 'thanhphan',
+    name: 'Thanh Phan',
     role: 'admin',
-    roleTitle: 'Quản trị viên trưởng',
+    roleTitle: 'Quản trị viên (Admin)',
     avatarBg: 'bg-blue-600',
+    email: 'thanhphan@vitinhantham.vn',
+    phone: '0909.053.058',
   },
   technician: {
     id: 'u-tech-1',
-    name: 'Trịnh Minh Tuấn',
+    username: 'tech01',
+    name: 'Kỹ thuật viên 01',
     role: 'technician',
-    roleTitle: 'Kỹ thuật viên phần cứng',
+    roleTitle: 'Kỹ thuật viên phần cứng & QC',
     avatarBg: 'bg-emerald-600',
+    email: 'tech01@vitinhantham.vn',
+    phone: '0977.123.456',
   },
   sales: {
     id: 'u-sales-1',
-    name: 'Lê Thu Hà',
+    username: 'sales01',
+    name: 'Sales 01',
     role: 'sales',
-    roleTitle: 'Chuyên viên bán hàng & CSKH',
+    roleTitle: 'Chuyên viên Bán hàng & CSKH',
     avatarBg: 'bg-purple-600',
+    email: 'sales01@vitinhantham.vn',
+    phone: '0933.345.678',
   },
 };
 
