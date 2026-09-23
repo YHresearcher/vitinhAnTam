@@ -127,11 +127,11 @@ export default function CaiDatPage() {
           streetAddress: '45 Nguyễn Huệ, Phường 1',
           district: 'Tân An',
           city: 'Long An',
-          serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
+          serviceAreas: 'Khu vực <5km Tân An (Hỏa tốc 2 giờ), Thủ Thừa, Châu Thành, Tân Trụ',
           workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
-          footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành tận nơi trong 2 giờ tại Long An.',
+          footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành hỏa tốc trong 2 giờ (<5km Tân An).',
           footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
           storeName: 'Vi Tính An Tâm',
         };
@@ -643,7 +643,7 @@ export default function CaiDatPage() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Khu vực phục vụ cứu hộ nhanh trong 2 giờ
+                        Khu vực phục vụ (Hỏa tốc 2 giờ khu vực &lt;5km từ trung tâm Tân An)
                       </label>
                       <input
                         type="text"
@@ -651,7 +651,7 @@ export default function CaiDatPage() {
                         onChange={(e) => handleChange('serviceAreas', e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
                       />
-                      <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: Tân An, Thủ Thừa, Châu Thành, Tân Trụ</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: Khu vực &lt;5km Tân An (Hỏa tốc 2 giờ), Thủ Thừa, Châu Thành, Tân Trụ</span>
                     </div>
                   </div>
 

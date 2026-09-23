@@ -252,7 +252,7 @@ export default function HomePage() {
     {
       question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà trong bán kính 10km (Tân An, Thủ Thừa, Châu Thành, Tân Trụ) trong vòng 2 giờ. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
+        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà phản ứng hỏa tốc trong 2 giờ cho khu vực <5km từ trung tâm Tân An (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
     },
     {
       question: 'Windows bản quyền số vĩnh viễn có lợi ích gì cho kế toán và văn phòng?',
@@ -794,7 +794,7 @@ export default function HomePage() {
               {/* Thông tin hỗ trợ kỹ thuật (hướng dẫn dùng widget góc phải) */}
               <div className="bg-[#FAF7F2] border border-slate-200 rounded-lg p-3.5 text-left md:text-right shrink-0">
                 <div className="text-[11px] text-[#C0392B] font-bold uppercase tracking-wider">Hỗ Trợ Kỹ Thuật 24/7</div>
-                <div className="text-xs text-slate-800 font-semibold mt-1">Cứu hộ tận nơi trong 2 giờ</div>
+                <div className="text-xs text-slate-800 font-semibold mt-1">Hỏa tốc 2 giờ (&lt;5km Tân An)</div>
                 <div className="text-[11px] text-slate-500 mt-0.5">Bấm nút gọi / nhắn tin nhanh ở góc phải màn hình</div>
               </div>
             </div>
@@ -823,7 +823,7 @@ export default function HomePage() {
                     <strong className="text-[#2B1810]">Chức năng:</strong> Tiếp nhận kiểm tra máy theo Service Tag, kiểm tra tải trực tiếp tại quầy, đổi mới linh kiện ngay trong ngày.
                   </p>
                   <p>
-                    <strong className="text-[#2B1810]">Bán kính hỗ trợ:</strong> Tiếp nhận tại quầy hoặc xuất phát đội cơ động trong bán kính 15km ({systemSettings.serviceAreas || 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ'}).
+                    <strong className="text-[#2B1810]">Phạm vi phục vụ:</strong> Phản ứng hỏa tốc trong 2 giờ cho khu vực &lt;5km từ trung tâm Tân An. Hỗ trợ kỹ thuật lưu động nhanh tại các địa bàn lân cận ({systemSettings.serviceAreas || 'Thủ Thừa, Châu Thành, Tân Trụ'}).
                   </p>
                 </div>
               </div>
@@ -832,26 +832,47 @@ export default function HomePage() {
               <div className="lg:col-span-7 space-y-5">
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider text-[#2B1810] mb-3">
-                    Địa Bàn Phục Vụ Tận Nơi Trong 30 – 60 Phút:
+                    Địa Bàn Phục Vụ Kỹ Thuật Tận Nơi:
                   </h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      TP. Tân An (P1 - P7)
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold">TP. Tân An (P1 - P7, Khánh Hậu, Tân Khánh)</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
+                          Hỏa tốc &lt;2h (&lt;5km)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#6E5D53]">Khu vực bán kính &lt;5km từ trung tâm Tân An, có mặt xử lý trong 2 giờ.</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      Khánh Hậu &amp; Tân Khánh
+
+                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold">Lợi Bình Nhơn &amp; KCN Lợi Bình Nhơn</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
+                          Hỏa tốc &lt;2h (&lt;5km)
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#6E5D53]">Phản ứng hỏa tốc trong 2 giờ cho cơ quan, xưởng sản xuất.</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      TT. Thủ Thừa &amp; Xã liền kề
+
+                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold">TT. Thủ Thừa &amp; Xã Liền Kề</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
+                          Lịch hẹn nhanh
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#6E5D53]">Đội cơ động điều phối có mặt nhanh theo lịch hẹn trong ngày.</p>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      Châu Thành (Long An)
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      Huyện Tân Trụ (Lân cận)
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 text-[#2B1810] font-medium">
-                      KCN Tân Hương &amp; Lợi Bình Nhơn
+
+                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold">Châu Thành, Tân Trụ &amp; KCN Tân Hương</span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
+                          Lịch hẹn nhanh
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#6E5D53]">Hỗ trợ tận nơi theo lịch hẹn ưu tiên, trang thiết bị chuyên dụng.</p>
                     </div>
                   </div>
                 </div>

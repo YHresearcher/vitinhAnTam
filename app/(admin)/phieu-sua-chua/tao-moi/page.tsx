@@ -195,7 +195,7 @@ export default function TaoPhieuSuaChuaPage() {
             }`}
           >
             <Truck className="w-4 h-4" />
-            Cứu Hộ Tận Nơi 10km
+            Cứu Hộ Tận Nơi (&lt;5km Hỏa Tốc)
           </button>
         </div>
       </div>
@@ -246,7 +246,7 @@ export default function TaoPhieuSuaChuaPage() {
             {ticketType === 'onsite' && (
               <div className="md:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Địa Chỉ Cứu Hộ Tận Nơi (Long An / Bán Kính 10km) *
+                  Địa Chỉ Cứu Hộ Tận Nơi (Hỏa tốc 2h cho khu vực &lt;5km Tân An / Theo hẹn huyện lân cận) *
                 </label>
                 <input
                   type="text"

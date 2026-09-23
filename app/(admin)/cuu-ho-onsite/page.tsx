@@ -60,14 +60,14 @@ export default function CuuHoOnsitePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Điều Phối Cứu Hộ Tận Nơi 10km
+            Điều Phối Cứu Hộ Tận Nơi (&lt;5km Hỏa Tốc 2H)
             <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full flex items-center gap-1">
               <Radio className="w-3 h-3 animate-pulse text-indigo-600" />
               {activeCount} ca đang chạy
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Cam kết có mặt trong 2 giờ khu vực Long An - Tây Ninh.
+            Phản ứng hỏa tốc trong 2 giờ cho khu vực &lt;5km từ trung tâm Tân An.
           </p>
         </div>
       </div>
@@ -80,19 +80,19 @@ export default function CuuHoOnsitePage() {
           </div>
           <div>
             <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              Trụ Sở Điều Phối: Long An - Tây Ninh
+              Trụ Sở Điều Phối: Tân An & Các Huyện Lân Cận
             </div>
             <div className="text-xs text-blue-700 font-medium mt-0.5">
-              Bán kính phục vụ: Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn, KCN Lợi Bình Nhơn (0-10km).
+              Phạm vi phục vụ: Hỏa tốc trong 2 giờ khu vực &lt;5km từ trung tâm Tân An (Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn). Huyện lân cận theo lịch hẹn.
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <a
-            href="tel:0918234891"
+            href="tel:0909053058"
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
           >
-            <Phone className="w-3.5 h-3.5" /> Hotline: 0918.234.891
+            <Phone className="w-3.5 h-3.5" /> Hotline: 0909.053.058
           </a>
         </div>
       </div>

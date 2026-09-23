@@ -60,11 +60,11 @@ export const initialSystemSettings: SystemSettings = {
   streetAddress: '45 Nguyễn Huệ, Phường 1',
   district: 'Tân An',
   city: 'Long An',
-  serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
+  serviceAreas: 'Khu vực <5km Tân An (Hỏa tốc 2 giờ), Thủ Thừa, Châu Thành, Tân Trụ',
   workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',
-  footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành tận nơi trong 2 giờ tại Long An.',
+  footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành hỏa tốc trong 2 giờ (<5km Tân An).',
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 };

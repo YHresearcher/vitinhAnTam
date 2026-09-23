@@ -111,7 +111,7 @@ export default function PhieuSuaChuaPage() {
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Theo dõi tiến độ sửa chữa máy bàn, laptop, bảo dưỡng keo tản nhiệt và cứu hộ Long An - Tây Ninh 10km.
+            Theo dõi tiến độ sửa chữa máy bàn, laptop, bảo dưỡng keo tản nhiệt và cứu hộ hỏa tốc &lt;5km Tân An / huyện lân cận.
           </p>
         </div>
 
@@ -229,7 +229,7 @@ export default function PhieuSuaChuaPage() {
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
-              Tận Nơi 10km
+              Tận Nơi (&lt;5km Hỏa Tốc)
             </button>
           </div>
         </div>
