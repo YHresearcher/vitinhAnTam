@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { InventoryItem } from '@/lib/supabase';
-import { Printer, Tag, X } from 'lucide-react';
 
 interface ThermalLabelModalProps {
   item: InventoryItem | null;
@@ -22,23 +21,21 @@ export function ThermalLabelModal({ item, onClose, isOpen = true }: ThermalLabel
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 max-w-md w-full relative print:p-0 print:border-none print:shadow-none">
         {/* Controls - Hidden when printing */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 print:hidden">
-          <div className="flex items-center gap-2">
-            <Tag className="w-5 h-5 text-blue-600" />
+          <div>
             <h3 className="font-bold text-slate-900 text-sm">Tem Thông Số &amp; S/N Thiết Bị (50x30mm)</h3>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
             >
-              <Printer className="w-3.5 h-3.5" />
-              <span>In Ngay</span>
+              In Ngay
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
+              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors text-sm font-bold"
             >
-              <X className="w-4 h-4" />
+              ✕
             </button>
           </div>
         </div>

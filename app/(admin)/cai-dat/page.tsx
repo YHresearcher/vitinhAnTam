@@ -18,28 +18,6 @@ import {
   Tag,
   Space,
 } from 'antd';
-import {
-  Settings,
-  HelpCircle,
-  MessageSquare,
-  Plus,
-  Trash2,
-  Edit2,
-  Lock,
-  ArrowLeft,
-  RotateCcw,
-  Save,
-  Phone,
-  PhoneCall,
-  Mail,
-  ExternalLink,
-  Clock,
-  MapPin,
-  Star,
-  KeyRound,
-  ShieldCheck,
-  Sparkles,
-} from 'lucide-react';
 import { UserAccount } from '@/lib/supabase';
 
 const { TextArea } = Input;
@@ -226,19 +204,18 @@ export default function CaiDatPage() {
   if (!canAccessSettings()) {
     return (
       <div className="p-8 text-center max-w-lg mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm mt-12">
-        <div className="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3">
-          <Lock className="w-6 h-6" />
-        </div>
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-3">
+          Bảo Mật Hệ Thống
+        </span>
         <h2 className="text-lg font-bold text-slate-900 mb-1">YÊU CẦU QUYỀN QUẢN TRỊ VIÊN (ADMIN)</h2>
         <p className="text-xs text-slate-600 mb-4">
           Chỉ tài khoản Admin mới có quyền điều chỉnh số hotline, thông tin Zalo, quản lý FAQ và đánh giá khách hàng.
         </p>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Về Bảng Điều Khiển</span>
+          ← Về Bảng Điều Khiển
         </Link>
       </div>
     );
@@ -270,7 +247,6 @@ export default function CaiDatPage() {
         <Space size="small">
           <Button
             size="small"
-            icon={<Edit2 className="w-3.5 h-3.5" />}
             onClick={() => handleOpenFaqModal(record)}
           >
             Sửa
@@ -283,7 +259,7 @@ export default function CaiDatPage() {
             cancelText="Hủy"
             okType="danger"
           >
-            <Button size="small" danger icon={<Trash2 className="w-3.5 h-3.5" />} />
+            <Button size="small" danger>Xóa</Button>
           </Popconfirm>
         </Space>
       ),
@@ -317,9 +293,9 @@ export default function CaiDatPage() {
       key: 'comment',
       render: (text: string, record: CustomerReview) => (
         <div className="space-y-1">
-          <div className="flex items-center gap-1 text-amber-500">
+          <div className="flex items-center gap-0.5 text-amber-500 text-sm">
             {Array.from({ length: record.rating || 5 }).map((_, i) => (
-              <Star key={i} className="w-3.5 h-3.5 fill-amber-400" />
+              <span key={i}>★</span>
             ))}
           </div>
           <p className="text-xs text-slate-600 leading-relaxed max-w-lg">{text}</p>
@@ -339,7 +315,7 @@ export default function CaiDatPage() {
           cancelText="Hủy"
           okType="danger"
         >
-          <Button size="small" danger icon={<Trash2 className="w-3.5 h-3.5" />} />
+          <Button size="small" danger>Xóa</Button>
         </Popconfirm>
       ),
     },
@@ -370,18 +346,16 @@ export default function CaiDatPage() {
           {
             key: 'contacts',
             label: (
-              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-                <PhoneCall className="w-4 h-4 text-[#C0392B]" />
-                <span>Phương Tiện Liên Lạc</span>
+              <span className="font-bold text-xs sm:text-sm">
+                Phương Tiện Liên Lạc
               </span>
             ),
             children: (
               <Card className="rounded-xl border-slate-200 shadow-xs">
                 <form onSubmit={handleSubmitSettings} className="space-y-6">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <Phone className="w-4 h-4 text-[#C0392B]" />
-                      <span>1. Quản Lý Kênh Liên Hệ Trực Tiếp &amp; Widget</span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">
+                      1. Quản Lý Kênh Liên Hệ Trực Tiếp &amp; Widget
                     </h3>
                     <p className="text-xs text-slate-500 mt-1 mb-4">
                       Các kênh liên lạc này sẽ hiển thị trực tiếp tại thanh nút nổi (Floating Bar) bên phải và Header/Footer của website.
@@ -398,7 +372,7 @@ export default function CaiDatPage() {
                           required
                           value={formData.hotline}
                           onChange={(e) => handleChange('hotline', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-[#C0392B] focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-[#C0392B] focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
                         />
                         <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: 0909.053.058</span>
                       </div>
@@ -413,7 +387,7 @@ export default function CaiDatPage() {
                           required
                           value={formData.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
                         />
                         <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: lienhe@vitinhantham.vn</span>
                       </div>
@@ -434,7 +408,7 @@ export default function CaiDatPage() {
                               handleChange('zaloLink', `https://zalo.me/${val.trim().replace(/\./g, '')}`);
                             }
                           }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#0068FF] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#0068FF] bg-slate-50 focus:bg-white font-mono"
                         />
                       </div>
 
@@ -467,7 +441,7 @@ export default function CaiDatPage() {
                               handleChange('whatsappLink', `https://wa.me/${clean}`);
                             }
                           }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#25D366] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#25D366] bg-slate-50 focus:bg-white font-mono"
                         />
                         <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: 0909053058</span>
                       </div>
@@ -491,28 +465,25 @@ export default function CaiDatPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <a
                           href={`tel:${formData.hotline.replace(/\./g, '')}`}
-                          className="px-3 py-1.5 rounded-md bg-[#C0392B] text-white font-bold flex items-center gap-1 hover:opacity-90"
+                          className="px-3 py-1.5 rounded-md bg-[#C0392B] text-white font-bold hover:opacity-90 font-mono"
                         >
-                          <PhoneCall className="w-3.5 h-3.5" />
-                          <span>Gọi {formData.hotline}</span>
+                          Gọi {formData.hotline}
                         </a>
                         <a
                           href={formData.zaloLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-md bg-[#0068FF] text-white font-bold flex items-center gap-1 hover:opacity-90"
+                          className="px-3 py-1.5 rounded-md bg-[#0068FF] text-white font-bold hover:opacity-90"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Mở Zalo</span>
+                          Mở Zalo
                         </a>
                         <a
                           href={formData.whatsappLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-1.5 rounded-md bg-[#25D366] text-white font-bold flex items-center gap-1 hover:opacity-90"
+                          className="px-3 py-1.5 rounded-md bg-[#25D366] text-white font-bold hover:opacity-90"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <span>Mở WhatsApp</span>
+                          Mở WhatsApp
                         </a>
                       </div>
                     </div>
@@ -523,18 +494,16 @@ export default function CaiDatPage() {
                     <button
                       type="button"
                       onClick={handleResetDefaults}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Đặt lại mặc định</span>
+                      Đặt lại mặc định
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-6 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50"
+                      className="px-6 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>{isSaving ? 'Đang lưu...' : 'Lưu Phương Tiện Liên Lạc'}</span>
+                      {isSaving ? 'Đang lưu...' : 'Lưu Phương Tiện Liên Lạc'}
                     </button>
                   </div>
                 </form>
@@ -544,9 +513,8 @@ export default function CaiDatPage() {
           {
             key: 'address',
             label: (
-              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-                <MapPin className="w-4 h-4 text-[#D9531E]" />
-                <span>Địa Chỉ &amp; Showroom (Cho Phép Sửa)</span>
+              <span className="font-bold text-xs sm:text-sm">
+                Địa Chỉ &amp; Showroom
               </span>
             ),
             children: (
@@ -554,9 +522,8 @@ export default function CaiDatPage() {
                 <form onSubmit={handleSubmitSettings} className="space-y-6">
                   {/* Nhóm 1: Địa chỉ chi tiết */}
                   <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <MapPin className="w-4 h-4 text-[#D9531E]" />
-                      <span>1. Địa Chỉ Showroom &amp; Trạm Kỹ Thuật Chính</span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">
+                      1. Địa Chỉ Showroom &amp; Trạm Kỹ Thuật Chính
                     </h3>
                     <p className="text-xs text-slate-500">
                       Cho phép thay đổi địa chỉ showroom vật lý, thông tin khu vực phục vụ và giờ mở cửa để hiển thị tự động lên Footer, Khối Giới Thiệu và Schema SEO.
@@ -657,9 +624,8 @@ export default function CaiDatPage() {
 
                   {/* Nhóm 2: Giờ phục vụ */}
                   <div className="space-y-4 pt-2 border-t border-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
-                      <Clock className="w-4 h-4 text-[#D9531E]" />
-                      <span>2. Khung Giờ Phục Vụ &amp; Cứu Hộ Ưu Tiên 2H</span>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">
+                      2. Khung Giờ Phục Vụ &amp; Cứu Hộ Ưu Tiên 2H
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -670,7 +636,7 @@ export default function CaiDatPage() {
                           type="text"
                           value={formData.workingHoursWeekday}
                           onChange={(e) => handleChange('workingHoursWeekday', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white font-mono"
                         />
                       </div>
                       <div>
@@ -681,7 +647,7 @@ export default function CaiDatPage() {
                           type="text"
                           value={formData.workingHoursWeekend}
                           onChange={(e) => handleChange('workingHoursWeekend', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white font-mono"
                         />
                       </div>
                     </div>
@@ -707,18 +673,16 @@ export default function CaiDatPage() {
                     <button
                       type="button"
                       onClick={handleResetDefaults}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Đặt lại mặc định</span>
+                      Đặt lại mặc định
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-6 py-2.5 rounded-lg bg-[#D9531E] hover:bg-[#C0392B] text-white text-xs font-bold shadow-xs flex items-center gap-2 transition-all disabled:opacity-50"
+                      className="px-6 py-2.5 rounded-lg bg-[#D9531E] hover:bg-[#C0392B] text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>{isSaving ? 'Đang lưu...' : 'Lưu Cấu Hình Địa Chỉ'}</span>
+                      {isSaving ? 'Đang lưu...' : 'Lưu Cấu Hình Địa Chỉ'}
                     </button>
                   </div>
                 </form>
@@ -728,9 +692,8 @@ export default function CaiDatPage() {
           {
             key: 'faqs',
             label: (
-              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-                <HelpCircle className="w-4 h-4 text-emerald-600" />
-                <span>Quản Lý Câu Hỏi FAQ ({faqs.length})</span>
+              <span className="font-bold text-xs sm:text-sm">
+                Quản Lý FAQ ({faqs.length})
               </span>
             ),
             children: (
@@ -746,11 +709,10 @@ export default function CaiDatPage() {
                   </div>
                   <Button
                     type="primary"
-                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={() => handleOpenFaqModal()}
                     className="bg-blue-600"
                   >
-                    Thêm Câu Hỏi Mới
+                    + Thêm Câu Hỏi Mới
                   </Button>
                 </div>
 
@@ -767,9 +729,8 @@ export default function CaiDatPage() {
           {
             key: 'reviews',
             label: (
-              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-                <MessageSquare className="w-4 h-4 text-purple-600" />
-                <span>Quản Lý Đánh Giá Khách Hàng ({reviews.length})</span>
+              <span className="font-bold text-xs sm:text-sm">
+                Đánh Giá Khách Hàng ({reviews.length})
               </span>
             ),
             children: (
@@ -785,11 +746,10 @@ export default function CaiDatPage() {
                   </div>
                   <Button
                     type="primary"
-                    icon={<Plus className="w-3.5 h-3.5" />}
                     onClick={handleOpenReviewModal}
                     className="bg-purple-600"
                   >
-                    Thêm Đánh Giá Mới
+                    + Thêm Đánh Giá Mới
                   </Button>
                 </div>
 
@@ -806,9 +766,8 @@ export default function CaiDatPage() {
           {
             key: 'security',
             label: (
-              <span className="flex items-center gap-1.5 font-bold text-xs sm:text-sm">
-                <KeyRound className="w-4 h-4 text-amber-600" />
-                <span>Bảo Mật &amp; Mật Khẩu Thành Viên</span>
+              <span className="font-bold text-xs sm:text-sm">
+                Bảo Mật &amp; Mật Khẩu
               </span>
             ),
             children: (
@@ -822,10 +781,9 @@ export default function CaiDatPage() {
                   </div>
                   <Link
                     href="/thanh-vien"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
                   >
-                    <ShieldCheck className="w-4 h-4" />
-                    <span>Quản lý phân quyền chi tiết</span>
+                    Quản lý phân quyền chi tiết →
                   </Link>
                 </div>
 
@@ -847,7 +805,7 @@ export default function CaiDatPage() {
                             <Tag
                               color={
                                 u.role === 'admin'
-                                  ? 'blue'
+                                    ? 'blue'
                                   : u.role === 'technician'
                                   ? 'green'
                                   : 'purple'
@@ -880,7 +838,6 @@ export default function CaiDatPage() {
 
                       <div className="flex items-center gap-2 self-end sm:self-center">
                         <Button
-                          icon={<KeyRound className="w-3.5 h-3.5" />}
                           onClick={() => {
                             setMemberForPassword(u);
                             setMemberNewPassword('');
@@ -996,9 +953,8 @@ export default function CaiDatPage() {
       {/* Modal Đổi Mật Khẩu Thành Viên */}
       <Modal
         title={
-          <div className="flex items-center gap-2 text-amber-600">
-            <KeyRound className="w-5 h-5" />
-            <span>Đổi Mật Khẩu Thành Viên</span>
+          <div className="text-amber-700 font-bold">
+            Đổi Mật Khẩu Thành Viên
           </div>
         }
         open={Boolean(memberForPassword)}
@@ -1039,10 +995,9 @@ export default function CaiDatPage() {
                     }
                     setMemberNewPassword(res);
                   }}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                  className="text-[11px] text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
                 >
-                  <Sparkles className="w-3 h-3" />
-                  <span>Tạo ngẫu nhiên</span>
+                  Tạo ngẫu nhiên
                 </button>
               </div>
               <Input.Password

@@ -4,33 +4,8 @@ import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { InventoryItem, SparePart, SoftwareLicense, generateCustomerCode } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
-import {
-  Search,
-  Plus,
-  Printer,
-  ShieldCheck,
-  HardDrive,
-  Cpu,
-  Layers,
-  Lock,
-  ShoppingBag,
-  UserCheck,
-  Edit2,
-  Trash2,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
-  MapPin,
-  Barcode,
-  X,
-  Sparkles,
-  Package,
-  Wrench,
-  Key,
-  Monitor,
-  Disc,
-  Filter,
-} from 'lucide-react';
+// Lucide icons removed for minimalist text design
+
 
 export default function KhoMayPage() {
   const {
@@ -488,13 +463,83 @@ export default function KhoMayPage() {
     }
   };
 
+  // Export CSV (Excel)
+  const handleExportCSV = () => {
+    if (activeTab === 'machines') {
+      if (filteredInventory.length === 0) return;
+      const headers = ['Mã Quản Lý', 'Model Thiết Bị', 'Số Serial', 'CPU', 'RAM', 'Ổ Cứng', 'Trạng Thái', 'Giá Bán', 'Bảo Hành', 'Ghi Chú'];
+      const rows = filteredInventory.map((item) => [
+        `"${item.service_tag || ''}"`,
+        `"${(item.device_model || item.model || '').replace(/"/g, '""')}"`,
+        `"${item.serial_number || ''}"`,
+        `"${item.cpu || item.specs?.cpu || ''}"`,
+        `"${item.ram || item.specs?.ram || ''}"`,
+        `"${item.ssd_capacity || item.specs?.ssd || ''}"`,
+        `"${item.qc_status || ''}"`,
+        item.price || item.retail_price || 0,
+        `"${item.warranty_months || 0} tháng"`,
+        `"${(item.specs_summary || '').replace(/"/g, '""')}"`,
+      ]);
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `danh_sach_kho_may_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (activeTab === 'components') {
+      if (filteredSpareParts.length === 0) return;
+      const headers = ['Tên Linh Kiện', 'Phân Loại', 'Tình Trạng', 'Tồn Kho', 'Đơn Giá', 'Ghi Chú'];
+      const rows = filteredSpareParts.map((part) => [
+        `"${part.part_name.replace(/"/g, '""')}"`,
+        `"${part.part_type || ''}"`,
+        `"${part.condition || ''}"`,
+        part.quantity_in_stock || 0,
+        part.unit_price || 0,
+        `"${(part.notes || '').replace(/"/g, '""')}"`,
+      ]);
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `danh_sach_linh_kien_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      if (filteredSoftwareLicenses.length === 0) return;
+      const headers = ['Tên Phần Mềm', 'Phân Loại', 'Hình Thức', 'Tồn Kho', 'Giá Bán', 'Thời Hạn', 'Ghi Chú'];
+      const rows = filteredSoftwareLicenses.map((lic) => [
+        `"${lic.software_name.replace(/"/g, '""')}"`,
+        `"${lic.software_type || ''}"`,
+        `"${lic.license_type || ''}"`,
+        lic.quantity_in_stock || 0,
+        lic.unit_price || 0,
+        `"${lic.duration_months === 0 ? 'Vĩnh viễn' : (lic.duration_months ? `${lic.duration_months} tháng` : '')}"`,
+        `"${(lic.notes || '').replace(/"/g, '""')}"`,
+      ]);
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `danh_sach_phan_mem_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Toast Notice */}
       {actionNotice && (
-        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium">{actionNotice}</span>
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span>{actionNotice}</span>
         </div>
       )}
 
@@ -505,7 +550,7 @@ export default function KhoMayPage() {
             {activeTab === 'machines' && 'Kho Máy Bộ'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
             {activeTab === 'software' && 'Kho Phần Mềm'}
-            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md">
+            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
               {activeTab === 'machines' && `${inventory.length} máy`}
               {activeTab === 'components' && `${spareParts.length} mục`}
               {activeTab === 'software' && `${softwareLicenses.length} mục`}
@@ -513,34 +558,39 @@ export default function KhoMayPage() {
           </h1>
         </div>
 
-        {/* Action Button: Changes dynamically by active tab */}
-        {activeTab === 'machines' && (
+        {/* Action Buttons: Export CSV & Add button */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            onClick={handleExportCSV}
+            className="inline-flex items-center justify-center px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Nhập máy
+            Xuất Excel (CSV)
           </button>
-        )}
-        {activeTab === 'components' && (
-          <button
-            onClick={() => setIsAddPartModalOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Thêm linh kiện
-          </button>
-        )}
-        {activeTab === 'software' && (
-          <button
-            onClick={() => setIsAddSoftwareModalOpen(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Thêm phần mềm
-          </button>
-        )}
+          {activeTab === 'machines' && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Nhập máy
+            </button>
+          )}
+          {activeTab === 'components' && (
+            <button
+              onClick={() => setIsAddPartModalOpen(true)}
+              className="inline-flex items-center justify-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Thêm linh kiện
+            </button>
+          )}
+          {activeTab === 'software' && (
+            <button
+              onClick={() => setIsAddSoftwareModalOpen(true)}
+              className="inline-flex items-center justify-center px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Thêm phần mềm
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Category Tabs: Machines, Components, Software */}
@@ -553,9 +603,8 @@ export default function KhoMayPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Monitor className="w-3.5 h-3.5 text-blue-600" />
           <span>Máy bộ</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'machines' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
           }`}>
             {stats.total}
@@ -570,9 +619,8 @@ export default function KhoMayPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Wrench className="w-3.5 h-3.5 text-emerald-600" />
           <span>Linh kiện</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'components' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
           }`}>
             {stats.componentsTotal}
@@ -587,9 +635,8 @@ export default function KhoMayPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Key className="w-3.5 h-3.5 text-purple-600" />
           <span>Phần mềm</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'software' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
           }`}>
             {stats.softwareTotal}
@@ -599,71 +646,45 @@ export default function KhoMayPage() {
 
       {/* RBAC Notice (Compact) */}
       {!canEditStock() && (
-        <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2 text-xs text-amber-800">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+        <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
           <span>Tài khoản {currentUser.name} ({currentUser.role === 'technician' ? 'Kỹ thuật' : 'Kinh doanh'}) — Chỉ xem tồn kho, quyền sửa dành cho Admin.</span>
         </div>
       )}
 
-      {/* KPI Stats Grid (Compact) */}
+      {/* KPI Stats Grid (Compact) - Clean Typography, No Empty Icon Boxes */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Layers className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] text-slate-500 truncate">Máy Tồn Kho</div>
-            <div className="text-base font-bold text-slate-900">{stats.total} máy</div>
-          </div>
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] text-slate-500 truncate">Máy Tồn Kho</div>
+          <div className="text-base font-bold text-slate-900 font-mono mt-0.5">{stats.total} máy</div>
         </div>
 
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] text-slate-500 truncate">Sẵn Bán (RTS)</div>
-            <div className="text-base font-bold text-emerald-700">{stats.ready} máy</div>
-          </div>
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] text-slate-500 truncate">Sẵn Bán (RTS)</div>
+          <div className="text-base font-bold text-emerald-700 font-mono mt-0.5">{stats.ready} máy</div>
         </div>
 
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <Clock className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] text-slate-500 truncate">Đang QC</div>
-            <div className="text-base font-bold text-amber-700">{stats.testing} máy</div>
-          </div>
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] text-slate-500 truncate">Đang QC</div>
+          <div className="text-base font-bold text-amber-700 font-mono mt-0.5">{stats.testing} máy</div>
         </div>
 
-        <div className={`p-3 rounded-xl border shadow-2xs flex items-center gap-2.5 transition-colors ${
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
         }`}>
-          <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Wrench className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] text-slate-500 truncate">Linh Kiện</div>
-            <div className="text-base font-bold text-emerald-800">{stats.componentsTotal} món</div>
-            <div className="text-[10px] text-slate-500 font-medium">
-              Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
-            </div>
+          <div className="text-[11px] text-slate-500 truncate">Linh Kiện</div>
+          <div className="text-base font-bold text-emerald-800 font-mono mt-0.5">{stats.componentsTotal} món</div>
+          <div className="text-[10px] text-slate-500 font-medium">
+            Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
           </div>
         </div>
 
-        <div className={`p-3 rounded-xl border shadow-2xs flex items-center gap-2.5 transition-colors ${
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'software' ? 'bg-purple-50/50 border-purple-300' : 'bg-white border-slate-200'
         }`}>
-          <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-            <Key className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] text-slate-500 truncate">Phần Mềm</div>
-            <div className="text-base font-bold text-purple-800">{stats.softwareTotal} bản quyền</div>
-            <div className="text-[10px] text-slate-500 font-medium">
-              {stats.softwareCount} sản phẩm
-            </div>
+          <div className="text-[11px] text-slate-500 truncate">Phần Mềm</div>
+          <div className="text-base font-bold text-purple-800 font-mono mt-0.5">{stats.softwareTotal} bản quyền</div>
+          <div className="text-[10px] text-slate-500 font-medium">
+            {stats.softwareCount} sản phẩm
           </div>
         </div>
       </div>
@@ -678,20 +699,19 @@ export default function KhoMayPage() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Search box */}
           <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm Service Tag, Model..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-semibold"
               >
-                <X className="w-4 h-4" />
+                ✕
               </button>
             )}
           </div>
@@ -791,23 +811,18 @@ export default function KhoMayPage() {
 
                       {/* Service Tag */}
                       <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center gap-1 font-mono font-bold text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100">
-                          <Barcode className="w-3.5 h-3.5 text-blue-500" />
+                        <div className="inline-flex items-center font-mono font-bold text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-100">
                           {item.service_tag}
                         </div>
                       </td>
 
                       {/* Specs & SSD Health */}
                       <td className="py-3.5 px-4">
-                        <div className="text-xs text-slate-700 flex items-center gap-1">
-                          <Cpu className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{item.cpu}</span>
-                          <span>•</span>
-                          <span>{item.ram}</span>
+                        <div className="text-xs text-slate-700">
+                          <span>{item.cpu}</span> • <span>{item.ram}</span>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <div className="text-xs font-mono text-slate-600 flex items-center gap-1">
-                            <HardDrive className="w-3.5 h-3.5 text-slate-400" />
+                          <div className="text-xs font-mono text-slate-600">
                             {item.ssd_capacity}
                           </div>
                           {/* SSD Health Badge */}
@@ -846,13 +861,13 @@ export default function KhoMayPage() {
                                 : 'bg-slate-100 text-slate-600 border-slate-300'
                             }`}
                           >
-                            <option value="ready_to_sell">✓ Sẵn sàng bán</option>
-                            <option value="testing">⏳ Đang kiểm tra</option>
-                            <option value="sold">✕ Đã bán</option>
+                            <option value="ready_to_sell">Sẵn bán (RTS)</option>
+                            <option value="testing">Đang QC</option>
+                            <option value="sold">Đã bán</option>
                           </select>
                         ) : (
                           <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
                               isReady
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : isTesting
@@ -860,8 +875,6 @@ export default function KhoMayPage() {
                                 : 'bg-slate-100 text-slate-700'
                             }`}
                           >
-                            {isReady && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
-                            {isTesting && <Clock className="w-3 h-3 text-amber-600" />}
                             {isReady ? 'Sẵn sàng bán' : isTesting ? 'Đang kiểm tra' : 'Đã bán'}
                           </span>
                         )}
@@ -887,14 +900,14 @@ export default function KhoMayPage() {
                               </button>
                               <button
                                 onClick={() => setEditingStockId(null)}
-                                className="px-1.5 py-1 text-slate-400 hover:text-slate-600 text-xs"
+                                className="px-2 py-1 text-slate-500 hover:text-slate-700 text-xs font-semibold"
                               >
-                                <X className="w-3.5 h-3.5" />
+                                Hủy
                               </button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-900 text-sm">
+                              <span className="font-bold text-slate-900 text-sm font-mono">
                                 {item.stock_quantity ?? item.quantity ?? 1}
                               </span>
                               <button
@@ -903,20 +916,19 @@ export default function KhoMayPage() {
                                   setTempStockValue(item.stock_quantity ?? item.quantity ?? 1);
                                 }}
                                 title="Admin: Sửa số lượng tồn kho"
-                                className="text-slate-400 hover:text-blue-600 p-1 rounded hover:bg-blue-50 transition-colors"
+                                className="text-blue-600 hover:text-blue-800 text-xs px-1.5 py-0.5 rounded hover:bg-blue-50 transition-colors font-medium"
                               >
-                                <Edit2 className="w-3.5 h-3.5" />
+                                Sửa
                               </button>
                             </div>
                           )
                         ) : (
                           // Read-Only Display for Technician & Sales
                           <div
-                            className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded text-slate-700 text-xs font-semibold cursor-not-allowed group relative"
+                            className="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-slate-700 text-xs font-semibold font-mono"
                             title="Chỉ Admin mới có quyền điều chỉnh số lượng tồn kho"
                           >
                             <span>{item.stock_quantity ?? item.quantity ?? 1} cái</span>
-                            <Lock className="w-3 h-3 text-slate-400 group-hover:text-amber-600" />
                           </div>
                         )}
                       </td>
@@ -948,23 +960,22 @@ export default function KhoMayPage() {
                                 ? 'Xuất bán máy, cấp mã KH & điều chỉnh bảo hành'
                                 : 'Chỉ Admin và Bán Hàng có quyền bán máy'
                             }
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1 border transition-all ${
+                            className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                               item.qc_status === 'sold'
                                 ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
                                 : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
                             }`}
                           >
-                            <ShoppingBag className="w-3.5 h-3.5" />
-                            <span>{item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}</span>
+                            {item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}
                           </button>
 
                           {/* Print 50x30mm Label */}
                           <button
                             onClick={() => handleOpenLabelModal(item)}
                             title="In tem nhiệt 50x30mm (Xprinter)"
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+                            className="px-2 py-1 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors border border-blue-200 bg-blue-50"
                           >
-                            <Printer className="w-4 h-4" />
+                            In tem
                           </button>
 
                           {/* Admin Only Delete */}
@@ -972,9 +983,9 @@ export default function KhoMayPage() {
                             <button
                               onClick={() => handleDeleteItem(item.id, item.service_tag)}
                               title="Xóa máy khỏi kho (Chỉ Admin)"
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              className="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg text-xs font-semibold transition-colors"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              Xóa
                             </button>
                           )}
                         </div>
@@ -1000,20 +1011,19 @@ export default function KhoMayPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-3">
               {/* Search box */}
               <div className="relative w-full md:w-96">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={partSearchQuery}
                   onChange={(e) => setPartSearchQuery(e.target.value)}
                   placeholder="Tìm linh kiện..."
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  className="w-full px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
                 />
                 {partSearchQuery && (
                   <button
                     onClick={() => setPartSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold"
                   >
-                    <X className="w-4 h-4" />
+                    ✕
                   </button>
                 )}
               </div>
@@ -1032,25 +1042,23 @@ export default function KhoMayPage() {
                 </button>
                 <button
                   onClick={() => setPartConditionFilter('new')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
                     partConditionFilter === 'new'
                       ? 'bg-emerald-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-emerald-700'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Mới 100%</span>
+                  Mới 100%
                 </button>
                 <button
                   onClick={() => setPartConditionFilter('used')}
-                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
                     partConditionFilter === 'used'
                       ? 'bg-purple-600 text-white shadow-xs'
                       : 'text-slate-600 hover:text-purple-700'
                   }`}
                 >
-                  <Package className="w-3.5 h-3.5" />
-                  <span>Cũ / Bóc máy</span>
+                  Cũ / Bóc máy
                 </button>
               </div>
             </div>
@@ -1136,13 +1144,11 @@ export default function KhoMayPage() {
                           {/* Condition Badge (Mới 100% vs Cũ Zin bóc máy) */}
                           <td className="py-3.5 px-4">
                             {isNew ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                <Sparkles className="w-3 h-3 text-emerald-600" />
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                                 Mới 100%
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                <Package className="w-3 h-3 text-purple-600" />
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
                                 Zin bóc máy (Cũ)
                               </span>
                             )}
@@ -1162,37 +1168,33 @@ export default function KhoMayPage() {
                                 />
                                 <button
                                   onClick={() => handleStockEditPart(part.id)}
-                                  className="p-1 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+                                  className="px-2 py-1 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700"
                                 >
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Lưu
                                 </button>
                                 <button
                                   onClick={() => setEditingPartStockId(null)}
-                                  className="p-1 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                                  className="px-2 py-1 bg-slate-200 text-slate-600 rounded text-xs hover:bg-slate-300"
                                 >
-                                  <X className="w-3.5 h-3.5" />
+                                  Hủy
                                 </button>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className={`font-bold ${part.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
+                                <span className={`font-bold font-mono ${part.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
                                   {part.quantity_in_stock} cái
                                 </span>
-                                {canEditStock() ? (
+                                {canEditStock() && (
                                   <button
                                     onClick={() => {
                                       setEditingPartStockId(part.id);
                                       setTempPartStockValue(part.quantity_in_stock);
                                     }}
                                     title="Sửa số lượng tồn (Chỉ Admin)"
-                                    className="p-1 text-slate-400 hover:text-emerald-600 rounded hover:bg-emerald-50 transition-colors"
+                                    className="px-2 py-0.5 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded border border-emerald-200"
                                   >
-                                    <Edit2 className="w-3 h-3" />
+                                    Sửa
                                   </button>
-                                ) : (
-                                  <span title="Chỉ Admin mới có quyền sửa tồn kho">
-                                    <Lock className="w-3 h-3 text-slate-300" />
-                                  </span>
                                 )}
                               </div>
                             )}
@@ -1201,7 +1203,7 @@ export default function KhoMayPage() {
                           {/* Cost Price */}
                           <td className="py-3.5 px-4 text-xs">
                             {canEditStock() ? (
-                              <span className="font-medium text-slate-600">
+                              <span className="font-medium text-slate-600 font-mono">
                                 {new Intl.NumberFormat('vi-VN').format(part.unit_cost || 0)} đ
                               </span>
                             ) : (
@@ -1211,7 +1213,7 @@ export default function KhoMayPage() {
 
                           {/* Retail Price */}
                           <td className="py-3.5 px-4 text-right">
-                            <span className="font-bold text-slate-900">
+                            <span className="font-bold text-slate-900 font-mono">
                               {part.unit_price === 0
                                 ? 'Giá liên hệ'
                                 : new Intl.NumberFormat('vi-VN').format(part.unit_price) + ' đ'}
@@ -1231,9 +1233,9 @@ export default function KhoMayPage() {
                               <button
                                 onClick={() => handleDeletePart(part.id, part.part_name)}
                                 title="Xóa linh kiện (Chỉ Admin)"
-                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                Xóa
                               </button>
                             )}
                           </td>
@@ -1258,20 +1260,19 @@ export default function KhoMayPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-3">
               {/* Search box */}
               <div className="relative w-full md:w-80">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={softwareSearchQuery}
                   onChange={(e) => setSoftwareSearchQuery(e.target.value)}
                   placeholder="Tìm phần mềm, đối tác..."
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
+                  className="w-full px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
                 />
                 {softwareSearchQuery && (
                   <button
                     onClick={() => setSoftwareSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold"
                   >
-                    <X className="w-4 h-4" />
+                    ✕
                   </button>
                 )}
               </div>
@@ -1416,37 +1417,33 @@ export default function KhoMayPage() {
                                 />
                                 <button
                                   onClick={() => handleStockEditSoftware(sw.id)}
-                                  className="p-1 bg-purple-600 text-white rounded hover:bg-purple-700"
+                                  className="px-2 py-1 bg-purple-600 text-white rounded text-xs font-bold hover:bg-purple-700"
                                 >
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Lưu
                                 </button>
                                 <button
                                   onClick={() => setEditingSoftwareStockId(null)}
-                                  className="p-1 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                                  className="px-2 py-1 bg-slate-200 text-slate-600 rounded text-xs hover:bg-slate-300"
                                 >
-                                  <X className="w-3.5 h-3.5" />
+                                  Hủy
                                 </button>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className={`font-bold ${sw.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
+                                <span className={`font-bold font-mono ${sw.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
                                   {sw.quantity_in_stock} key
                                 </span>
-                                {canEditStock() ? (
+                                {canEditStock() && (
                                   <button
                                     onClick={() => {
                                       setEditingSoftwareStockId(sw.id);
                                       setTempSoftwareStockValue(sw.quantity_in_stock);
                                     }}
                                     title="Sửa số lượng tồn"
-                                    className="p-1 text-slate-400 hover:text-purple-600 rounded hover:bg-purple-50 transition-colors"
+                                    className="px-2 py-0.5 text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
                                   >
-                                    <Edit2 className="w-3 h-3" />
+                                    Sửa
                                   </button>
-                                ) : (
-                                  <span title="Chỉ Admin mới có quyền sửa tồn kho">
-                                    <Lock className="w-3 h-3 text-slate-300" />
-                                  </span>
                                 )}
                               </div>
                             )}
@@ -1455,7 +1452,7 @@ export default function KhoMayPage() {
                           {/* Cost Price */}
                           <td className="py-3.5 px-4 text-xs">
                             {canEditStock() ? (
-                              <span className="font-medium text-slate-600">
+                              <span className="font-medium text-slate-600 font-mono">
                                 {new Intl.NumberFormat('vi-VN').format(sw.unit_cost || 0)} đ
                               </span>
                             ) : (
@@ -1465,7 +1462,7 @@ export default function KhoMayPage() {
 
                           {/* Retail Price */}
                           <td className="py-3.5 px-4 text-right">
-                            <span className="font-bold text-slate-900">
+                            <span className="font-bold text-slate-900 font-mono">
                               {sw.unit_price === 0
                                 ? 'Liên hệ'
                                 : new Intl.NumberFormat('vi-VN').format(sw.unit_price) + ' đ'}
@@ -1478,9 +1475,9 @@ export default function KhoMayPage() {
                               <button
                                 onClick={() => handleDeleteSoftware(sw.id, sw.software_name)}
                                 title="Xóa bản quyền"
-                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                Xóa
                               </button>
                             )}
                           </td>
@@ -1508,9 +1505,9 @@ export default function KhoMayPage() {
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50 text-base font-bold"
               >
-                <X className="w-5 h-5" />
+                ✕
               </button>
             </div>
 
@@ -1727,20 +1724,15 @@ export default function KhoMayPage() {
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-4 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-bold text-slate-900">
-                    Bán Máy &amp; Bàn Giao
-                  </h2>
-                  <p className="text-xs text-slate-500">Ghi nhận thông tin khách và kích hoạt bảo hành</p>
-                </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Bán Máy &amp; Bàn Giao
+                </h2>
+                <p className="text-xs text-slate-500">Ghi nhận thông tin khách và kích hoạt bảo hành</p>
               </div>
               <button
                 onClick={() => setSellingItem(null)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors text-base font-bold"
               >
                 ✕
               </button>
@@ -1760,7 +1752,7 @@ export default function KhoMayPage() {
                 </div>
                 <div className="text-right">
                   <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Giá niêm yết</span>
-                  <div className="text-base font-black text-blue-700 mt-0.5">
+                  <div className="text-base font-black text-blue-700 mt-0.5 font-mono">
                     {(sellingItem.price ?? sellingItem.retail_price ?? 0).toLocaleString('vi-VN')} đ
                   </div>
                 </div>
@@ -1769,9 +1761,8 @@ export default function KhoMayPage() {
               {/* CUSTOMER INFO */}
               <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <UserCheck className="w-4 h-4 text-blue-600" />
-                    <span>Thông Tin Khách Hàng</span>
+                  <label className="text-xs font-bold text-blue-900 uppercase tracking-wider block">
+                    Thông Tin Khách Hàng
                   </label>
                   <span className="text-xs font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
                     {previewCustomerCode || 'Mã KH tự động'}
@@ -1873,7 +1864,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={sellPrice}
                     onChange={(e) => setSellPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
                   />
                 </div>
               </div>
@@ -1888,10 +1879,9 @@ export default function KhoMayPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Xác Nhận Bán Máy</span>
+                  Xác Nhận Bán Máy
                 </button>
               </div>
             </form>
@@ -1905,16 +1895,15 @@ export default function KhoMayPage() {
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Wrench className="w-5 h-5 text-emerald-600" />
+                <h3 className="text-base font-bold text-slate-900">
                   Thêm Linh Kiện Mới
                 </h3>
               </div>
               <button
                 onClick={() => setIsAddPartModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50 text-base font-bold"
               >
-                <X className="w-5 h-5" />
+                ✕
               </button>
             </div>
 
@@ -1928,13 +1917,12 @@ export default function KhoMayPage() {
                   <button
                     type="button"
                     onClick={() => setNewPart({ ...newPart, condition: 'new', warranty_months: 36 })}
-                    className={`p-3 rounded-xl border-2 text-left transition-all flex items-start gap-2.5 ${
+                    className={`p-3 rounded-xl border-2 text-left transition-all ${
                       newPart.condition === 'new'
                         ? 'border-emerald-600 bg-emerald-50/60 shadow-xs'
                         : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <Sparkles className={`w-5 h-5 shrink-0 ${newPart.condition === 'new' ? 'text-emerald-600' : 'text-slate-400'}`} />
                     <div>
                       <div className={`text-xs font-bold ${newPart.condition === 'new' ? 'text-emerald-900' : 'text-slate-800'}`}>
                         Mới 100%
@@ -1948,13 +1936,12 @@ export default function KhoMayPage() {
                   <button
                     type="button"
                     onClick={() => setNewPart({ ...newPart, condition: 'used', warranty_months: 3 })}
-                    className={`p-3 rounded-xl border-2 text-left transition-all flex items-start gap-2.5 ${
+                    className={`p-3 rounded-xl border-2 text-left transition-all ${
                       newPart.condition === 'used'
                         ? 'border-purple-600 bg-purple-50/60 shadow-xs'
                         : 'border-slate-200 hover:border-slate-300 bg-white'
                     }`}
                   >
-                    <Package className={`w-5 h-5 shrink-0 ${newPart.condition === 'used' ? 'text-purple-600' : 'text-slate-400'}`} />
                     <div>
                       <div className={`text-xs font-bold ${newPart.condition === 'used' ? 'text-purple-900' : 'text-slate-800'}`}>
                         Cũ / Bóc Máy
@@ -2005,7 +1992,6 @@ export default function KhoMayPage() {
                   </select>
                 </div>
 
-
                 {/* Initial Stock */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -2017,7 +2003,7 @@ export default function KhoMayPage() {
                     required
                     value={newPart.quantity_in_stock}
                     onChange={(e) => setNewPart({ ...newPart, quantity_in_stock: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold font-mono"
                   />
                 </div>
 
@@ -2063,7 +2049,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={newPart.unit_cost}
                     onChange={(e) => setNewPart({ ...newPart, unit_cost: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium font-mono"
                   />
                 </div>
 
@@ -2076,7 +2062,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={newPart.unit_price}
                     onChange={(e) => setNewPart({ ...newPart, unit_price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-700"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-700 font-mono"
                   />
                 </div>
 
@@ -2106,9 +2092,8 @@ export default function KhoMayPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
                   Lưu Linh Kiện
                 </button>
               </div>
@@ -2123,16 +2108,15 @@ export default function KhoMayPage() {
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-purple-50/70 border-b border-purple-100 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Key className="w-5 h-5 text-purple-600" />
+                <h3 className="text-base font-bold text-slate-900">
                   Thêm Phần Mềm &amp; Bản Quyền
                 </h3>
               </div>
               <button
                 onClick={() => setIsAddSoftwareModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50 text-base font-bold"
               >
-                <X className="w-5 h-5" />
+                ✕
               </button>
             </div>
 
@@ -2217,7 +2201,7 @@ export default function KhoMayPage() {
                     required
                     value={newSoftware.quantity_in_stock}
                     onChange={(e) => setNewSoftware({ ...newSoftware, quantity_in_stock: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold font-mono"
                   />
                 </div>
 
@@ -2244,7 +2228,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={newSoftware.unit_cost}
                     onChange={(e) => setNewSoftware({ ...newSoftware, unit_cost: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium font-mono"
                   />
                 </div>
 
@@ -2257,7 +2241,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={newSoftware.unit_price}
                     onChange={(e) => setNewSoftware({ ...newSoftware, unit_price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold text-purple-700"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold text-purple-700 font-mono"
                   />
                 </div>
 
@@ -2287,9 +2271,8 @@ export default function KhoMayPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
+                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
                   Lưu Phần Mềm
                 </button>
               </div>

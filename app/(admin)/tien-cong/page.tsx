@@ -3,21 +3,8 @@
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { ShiftLog, formatDateVN } from '@/lib/supabase';
-import {
-  DollarSign,
-  Calendar,
-  User,
-  Clock,
-  Award,
-  Lock,
-  Plus,
-  FileSpreadsheet,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  ShieldCheck,
-  X
-} from 'lucide-react';
+// Lucide icons removed for minimalist text design
+
 
 export default function TienCongPage() {
   const {
@@ -47,8 +34,8 @@ export default function TienCongPage() {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-5">
-          <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
-            <Lock className="w-8 h-8" />
+          <div className="inline-block px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full uppercase tracking-wider">
+            Bảo Mật Nội Bộ
           </div>
 
           <div className="space-y-2">
@@ -64,8 +51,7 @@ export default function TienCongPage() {
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 text-left space-y-1">
-            <div className="font-bold flex items-center gap-1.5 text-amber-800">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
+            <div className="font-bold text-amber-800">
               Quy tắc ma trận RBAC đã áp dụng:
             </div>
             <div>• Kỹ thuật viên & Kinh doanh: Chỉ được xem kho máy, nhập thiết bị mới vào kho.</div>
@@ -75,11 +61,9 @@ export default function TienCongPage() {
           <div className="pt-2">
             <button
               onClick={() => setCurrentUserRole('admin')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95"
+              className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95"
             >
-              <ShieldCheck className="w-4 h-4" />
               Chuyển Sang Vai Trò Admin (Demo Phân Quyền)
-              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -138,9 +122,9 @@ export default function TienCongPage() {
     <div className="space-y-6">
       {/* Toast Notice */}
       {notice && (
-        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium">{notice}</span>
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span>{notice}</span>
         </div>
       )}
 
@@ -149,8 +133,7 @@ export default function TienCongPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Tính Tiền Công Theo Ca & Thưởng KPI
-            <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-700 font-semibold rounded-full flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
+            <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-700 font-semibold rounded-full">
               Đặc quyền Admin
             </span>
           </h1>
@@ -159,67 +142,49 @@ export default function TienCongPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleExportCsv}
-            className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-2xs"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
             Xuất Bảng Lương (CSV)
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition-all"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all"
           >
-            <Plus className="w-4 h-4" />
-            Ghi Nhận Ca Mới
+            + Ghi Nhận Ca Mới
           </button>
         </div>
       </div>
 
-      {/* Payroll KPI Cards */}
+      {/* Payroll KPI Cards - Clean Typography, No Empty Icon Boxes */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Tổng Chi Tiền Công</div>
-            <div className="text-xl font-bold text-slate-900">
-              {totalWages.toLocaleString('vi-VN')} đ
-            </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Tổng Chi Tiền Công</div>
+          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">
+            {totalWages.toLocaleString('vi-VN')} đ
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Calendar className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Tổng Ca Đã Trực</div>
-            <div className="text-xl font-bold text-emerald-700">{shiftLogs.length} ca</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Tổng Ca Đã Trực</div>
+          <div className="text-xl font-bold text-emerald-700 mt-1 font-mono">
+            {shiftLogs.length} ca
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Máy Đã Hoàn Tất</div>
-            <div className="text-xl font-bold text-amber-700">{totalTicketsHandled} máy</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Máy Đã Hoàn Tất</div>
+          <div className="text-xl font-bold text-amber-700 mt-1 font-mono">
+            {totalTicketsHandled} máy
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-            <Award className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Thưởng Năng Suất KPI</div>
-            <div className="text-xl font-bold text-purple-700">
-              {totalBonus.toLocaleString('vi-VN')} đ
-            </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Thưởng Năng Suất KPI</div>
+          <div className="text-xl font-bold text-purple-700 mt-1 font-mono">
+            {totalBonus.toLocaleString('vi-VN')} đ
           </div>
         </div>
       </div>
@@ -254,10 +219,7 @@ export default function TienCongPage() {
                 return (
                   <tr key={log.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3.5 px-4 font-semibold text-slate-900">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-slate-400" />
-                        {log.technician_name}
-                      </div>
+                      {log.technician_name}
                     </td>
 
                     <td className="py-3.5 px-4 text-slate-600 font-mono text-xs">
@@ -311,9 +273,9 @@ export default function TienCongPage() {
               <h3 className="text-base font-bold text-slate-900">Ghi Nhận Ca Trực Mới</h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 px-2 py-1 text-xs font-semibold rounded-lg hover:bg-slate-200/50"
               >
-                <X className="w-5 h-5" />
+                Đóng
               </button>
             </div>
 

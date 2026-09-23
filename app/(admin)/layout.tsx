@@ -17,13 +17,64 @@ export default function AdminLayout({
   const { currentUser, isLoggedIn, isLoading, logout } = useViTinhAnTamStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Authentication guard: Chặn truy cập trái phép nếu chưa đăng nhập
+  // Command palette navigation items
+  const navItems = [
+    { title: 'Tổng Quan Bảng Điều Khiển', path: '/dashboard', category: 'Trang Chính' },
+    { title: 'Danh Sách Phiếu Sửa Chữa', path: '/phieu-sua-chua', category: 'Nghiệp Vụ' },
+    { title: 'Lập Phiếu Tiếp Nhận Máy Mới', path: '/phieu-sua-chua/tao-moi', category: 'Nghiệp Vụ' },
+    { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa' },
+    { title: 'Quản Lý Khách Hàng (CRM)', path: '/khach-hang', category: 'Khách Hàng' },
+    { title: 'Điều Phối Cứu Hộ Tận Nơi (Onsite)', path: '/cuu-ho-onsite', category: 'Điều Phối' },
+    { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Kế Toán' },
+    { title: 'Quản Lý Thành Viên & Phân Quyền', path: '/thanh-vien', category: 'Hệ Thống' },
+    { title: 'Cấu Hình Doanh Nghiệp & Nội Dung Web', path: '/cai-dat', category: 'Hệ Thống' },
+  ];
+
+  const filteredNavItems = navItems.filter((item) =>
+    item.title.toLowerCase().includes(paletteQuery.toLowerCase()) ||
+    item.category.toLowerCase().includes(paletteQuery.toLowerCase()) ||
+    item.path.toLowerCase().includes(paletteQuery.toLowerCase())
+  );
+
+  // Global Ctrl + K listener
   useEffect(() => {
-    if (!isLoading && !isLoggedIn) {
-      router.replace('/login');
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
+        setIsCommandPaletteOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [paletteQuery]);
+
+  const handleSelectNav = (path: string) => {
+    setIsCommandPaletteOpen(false);
+    setPaletteQuery('');
+    router.push(path);
+  };
+
+  const handlePaletteSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (filteredNavItems.length > 0 && selectedIndex < filteredNavItems.length) {
+      handleSelectNav(filteredNavItems[selectedIndex].path);
+    } else if (paletteQuery.trim()) {
+      setIsCommandPaletteOpen(false);
+      router.push(`/kho-may?search=${encodeURIComponent(paletteQuery.trim())}`);
+      setPaletteQuery('');
     }
-  }, [isLoading, isLoggedIn, router]);
+  };
 
   const handleQuickSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,9 +91,9 @@ export default function AdminLayout({
   if (isLoading || !isLoggedIn) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center mb-4 text-xs font-bold shadow-xs">
-          KHÓA
-        </div>
+        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-3 border border-blue-200">
+          Bảo Mật
+        </span>
         <h2 className="text-base font-bold text-slate-900 mb-1">Yêu cầu xác thực tài khoản</h2>
         <p className="text-xs text-slate-500 mb-4 max-w-sm">
           Bạn cần đăng nhập bằng tài khoản nội bộ (Admin, Kỹ thuật hoặc Sales) để truy cập hệ thống quản trị.
@@ -80,24 +131,22 @@ export default function AdminLayout({
               Menu
             </button>
 
-            {/* Quick Search */}
-            <form onSubmit={handleQuickSearch} className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tra cứu S/N, SĐT, Model máy..."
-                className="w-full h-9 px-3 pr-16 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 placeholder:text-slate-400 text-xs focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-100 transition-all"
-              />
-              <div className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 items-center gap-0.5">
-                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-200 text-slate-500 font-mono">
+            {/* Quick Search Button / Input triggering Command Palette */}
+            <button
+              type="button"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="relative w-full h-9 px-3 pr-16 rounded-lg bg-slate-100 hover:bg-slate-200/70 border border-slate-200 text-slate-400 text-xs flex items-center justify-between transition-all text-left"
+            >
+              <span>Tra cứu S/N, SĐT, chuyển trang nhanh...</span>
+              <div className="hidden sm:flex items-center gap-0.5">
+                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-300 text-slate-600 font-mono font-bold">
                   Ctrl
                 </kbd>
-                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-200 text-slate-500 font-mono">
+                <kbd className="px-1 py-0.5 rounded text-[9px] bg-white border border-slate-300 text-slate-600 font-mono font-bold">
                   K
                 </kbd>
               </div>
-            </form>
+            </button>
           </div>
 
           {/* Right Header Actions */}
@@ -150,6 +199,62 @@ export default function AdminLayout({
         {/* Page Body */}
         <main className="mt-16 p-4 sm:p-6 lg:p-8 flex-1 bg-white">{children}</main>
       </div>
+
+      {/* COMMAND PALETTE MODAL (Ctrl + K) */}
+      {isCommandPaletteOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-start justify-center p-4 pt-20">
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Input Header */}
+            <form onSubmit={handlePaletteSubmit} className="p-3 border-b border-slate-200 flex items-center gap-2">
+              <input
+                type="text"
+                autoFocus
+                value={paletteQuery}
+                onChange={(e) => setPaletteQuery(e.target.value)}
+                placeholder="Tìm trang, tra cứu S/N hoặc SĐT..."
+                className="flex-1 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none bg-transparent"
+              />
+              <span className="text-xs text-slate-400 px-2 font-mono">ESC để đóng</span>
+            </form>
+
+            {/* Results / Navigation List */}
+            <div className="max-h-80 overflow-y-auto p-2 space-y-1">
+              {filteredNavItems.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500">
+                  Không tìm thấy tính năng nào. Bấm <strong>Enter</strong> để tra cứu toàn bộ kho máy với từ khóa &quot;{paletteQuery}&quot;.
+                </div>
+              ) : (
+                filteredNavItems.map((item, idx) => (
+                  <button
+                    key={item.path}
+                    type="button"
+                    onClick={() => handleSelectNav(item.path)}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between text-xs transition-colors ${
+                      idx === selectedIndex
+                        ? 'bg-blue-50 text-blue-900 font-semibold'
+                        : 'text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{item.title}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
+                      {item.category}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+
+            {/* Footer Tip */}
+            <div className="p-2.5 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between px-4">
+              <span>Điều hướng phím tắt nhanh toàn hệ thống</span>
+              <span className="font-mono text-slate-400">Vi Tính An Tâm</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

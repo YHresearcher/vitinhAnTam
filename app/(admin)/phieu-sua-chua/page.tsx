@@ -4,22 +4,6 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { ServiceTicket } from '@/lib/supabase';
-import {
-  Search,
-  Plus,
-  Wrench,
-  Clock,
-  CheckCircle2,
-  Phone,
-  Barcode,
-  Truck,
-  Building,
-  Lock,
-  Calendar,
-  DollarSign,
-  User,
-  X
-} from 'lucide-react';
 
 const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string; text: string; border: string }> = {
   received: { label: 'Tiếp nhận mới', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -91,13 +75,38 @@ export default function PhieuSuaChuaPage() {
     }
   };
 
+  // Xuất file CSV / Excel
+  const handleExportCSV = () => {
+    const headers = ['Mã Phiếu', 'Khách Hàng', 'Số Điện Thoại', 'Thiết Bị', 'Hình Thức', 'Mô Tả Lỗi', 'Trạng Thái', 'Kỹ Thuật Viên', 'Chi Phí (VNĐ)'];
+    const rows = filteredTickets.map((t) => [
+      t.ticket_code,
+      `"${t.customer_name}"`,
+      `"${t.customer_phone}"`,
+      `"${t.device_model || t.device_name || ''}"`,
+      t.ticket_type === 'onsite' ? 'Tận nơi' : 'Tại quầy',
+      `"${(t.issue_description || '').replace(/"/g, '""')}"`,
+      STATUS_LABELS[t.status]?.label || t.status,
+      `"${t.technician_name || ''}"`,
+      t.actual_cost ?? t.estimated_cost ?? t.total_amount ?? 0,
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Phieu_Sua_Chua_ViTinhAnTam_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Toast Notice */}
       {actionNotice && (
-        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium">{actionNotice}</span>
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-2">
+          <span className="text-xs font-semibold">{actionNotice}</span>
         </div>
       )}
 
@@ -112,98 +121,81 @@ export default function PhieuSuaChuaPage() {
           </h1>
         </div>
 
-        <Link
-          href="/phieu-sua-chua/tao-moi"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          + Tạo phiếu mới
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+          >
+            Xuất Excel (CSV)
+          </button>
+          <Link
+            href="/phieu-sua-chua/tao-moi"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95"
+          >
+            + Tạo phiếu mới
+          </Link>
+        </div>
       </div>
 
       {/* Role Notice */}
       {!canUpdateRepairStatus() && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2.5 text-xs text-amber-800">
-          <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-          <div>
-            Tài khoản <span className="font-semibold">{currentUser.name}</span> (Kinh doanh) — Được phép tạo phiếu và xem, quyền sửa trạng thái thuộc về Kỹ thuật viên.
-          </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+          Tài khoản <span className="font-semibold">{currentUser.name}</span> (Kinh doanh) — Được phép tạo phiếu và xem, quyền sửa trạng thái thuộc về Kỹ thuật viên.
         </div>
       )}
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Wrench className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Tổng phiếu</div>
-            <div className="text-xl font-bold text-slate-900">{stats.total}</div>
-          </div>
+      {/* Stats Summary (Loại bỏ hoàn toàn các ô khung rỗng) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Tổng phiếu</div>
+          <div className="text-xl font-bold text-slate-900 font-mono mt-1">{stats.total}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Đang sửa</div>
-            <div className="text-xl font-bold text-amber-700">{stats.inProgress}</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Đang sửa</div>
+          <div className="text-xl font-bold text-amber-700 font-mono mt-1">{stats.inProgress}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Chờ giao</div>
-            <div className="text-xl font-bold text-emerald-700">{stats.ready}</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Chờ giao</div>
+          <div className="text-xl font-bold text-emerald-700 font-mono mt-1">{stats.ready}</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <DollarSign className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Dự kiến thu</div>
-            <div className="text-xl font-bold text-indigo-700">
-              {stats.estimatedRev.toLocaleString('vi-VN')} đ
-            </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Dự kiến thu</div>
+          <div className="text-xl font-bold text-indigo-700 font-mono mt-1">
+            {stats.estimatedRev.toLocaleString('vi-VN')} đ
           </div>
         </div>
       </div>
 
       {/* Filters & Search */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Search bar */}
           <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm mã phiếu, khách hàng, SĐT, tag..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
               >
-                <X className="w-4 h-4" />
+                ×
               </button>
             )}
           </div>
 
           {/* Type tabs (Counter / Onsite) */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg text-xs">
             <button
               onClick={() => setSelectedType('all')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+              className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
                 selectedType === 'all' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'
               }`}
             >
@@ -211,20 +203,18 @@ export default function PhieuSuaChuaPage() {
             </button>
             <button
               onClick={() => setSelectedType('counter')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
                 selectedType === 'counter' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'
               }`}
             >
-              <Building className="w-3.5 h-3.5" />
               Tại quầy
             </button>
             <button
               onClick={() => setSelectedType('onsite')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
                 selectedType === 'onsite' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'
               }`}
             >
-              <Truck className="w-3.5 h-3.5" />
               Tận nơi
             </button>
           </div>
@@ -257,7 +247,7 @@ export default function PhieuSuaChuaPage() {
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -272,7 +262,7 @@ export default function PhieuSuaChuaPage() {
                 <th className="py-3 px-4 text-right">Chi Phí</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-sm">
+            <tbody className="divide-y divide-slate-200 text-xs">
               {filteredTickets.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">
@@ -287,11 +277,10 @@ export default function PhieuSuaChuaPage() {
                     <tr key={ticket.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Ticket Code & Date */}
                       <td className="py-3.5 px-4">
-                        <div className="font-mono font-bold text-blue-600 text-xs">
+                        <div className="font-mono font-bold text-blue-600">
                           {ticket.ticket_code}
                         </div>
-                        <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Calendar className="w-3 h-3" />
+                        <div className="text-[11px] text-slate-400 mt-0.5">
                           {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('vi-VN') : 'Hôm nay'}
                         </div>
                       </td>
@@ -299,21 +288,19 @@ export default function PhieuSuaChuaPage() {
                       {/* Customer Info */}
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-900">{ticket.customer_name}</div>
-                        <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span className="font-mono">{ticket.customer_phone}</span>
+                        <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                          {ticket.customer_phone}
                         </div>
                       </td>
 
                       {/* Device & Service Tag */}
                       <td className="py-3.5 px-4">
-                        <div className="font-medium text-slate-800 text-xs">
+                        <div className="font-medium text-slate-800">
                           {ticket.device_model || ticket.device_name || 'Thiết bị tiếp nhận'}
                         </div>
                         {(ticket.service_tag || ticket.device_service_tag) && (
-                          <div className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5">
-                            <Barcode className="w-3 h-3 text-slate-400" />
-                            {ticket.service_tag || ticket.device_service_tag}
+                          <div className="inline-block text-[11px] font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5">
+                            Tag: {ticket.service_tag || ticket.device_service_tag}
                           </div>
                         )}
                       </td>
@@ -321,19 +308,19 @@ export default function PhieuSuaChuaPage() {
                       {/* Ticket Type */}
                       <td className="py-3.5 px-4">
                         {ticket.ticket_type === 'onsite' || ticket.reception_mode === 'mobile' ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
-                            <Truck className="w-3 h-3" /> Tận nơi
+                          <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded">
+                            Tận nơi
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                            <Building className="w-3 h-3" /> Tại quầy
+                          <span className="text-[11px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
+                            Tại quầy
                           </span>
                         )}
                       </td>
 
                       {/* Issue Description */}
                       <td className="py-3.5 px-4 max-w-xs">
-                        <p className="text-xs text-slate-600 line-clamp-2">
+                        <p className="text-slate-600 line-clamp-2">
                           {ticket.issue_description || ticket.issueDescription || ticket.visual_condition || 'Không có mô tả'}
                         </p>
                         {ticket.parts_used && ticket.parts_used.length > 0 && (
@@ -362,30 +349,26 @@ export default function PhieuSuaChuaPage() {
                           </select>
                         ) : (
                           <div
-                            className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.bg} ${statusInfo.text}`}
+                            className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${statusInfo.bg} ${statusInfo.text}`}
                             title="Kinh doanh không có quyền đổi trạng thái sửa chữa"
                           >
-                            <span>{statusInfo.label}</span>
-                            <Lock className="w-3 h-3 text-slate-400" />
+                            {statusInfo.label}
                           </div>
                         )}
                       </td>
 
                       {/* Tech in charge */}
-                      <td className="py-3.5 px-4 text-xs text-slate-600">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{ticket.technician_name}</span>
-                        </div>
+                      <td className="py-3.5 px-4 text-slate-600">
+                        <span>{ticket.technician_name}</span>
                       </td>
 
                       {/* Cost */}
                       <td className="py-3.5 px-4 text-right">
-                        <div className="font-bold text-slate-900">
+                        <div className="font-bold text-slate-900 font-mono">
                           {(ticket.actual_cost ?? ticket.estimated_cost ?? ticket.total_amount ?? 0).toLocaleString('vi-VN')} đ
                         </div>
                         {ticket.actual_cost && ticket.actual_cost !== ticket.estimated_cost && (
-                          <div className="text-[10px] text-slate-400 line-through">
+                          <div className="text-[10px] text-slate-400 line-through font-mono">
                             {(ticket.estimated_cost ?? 0).toLocaleString('vi-VN')} đ
                           </div>
                         )}

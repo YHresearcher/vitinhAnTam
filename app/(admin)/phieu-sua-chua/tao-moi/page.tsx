@@ -4,19 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import {
-  ArrowLeft,
-  Building,
-  Truck,
-  User,
-  Phone,
-  Laptop,
-  CheckSquare,
-  Square,
-  ShieldCheck,
-  Wrench,
-  CheckCircle2
-} from 'lucide-react';
 
 const COMMON_SERVICES = [
   {
@@ -153,17 +140,16 @@ export default function TaoPhieuSuaChuaPage() {
       <div>
         <Link
           href="/phieu-sua-chua"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors font-medium"
+          className="inline-flex items-center text-sm text-slate-500 hover:text-slate-800 transition-colors font-medium"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Quay lại danh sách phiếu sửa chữa
+          ← Quay lại danh sách phiếu sửa chữa
         </Link>
       </div>
 
       {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Lập Phiếu Tiếp Nhận Máy Mới
           </h1>
           <p className="text-sm text-slate-500 mt-1">
@@ -176,25 +162,23 @@ export default function TaoPhieuSuaChuaPage() {
           <button
             type="button"
             onClick={() => setTicketType('counter')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               ticketType === 'counter'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Building className="w-4 h-4" />
             Tại Quầy Cửa Hàng
           </button>
           <button
             type="button"
             onClick={() => setTicketType('onsite')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
               ticketType === 'onsite'
                 ? 'bg-white text-indigo-600 shadow-sm'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Truck className="w-4 h-4" />
             Cứu Hộ Tận Nơi (&lt;5km Hỏa Tốc)
           </button>
         </div>
@@ -203,8 +187,7 @@ export default function TaoPhieuSuaChuaPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Step 1: Customer Information */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-sm font-bold text-slate-900">
-            <User className="w-4 h-4 text-blue-600" />
+          <div className="pb-3 border-b border-slate-100 text-sm font-bold text-slate-900">
             1. Thông Tin Khách Hàng
           </div>
 
@@ -213,15 +196,14 @@ export default function TaoPhieuSuaChuaPage() {
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Số Điện Thoại Khách Hàng *
               </label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <div>
                 <input
                   type="tel"
                   required
                   placeholder="VD: 0918234891"
                   value={customerPhone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
                 />
               </div>
               <span className="text-[11px] text-slate-400 mt-1 block">
@@ -263,9 +245,8 @@ export default function TaoPhieuSuaChuaPage() {
 
         {/* Step 2: Device & Issue Description */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 text-sm font-bold text-slate-900">
-            <Laptop className="w-4 h-4 text-blue-600" />
-            2. Thông Tin Thiết Bị & Tình Trạng Lỗi Tiếp Nhận
+          <div className="pb-3 border-b border-slate-100 text-sm font-bold text-slate-900">
+            2. Thông Tin Thiết Bị &amp; Tình Trạng Lỗi Tiếp Nhận
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -328,9 +309,8 @@ export default function TaoPhieuSuaChuaPage() {
         {/* Step 3: Service Checklist & Pricing */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
-              <Wrench className="w-4 h-4 text-blue-600" />
-              3. Gói Dịch Vụ & Linh Kiện Dự Kiến Thay Thế
+            <div className="text-sm font-bold text-slate-900">
+              3. Gói Dịch Vụ &amp; Linh Kiện Dự Kiến Thay Thế
             </div>
             <span className="text-xs text-slate-500">Tick chọn để tự động cộng dồn</span>
           </div>
@@ -349,11 +329,11 @@ export default function TaoPhieuSuaChuaPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    {isChecked ? (
-                      <CheckSquare className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                    ) : (
-                      <Square className="w-5 h-5 text-slate-400 flex-shrink-0" />
-                    )}
+                    <span className={`w-5 h-5 rounded border flex items-center justify-center text-xs font-bold font-mono transition-colors ${
+                      isChecked ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-transparent border-slate-300'
+                    }`}>
+                      ✓
+                    </span>
                     <div>
                       <div className="text-sm font-semibold text-slate-900">{s.name}</div>
                       <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
@@ -367,7 +347,7 @@ export default function TaoPhieuSuaChuaPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-sm font-bold text-slate-900">
+                  <div className="text-sm font-bold text-slate-900 font-mono">
                     +{s.price.toLocaleString('vi-VN')} đ
                   </div>
                 </div>
@@ -386,7 +366,7 @@ export default function TaoPhieuSuaChuaPage() {
                 step={10000}
                 value={customCost}
                 onChange={(e) => setCustomCost(Number(e.target.value))}
-                className="w-32 px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-right font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="w-32 px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-right font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
               />
               <span className="text-xs text-slate-500 font-medium">VNĐ</span>
             </div>
@@ -396,13 +376,12 @@ export default function TaoPhieuSuaChuaPage() {
         {/* Multi-tier Warranty Preview Card - WHITE & BLUE THEME */}
         <div className="bg-gradient-to-br from-blue-50/90 to-indigo-50/70 text-slate-800 p-6 rounded-2xl shadow-xs border-2 border-blue-200">
           <div className="flex items-center justify-between pb-4 border-b border-blue-200">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-blue-600" />
+            <div>
               <span className="font-bold text-base text-slate-900">Cam Kết Bảo Hành Phân Tầng Điện Tử</span>
             </div>
             <div className="text-right">
               <div className="text-xs text-slate-500 font-medium">Tổng chi phí ước tính:</div>
-              <div className="text-2xl font-black text-blue-700">
+              <div className="text-2xl font-black text-blue-700 font-mono">
                 {totalCost.toLocaleString('vi-VN')} đ
               </div>
             </div>
@@ -416,7 +395,7 @@ export default function TaoPhieuSuaChuaPage() {
               </p>
             </div>
             <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-xs">
-              <div className="text-blue-700 font-bold mb-1">Tầng 2: Keo TF7 & Nhiệt Độ (30N)</div>
+              <div className="text-blue-700 font-bold mb-1">Tầng 2: Keo TF7 &amp; Nhiệt Độ (30N)</div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
                 Bảo hành nhiệt độ CPU dưới 70°C khi làm việc văn phòng, miễn phí vệ sinh lại nếu quạt kêu.
               </p>
@@ -448,9 +427,8 @@ export default function TaoPhieuSuaChuaPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg shadow-sm transition-all active:scale-95 flex items-center gap-2"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-bold rounded-lg shadow-sm transition-all active:scale-95"
             >
-              <CheckCircle2 className="w-4 h-4" />
               {isSubmitting ? 'Đang lưu phiếu...' : 'Xác Nhận Tiếp Nhận Phiếu'}
             </button>
           </div>

@@ -4,28 +4,8 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { Customer, InventoryItem, ServiceTicket, generateCustomerCode } from '@/lib/supabase';
-import {
-  Users,
-  Search,
-  UserPlus,
-  Phone,
-  MessageSquare,
-  Eye,
-  Edit2,
-  Trash2,
-  Crown,
-  HeartHandshake,
-  UserCheck,
-  Laptop,
-  Wrench,
-  Calendar,
-  MapPin,
-  ExternalLink,
-  X,
-  CheckCircle2,
-  AlertTriangle,
-  Plus,
-} from 'lucide-react';
+// Lucide icons removed for minimalist text design
+
 
 export default function KhachHangCrmPage() {
   const {
@@ -221,13 +201,38 @@ export default function KhachHangCrmPage() {
     setActive360Tab('devices');
   };
 
+  // Export CSV (Excel)
+  const handleExportCSV = () => {
+    if (filteredCustomers.length === 0) return;
+    const headers = ['Mã KH', 'Tên khách hàng', 'Số điện thoại', 'Địa chỉ', 'Khu vực', 'Phân hạng', 'Số máy gửi sửa', 'Ghi chú'];
+    const rows = filteredCustomers.map((c) => [
+      `"${c.customer_code || ''}"`,
+      `"${(c.full_name || c.name || '').replace(/"/g, '""')}"`,
+      `"${c.phone}"`,
+      `"${(c.address || '').replace(/"/g, '""')}"`,
+      `"${c.area_zone || ''}"`,
+      `"${c.customer_tier || 'Standard'}"`,
+      getCustomerDevices(c).length,
+      `"${(c.notes || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `danh_sach_khach_hang_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-emerald-600 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <span className="text-sm font-medium">{toastMessage}</span>
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-emerald-600 flex items-center gap-3 animate-fade-in text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>{toastMessage}</span>
         </div>
       )}
 
@@ -236,7 +241,7 @@ export default function KhachHangCrmPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Quản Lý Khách Hàng & CRM
-            <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full">
+            <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full font-mono">
               {customers.length} khách hàng
             </span>
           </h1>
@@ -245,69 +250,53 @@ export default function KhachHangCrmPage() {
           </p>
         </div>
 
-        {/* Action Button: Accessible to Admin and Sales */}
-        {canAccessCRM() && (
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+            onClick={handleExportCSV}
+            className="inline-flex items-center justify-center px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap"
           >
-            <UserPlus className="w-4 h-4" />
-            Thêm Khách Hàng Mới
+            Xuất Excel (CSV)
           </button>
-        )}
+          {canAccessCRM() && (
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Thêm Khách Hàng Mới
+            </button>
+          )}
+        </div>
       </div>
 
       {/* RBAC Notice for KTV */}
       {!canAccessCRM() && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-3">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800">
-            <span className="font-semibold">{currentUser.name} (Kỹ thuật viên):</span>{' '}
-            Chế độ chỉ xem lịch sử và tra cứu. Quyền cập nhật dành cho Quản trị viên và Bán hàng.
-          </div>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
+          <span className="font-semibold">{currentUser.name} (Kỹ thuật viên):</span>{' '}
+          Chế độ chỉ xem lịch sử và tra cứu. Quyền cập nhật dành cho Quản trị viên và Bán hàng.
         </div>
       )}
 
-      {/* KPI Stats Grid */}
+      {/* KPI Stats Grid - Clean typography, no empty icon boxes */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Tổng Khách Hàng</div>
-            <div className="text-xl font-bold text-slate-900">{stats.total} người</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Tổng Khách Hàng</div>
+          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">{stats.total} người</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Crown className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Khách Hàng VIP</div>
-            <div className="text-xl font-bold text-amber-700">{stats.vipCount} đối tác</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Khách Hàng VIP</div>
+          <div className="text-xl font-bold text-amber-700 mt-1 font-mono">{stats.vipCount} đối tác</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-            <HeartHandshake className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Khách Thân Thiết</div>
-            <div className="text-xl font-bold text-purple-700">{stats.loyalCount} khách quen</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Khách Thân Thiết</div>
+          <div className="text-xl font-bold text-purple-700 mt-1 font-mono">{stats.loyalCount} khách quen</div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-11 h-11 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <UserCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="text-xs font-medium text-slate-500">Khu Vực Phục Vụ</div>
-            <div className="text-xl font-bold text-emerald-700">Long An - Tây Ninh</div>
-          </div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-xs font-medium text-slate-500">Khu Vực Phục Vụ</div>
+          <div className="text-xl font-bold text-emerald-700 mt-1">Long An - Tây Ninh</div>
         </div>
       </div>
 
@@ -316,20 +305,19 @@ export default function KhachHangCrmPage() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Search box */}
           <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm theo Tên, SĐT, Mã định danh, Địa chỉ..."
-              className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
               >
-                <X className="w-4 h-4" />
+                Xóa
               </button>
             )}
           </div>
@@ -339,8 +327,8 @@ export default function KhachHangCrmPage() {
             {(
               [
                 { id: 'all', label: 'Tất cả hạng' },
-                { id: 'VIP', label: '👑 VIP' },
-                { id: 'Thân thiết', label: '💜 Thân thiết' },
+                { id: 'VIP', label: 'VIP' },
+                { id: 'Thân thiết', label: 'Thân thiết' },
                 { id: 'Standard', label: 'Tiêu chuẩn' },
               ] as const
             ).map((tab) => (
@@ -446,19 +434,17 @@ export default function KhachHangCrmPage() {
                         <div className="flex items-center gap-2 mt-1">
                           <a
                             href={`tel:${cleanPhone}`}
-                            className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded font-medium"
+                            className="inline-flex items-center text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-0.5 rounded font-medium"
                           >
-                            <Phone className="w-3 h-3" />
                             Gọi ngay
                           </a>
                           <a
                             href={`https://zalo.me/${cleanPhone}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded font-medium"
+                            className="inline-flex items-center text-[11px] text-emerald-700 hover:text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded font-medium"
                           >
-                            <MessageSquare className="w-3 h-3" />
-                            Chat Zalo
+                            Zalo
                           </a>
                         </div>
                       </td>
@@ -466,19 +452,17 @@ export default function KhachHangCrmPage() {
                       {/* Tier Badge */}
                       <td className="py-3.5 px-4">
                         {cust.customer_tier === 'VIP' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                            <Crown className="w-3.5 h-3.5 text-amber-600" />
-                            VIP Doanh Nghiệp
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                            VIP
                           </span>
                         )}
                         {cust.customer_tier === 'Thân thiết' && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                            <HeartHandshake className="w-3.5 h-3.5 text-purple-600" />
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
                             Thân Thiết
                           </span>
                         )}
                         {(!cust.customer_tier || cust.customer_tier === 'Standard') && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
                             Tiêu chuẩn
                           </span>
                         )}
@@ -491,7 +475,7 @@ export default function KhachHangCrmPage() {
                         </div>
                         {cust.notes && (
                           <div className="text-[11px] text-slate-400 mt-0.5 max-w-xs truncate italic" title={cust.notes}>
-                            📝 {cust.notes}
+                            {cust.notes}
                           </div>
                         )}
                       </td>
@@ -500,9 +484,8 @@ export default function KhachHangCrmPage() {
                       <td className="py-3.5 px-4 text-center">
                         <button
                           onClick={() => handleOpen360(cust)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold"
+                          className="px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-semibold"
                         >
-                          <Laptop className="w-3.5 h-3.5" />
                           {custDevices.length} máy
                         </button>
                       </td>
@@ -511,39 +494,38 @@ export default function KhachHangCrmPage() {
                       <td className="py-3.5 px-4 text-center">
                         <button
                           onClick={() => handleOpen360(cust)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold"
+                          className="px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold"
                         >
-                          <Wrench className="w-3.5 h-3.5" />
                           {custTickets.length} phiếu
                         </button>
                       </td>
 
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-center">
-                        <div className="inline-flex items-center gap-1">
+                        <div className="inline-flex items-center gap-1.5">
                           <button
                             onClick={() => handleOpen360(cust)}
-                            className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="px-2 py-1 text-xs text-blue-700 hover:bg-blue-50 font-medium rounded transition-colors"
                             title="Xem Hồ sơ 360°"
                           >
-                            <Eye className="w-4 h-4" />
+                            Xem
                           </button>
                           {canAccessCRM() && (
                             <button
                               onClick={() => handleOpenEdit(cust)}
-                              className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                              className="px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-50 font-medium rounded transition-colors"
                               title="Chỉnh sửa thông tin"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              Sửa
                             </button>
                           )}
                           {currentUser.role === 'admin' && (
                             <button
                               onClick={() => handleDeleteCustomer(cust)}
-                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 font-medium rounded transition-colors"
                               title="Xóa khách hàng"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              Xóa
                             </button>
                           )}
                         </div>
@@ -579,23 +561,21 @@ export default function KhachHangCrmPage() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 mt-1 flex items-center gap-3">
-                    <span className="flex items-center gap-1 font-mono">
-                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                      {viewing360Customer.phone}
+                    <span className="font-mono">
+                      ĐT: {viewing360Customer.phone}
                     </span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-blue-400" />
-                      {viewing360Customer.address || 'Long An - Tây Ninh'}
+                      <span>ĐC: {viewing360Customer.address || 'Long An - Tây Ninh'}</span>
                     </span>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setViewing360Customer(null)}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10"
+                className="text-slate-400 hover:text-white px-2.5 py-1 text-xs font-semibold rounded-lg hover:bg-white/10"
               >
-                <X className="w-5 h-5" />
+                Đóng
               </button>
             </div>
 
@@ -610,26 +590,23 @@ export default function KhachHangCrmPage() {
               <div className="flex items-center gap-2">
                 <a
                   href={`tel:${viewing360Customer.phone.replace(/\D/g, '')}`}
-                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold inline-flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold inline-flex items-center"
                 >
-                  <Phone className="w-3.5 h-3.5" />
                   Gọi điện
                 </a>
                 <a
                   href={`https://zalo.me/${viewing360Customer.phone.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold inline-flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold inline-flex items-center"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
                   Nhắn Zalo
                 </a>
                 <Link
                   href={`/phieu-sua-chua/tao-moi?customerPhone=${encodeURIComponent(viewing360Customer.phone)}&customerName=${encodeURIComponent(viewing360Customer.full_name || viewing360Customer.name || '')}`}
-                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold inline-flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold inline-flex items-center"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  Tạo phiếu sửa
+                  + Tạo phiếu sửa
                 </Link>
               </div>
             </div>
@@ -644,7 +621,6 @@ export default function KhachHangCrmPage() {
                     : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <Laptop className="w-4 h-4" />
                 Thiết Bị Đã Mua ({getCustomerDevices(viewing360Customer).length})
               </button>
               <button
@@ -655,7 +631,6 @@ export default function KhachHangCrmPage() {
                     : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <Wrench className="w-4 h-4" />
                 Lịch Sử Sửa Chữa ({getCustomerTickets(viewing360Customer).length})
               </button>
               <button
@@ -666,7 +641,6 @@ export default function KhachHangCrmPage() {
                     : 'border-transparent text-slate-500 hover:text-slate-900'
                 }`}
               >
-                <Edit2 className="w-4 h-4" />
                 Ghi Chú CSKH
               </button>
             </div>
@@ -697,8 +671,7 @@ export default function KhachHangCrmPage() {
                             Serial: <span className="font-mono font-medium">{dev.serial_number || 'N/A'}</span> • Cấu hình: {dev.cpu || dev.specs?.cpu || 'i5'}, {dev.ram || dev.specs?.ram || '16GB'}, {dev.ssd_capacity || dev.specs?.ssd || 'SSD'}
                           </div>
                           {dev.warranty_months ? (
-                            <div className="text-xs text-emerald-700 flex items-center gap-1 font-medium">
-                              <Calendar className="w-3.5 h-3.5" />
+                            <div className="text-xs text-emerald-700 font-medium">
                               Bảo hành: {dev.warranty_months} tháng {dev.handover_date ? `(Bàn giao: ${new Date(dev.handover_date).toLocaleDateString('vi-VN')})` : ''}
                             </div>
                           ) : null}
@@ -706,9 +679,8 @@ export default function KhachHangCrmPage() {
                         <Link
                           href={`/tra-cuu-bao-hanh?tag=${encodeURIComponent(dev.service_tag)}`}
                           target="_blank"
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs font-medium whitespace-nowrap shrink-0"
+                          className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-2xs font-medium whitespace-nowrap shrink-0"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
                           Tra cứu bảo hành
                         </Link>
                       </div>
@@ -812,9 +784,9 @@ export default function KhachHangCrmPage() {
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50"
+                className="text-slate-400 hover:text-slate-600 px-2 py-1 text-xs font-semibold rounded-lg hover:bg-slate-200/50"
               >
-                <X className="w-5 h-5" />
+                Đóng
               </button>
             </div>
 
