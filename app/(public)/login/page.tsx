@@ -103,53 +103,48 @@ export default function LoginPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative overflow-hidden">
-      {/* Soft Blue Ambient Gradient Backdrop */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-blue-50/70 via-sky-50/30 to-transparent pointer-events-none -z-10" />
-      <div className="absolute -top-24 right-1/4 w-72 h-72 bg-blue-100/40 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute top-32 left-1/4 w-80 h-80 bg-sky-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
-
+    <div className="min-h-screen bg-[#FAF7F2] py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center relative">
       <div className="sm:mx-auto sm:w-full sm:max-w-xl space-y-6">
         {/* Branding */}
         <div className="flex flex-col items-center text-center">
           <Link href="/" className="inline-block hover:opacity-95 transition-opacity">
             <Logo />
           </Link>
-          <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-xs font-bold text-blue-700">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+          <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#FAF7F2] border border-[#E8E2D9] text-xs font-bold text-[#C0392B]">
+            <span className="w-2 h-2 rounded-full bg-[#C0392B]" />
             <span>{t.badge}</span>
           </div>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold text-[#2B1810] tracking-tight">
             {t.title}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-600">
+          <p className="mt-1 text-xs sm:text-sm text-[#735A4D]">
             {t.subtitle}
           </p>
         </div>
 
         {/* Notifications */}
         {errorMessage && (
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-shake">
+          <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-shake">
             <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
         {successMessage && (
-          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs sm:text-sm font-semibold flex items-center gap-2 animate-pulse">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+          <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-semibold flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0" />
             <span>{successMessage}</span>
           </div>
         )}
 
         {/* Card Container */}
-        <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-xl shadow-blue-900/5 border border-slate-200 space-y-6">
+        <div className="bg-[#FFFDF9] p-6 sm:p-8 rounded-lg shadow-sm border border-[#E8E2D9] space-y-6">
           {/* Quick Login Role Cards */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider font-bold text-slate-500">
+              <span className="text-xs uppercase tracking-wider font-bold text-[#735A4D]">
                 {t.oneClickTitle}
               </span>
-              <span className="text-[11px] text-blue-600 font-semibold">{t.oneClickAuto}</span>
+              <span className="text-[11px] text-[#C0392B] font-semibold">{t.oneClickAuto}</span>
             </div>
 
             <div className="space-y-2.5">
@@ -161,28 +156,32 @@ export default function LoginPage() {
                   <div
                     key={qr.role}
                     onClick={() => handleSelectMember(qr.user)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                      isSelected ? qr.activeClass : `bg-white border-slate-200 ${qr.hoverClass}`
+                    className={`p-4 rounded-lg border transition-all cursor-pointer flex items-start gap-3.5 ${
+                      isSelected ? 'bg-[#FAF7F2] border-2 border-[#C0392B] shadow-xs' : 'bg-white border-[#E8E2D9] hover:border-[#C0392B]/40 hover:bg-[#FAF7F2]/50'
                     }`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-xl ${qr.iconBg} flex items-center justify-center shrink-0 text-white font-bold shadow-xs`}
+                      className={`w-10 h-10 rounded-lg ${isSelected ? 'bg-[#C0392B]' : 'bg-[#2B1810]'} flex items-center justify-center shrink-0 text-white font-bold shadow-xs`}
                     >
-                      <RoleIcon className="w-5 h-5" />
+                      <RoleIcon className="w-5 h-5" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-bold text-slate-900">{qr.label}</h3>
+                        <h3 className="text-sm font-bold text-[#2B1810]">{qr.label}</h3>
                         <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full border font-bold ${qr.badgeClass}`}
+                          className={`text-[10px] px-2 py-0.5 rounded-md border font-bold ${
+                            qr.role === 'admin' ? 'bg-[#FAF7F2] text-[#C0392B] border-[#C0392B]/30' :
+                            qr.role === 'sales' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+                            'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          }`}
                         >
                           {qr.badge}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 font-medium mt-0.5">
-                        {qr.user.name} • Tên đăng nhập: <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">@{qr.user.username || qr.user.email.split('@')[0]}</span>
+                      <p className="text-[11px] text-[#735A4D] font-medium mt-0.5">
+                        {qr.user.name} • Tên đăng nhập: <span className="font-mono font-bold text-[#C0392B] bg-[#FAF7F2] px-1.5 py-0.5 rounded border border-[#E8E2D9]">@{qr.user.username || qr.user.email.split('@')[0]}</span>
                       </p>
-                      <p className="text-[10px] text-slate-500 mt-1 leading-snug">{qr.desc}</p>
+                      <p className="text-[10px] text-[#735A4D]/80 mt-1 leading-snug">{qr.desc}</p>
                     </div>
                     <button
                       type="button"
@@ -190,7 +189,7 @@ export default function LoginPage() {
                         e.stopPropagation();
                         handleQuickLoginUser(qr.user);
                       }}
-                      className={`px-3 py-1.5 rounded-lg ${qr.btnBg} text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center`}
+                      className="px-3 py-1.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
                     >
                       {t.btnQuickLogin}
                     </button>
@@ -202,46 +201,46 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-slate-200"></div>
-            <span className="flex-shrink mx-4 text-[11px] uppercase tracking-widest text-slate-400 font-bold">
+            <div className="flex-grow border-t border-[#E8E2D9]"></div>
+            <span className="flex-shrink mx-4 text-[11px] uppercase tracking-widest text-[#735A4D]/60 font-bold">
               {t.orDivider}
             </span>
-            <div className="flex-grow border-t border-slate-200"></div>
+            <div className="flex-grow border-t border-[#E8E2D9]"></div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleFormLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold text-[#2B1810] mb-1.5">
                 {t.emailLabel}
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C0392B] w-4 h-4" strokeWidth={1.5} />
                 <input
                   type="text"
                   required
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="thanhphan, sales01, tech01 hoặc email..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9] text-[#2B1810] placeholder-[#735A4D]/50 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#C0392B] focus:border-[#C0392B] transition-all font-mono"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-slate-700">{t.passwordLabel}</label>
-                <span className="text-[11px] text-blue-600 font-semibold">{t.defaultPasswordHint}</span>
+                <label className="block text-xs font-bold text-[#2B1810]">{t.passwordLabel}</label>
+                <span className="text-[11px] text-[#C0392B] font-semibold">{t.defaultPasswordHint}</span>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-600 w-4 h-4" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C0392B] w-4 h-4" strokeWidth={1.5} />
                 <input
                   type="password"
                   required
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   placeholder="••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-slate-900 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-mono"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9] text-[#2B1810] placeholder-[#735A4D]/50 text-xs sm:text-sm focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#C0392B] focus:border-[#C0392B] transition-all font-mono"
                 />
               </div>
             </div>
@@ -249,9 +248,9 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-sm transition-all active:scale-[0.99] flex items-center justify-center gap-2"
             >
-              <LogIn className="w-4 h-4" />
+              <LogIn className="w-4 h-4" strokeWidth={1.5} />
               <span>{isSubmitting ? t.verifying : t.btnSubmit}</span>
             </button>
           </form>
@@ -261,9 +260,9 @@ export default function LoginPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] hover:text-[#C0392B] font-medium transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>{t.backToHome}</span>
           </Link>
         </div>

@@ -263,7 +263,8 @@ export const getQRCodeUrl = (text: string, size = 150): string => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
 };
 
-export const formatVND = (amount: number): string => {
+export const formatVND = (amount: number, contactText = 'Liên hệ'): string => {
+  if (!amount || amount <= 0) return contactText;
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 

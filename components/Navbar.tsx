@@ -17,7 +17,7 @@ export function Navbar() {
   const t = TRANSLATIONS[currentLang || 'vi'].navbar;
 
   return (
-    <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <header className="sticky top-0 w-full z-50 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E8E2D9] shadow-xs">
       {/* Main Header */}
       <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* Logo with Slogan */}
@@ -33,8 +33,8 @@ export function Navbar() {
             href="/"
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/'
-                ? 'bg-blue-50 text-blue-800 font-bold'
-                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
+                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
+                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.home}
@@ -43,27 +43,27 @@ export function Navbar() {
             href="/vi-sao-chon-an-tam"
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/vi-sao-chon-an-tam'
-                ? 'bg-blue-50 text-blue-800 font-bold'
-                : 'text-slate-600 hover:text-blue-700 hover:bg-slate-100'
+                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
+                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.whyUs}
           </Link>
           <Link
             href="/#danh-muc-san-pham"
-            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.products}
           </Link>
           <Link
             href="/#dich-vu-spa"
-            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.services}
           </Link>
           <Link
             href="/#chinh-sach"
-            className="text-xs font-medium text-slate-600 hover:text-blue-700 px-3 py-1.5 rounded-lg transition-colors hover:bg-slate-100"
+            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.contact}
           </Link>
@@ -72,14 +72,14 @@ export function Navbar() {
         {/* Right CTAs */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Language Switcher Vi / En */}
-          <div className="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5 text-[11px] font-bold">
+          <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-0.5 text-[11px] font-bold">
             <button
               type="button"
               onClick={() => setLang('vi')}
               className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                 !isEn
-                  ? 'bg-blue-700 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-blue-700'
+                  ? 'bg-[#C0392B] text-white shadow-xs'
+                  : 'text-[#6E5D53] hover:text-[#C0392B]'
               }`}
               title="Tiếng Việt (Mặc định)"
             >
@@ -91,8 +91,8 @@ export function Navbar() {
               onClick={() => setLang('en')}
               className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
                 isEn
-                  ? 'bg-blue-700 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-blue-700'
+                  ? 'bg-[#C0392B] text-white shadow-xs'
+                  : 'text-[#6E5D53] hover:text-[#C0392B]'
               }`}
               title="English (Professional)"
             >
@@ -106,27 +106,27 @@ export function Navbar() {
             <div className="flex items-center gap-0.5">
               <Link
                 href="/dashboard"
-                className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors"
                 title={t.adminPortal}
               >
-                <User className="w-5 h-5" />
+                <User className="w-5 h-5" strokeWidth={1.5} />
               </Link>
               <button
                 type="button"
                 onClick={() => logout()}
                 title={t.logout}
-                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-1.5 text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA] rounded-lg transition-colors"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
           ) : (
             <Link
               href="/login"
-              className="p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors flex items-center justify-center"
+              className="p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors flex items-center justify-center"
               title={t.signIn}
             >
-              <LogIn className="w-5 h-5" />
+              <LogIn className="w-5 h-5" strokeWidth={1.5} />
             </Link>
           )}
 
@@ -134,13 +134,13 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-1.5 rounded-lg text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors"
+            className="md:hidden p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors"
             aria-label="Toggle Navigation Menu"
           >
             {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6" strokeWidth={1.5} />
             ) : (
-              <Menu className="w-6 h-6" />
+              <Menu className="w-6 h-6" strokeWidth={1.5} />
             )}
           </button>
         </div>
@@ -148,12 +148,12 @@ export function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-2 pb-4 space-y-1 shadow-lg">
+        <div className="md:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-4 pt-2 pb-4 space-y-1 shadow-lg">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
             className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
-              pathname === '/' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+              pathname === '/' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.home}
@@ -162,7 +162,7 @@ export function Navbar() {
             href="/vi-sao-chon-an-tam"
             onClick={() => setIsMobileMenuOpen(false)}
             className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
-              pathname === '/vi-sao-chon-an-tam' ? 'bg-blue-50 text-blue-800' : 'text-slate-700 hover:bg-slate-100'
+              pathname === '/vi-sao-chon-an-tam' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.whyUs}
@@ -170,21 +170,21 @@ export function Navbar() {
           <Link
             href="/#danh-muc-san-pham"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.products}
           </Link>
           <Link
             href="/#dich-vu-spa"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.services}
           </Link>
           <Link
             href="/#chinh-sach"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.contact}
           </Link>

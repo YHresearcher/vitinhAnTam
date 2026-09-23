@@ -1,10 +1,19 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Be_Vietnam_Pro, JetBrains_Mono, Inter } from 'next/font/google';
 import './globals.css';
 import { ClientProvider } from '@/components/ClientProvider';
+import { AntdRegistry } from '@ant-design/nextjs-registry';
+
+export const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ['vietnamese', 'latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-be-vietnam-pro',
+  display: 'swap',
+});
 
 export const inter = Inter({
   subsets: ['vietnamese', 'latin'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
   display: 'swap',
 });
@@ -16,7 +25,7 @@ export const jetbrainsMono = JetBrains_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#1D4ED8',
+  themeColor: '#C0392B',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 5,
@@ -24,25 +33,23 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://vitinhantham.vn'),
-  title: {
-    default: 'Vi Tính An Tâm - Máy Tính Cũ Tuyển Chọn Loại 1 & Dịch Vụ 2H Tận Nơi Long An - Tây Ninh',
-    template: '%s | Vi Tính An Tâm',
-  },
-  description: 'Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, IBM tuyển chọn loại 1 nguyên bản >95%, cài sẵn Windows bản quyền số vĩnh viễn và dịch vụ kiểm tra bảo hành, cứu hộ tận nơi trong 2 giờ tại Long An - Tây Ninh.',
+  title: 'Máy tính cũ chuẩn A Tân An | Vi Tính An Tâm — Long An',
+  description:
+    'PC đồng bộ & laptop doanh nhân tuyển chọn, Win bản quyền, bảo hành 1 đổi 1 tận nơi trong 2 giờ tại Tân An, Thủ Thừa, Châu Thành, Long An. Hotline 0909.053.058.',
   keywords: [
-    'Vi tính An Tâm',
-    'máy tính cũ loại 1',
-    'máy tính đồng bộ Long An',
-    'máy tính Tây Ninh',
-    'laptop doanh nhân cũ',
-    'Dell OptiPlex',
-    'ThinkPad T480s',
-    'cứu hộ máy tính tận nơi 2 giờ',
-    'kiểm tra bảo hành điện tử',
-    'sửa máy tính Long An',
-    'sửa máy tính Tây Ninh',
-    'Windows bản quyền số',
+    'Máy tính cũ chuẩn A Tân An',
+    'Vi Tính An Tâm',
+    'máy tính Long An',
+    'laptop cũ Tân An',
+    'Dell OptiPlex Long An',
+    'ThinkPad Tân An',
+    'bảo hành 1 đổi 1 tận nơi 2 giờ',
+    'sửa máy tính Tân An',
+    'cứu hộ máy tính Long An',
   ],
+  icons: {
+    icon: '/favicon.ico',
+  },
   authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantham.vn' }],
   creator: 'Vi Tính An Tâm',
   publisher: 'Vi Tính An Tâm',
@@ -55,26 +62,26 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Vi Tính An Tâm - Máy Tính Cũ Tuyển Chọn Loại 1 & Xử Lý Tận Nơi Trong 2 Giờ',
-    description: 'Máy tính đồng bộ doanh nghiệp nguyên bản, bảo hành 1 đổi 1 tận nơi trong 2 giờ tại Long An - Tây Ninh. Hotline: 0909.053.058.',
+    title: 'Vi Tính An Tâm — Máy tính cũ chuẩn A tại Tân An',
+    description: 'Bảo hành 1 đổi 1 tận nơi 2 giờ. SSD/RAM mới BH 36 tháng. Hotline: 0909.053.058.',
     url: 'https://vitinhantham.vn',
     siteName: 'Vi Tính An Tâm',
     locale: 'vi_VN',
     type: 'website',
     images: [
       {
-        url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVHGVQdGoKoVXAwU6yjMLDBWAOvJvMJjMYYR-uGGp_yR16sbGNGfIGEVOI-jK5EAILW4owtjMgdNjqreUBRD3syOQ6OcUN6-yvS10I7Hqh9Ae-XW9vinCGiMR2fyCR5Rzcds6m7N29w5XAXbs-Aov2qfO1UDnRW3Vm7Je5H1DzWR2urIl3fYFAKLRqktLbhDsPj4GRtfMV3CNdDsWOVFl7arQwFItiQU2tj-mWbZRBt-i7YRGXhE19',
+        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
-        alt: 'Vi Tính An Tâm - Máy Tính Cũ Tuyển Chọn Loại 1 Long An - Tây Ninh',
+        alt: 'Vi Tính An Tâm — Máy Tính Cũ Chuẩn A Tại Tân An Long An',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vi Tính An Tâm - Máy Tính Cũ Chuẩn Doanh Nghiệp Long An - Tây Ninh',
-    description: '1 đổi 1 linh kiện tận nơi trong 2 giờ. Windows bản quyền số vĩnh viễn.',
-    images: ['https://lh3.googleusercontent.com/aida-public/AB6AXuCVHGVQdGoKoVXAwU6yjMLDBWAOvJvMJjMYYR-uGGp_yR16sbGNGfIGEVOI-jK5EAILW4owtjMgdNjqreUBRD3syOQ6OcUN6-yvS10I7Hqh9Ae-XW9vinCGiMR2fyCR5Rzcds6m7N29w5XAXbs-Aov2qfO1UDnRW3Vm7Je5H1DzWR2urIl3fYFAKLRqktLbhDsPj4GRtfMV3CNdDsWOVFl7arQwFItiQU2tj-mWbZRBt-i7YRGXhE19'],
+    title: 'Vi Tính An Tâm — Máy tính cũ chuẩn A tại Tân An',
+    description: 'Bảo hành 1 đổi 1 tận nơi 2 giờ. SSD/RAM mới BH 36 tháng.',
+    images: ['https://vitinhantham.vn/anh-that-cua-hang.jpg'],
   },
   robots: {
     index: true,
@@ -91,66 +98,36 @@ export const metadata: Metadata = {
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@graph': [
+  '@type': 'LocalBusiness',
+  name: 'Vi Tính An Tâm',
+  slogan: 'Bán bằng tâm để bạn an tâm',
+  url: 'https://vitinhantham.vn',
+  telephone: '+84909053058',
+  email: 'lienhe@vitinhantham.vn',
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: '45 Nguyễn Huệ, Phường 1',
+    addressLocality: 'Tân An',
+    addressRegion: 'Long An',
+    addressCountry: 'VN',
+  },
+  openingHoursSpecification: [
     {
-      '@type': 'ComputerStore',
-      '@id': 'https://vitinhantham.vn/#store',
-      name: 'Vi Tính An Tâm',
-      url: 'https://vitinhantham.vn',
-      logo: 'https://vitinhantham.vn/logo.png',
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCVHGVQdGoKoVXAwU6yjMLDBWAOvJvMJjMYYR-uGGp_yR16sbGNGfIGEVOI-jK5EAILW4owtjMgdNjqreUBRD3syOQ6OcUN6-yvS10I7Hqh9Ae-XW9vinCGiMR2fyCR5Rzcds6m7N29w5XAXbs-Aov2qfO1UDnRW3Vm7Je5H1DzWR2urIl3fYFAKLRqktLbhDsPj4GRtfMV3CNdDsWOVFl7arQwFItiQU2tj-mWbZRBt-i7YRGXhE19',
-      telephone: '0909.053.058',
-      priceRange: '3000000 - 8000000 VND',
-      address: {
-        '@type': 'PostalAddress',
-        addressLocality: 'Long An - Tây Ninh',
-        addressRegion: 'Long An - Tây Ninh',
-        addressCountry: 'VN',
-      },
-      geo: {
-        '@type': 'GeoCoordinates',
-        latitude: 10.5333,
-        longitude: 106.4,
-      },
-      openingHoursSpecification: [
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          opens: '08:00',
-          closes: '21:00',
-        },
-        {
-          '@type': 'OpeningHoursSpecification',
-          dayOfWeek: ['Saturday', 'Sunday'],
-          opens: '08:00',
-          closes: '21:00',
-        },
-      ],
-      areaServed: [
-        'Long An',
-        'Tây Ninh',
-        'TP. Tân An',
-        'Bến Lức',
-        'Thủ Thừa',
-        'Trảng Bàng',
-        'Gò Dầu',
-        'TP. Tây Ninh',
-      ],
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+      opens: '08:00',
+      closes: '21:00',
     },
     {
-      '@type': 'ComputerRepairService',
-      '@id': 'https://vitinhantham.vn/#service',
-      name: 'Dịch Vụ Cứu Hộ & Bảo Dưỡng Máy Tính Tận Nơi Trong 2 Giờ',
-      provider: {
-        '@id': 'https://vitinhantham.vn/#store',
-      },
-      areaServed: 'Long An - Tây Ninh',
-      serviceType: 'Sửa chữa, nâng cấp SSD và bảo dưỡng máy tính tận nơi',
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Saturday', 'Sunday'],
+      opens: '08:00',
+      closes: '21:00',
     },
   ],
+  priceRange: '3.000.000₫ - 8.000.000₫',
+  areaServed: ['Tân An', 'Thủ Thừa', 'Châu Thành', 'Tân Trụ'],
 };
-
-import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 export default function RootLayout({
   children,
@@ -158,7 +135,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* Schema.org Structured Data for Local SEO */}
         <script
@@ -166,7 +143,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-[#F8FAFC] text-[#334155] font-sans antialiased flex flex-col selection:bg-orange-100 selection:text-orange-900">
+      <body className="min-h-screen bg-[#FAF7F2] text-[#2B1810] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
         <AntdRegistry>
           <ClientProvider>{children}</ClientProvider>
         </AntdRegistry>

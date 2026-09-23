@@ -11,9 +11,11 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
       locale={viVN}
       theme={{
         token: {
-          colorPrimary: '#2563eb',
+          colorPrimary: '#C0392B',
           borderRadius: 8,
-          fontFamily: 'var(--font-inter), system-ui, sans-serif',
+          fontFamily: 'var(--font-be-vietnam-pro), system-ui, sans-serif',
+          colorLink: '#C0392B',
+          colorLinkHover: '#D9531E',
         },
       }}
     >

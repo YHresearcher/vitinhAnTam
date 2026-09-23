@@ -19,8 +19,8 @@ export function Logo({ className = 'h-10 w-auto', variant = 'light', slogan }: L
 
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      {/* Sắc Cam Năng Lượng - Biểu tượng Chiếc Khiên Công Nghệ An Tâm */}
-      <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-md shadow-orange-500/25 shrink-0 group transition-transform hover:scale-105">
+      {/* Sắc Lư Trung Hỏa - Chiếc Khiên An Tâm Đỏ Gạch & Cam Cháy */}
+      <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-[#C0392B] to-[#D9531E] flex items-center justify-center shadow-md shadow-[#C0392B]/20 shrink-0 group transition-transform hover:scale-105">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
@@ -45,17 +45,17 @@ export function Logo({ className = 'h-10 w-auto', variant = 'light', slogan }: L
         </svg>
       </div>
 
-      {/* Typography: VI TÍNH (Dark Slate) + AN TÂM (Royal Blue) */}
+      {/* Typography: VI TÍNH (Nâu Đất) + AN TÂM (Đỏ Gạch) */}
       <div className="flex flex-col leading-none">
         <div className="flex items-center gap-1">
-          <span className={`font-black text-base tracking-tight ${variant === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+          <span className={`font-black text-base tracking-tight ${variant === 'dark' ? 'text-white' : 'text-[#2B1810]'}`}>
             VI TÍNH
           </span>
-          <span className="font-black text-base tracking-tight text-blue-700">
+          <span className="font-black text-base tracking-tight text-[#C0392B]">
             AN TÂM
           </span>
         </div>
-        <span className={`text-[10px] font-bold tracking-wider uppercase mt-0.5 ${variant === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
+        <span className={`text-[10px] font-semibold tracking-wider uppercase mt-0.5 ${variant === 'dark' ? 'text-slate-400' : 'text-[#6E5D53]'}`}>
           {currentSlogan}
         </span>
       </div>

@@ -32,7 +32,7 @@ function AppointmentBookingContent() {
   const [appointmentDate, setAppointmentDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ vàng (17:30 - 21:00)');
+  const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ cứu hộ khẩn (17:30 - 21:00)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{
     code: string;

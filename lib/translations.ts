@@ -35,7 +35,7 @@ export const TRANSLATIONS = {
       policiesTitle: 'CHÍNH SÁCH & ĐIỀU LỆ',
       swapPolicy: 'Chính sách 1 đổi 1 tận nơi nhanh chóng',
       privacyPolicy: 'Cam kết tuyệt đối bảo mật dữ liệu khách hàng',
-      copyright: '© 2025 Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.',
+      copyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.`,
       warrantyTerms: 'Quy định bảo hành',
       internalLogin: 'Đăng nhập nội bộ',
     },
@@ -56,8 +56,7 @@ export const TRANSLATIONS = {
       pillar3Desc:
         'Đổi mới linh kiện tại chỗ, ưu tiên khung giờ vàng 17:30 – 21:00 các ngày trong tuần.',
       quickSearchLabel: 'Tra Cứu Nhanh S/N:',
-      quickSearchPlaceholder:
-        'Nhập Service Tag dập trên thân máy (VD: ST-8F4K92X, HP-400G5M) hoặc SĐT...',
+      quickSearchPlaceholder: 'Nhập Service Tag hoặc Số điện thoại...',
       quickSearchBtn: 'Tra Cứu Hồ Sơ',
       btnBrowseStock: 'XEM DANH MỤC MÁY SẴN HÀNG',
       btnScheduleService: 'ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI',
@@ -89,7 +88,7 @@ export const TRANSLATIONS = {
       inWarehouseCount: 'Sẵn',
       inWarehouseSuffix: 'máy tại kho',
       shelfLocation: 'Vị trí kệ:',
-      burnInDuration: 'Thời gian Burn-in test:',
+      burnInDuration: 'Đã test tải êm & mát:',
       minutes: 'phút',
       osLicense: 'Bản quyền:',
       osLicenseVal: 'Windows Pro Bản Quyền Số',
@@ -166,16 +165,16 @@ export const TRANSLATIONS = {
         'Nhấn vào từng câu hỏi để xem chi tiết chính sách phục vụ của Vi tính An Tâm.',
     },
     coverage: {
-      title: 'MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH',
+      title: 'TRỤ SỞ CHÍNH & MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH',
       desc: 'Đội cơ động tiếp nhận kiểm tra, giao máy và đổi mới linh kiện tận nơi trong vòng 30 - 60 phút tại các khu vực:',
       goldenHourTitle:
-        'KHUNG GIỜ VÀNG CỨU HỘ NGOÀI GIỜ (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)',
+        'KHUNG GIỜ CỨU HỘ KHẨN (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)',
       goldenHourDesc:
         'Ưu tiên cứu hộ tận nơi: 17h30 – 21h00 các ngày trong tuần và 08h00 – 20h00 Thứ Bảy & Chủ Nhật. Không phụ thu phí ngoài giờ.',
       hotlineLabel: 'Hotline Khẩn Cấp & Zalo Kỹ Thuật:',
       btnCallTech: 'Gọi Trực Tiếp KTV Ca Trực',
       hqBadge: 'TRỤ SỞ CHÍNH',
-      hqTitle: 'Vi Tính An Tâm - Hub Tân An',
+      hqTitle: 'Trụ Sở & Trạm Kỹ Thuật Tân An',
       hqAddress:
         '45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An (Có bãi đỗ ô tô thuận tiện)',
       mapLink: 'Chỉ đường trên Google Maps',
@@ -192,7 +191,7 @@ export const TRANSLATIONS = {
       titleHighlight: 'LỊCH SỬ THIẾT BỊ',
       description:
         'Không cần giữ phiếu giấy hay tem dán rách. Hệ thống đối chiếu trực tiếp theo Số Serial (S/N) dập sẵn trên thân máy hoặc Số điện thoại mua hàng.',
-      placeholder: 'Nhập S/N dập trên máy (VD: ST-8F4K92X) hoặc SĐT (0918...)',
+      placeholder: 'Nhập S/N dập trên máy hoặc Số điện thoại mua hàng...',
       checking: 'Đang kiểm tra...',
       btnCheck: 'Kiểm Tra Ngay',
       quickChipsLabel: 'Thử nhanh mẫu S/N:',
@@ -274,7 +273,7 @@ export const TRANSLATIONS = {
       timeSlots: [
         { label: 'Sáng (08:00 - 11:30)', desc: 'Tiếp nhận giờ hành chính', icon: '🌅' },
         { label: 'Chiều (13:30 - 17:30)', desc: 'Xử lý trong ngày', icon: '🌤️' },
-        { label: 'Khung giờ vàng (17:30 - 21:00)', desc: 'Ưu tiên cứu hộ sau giờ làm', icon: '⚡' },
+        { label: 'Khung giờ cứu hộ khẩn (17:30 - 21:00)', desc: 'Ưu tiên cứu hộ sau giờ làm', icon: '⚡' },
         { label: 'Cứu hộ khẩn cấp (Trong 60 phút)', desc: 'Đội cơ động xuất phát ngay', icon: '🚨' },
       ],
       btnSubmit: 'Xác Nhận Đặt Lịch Hẹn Ngay',
@@ -428,7 +427,7 @@ export const TRANSLATIONS = {
       swapPolicy: 'Instant 1-to-1 on-site hardware swap policy',
       privacyPolicy: '100% strict corporate data confidentiality',
       copyright:
-        '© 2025 Vi Tinh An Tam (vitinhantham.vn) - Dedicated to Premium Quality.',
+        `© ${new Date().getFullYear()} Vi Tinh An Tam (vitinhantham.vn) - Dedicated to Premium Quality.`,
       warrantyTerms: 'Warranty Terms',
       internalLogin: 'Staff Portal',
     },
@@ -449,8 +448,7 @@ export const TRANSLATIONS = {
       pillar3Desc:
         'Instant hardware replacement at your doorstep within 2 hours, with dedicated evening shifts (17:30 - 21:00).',
       quickSearchLabel: 'Quick S/N Lookup:',
-      quickSearchPlaceholder:
-        'Enter manufacturer Service Tag (e.g. ST-8F4K92X, HP-400G5M) or phone number...',
+      quickSearchPlaceholder: 'Enter Service Tag or phone number...',
       quickSearchBtn: 'Search Warranty',
       btnBrowseStock: 'BROWSE READY INVENTORY',
       btnScheduleService: 'BOOK ON-SITE SPA / UPGRADE',
@@ -585,7 +583,7 @@ export const TRANSLATIONS = {
       titleHighlight: 'DEVICE LIFECYCLE AUDIT',
       description:
         'Eliminate fragile paper invoices or torn warranty stickers. Our electronic registry validates the physical Service Tag (S/N) engraved on your chassis or your customer phone number.',
-      placeholder: 'Enter physical S/N (e.g. ST-8F4K92X) or Phone Number (0918...)',
+      placeholder: 'Enter physical S/N or Phone Number...',
       checking: 'Verifying record...',
       btnCheck: 'Verify Hardware S/N',
       quickChipsLabel: 'Quick sample S/N:',

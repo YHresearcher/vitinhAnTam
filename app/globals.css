@@ -1,46 +1,81 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-inter: var(--font-inter), "Inter", system-ui, sans-serif;
   --font-mono: var(--font-mono), "JetBrains Mono", monospace;
+
+  /* Hệ màu Ngũ Hành Lư Trung Hỏa */
+  --color-canvas: #FAF7F2;
+  --color-card: #FFFDF9;
+  --color-card-pure: #FFFFFF;
+  --color-earth-main: #2B1810;
+  --color-earth-muted: #6E5D53;
+  --color-earth-border: #E8E2D9;
+  --color-footer-ember: #1C130E;
+
+  --color-fire-brick: #C0392B;
+  --color-fire-burnt: #D9531E;
+  --color-fire-ochre: #D97706;
+  --color-fire-plum: #5D3A3A;
+
+  --color-deep-teal: #0F4C5C;
+  --color-whatsapp: #25D366;
 }
 
-
 :root {
-  --font-inter: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --color-brand-blue: #2563EB;
-  --color-brand-blue-hover: #1D4ED8;
-  --color-brand-blue-subtle: #EFF6FF;
-  --color-surface-canvas: #FFFFFF;
+  --font-be-vietnam-pro: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --color-brand-primary: #C0392B;
+  --color-brand-accent: #D9531E;
+  --color-surface-canvas: #FAF7F2;
   --color-surface-card: #FFFFFF;
-  --color-surface-subtle: #F8FAFC;
-  --color-border-default: #E2E8F0;
-  --color-text-main: #0F172A;
-  --color-text-muted: #64748B;
+  --color-surface-card-warm: #FFFDF9;
+  --color-border-default: #E8E2D9;
+  --color-text-main: #2B1810;
+  --color-text-muted: #6E5D53;
+  --color-footer-ember: #1C130E;
 }
 
 body {
-  background-color: #FFFFFF;
-  color: #0F172A;
-  font-family: var(--font-inter);
+  background-color: #FAF7F2;
+  color: #2B1810;
+  font-family: var(--font-be-vietnam-pro), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Headline weights: 700 / 800 */
+h1, h2, h3, .font-headline {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 
-/* Smooth custom scrollbars */
+h1.font-black, h2.font-black, .font-extrabold {
+  font-weight: 800;
+}
+
+/* Body weights: 400 / 500 */
+p, span, li, input, textarea {
+  font-weight: 400;
+}
+
+strong, b, .font-semibold, .font-medium {
+  font-weight: 600;
+}
+
+/* Smooth custom scrollbars in warm earth tones */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F8FAFC;
+  background: #FAF7F2;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #D4C9BC;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #B3A495;
 }
 
 /* Marquee smooth horizontal continuous scroll */
@@ -57,6 +92,13 @@ body {
 
 .animate-marquee-slow:hover {
   animation-play-state: paused;
+}
+
+/* Subtle paper texture */
+.bg-subtle-paper {
+  background-color: #FAF7F2;
+  background-image: radial-gradient(rgba(43, 24, 16, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
 }
 
 /* Hide Next.js Dev Badge / Indicators */

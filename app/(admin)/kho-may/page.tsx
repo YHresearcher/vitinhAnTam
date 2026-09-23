@@ -593,9 +593,15 @@ export default function KhoMayPage() {
 
                       {/* Sale Price */}
                       <td className="py-3.5 px-4 text-right">
-                        <div className="font-bold text-slate-900">
-                          {(item.price ?? item.retail_price ?? 0).toLocaleString('vi-VN')} đ
-                        </div>
+                        {(item.price ?? item.retail_price ?? 0) <= 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            Liên hệ
+                          </span>
+                        ) : (
+                          <div className="font-bold text-slate-900 font-mono">
+                            {(item.price ?? item.retail_price ?? 0).toLocaleString('vi-VN')} đ
+                          </div>
+                        )}
                         <div className="text-[11px] text-slate-400">
                           Bảo hành {item.warranty_months}T
                         </div>
@@ -825,16 +831,37 @@ export default function KhoMayPage() {
 
                 {/* Price */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Bán Dự Kiến (VNĐ)
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Giá Bán Dự Kiến (VNĐ)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setNewItem({ ...newItem, price: 0 })}
+                      className={`text-[11px] px-2 py-0.5 rounded font-semibold transition-colors ${
+                        newItem.price === 0
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                      }`}
+                    >
+                      {newItem.price === 0 ? '✓ Đang chọn: Giá Liên Hệ' : 'Đặt "Giá Liên Hệ"'}
+                    </button>
+                  </div>
                   <input
                     type="number"
                     step={50000}
-                    value={newItem.price}
-                    onChange={(e) => setNewItem({ ...newItem, price: Number(e.target.value) })}
+                    value={newItem.price === 0 ? '' : newItem.price}
+                    placeholder={newItem.price === 0 ? 'Liên Hệ (0 VNĐ)' : 'Nhập giá bán VNĐ...'}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, price: e.target.value === '' ? 0 : Number(e.target.value) })
+                    }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
+                  {newItem.price === 0 && (
+                    <p className="text-[11px] text-amber-700 mt-1 font-medium">
+                      ℹ️ Sản phẩm sẽ được ghi nhận là &quot;Giá Liên Hệ&quot; trên hệ thống và hiển thị &quot;Liên hệ&quot; cho khách hàng.
+                    </p>
+                  )}
                 </div>
 
                 {/* QC Status */}
@@ -849,7 +876,7 @@ export default function KhoMayPage() {
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="testing">⏳ Đang kiểm tra (Burn-in & QC)</option>
+                    <option value="testing">⏳ Đang kiểm tra chạy thử tải & làm mát</option>
                     <option value="ready_to_sell">✓ Sẵn sàng bán ngay</option>
                   </select>
                 </div>
