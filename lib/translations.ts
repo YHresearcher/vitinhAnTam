@@ -55,14 +55,14 @@ export const TRANSLATIONS = {
       pillar3Title: 'HỎA TỐC 2 GIỜ (<5KM TỪ CỬA HÀNG)',
       pillar3Desc:
         'Đổi mới linh kiện tại chỗ cho khu vực <5km từ cửa hàng, ưu tiên khung giờ cứu hộ khẩn 17:30 – 21:00.',
-      quickSearchLabel: 'Tra Cứu Nhanh S/N:',
-      quickSearchPlaceholder: 'Nhập Service Tag hoặc Số điện thoại...',
-      quickSearchBtn: 'Tra Cứu Hồ Sơ',
+      quickSearchLabel: 'Tra cứu bảo hành/sửa chữa:',
+      quickSearchPlaceholder: 'Nhập Serial Number hoặc Số điện thoại...',
+      quickSearchBtn: 'Tìm kiếm',
       btnBrowseStock: 'XEM DANH MỤC MÁY SẴN HÀNG',
       btnScheduleService: 'ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI',
     },
     products: {
-      tag: 'KHO THIẾT BỊ ĐÃ KIỂM ĐỊNH QC - BẢO HÀNH 1 ĐỔI 1 TẬN NƠI',
+      tag: 'KHO THIẾT BỊ ĐÃ KIỂM ĐỊNH QC - BẢO HÀNH NHANH CHÓNG',
       title: 'KHO MÁY TÍNH TUYỂN CHỌN & HỒ SƠ BÀN GIAO',
       readyCount: 'Đang có',
       readyCountSuffix: 'máy sẵn sàng giao hỏa tốc',
