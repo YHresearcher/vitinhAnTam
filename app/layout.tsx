@@ -134,6 +134,7 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable}`}>
       <head>
+        <title>Vi tính An Tâm - Bán bằng tâm để bạn an tâm</title>
         {/* Schema.org Structured Data for Local SEO */}
         <script
           type="application/ld+json"
