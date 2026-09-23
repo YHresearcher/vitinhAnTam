@@ -778,109 +778,83 @@ export default function HomePage() {
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="chinh-sach">
           <div className="p-6 sm:p-10 rounded-lg bg-white border border-slate-200 shadow-xs space-y-8 font-inter">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-5">
               <div>
-                <div className="inline-flex items-center px-2.5 py-1 rounded bg-[#FAF7F2] text-[#C0392B] border border-[#E8E2D9] text-[11px] font-bold uppercase tracking-wider mb-2">
+                <div className="inline-flex items-center px-2 py-0.5 rounded bg-[#FAF7F2] text-[#C0392B] border border-[#E8E2D9] text-[10px] font-bold uppercase tracking-wider mb-1.5">
                   TRỤ SỞ & ĐIỀU PHỐI KỸ THUẬT
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
                   {t.coverage.title}
                 </h2>
-                <p className="text-xs sm:text-sm text-[#6E5D53] mt-1 max-w-2xl">
-                  {t.coverage.desc}
-                </p>
               </div>
-
-              {/* Thông tin hỗ trợ kỹ thuật (hướng dẫn dùng widget góc phải) */}
-              <div className="bg-[#FAF7F2] border border-slate-200 rounded-lg p-3.5 text-left md:text-right shrink-0">
-                <div className="text-[11px] text-[#C0392B] font-bold uppercase tracking-wider">Hỗ Trợ Kỹ Thuật 24/7</div>
-                <div className="text-xs text-slate-800 font-semibold mt-1">Hỏa tốc 2 giờ (&lt;5km Tân An)</div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Bấm nút gọi / nhắn tin nhanh ở góc phải màn hình</div>
-              </div>
+              <p className="text-xs sm:text-sm text-[#6E5D53] max-w-md md:text-right">
+                {t.coverage.desc}
+              </p>
             </div>
 
             {/* Content grid: Trụ sở Tân An & Các địa bàn cơ động */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Trụ sở chính: Hub Tân An */}
-              <div className="lg:col-span-5 p-6 rounded-lg bg-[#FAF7F2] border border-slate-200 space-y-4">
+              <div className="lg:col-span-5 p-5 rounded-lg bg-[#FAF7F2] border border-slate-200 space-y-3 text-xs text-[#6E5D53]">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#C0392B] text-white text-[10px] font-bold">
                     TRỤ SỞ CHÍNH
                   </span>
-                  <h3 className="text-base font-bold text-[#2B1810]">
-                    {systemSettings.storeName || 'Vi Tính An Tâm'} — Trạm Kỹ Thuật Tân An
+                  <h3 className="text-sm font-bold text-[#2B1810]">
+                    {systemSettings.storeName || 'Vi Tính An Tâm'} (TP. Tân An)
                   </h3>
                 </div>
 
-                <div className="space-y-2 text-xs text-[#6E5D53] leading-relaxed">
+                <div className="space-y-1.5 leading-relaxed">
                   <p>
                     <strong className="text-[#2B1810]">Địa chỉ:</strong> {systemSettings.address || '45 Nguyễn Huệ, Phường 1, Tân An, Long An'}
                   </p>
                   <p>
-                    <strong className="text-[#2B1810]">Giờ phục vụ:</strong> {systemSettings.workingHoursWeekday || '08:00 – 21:00'} (Thứ 2 đến Chủ Nhật, không nghỉ trưa)
+                    <strong className="text-[#2B1810]">Mở cửa:</strong> {systemSettings.workingHoursWeekday || '08:00 – 21:00'} (Hàng ngày, xuyên trưa)
                   </p>
                   <p>
-                    <strong className="text-[#2B1810]">Chức năng:</strong> Tiếp nhận kiểm tra máy theo Service Tag, kiểm tra tải trực tiếp tại quầy, đổi mới linh kiện ngay trong ngày.
-                  </p>
-                  <p>
-                    <strong className="text-[#2B1810]">Phạm vi phục vụ:</strong> Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi. Hỗ trợ kỹ thuật lưu động nhanh tại các địa bàn lân cận ({systemSettings.serviceAreas || 'Thủ Thừa, Châu Thành, Tân Trụ'}).
+                    <strong className="text-[#2B1810]">Phạm vi:</strong> Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi.
                   </p>
                 </div>
               </div>
 
               {/* Mạng lưới lưu động & Khung giờ cứu hộ khẩn */}
-              <div className="lg:col-span-7 space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">TP. Tân An (P1 - P7, Khánh Hậu, Tân Khánh)</span>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
-                          Hỏa tốc &lt;2h (&lt;5km)
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#6E5D53]">Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi.</p>
+              <div className="lg:col-span-7 space-y-3.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-lg bg-white border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#2B1810]">Hỏa Tốc Bán Kính 5km</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
+                        Hỏa tốc 2h
+                      </span>
                     </div>
-
-                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">Lợi Bình Nhơn &amp; KCN Lợi Bình Nhơn</span>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
-                          Hỏa tốc &lt;2h (&lt;5km)
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#6E5D53]">Phản ứng hỏa tốc trong 2 giờ cho cơ quan, xưởng sản xuất.</p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">TT. Thủ Thừa &amp; Xã Liền Kề</span>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
-                          Lịch hẹn nhanh
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#6E5D53]">Đội cơ động điều phối có mặt nhanh theo lịch hẹn trong ngày.</p>
-                    </div>
-
-                    <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold">Châu Thành, Tân Trụ &amp; KCN Tân Hương</span>
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
-                          Lịch hẹn nhanh
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-[#6E5D53]">Hỗ trợ tận nơi theo lịch hẹn ưu tiên, trang thiết bị chuyên dụng.</p>
-                    </div>
+                    <p className="text-[11px] text-[#6E5D53]">
+                      TP. Tân An (P1 - P7), Khánh Hậu, Tân Khánh, Lợi Bình Nhơn.
+                    </p>
                   </div>
 
+                  <div className="p-3.5 rounded-lg bg-white border border-slate-200 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#2B1810]">Địa Bàn Lân Cận</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
+                        Theo lịch hẹn
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#6E5D53]">
+                      Thủ Thừa, Châu Thành, Tân Trụ, KCN Tân Hương.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Hộp Khung Giờ Cứu Hộ Khẩn */}
-                <div className="p-4 rounded-lg bg-[#FAF7F2] border-l-4 border-[#C0392B] border border-slate-200">
-                  <h4 className="text-xs font-bold text-[#2B1810] flex items-center gap-1.5">
+                <div className="p-3.5 rounded-lg bg-[#FAF7F2] border-l-4 border-[#C0392B] border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
+                  <div className="flex items-center gap-2 text-[#2B1810] font-bold">
                     <Clock className="w-4 h-4 text-[#C0392B] shrink-0" strokeWidth={1.5} />
-                    {t.coverage.goldenHourTitle}
-                  </h4>
-                  <p className="text-xs text-[#6E5D53] mt-1 leading-relaxed">
-                    {t.coverage.goldenHourDesc}
-                  </p>
+                    <span>{t.coverage.goldenHourTitle}: 17h30 – 21h00</span>
+                  </div>
+                  <span className="text-[11px] text-[#6E5D53]">
+                    Hỗ trợ ngoài giờ hành chính • Không phụ thu phí
+                  </span>
                 </div>
               </div>
             </div>

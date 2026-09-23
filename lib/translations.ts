@@ -165,12 +165,11 @@ export const TRANSLATIONS = {
         'Nhấn vào từng câu hỏi để xem chi tiết chính sách phục vụ của Vi tính An Tâm.',
     },
     coverage: {
-      title: 'TRỤ SỞ CHÍNH & MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH',
-      desc: 'Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi và điều phối kỹ thuật lưu động nhanh tại:',
-      goldenHourTitle:
-        'KHUNG GIỜ CỨU HỘ KHẨN (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)',
+      title: 'TRỤ SỞ & ĐIỀU PHỐI KỸ THUẬT',
+      desc: 'Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi.',
+      goldenHourTitle: 'KHUNG GIỜ CỨU HỘ KHẨN',
       goldenHourDesc:
-        'Ưu tiên cứu hộ tận nơi: 17h30 – 21h00 các ngày trong tuần và 08h00 – 20h00 Thứ Bảy & Chủ Nhật. Không phụ thu phí ngoài giờ.',
+        'Ưu tiên ngoài giờ: 17h30 – 21h00 (Thứ 2 – Chủ Nhật) • Không phụ thu phí ngoài giờ.',
       hotlineLabel: 'Hotline Khẩn Cấp & Zalo Kỹ Thuật:',
       btnCallTech: 'Gọi Trực Tiếp KTV Ca Trực',
       hqBadge: 'TRỤ SỞ CHÍNH',
@@ -557,12 +556,11 @@ export const TRANSLATIONS = {
         'Click on any question to view detailed service commitments from Vi Tinh An Tam.',
     },
     coverage: {
-      title: 'MOBILE TECHNICAL DISPATCH NETWORK (LONG AN - TAY NINH)',
-      desc: 'Rapid technical emergency dispatch within a 5km radius from our store and prompt scheduling across:',
-      goldenHourTitle:
-        'PRIORITY EVENING ON-SITE SUPPORT (FOR BUSINESSES & OFFICE PROFESSIONALS)',
+      title: 'TECHNICAL HUB & DISPATCH',
+      desc: 'Rapid technical emergency dispatch within a 5km radius from our store.',
+      goldenHourTitle: 'AFTER-HOURS EMERGENCY SUPPORT',
       goldenHourDesc:
-        'Priority on-site emergency dispatch: 17:30 – 21:00 on weekdays and 08:00 – 20:00 on Saturdays & Sundays. Zero after-hours surcharges.',
+        'Priority support: 17:30 – 21:00 (Mon – Sun) • Zero surcharge.',
       hotlineLabel: 'Emergency Hotline & Technical Zalo:',
       btnCallTech: 'Call On-Duty Engineer Now',
       hqBadge: 'HEADQUARTERS',
