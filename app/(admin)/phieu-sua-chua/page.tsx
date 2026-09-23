@@ -105,14 +105,11 @@ export default function PhieuSuaChuaPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            QUẢN LÝ PHIẾU DỊCH VỤ & SỬA CHỮA
+            Phiếu Sửa Chữa
             <span className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full">
               {tickets.length} phiếu
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Theo dõi tiến độ sửa chữa máy bàn, laptop, bảo dưỡng keo tản nhiệt và cứu hộ hỏa tốc &lt;5km Tân An / huyện lân cận.
-          </p>
         </div>
 
         <Link
@@ -120,17 +117,16 @@ export default function PhieuSuaChuaPage() {
           className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
         >
           <Plus className="w-4 h-4" />
-          Tạo Phiếu Tiếp Nhận Mới
+          + Tạo phiếu mới
         </Link>
       </div>
 
       {/* Role Notice */}
       {!canUpdateRepairStatus() && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3.5 flex items-start gap-3">
-          <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800">
-            <span className="font-semibold">Phân quyền Kinh doanh ({currentUser.name}):</span>{' '}
-            Bạn có quyền tạo phiếu tiếp nhận mới và xem thông tin kỹ thuật, nhưng không có quyền điều chỉnh trạng thái xử lý/chẩn đoán của Kỹ thuật viên.
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-2.5 text-xs text-amber-800">
+          <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+          <div>
+            Tài khoản <span className="font-semibold">{currentUser.name}</span> (Kinh doanh) — Được phép tạo phiếu và xem, quyền sửa trạng thái thuộc về Kỹ thuật viên.
           </div>
         </div>
       )}
@@ -142,7 +138,7 @@ export default function PhieuSuaChuaPage() {
             <Wrench className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Tổng Phiếu Đã Lập</div>
+            <div className="text-xs font-medium text-slate-500">Tổng phiếu</div>
             <div className="text-xl font-bold text-slate-900">{stats.total}</div>
           </div>
         </div>
@@ -152,7 +148,7 @@ export default function PhieuSuaChuaPage() {
             <Clock className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Đang Xử Lý / Kiểm Tra</div>
+            <div className="text-xs font-medium text-slate-500">Đang sửa</div>
             <div className="text-xl font-bold text-amber-700">{stats.inProgress}</div>
           </div>
         </div>
@@ -162,7 +158,7 @@ export default function PhieuSuaChuaPage() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Chờ Khách Đến Nhận</div>
+            <div className="text-xs font-medium text-slate-500">Chờ giao</div>
             <div className="text-xl font-bold text-emerald-700">{stats.ready}</div>
           </div>
         </div>
@@ -172,7 +168,7 @@ export default function PhieuSuaChuaPage() {
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <div className="text-xs font-medium text-slate-500">Dự Tính Doanh Thu</div>
+            <div className="text-xs font-medium text-slate-500">Dự kiến thu</div>
             <div className="text-xl font-bold text-indigo-700">
               {stats.estimatedRev.toLocaleString('vi-VN')} đ
             </div>
@@ -184,13 +180,13 @@ export default function PhieuSuaChuaPage() {
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
           {/* Search bar */}
-          <div className="relative w-full md:w-96">
+          <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo Mã phiếu, Khách hàng, SĐT, Tag..."
+              placeholder="Tìm mã phiếu, khách hàng, SĐT, tag..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
@@ -211,7 +207,7 @@ export default function PhieuSuaChuaPage() {
                 selectedType === 'all' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600'
               }`}
             >
-              Tất cả hình thức
+              Tất cả
             </button>
             <button
               onClick={() => setSelectedType('counter')}
@@ -220,7 +216,7 @@ export default function PhieuSuaChuaPage() {
               }`}
             >
               <Building className="w-3.5 h-3.5" />
-              Tại Quầy
+              Tại quầy
             </button>
             <button
               onClick={() => setSelectedType('onsite')}
@@ -229,7 +225,7 @@ export default function PhieuSuaChuaPage() {
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
-              Tận Nơi (&lt;5km Hỏa Tốc)
+              Tận nơi
             </button>
           </div>
         </div>
@@ -266,13 +262,13 @@ export default function PhieuSuaChuaPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Mã Phiếu & Ngày</th>
-                <th className="py-3 px-4">Khách Hàng & SĐT</th>
-                <th className="py-3 px-4">Thiết Bị & Tag</th>
+                <th className="py-3 px-4">Mã Phiếu</th>
+                <th className="py-3 px-4">Khách Hàng</th>
+                <th className="py-3 px-4">Thiết Bị</th>
                 <th className="py-3 px-4">Hình Thức</th>
-                <th className="py-3 px-4">Mô Tả Lỗi / Yêu Cầu</th>
-                <th className="py-3 px-4">Trạng Thái Xử Lý</th>
-                <th className="py-3 px-4">KTV Phụ Trách</th>
+                <th className="py-3 px-4">Mô Tả Lỗi</th>
+                <th className="py-3 px-4">Trạng Thái</th>
+                <th className="py-3 px-4">KTV</th>
                 <th className="py-3 px-4 text-right">Chi Phí</th>
               </tr>
             </thead>

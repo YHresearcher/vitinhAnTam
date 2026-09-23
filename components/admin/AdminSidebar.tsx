@@ -41,7 +41,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       badge: null,
     },
     {
-      label: 'Khách hàng & CRM',
+      label: 'Khách hàng',
       href: '/khach-hang',
       icon: UserCheck,
       badge: `${customers.length}`,
@@ -55,34 +55,34 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       badgeColor: 'bg-blue-100 text-blue-700',
     },
     {
-      label: 'Kho máy & Linh kiện',
+      label: 'Kho hàng',
       href: '/kho-may',
       icon: Boxes,
       badge: null,
     },
     {
-      label: 'Cứu hộ Onsite',
+      label: 'Cứu hộ tận nơi',
       href: '/cuu-ho-onsite',
       icon: Navigation,
       badge: 'Khẩn',
       badgeColor: 'bg-red-100 text-red-700',
     },
     {
-      label: 'Tiền công & Ca làm',
+      label: 'Tiền công',
       href: '/tien-cong',
       icon: CircleDollarSign,
       badge: canAccessPayroll() ? 'Admin' : 'Khóa',
       badgeColor: canAccessPayroll() ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500',
     },
     {
-      label: 'Thành viên & Phân quyền',
+      label: 'Nhân sự',
       href: '/thanh-vien',
       icon: Users,
       badge: canAccessPayroll() ? 'Admin' : 'Khóa',
       badgeColor: canAccessPayroll() ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500',
     },
     {
-      label: 'Cấu hình hệ thống',
+      label: 'Cài đặt',
       href: '/cai-dat',
       icon: Settings,
       badge: canAccessSettings() ? 'Admin' : 'Khóa',
@@ -122,10 +122,10 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
                     ? 'Admin Trực ban'
                     : currentUser.role === 'technician'
                     ? 'KTV Trực ca'
-                    : 'Kinh doanh Trực quầy'}
+                    : 'Kinh doanh'}
                 </span>
                 <span className="text-[10px] text-emerald-600 font-medium mt-0.5">
-                  Trực tuyến (Online)
+                  Trực tuyến
                 </span>
               </div>
             </div>
@@ -177,7 +177,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             className="flex items-center gap-3 px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all text-xs"
           >
             <ShieldCheck className="w-4 h-4 text-slate-400" />
-            <span>Cổng Kiểm tra bảo hành S/N</span>
+            <span>Tra cứu bảo hành</span>
           </Link>
 
           <Link
@@ -186,7 +186,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             className="flex items-center gap-3 px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all text-xs"
           >
             <ArrowLeft className="w-4 h-4 text-slate-400" />
-            <span>Xem Website khách hàng</span>
+            <span>Xem trang chủ</span>
           </Link>
 
           <button
@@ -198,7 +198,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             className="flex items-center gap-3 px-3.5 py-2 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all text-xs font-semibold w-full text-left"
           >
             <LogOut className="w-4 h-4 text-rose-500" />
-            <span>Đăng xuất tài khoản</span>
+            <span>Đăng xuất</span>
           </button>
         </nav>
       </div>
@@ -216,7 +216,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           <span className="text-[10px] font-mono text-blue-600 font-bold">24/7</span>
         </div>
         <div className="text-[11px] text-center text-slate-400 font-medium">
-          © Vi tính An Tâm (Admin CRM)
+          Vi tính An Tâm
         </div>
       </div>
     </div>

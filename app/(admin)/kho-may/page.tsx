@@ -501,176 +501,168 @@ export default function KhoMayPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            {activeTab === 'machines' && 'Quản Lý Kho Máy & Thiết Bị Đồng Bộ'}
-            {activeTab === 'components' && 'Quản Lý Linh Kiện Phần Cứng (Mới / Cũ)'}
-            {activeTab === 'software' && 'Quản Lý Phần Mềm & Bản Quyền Số'}
-            <span className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full">
-              {activeTab === 'machines' && `${inventory.length} mã máy`}
-              {activeTab === 'components' && `${spareParts.length} loại linh kiện`}
-              {activeTab === 'software' && `${softwareLicenses.length} gói bản quyền`}
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            {activeTab === 'machines' && 'Kho Máy Bộ'}
+            {activeTab === 'components' && 'Kho Linh Kiện'}
+            {activeTab === 'software' && 'Kho Phần Mềm'}
+            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md">
+              {activeTab === 'machines' && `${inventory.length} máy`}
+              {activeTab === 'components' && `${spareParts.length} mục`}
+              {activeTab === 'software' && `${softwareLicenses.length} mục`}
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Hệ thống quản lý hàng hóa hợp nhất: Máy tính nguyên bộ, Linh kiện linh hoạt (Mới 100% / Zin bóc máy) và Bản quyền phần mềm.
-          </p>
         </div>
 
         {/* Action Button: Changes dynamically by active tab */}
         {activeTab === 'machines' && (
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            Nhập Máy Mới Về Kho
+            <Plus className="w-3.5 h-3.5" />
+            Nhập máy
           </button>
         )}
         {activeTab === 'components' && (
           <button
             onClick={() => setIsAddPartModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            Thêm Linh Kiện Mới
+            <Plus className="w-3.5 h-3.5" />
+            Thêm linh kiện
           </button>
         )}
         {activeTab === 'software' && (
           <button
             onClick={() => setIsAddSoftwareModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95 whitespace-nowrap shrink-0"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" />
-            Thêm Key / Bản Quyền Mới
+            <Plus className="w-3.5 h-3.5" />
+            Thêm phần mềm
           </button>
         )}
       </div>
 
-      {/* Primary Category Tabs: Machines, Components, Software */}
-      <div className="flex items-center gap-2 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200">
+      {/* Category Tabs: Machines, Components, Software */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
         <button
           onClick={() => setActiveTab('machines')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
             activeTab === 'machines'
-              ? 'bg-white text-blue-700 shadow-sm border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-blue-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Monitor className="w-4 h-4 text-blue-600" />
-          <span>Máy Tính &amp; Thiết Bị</span>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+          <Monitor className="w-3.5 h-3.5 text-blue-600" />
+          <span>Máy bộ</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
             activeTab === 'machines' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.total} máy
+            {stats.total}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('components')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
             activeTab === 'components'
-              ? 'bg-white text-emerald-700 shadow-sm border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-emerald-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Wrench className="w-4 h-4 text-emerald-600" />
-          <span>Linh Kiện Phần Cứng (Mới / Cũ)</span>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+          <Wrench className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Linh kiện</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
             activeTab === 'components' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.componentsTotal} món
+            {stats.componentsTotal}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('software')}
-          className={`flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
             activeTab === 'software'
-              ? 'bg-white text-purple-700 shadow-sm border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              ? 'bg-white text-purple-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Key className="w-4 h-4 text-purple-600" />
-          <span>Phần Mềm &amp; Bản Quyền Số</span>
-          <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+          <Key className="w-3.5 h-3.5 text-purple-600" />
+          <span>Phần mềm</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold ${
             activeTab === 'software' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.softwareTotal} license
+            {stats.softwareTotal}
           </span>
         </button>
       </div>
 
-      {/* RBAC Notice Banner */}
+      {/* RBAC Notice (Compact) */}
       {!canEditStock() && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3.5 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800">
-            <span className="font-semibold">Phân quyền vai trò ({currentUser.name} - {currentUser.role === 'technician' ? 'Kỹ thuật viên' : 'Kinh doanh'}):</span>{' '}
-            Bạn có toàn quyền xem thông tin hàng hóa, nhập mặt hàng mới và xem số lượng tồn kho. Chức năng điều chỉnh số lượng tồn kho bị khóa (Chỉ Admin được cấp phép).
-          </div>
+        <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2 text-xs text-amber-800">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>Tài khoản {currentUser.name} ({currentUser.role === 'technician' ? 'Kỹ thuật' : 'Kinh doanh'}) — Chỉ xem tồn kho, quyền sửa dành cho Admin.</span>
         </div>
       )}
 
-      {/* KPI Stats Grid: Updated 5 Cards including "Linh kiện" and "Phần mềm" */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Layers className="w-5 h-5" />
+      {/* KPI Stats Grid (Compact) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-slate-500 truncate">Tổng Máy Tồn Kho</div>
-            <div className="text-lg font-bold text-slate-900">{stats.total} chiếc</div>
+            <div className="text-[11px] text-slate-500 truncate">Máy Tồn Kho</div>
+            <div className="text-base font-bold text-slate-900">{stats.total} máy</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-slate-500 truncate">Sẵn Sàng Bán</div>
-            <div className="text-lg font-bold text-emerald-700">{stats.ready} máy</div>
+            <div className="text-[11px] text-slate-500 truncate">Sẵn Bán (RTS)</div>
+            <div className="text-base font-bold text-emerald-700">{stats.ready} máy</div>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-slate-500 truncate">Đang Kiểm Tra (QC)</div>
-            <div className="text-lg font-bold text-amber-700">{stats.testing} máy</div>
+            <div className="text-[11px] text-slate-500 truncate">Đang QC</div>
+            <div className="text-base font-bold text-amber-700">{stats.testing} máy</div>
           </div>
         </div>
 
-        {/* REPLACED: "SSD Chuẩn Cao" -> "Linh Kiện" (Mới & Cũ bóc máy) */}
-        <div className={`p-3.5 rounded-xl border shadow-sm flex items-center gap-3 transition-colors ${
+        <div className={`p-3 rounded-xl border shadow-2xs flex items-center gap-2.5 transition-colors ${
           activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
         }`}>
-          <div className="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-            <Wrench className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <Wrench className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-slate-500 truncate">Linh Kiện Tồn Kho</div>
-            <div className="text-lg font-bold text-emerald-800">{stats.componentsTotal} món</div>
+            <div className="text-[11px] text-slate-500 truncate">Linh Kiện</div>
+            <div className="text-base font-bold text-emerald-800">{stats.componentsTotal} món</div>
             <div className="text-[10px] text-slate-500 font-medium">
-              Mới: <span className="text-emerald-700 font-bold">{stats.componentsNew}</span> • Cũ: <span className="text-amber-700 font-bold">{stats.componentsUsed}</span>
+              Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
             </div>
           </div>
         </div>
 
-        {/* ADDED: "Phần Mềm & Bản Quyền Số" */}
-        <div className={`p-3.5 rounded-xl border shadow-sm flex items-center gap-3 transition-colors ${
+        <div className={`p-3 rounded-xl border shadow-2xs flex items-center gap-2.5 transition-colors ${
           activeTab === 'software' ? 'bg-purple-50/50 border-purple-300' : 'bg-white border-slate-200'
         }`}>
-          <div className="w-10 h-10 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
-            <Key className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0">
+            <Key className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-slate-500 truncate">Phần Mềm &amp; License</div>
-            <div className="text-lg font-bold text-purple-800">{stats.softwareTotal} bản quyền</div>
+            <div className="text-[11px] text-slate-500 truncate">Phần Mềm</div>
+            <div className="text-base font-bold text-purple-800">{stats.softwareTotal} bản quyền</div>
             <div className="text-[10px] text-slate-500 font-medium">
-              {stats.softwareCount} sản phẩm / giải pháp
+              {stats.softwareCount} sản phẩm
             </div>
           </div>
         </div>
@@ -691,7 +683,7 @@ export default function KhoMayPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm theo Service Tag, Model, Vị trí kệ..."
+              placeholder="Tìm Service Tag, Model, Kệ..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
@@ -708,11 +700,11 @@ export default function KhoMayPage() {
           <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto p-1 bg-slate-100 rounded-lg">
             {(
               [
-                { id: 'all', label: 'Tất cả dòng' },
-                { id: 'Dell', label: 'Dell OptiPlex' },
-                { id: 'HP', label: 'HP ProDesk' },
-                { id: 'Lenovo', label: 'ThinkPad' },
-                { id: 'other', label: 'Linh kiện khác' },
+                { id: 'all', label: 'Tất cả' },
+                { id: 'Dell', label: 'Dell' },
+                { id: 'HP', label: 'HP' },
+                { id: 'Lenovo', label: 'Lenovo' },
+                { id: 'other', label: 'Khác' },
               ] as const
             ).map((tab) => (
               <button
@@ -762,13 +754,13 @@ export default function KhoMayPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Thiết Bị / Model</th>
+                <th className="py-3 px-4">Model</th>
                 <th className="py-3 px-4">Service Tag</th>
-                <th className="py-3 px-4">Cấu Hình & SSD Health</th>
-                <th className="py-3 px-4">Vị Trí Kệ</th>
-                <th className="py-3 px-4">Trạng Thái QC</th>
-                <th className="py-3 px-4">Số Lượng Tồn</th>
-                <th className="py-3 px-4 text-right">Giá Bán Lẻ</th>
+                <th className="py-3 px-4">Cấu Hình</th>
+                <th className="py-3 px-4">Kệ</th>
+                <th className="py-3 px-4">Trạng Thái</th>
+                <th className="py-3 px-4">Tồn Kho</th>
+                <th className="py-3 px-4 text-right">Giá Bán</th>
                 <th className="py-3 px-4 text-center">Thao Tác</th>
               </tr>
             </thead>
@@ -1022,7 +1014,7 @@ export default function KhoMayPage() {
                   type="text"
                   value={partSearchQuery}
                   onChange={(e) => setPartSearchQuery(e.target.value)}
-                  placeholder="Tìm linh kiện, vị trí kệ, hãng phân phối..."
+                  placeholder="Tìm linh kiện, kệ kho..."
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
                 />
                 {partSearchQuery && (
@@ -1045,7 +1037,7 @@ export default function KhoMayPage() {
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  Tất cả tình trạng
+                  Tất cả
                 </button>
                 <button
                   onClick={() => setPartConditionFilter('new')}
@@ -1056,7 +1048,7 @@ export default function KhoMayPage() {
                   }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Mới 100% Chính Hãng</span>
+                  <span>Mới 100%</span>
                 </button>
                 <button
                   onClick={() => setPartConditionFilter('used')}
@@ -1067,22 +1059,22 @@ export default function KhoMayPage() {
                   }`}
                 >
                   <Package className="w-3.5 h-3.5" />
-                  <span>Cũ / Zin Bóc Máy</span>
+                  <span>Cũ / Bóc máy</span>
                 </button>
               </div>
             </div>
 
             {/* Part Type Filter Pills */}
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs overflow-x-auto">
-              <span className="text-slate-400 font-medium shrink-0">Loại linh kiện:</span>
+              <span className="text-slate-400 font-medium shrink-0">Loại:</span>
               {[
-                { id: 'all', label: 'Tất cả loại' },
-                { id: 'SSD', label: 'Ổ cứng SSD' },
-                { id: 'RAM', label: 'Bộ nhớ RAM' },
-                { id: 'CPU', label: 'Vi xử lý CPU' },
-                { id: 'VGA', label: 'Card đồ họa VGA' },
-                { id: 'PSU', label: 'Nguồn máy tính' },
-                { id: 'Mainboard', label: 'Bo mạch chủ' },
+                { id: 'all', label: 'Tất cả' },
+                { id: 'SSD', label: 'SSD' },
+                { id: 'RAM', label: 'RAM' },
+                { id: 'CPU', label: 'CPU' },
+                { id: 'VGA', label: 'VGA' },
+                { id: 'PSU', label: 'Nguồn' },
+                { id: 'Mainboard', label: 'Mainboard' },
                 { id: 'ThermalPaste', label: 'Keo tản nhiệt' },
               ].map((t) => (
                 <button
@@ -1106,13 +1098,13 @@ export default function KhoMayPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Tên Linh Kiện &amp; Phân Phối</th>
-                    <th className="py-3 px-4">Phân Loại</th>
-                    <th className="py-3 px-4">Tình Trạng (Mới / Cũ)</th>
-                    <th className="py-3 px-4">Vị Trí Kệ Kho</th>
-                    <th className="py-3 px-4">Số Lượng Tồn</th>
+                    <th className="py-3 px-4">Linh Kiện</th>
+                    <th className="py-3 px-4">Loại</th>
+                    <th className="py-3 px-4">Tình Trạng</th>
+                    <th className="py-3 px-4">Kệ</th>
+                    <th className="py-3 px-4">Tồn Kho</th>
                     <th className="py-3 px-4">Giá Nhập</th>
-                    <th className="py-3 px-4 text-right">Giá Bán Lẻ</th>
+                    <th className="py-3 px-4 text-right">Giá Bán</th>
                     <th className="py-3 px-4 text-center">Bảo Hành</th>
                     <th className="py-3 px-4 text-center">Thao Tác</th>
                   </tr>
@@ -1275,7 +1267,7 @@ export default function KhoMayPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: QUẢN LÝ PHẦN MỀM & BẢN QUYỀN SỐ */}
+      {/* TAB 3: QUẢN LÝ PHẦN MỀM */}
       {/* ========================================================================= */}
       {activeTab === 'software' && (
         <>
@@ -1283,13 +1275,13 @@ export default function KhoMayPage() {
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
             <div className="flex flex-col md:flex-row items-center justify-between gap-3">
               {/* Search box */}
-              <div className="relative w-full md:w-96">
+              <div className="relative w-full md:w-80">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={softwareSearchQuery}
                   onChange={(e) => setSoftwareSearchQuery(e.target.value)}
-                  placeholder="Tìm phần mềm, hãng phát hành, ghi chú..."
+                  placeholder="Tìm phần mềm, đối tác..."
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
                 />
                 {softwareSearchQuery && (
@@ -1305,10 +1297,10 @@ export default function KhoMayPage() {
               {/* License Type Filter */}
               <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg overflow-x-auto">
                 {[
-                  { id: 'all', label: 'Tất cả cấp phép' },
-                  { id: 'oem', label: 'OEM Bản quyền số' },
-                  { id: 'retail', label: 'Retail / FPP' },
-                  { id: 'subscription', label: 'Đăng ký (Subscription)' },
+                  { id: 'all', label: 'Tất cả' },
+                  { id: 'oem', label: 'OEM' },
+                  { id: 'retail', label: 'Retail' },
+                  { id: 'subscription', label: 'Subscription' },
                 ].map((lic) => (
                   <button
                     key={lic.id}
@@ -1327,15 +1319,15 @@ export default function KhoMayPage() {
 
             {/* Software Category Pills */}
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs overflow-x-auto">
-              <span className="text-slate-400 font-medium shrink-0">Danh mục phần mềm:</span>
+              <span className="text-slate-400 font-medium shrink-0">Danh mục:</span>
               {[
-                { id: 'all', label: 'Tất cả danh mục' },
-                { id: 'os', label: 'Hệ điều hành Windows' },
-                { id: 'office', label: 'Tin học văn phòng Office' },
-                { id: 'antivirus', label: 'Diệt virus & An ninh' },
-                { id: 'accounting', label: 'Kế toán doanh nghiệp' },
-                { id: 'pos', label: 'Quản lý bán hàng POS' },
-                { id: 'utility', label: 'Tiện ích hệ thống' },
+                { id: 'all', label: 'Tất cả' },
+                { id: 'os', label: 'Windows' },
+                { id: 'office', label: 'Office' },
+                { id: 'antivirus', label: 'Diệt virus' },
+                { id: 'accounting', label: 'Kế toán' },
+                { id: 'pos', label: 'Bán hàng' },
+                { id: 'utility', label: 'Tiện ích' },
               ].map((c) => (
                 <button
                   key={c.id}
@@ -1358,13 +1350,13 @@ export default function KhoMayPage() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Tên Phần Mềm &amp; Đối Tác</th>
+                    <th className="py-3 px-4">Phần Mềm &amp; Đối Tác</th>
                     <th className="py-3 px-4">Danh Mục</th>
-                    <th className="py-3 px-4">Loại Cấp Phép</th>
-                    <th className="py-3 px-4">Thời Hạn Sử Dụng</th>
-                    <th className="py-3 px-4">Số License / Key Tồn</th>
+                    <th className="py-3 px-4">Cấp Phép</th>
+                    <th className="py-3 px-4">Thời Hạn</th>
+                    <th className="py-3 px-4">Tồn Kho</th>
                     <th className="py-3 px-4">Giá Nhập</th>
-                    <th className="py-3 px-4 text-right">Giá Bán Lẻ</th>
+                    <th className="py-3 px-4 text-right">Giá Bán</th>
                     <th className="py-3 px-4 text-center">Thao Tác</th>
                   </tr>
                 </thead>
@@ -1372,7 +1364,7 @@ export default function KhoMayPage() {
                   {filteredSoftwareLicenses.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-12 text-center text-slate-400">
-                        Không tìm thấy bản quyền phần mềm nào phù hợp với bộ lọc.
+                        Không có phần mềm phù hợp.
                       </td>
                     </tr>
                   ) : (
@@ -1397,10 +1389,10 @@ export default function KhoMayPage() {
                           <td className="py-3.5 px-4">
                             <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-xs font-semibold capitalize">
                               {sw.software_type === 'os' && 'Hệ điều hành'}
-                              {sw.software_type === 'office' && 'Văn phòng Office'}
+                              {sw.software_type === 'office' && 'Office'}
                               {sw.software_type === 'antivirus' && 'Diệt virus'}
-                              {sw.software_type === 'accounting' && 'Kế toán SME'}
-                              {sw.software_type === 'pos' && 'Bán hàng POS'}
+                              {sw.software_type === 'accounting' && 'Kế toán'}
+                              {sw.software_type === 'pos' && 'Bán hàng'}
                               {sw.software_type === 'utility' && 'Tiện ích'}
                               {!['os', 'office', 'antivirus', 'accounting', 'pos', 'utility'].includes(sw.software_type) && sw.software_type}
                             </span>
@@ -1422,7 +1414,7 @@ export default function KhoMayPage() {
                           {/* Duration */}
                           <td className="py-3.5 px-4 text-xs font-medium text-slate-700">
                             {sw.duration_months === 0 ? (
-                              <span className="text-emerald-700 font-bold">Vĩnh viễn (Lifetime)</span>
+                              <span className="text-emerald-700 font-bold">Vĩnh viễn</span>
                             ) : (
                               <span>{sw.duration_months} tháng</span>
                             )}
@@ -1464,7 +1456,7 @@ export default function KhoMayPage() {
                                       setEditingSoftwareStockId(sw.id);
                                       setTempSoftwareStockValue(sw.quantity_in_stock);
                                     }}
-                                    title="Sửa số lượng tồn (Chỉ Admin)"
+                                    title="Sửa số lượng tồn"
                                     className="p-1 text-slate-400 hover:text-purple-600 rounded hover:bg-purple-50 transition-colors"
                                   >
                                     <Edit2 className="w-3 h-3" />
@@ -1493,7 +1485,7 @@ export default function KhoMayPage() {
                           <td className="py-3.5 px-4 text-right">
                             <span className="font-bold text-slate-900">
                               {sw.unit_price === 0
-                                ? 'Giá liên hệ'
+                                ? 'Liên hệ'
                                 : new Intl.NumberFormat('vi-VN').format(sw.unit_price) + ' đ'}
                             </span>
                           </td>
@@ -1503,7 +1495,7 @@ export default function KhoMayPage() {
                             {canEditStock() && (
                               <button
                                 onClick={() => handleDeleteSoftware(sw.id, sw.software_name)}
-                                title="Xóa bản quyền (Chỉ Admin)"
+                                title="Xóa bản quyền"
                                 className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1521,13 +1513,13 @@ export default function KhoMayPage() {
         </>
       )}
 
-      {/* Modal Nhập Máy Mới Về Kho (Available to ALL Roles: Admin, KTV, Sales) */}
+      {/* Modal Nhập Máy Mới */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Nhập Thiết Bị / Máy Mới Về Kho</h3>
+                <h3 className="text-base font-bold text-slate-900">Nhập Máy Mới</h3>
                 <p className="text-xs text-slate-500">
                   Người thực hiện: <span className="font-semibold text-blue-600">{currentUser.name}</span> ({currentUser.role})
                 </p>
@@ -1563,7 +1555,7 @@ export default function KhoMayPage() {
                 {/* Model */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tên Model / Mã Máy *
+                    Model Máy *
                   </label>
                   <input
                     type="text"
@@ -1578,12 +1570,12 @@ export default function KhoMayPage() {
                 {/* Service Tag */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Service Tag / Số Serial *
+                    Service Tag / Serial *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="VD: ST-99214X hoặc Dell 7 ký tự"
+                    placeholder="VD: ST-99214X"
                     value={newItem.service_tag}
                     onChange={(e) => setNewItem({ ...newItem, service_tag: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -1593,7 +1585,7 @@ export default function KhoMayPage() {
                 {/* Form factor */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Kích Thước Case (Form Factor)
+                    Kích Thước Case
                   </label>
                   <select
                     value={newItem.form_factor}
@@ -1602,8 +1594,8 @@ export default function KhoMayPage() {
                   >
                     <option value="SFF">SFF (Small Form Factor)</option>
                     <option value="Mini / Micro">Mini / Micro PC</option>
-                    <option value="Tower / MT">Thùng lớn (Tower / MT)</option>
-                    <option value="Laptop">Laptop Xách Tay</option>
+                    <option value="Tower / MT">Thùng lớn (Tower)</option>
+                    <option value="Laptop">Laptop</option>
                   </select>
                 </div>
 
@@ -1614,7 +1606,7 @@ export default function KhoMayPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Intel Core i5-8500 3.0GHz"
+                    placeholder="VD: i5-8500"
                     value={newItem.cpu}
                     onChange={(e) => setNewItem({ ...newItem, cpu: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -1628,7 +1620,7 @@ export default function KhoMayPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="16GB DDR4 2666MHz"
+                    placeholder="VD: 16GB DDR4"
                     value={newItem.ram}
                     onChange={(e) => setNewItem({ ...newItem, ram: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -1642,7 +1634,7 @@ export default function KhoMayPage() {
                   </label>
                   <input
                     type="text"
-                    placeholder="256GB NVMe PCIe"
+                    placeholder="VD: 256GB NVMe"
                     value={newItem.ssd_capacity}
                     onChange={(e) => setNewItem({ ...newItem, ssd_capacity: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -1667,7 +1659,7 @@ export default function KhoMayPage() {
                 {/* Vị trí kệ */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Vị Trí Kệ Kho Tân An
+                    Vị Trí Kệ
                   </label>
                   <input
                     type="text"
@@ -1678,10 +1670,10 @@ export default function KhoMayPage() {
                   />
                 </div>
 
-                {/* Initial Stock (Only Admin can set > 1, Tech/Sales default 1) */}
+                {/* Initial Stock */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số Lượng Nhập Ban Đầu
+                    Số Lượng
                   </label>
                   <input
                     type="number"
@@ -1696,7 +1688,7 @@ export default function KhoMayPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-semibold text-slate-700">
-                      Giá Bán Dự Kiến (VNĐ)
+                      Giá Bán (VNĐ)
                     </label>
                     <button
                       type="button"
@@ -1707,30 +1699,25 @@ export default function KhoMayPage() {
                           : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
                       }`}
                     >
-                      {newItem.price === 0 ? '✓ Đang chọn: Giá Liên Hệ' : 'Đặt "Giá Liên Hệ"'}
+                      {newItem.price === 0 ? '✓ Giá Liên Hệ' : 'Đặt "Liên Hệ"'}
                     </button>
                   </div>
                   <input
                     type="number"
                     step={50000}
                     value={newItem.price === 0 ? '' : newItem.price}
-                    placeholder={newItem.price === 0 ? 'Liên Hệ (0 VNĐ)' : 'Nhập giá bán VNĐ...'}
+                    placeholder={newItem.price === 0 ? 'Liên Hệ (0 đ)' : 'Nhập giá bán...'}
                     onChange={(e) =>
                       setNewItem({ ...newItem, price: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  {newItem.price === 0 && (
-                    <p className="text-[11px] text-amber-700 mt-1 font-medium">
-                      ℹ️ Sản phẩm sẽ được ghi nhận là &quot;Giá Liên Hệ&quot; trên hệ thống và hiển thị &quot;Liên hệ&quot; cho khách hàng.
-                    </p>
-                  )}
                 </div>
 
                 {/* QC Status */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Trạng Thái Kiểm Định Ban Đầu
+                    Trạng Thái
                   </label>
                   <select
                     value={newItem.qc_status}
@@ -1739,8 +1726,8 @@ export default function KhoMayPage() {
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="testing">⏳ Đang kiểm tra chạy thử tải & làm mát</option>
-                    <option value="ready_to_sell">✓ Sẵn sàng bán ngay</option>
+                    <option value="testing">⏳ Đang QC (chạy thử)</option>
+                    <option value="ready_to_sell">✓ Sẵn sàng bán (RTS)</option>
                   </select>
                 </div>
               </div>
@@ -1757,7 +1744,7 @@ export default function KhoMayPage() {
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm"
                 >
-                  Lưu Thiết Bị Vào Kho
+                  Lưu Máy Mới
                 </button>
               </div>
             </form>
@@ -1766,22 +1753,20 @@ export default function KhoMayPage() {
       )}
 
 
-      {/* MODAL BÁN HÀNG & BÀN GIAO THIẾT BỊ (ADMIN & SALES ONLY) */}
+      {/* MODAL BÁN MÁY */}
       {sellingItem && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-5 my-8">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-4 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200">
-                  <ShoppingBag className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold border border-emerald-200">
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase mb-0.5">
-                    <span>Phân Quyền Bán Hàng &amp; Admin</span>
-                  </div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900">
-                    Xuất Bán Thiết Bị &amp; Bàn Giao Khách Hàng
+                  <h2 className="text-base font-bold text-slate-900">
+                    Bán Máy &amp; Bàn Giao
                   </h2>
+                  <p className="text-xs text-slate-500">Ghi nhận thông tin khách và kích hoạt bảo hành</p>
                 </div>
               </div>
               <button
@@ -1794,138 +1779,122 @@ export default function KhoMayPage() {
 
             <form onSubmit={handleConfirmSale} className="space-y-4">
               {/* Device Overview Banner */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Thiết bị xuất bán</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Thiết bị</span>
                   <div className="font-bold text-slate-900 text-sm mt-0.5">
                     {sellingItem.brand} {sellingItem.device_model || sellingItem.model} ({sellingItem.form_factor})
                   </div>
                   <div className="text-slate-500 mt-0.5 flex items-center gap-2">
                     <span>Tag: <strong className="text-blue-700 font-mono">{sellingItem.service_tag}</strong></span>
-                    <span>• Vị trí: {sellingItem.shelf_location}</span>
+                    <span>• Kệ: {sellingItem.shelf_location}</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Giá đề xuất</span>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Giá niêm yết</span>
                   <div className="text-base font-black text-blue-700 mt-0.5">
                     {(sellingItem.price ?? sellingItem.retail_price ?? 0).toLocaleString('vi-VN')} đ
                   </div>
                 </div>
               </div>
 
-              {/* SECTION 1: CUSTOMER INFO & AUTO GENERATED CODE */}
-              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3">
+              {/* CUSTOMER INFO */}
+              <div className="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
                     <UserCheck className="w-4 h-4 text-blue-600" />
                     <span>Thông Tin Khách Hàng</span>
                   </label>
-                  <span className="text-[11px] text-blue-700 font-medium">Tự động cấp mã KH</span>
+                  <span className="text-xs font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
+                    {previewCustomerCode || 'Mã KH tự động'}
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và Tên Khách Hàng *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và Tên *</label>
                     <input
                       type="text"
                       required
                       value={sellCustomerName}
                       onChange={(e) => setSellCustomerName(e.target.value)}
-                      placeholder="VD: Anh Tuấn (Cty Vận Tải)"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Số Điện Thoại Khách Hàng *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Số Điện Thoại *</label>
                     <input
                       type="tel"
                       required
                       value={sellCustomerPhone}
                       onChange={(e) => setSellCustomerPhone(e.target.value)}
-                      placeholder="0918234891"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      placeholder="0918xxxxxx"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ngày, Tháng, Năm Sinh *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ngày Sinh *</label>
                     <input
                       type="date"
                       required
                       value={sellCustomerBirthDate}
                       onChange={(e) => setSellCustomerBirthDate(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Địa Chỉ Giao Hàng</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Địa Chỉ</label>
                     <input
                       type="text"
                       value={sellCustomerAddress}
                       onChange={(e) => setSellCustomerAddress(e.target.value)}
-                      placeholder="Số nhà, Phường/Xã, Long An - Tây Ninh..."
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Phường/Xã, Tỉnh..."
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                 </div>
-
-                {/* Live Auto Generated Customer Code Display */}
-                <div className="p-3 rounded-xl bg-white border border-blue-200 flex items-center justify-between gap-3 shadow-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">
-                      Mã Khách Hàng Được Tạo Tự Động
-                    </span>
-                    <span className="text-base font-black text-blue-700 font-mono">
-                      {previewCustomerCode || 'Đang tạo...'}
-                    </span>
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
-                      Công thức: [NgàyThángSinh DDMM] + [4 số cuối SĐT]. Nếu trùng lặp tự động thêm 2 số ngẫu nhiên.
-                    </p>
-                  </div>
-                  <span className="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-xs font-bold shrink-0">
-                    Chuẩn CRM
-                  </span>
-                </div>
               </div>
 
-              {/* SECTION 2: DEVICE SERIAL & WARRANTY DURATION */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              {/* WARRANTY & PRICE */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                 <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
-                  Thông Số Bán Hàng &amp; Bảo Hành (Quyền Bán Hàng &amp; Admin)
+                  Bảo Hành &amp; Thanh Toán
                 </label>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Serial Number Của Thiết Bị *
+                      Số Serial Thiết Bị *
                     </label>
                     <input
                       type="text"
                       required
                       value={sellSerialNumber}
                       onChange={(e) => setSellSerialNumber(e.target.value)}
-                      placeholder="VD: SN-DELL-8F4K92X-2025"
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold"
+                      placeholder="VD: SN-DELL-8F4K92X"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Thời Hạn Bảo Hành (Tháng) *
+                      Thời Hạn Bảo Hành *
                     </label>
                     <select
                       value={sellWarrantyMonths}
                       onChange={(e) => setSellWarrantyMonths(Number(e.target.value))}
-                      className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-700"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-700"
                     >
-                      <option value={6}>6 Tháng (Linh kiện cơ bản)</option>
-                      <option value={12}>12 Tháng (Chuẩn máy loại A)</option>
-                      <option value={24}>24 Tháng (Gói cao cấp)</option>
-                      <option value={36}>36 Tháng (SSD &amp; RAM mới hãng)</option>
+                      <option value={6}>6 Tháng</option>
+                      <option value={12}>12 Tháng</option>
+                      <option value={24}>24 Tháng</option>
+                      <option value={36}>36 Tháng</option>
                     </select>
                   </div>
                 </div>
@@ -1936,7 +1905,7 @@ export default function KhoMayPage() {
                     type="number"
                     value={sellPrice}
                     onChange={(e) => setSellPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
+                    className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold"
                   />
                 </div>
               </div>
@@ -1945,16 +1914,16 @@ export default function KhoMayPage() {
                 <button
                   type="button"
                   onClick={() => setSellingItem(null)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
                 >
-                  Hủy Bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Xác Nhận Xuất Bán &amp; Kích Hoạt Bảo Hành</span>
+                  <span>Xác Nhận Bán Máy</span>
                 </button>
               </div>
             </form>
@@ -1962,21 +1931,16 @@ export default function KhoMayPage() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: THÊM LINH KIỆN MỚI (MỚI 100% / ZIN BÓC MÁY) */}
-      {/* ========================================================================= */}
+      {/* MODAL THÊM LINH KIỆN MỚI */}
       {isAddPartModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Wrench className="w-5 h-5 text-emerald-600" />
-                  Thêm Linh Kiện Mới Vào Kho
+                  Thêm Linh Kiện Mới
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Phân biệt rõ linh kiện Mới 100% chính hãng và linh kiện Cũ / Zin bóc máy.
-                </p>
               </div>
               <button
                 onClick={() => setIsAddPartModalOpen(false)}
@@ -1987,10 +1951,10 @@ export default function KhoMayPage() {
             </div>
 
             <form onSubmit={handleCreateNewPart} className="p-6 space-y-4">
-              {/* Tình Trạng Linh Kiện: Mới 100% vs Zin Bóc Máy */}
+              {/* Tình Trạng Linh Kiện */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Tình Trạng Linh Kiện *
+                  Tình Trạng *
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -2005,10 +1969,10 @@ export default function KhoMayPage() {
                     <Sparkles className={`w-5 h-5 shrink-0 ${newPart.condition === 'new' ? 'text-emerald-600' : 'text-slate-400'}`} />
                     <div>
                       <div className={`text-xs font-bold ${newPart.condition === 'new' ? 'text-emerald-900' : 'text-slate-800'}`}>
-                        Mới 100% Nguyên Seal
+                        Mới 100%
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        Chính hãng, bảo hành dài hạn (24-36 tháng)
+                        Chính hãng (24-36 tháng)
                       </div>
                     </div>
                   </button>
@@ -2025,10 +1989,10 @@ export default function KhoMayPage() {
                     <Package className={`w-5 h-5 shrink-0 ${newPart.condition === 'used' ? 'text-purple-600' : 'text-slate-400'}`} />
                     <div>
                       <div className={`text-xs font-bold ${newPart.condition === 'used' ? 'text-purple-900' : 'text-slate-800'}`}>
-                        Cũ / Zin Bóc Máy
+                        Cũ / Bóc Máy
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        Đã test kỹ qua QC, bảo hành 1-6 tháng
+                        Đã test QC (1-6 tháng)
                       </div>
                     </div>
                   </button>
@@ -2039,12 +2003,12 @@ export default function KhoMayPage() {
                 {/* Part Name */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tên Linh Kiện &amp; Model Chi Tiết *
+                    Tên Linh Kiện &amp; Model *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="VD: SSD Kingston NV2 500GB PCIe 4.0 NVMe M.2"
+                    placeholder="VD: SSD Kingston NV2 500GB NVMe"
                     value={newPart.part_name}
                     onChange={(e) => setNewPart({ ...newPart, part_name: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium"
@@ -2054,7 +2018,7 @@ export default function KhoMayPage() {
                 {/* Part Type */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phân Loại Linh Kiện
+                    Phân Loại
                   </label>
                   <select
                     value={newPart.part_type}
@@ -2067,20 +2031,20 @@ export default function KhoMayPage() {
                     <option value="VGA">Card đồ họa VGA</option>
                     <option value="PSU">Nguồn máy tính (PSU)</option>
                     <option value="Mainboard">Bo mạch chủ (Mainboard)</option>
-                    <option value="Screen">Màn hình hiển thị</option>
+                    <option value="Screen">Màn hình</option>
                     <option value="ThermalPaste">Keo tản nhiệt / Phụ kiện</option>
-                    <option value="Khác">Linh kiện khác</option>
+                    <option value="Khác">Khác</option>
                   </select>
                 </div>
 
                 {/* Shelf Location */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Vị Trí Kệ Kho
+                    Vị Trí Kệ
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: Kệ Linh Kiện L1-03"
+                    placeholder="VD: Kệ L1-03"
                     value={newPart.shelf_location}
                     onChange={(e) => setNewPart({ ...newPart, shelf_location: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -2090,7 +2054,7 @@ export default function KhoMayPage() {
                 {/* Initial Stock */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số Lượng Tồn Ban Đầu *
+                    Số Lượng Tồn *
                   </label>
                   <input
                     type="number"
@@ -2105,30 +2069,30 @@ export default function KhoMayPage() {
                 {/* Warranty Months */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Thời Hạn Bảo Hành (Tháng) *
+                    Bảo Hành (Tháng) *
                   </label>
                   <select
                     value={newPart.warranty_months}
                     onChange={(e) => setNewPart({ ...newPart, warranty_months: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-emerald-800"
                   >
-                    <option value={1}>1 Tháng (Bao test)</option>
-                    <option value={3}>3 Tháng (Linh kiện cũ bóc máy tiêu chuẩn)</option>
-                    <option value={6}>6 Tháng (Linh kiện cũ bảo hành cao)</option>
-                    <option value={12}>12 Tháng (Chính hãng cơ bản)</option>
-                    <option value={24}>24 Tháng (Nguồn / VGA chính hãng)</option>
-                    <option value={36}>36 Tháng (SSD &amp; RAM chính hãng)</option>
+                    <option value={1}>1 Tháng</option>
+                    <option value={3}>3 Tháng</option>
+                    <option value={6}>6 Tháng</option>
+                    <option value={12}>12 Tháng</option>
+                    <option value={24}>24 Tháng</option>
+                    <option value={36}>36 Tháng</option>
                   </select>
                 </div>
 
                 {/* Distributor */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hãng / Nhà Phân Phối
+                    Nhà Phân Phối / Hãng
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: Viễn Sơn, FPT Synnex, DGW, Bóc máy zin..."
+                    placeholder="VD: Viễn Sơn, FPT, Bóc máy..."
                     value={newPart.distributor}
                     onChange={(e) => setNewPart({ ...newPart, distributor: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -2151,7 +2115,7 @@ export default function KhoMayPage() {
                 {/* Unit Price */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Bán Lẻ Dự Kiến (VNĐ)
+                    Giá Bán (VNĐ)
                   </label>
                   <input
                     type="number"
@@ -2164,11 +2128,11 @@ export default function KhoMayPage() {
                 {/* Notes */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Ghi Chú Kỹ Thuật / Tình Trạng Ngoại Hình
+                    Ghi Chú
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: Chân socket đẹp, tem Viễn Sơn, tốc độ đọc 3500MB/s..."
+                    placeholder="VD: Còn tem phân phối, tốc độ đọc 3500MB/s..."
                     value={newPart.notes}
                     onChange={(e) => setNewPart({ ...newPart, notes: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -2183,14 +2147,14 @@ export default function KhoMayPage() {
                   onClick={() => setIsAddPartModalOpen(false)}
                   className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Xác Nhận Thêm Linh Kiện
+                  Lưu Linh Kiện
                 </button>
               </div>
             </form>
@@ -2198,21 +2162,16 @@ export default function KhoMayPage() {
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL: THÊM PHẦN MỀM & BẢN QUYỀN SỐ */}
-      {/* ========================================================================= */}
+      {/* MODAL THÊM PHẦN MỀM */}
       {isAddSoftwareModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-purple-50/70 border-b border-purple-100 flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Key className="w-5 h-5 text-purple-600" />
-                  Thêm Phần Mềm &amp; Key Bản Quyền
+                  Thêm Phần Mềm &amp; Bản Quyền
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Quản lý bản quyền số OEM, Retail, Subscription và giải pháp phần mềm doanh nghiệp.
-                </p>
               </div>
               <button
                 onClick={() => setIsAddSoftwareModalOpen(false)}
@@ -2227,12 +2186,12 @@ export default function KhoMayPage() {
                 {/* Software Name */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tên Phần Mềm / Gói Bản Quyền *
+                    Tên Phần Mềm / Bản Quyền *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="VD: Windows 11 Pro 64-bit Kỹ Thuật Số"
+                    placeholder="VD: Windows 11 Pro"
                     value={newSoftware.software_name}
                     onChange={(e) => setNewSoftware({ ...newSoftware, software_name: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
@@ -2242,60 +2201,60 @@ export default function KhoMayPage() {
                 {/* Software Category */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Danh Mục Phần Mềm
+                    Danh Mục
                   </label>
                   <select
                     value={newSoftware.software_type}
                     onChange={(e) => setNewSoftware({ ...newSoftware, software_type: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   >
-                    <option value="os">Hệ điều hành (Windows)</option>
-                    <option value="office">Tin học văn phòng Office</option>
-                    <option value="antivirus">Diệt virus &amp; An ninh</option>
-                    <option value="accounting">Kế toán doanh nghiệp (MISA...)</option>
-                    <option value="pos">Quản lý bán hàng (KiotViet...)</option>
-                    <option value="utility">Tiện ích hệ thống</option>
+                    <option value="os">Windows (Hệ điều hành)</option>
+                    <option value="office">Office (Văn phòng)</option>
+                    <option value="antivirus">Diệt virus</option>
+                    <option value="accounting">Kế toán (MISA...)</option>
+                    <option value="pos">Bán hàng (KiotViet...)</option>
+                    <option value="utility">Tiện ích</option>
                   </select>
                 </div>
 
                 {/* License Type */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hình Thức Cấp Phép (License Type)
+                    Cấp Phép
                   </label>
                   <select
                     value={newSoftware.license_type}
                     onChange={(e) => setNewSoftware({ ...newSoftware, license_type: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-semibold text-purple-800"
                   >
-                    <option value="oem">OEM Bản quyền số (Theo máy / Mainboard)</option>
-                    <option value="retail">Retail / FPP (Chuyển máy linh hoạt)</option>
-                    <option value="subscription">Đăng ký gia hạn (Subscription)</option>
-                    <option value="fpp">Hộp nguyên bản quyền (FPP Box)</option>
+                    <option value="oem">OEM (Theo máy)</option>
+                    <option value="retail">Retail (Chuyển máy được)</option>
+                    <option value="subscription">Subscription (Đăng ký định kỳ)</option>
+                    <option value="fpp">FPP (Hộp nguyên bản quyền)</option>
                   </select>
                 </div>
 
                 {/* Duration Months */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Thời Hạn Cấp Phép
+                    Thời Hạn
                   </label>
                   <select
                     value={newSoftware.duration_months}
                     onChange={(e) => setNewSoftware({ ...newSoftware, duration_months: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
                   >
-                    <option value={0}>Vĩnh viễn (Lifetime License)</option>
-                    <option value={12}>12 Tháng (1 Năm)</option>
-                    <option value={24}>24 Tháng (2 Năm)</option>
-                    <option value={36}>36 Tháng (3 Năm)</option>
+                    <option value={0}>Vĩnh viễn</option>
+                    <option value={12}>12 Tháng</option>
+                    <option value={24}>24 Tháng</option>
+                    <option value={36}>36 Tháng</option>
                   </select>
                 </div>
 
                 {/* Initial Stock */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số License / Key Tồn Kho *
+                    Số Key Tồn Kho *
                   </label>
                   <input
                     type="number"
@@ -2310,11 +2269,11 @@ export default function KhoMayPage() {
                 {/* Distributor */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Nhà Phân Phối / Đối Tác
+                    Đối Tác / Nhà Phân Phối
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: Microsoft CSP, MISA JSC, KiotViet, Kaspersky VN..."
+                    placeholder="VD: Microsoft CSP, MISA..."
                     value={newSoftware.distributor}
                     onChange={(e) => setNewSoftware({ ...newSoftware, distributor: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
@@ -2337,7 +2296,7 @@ export default function KhoMayPage() {
                 {/* Unit Price */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Bán Lẻ Dự Kiến (VNĐ)
+                    Giá Bán (VNĐ)
                   </label>
                   <input
                     type="number"
@@ -2350,11 +2309,11 @@ export default function KhoMayPage() {
                 {/* Notes */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Ghi Chú Hướng Dẫn &amp; Hóa Đơn VAT
+                    Ghi Chú
                   </label>
                   <input
                     type="text"
-                    placeholder="VD: Key điện tử kích hoạt online qua Microsoft Account, hỗ trợ xuất VAT..."
+                    placeholder="VD: Kích hoạt online, hỗ trợ xuất VAT..."
                     value={newSoftware.notes}
                     onChange={(e) => setNewSoftware({ ...newSoftware, notes: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
@@ -2369,14 +2328,14 @@ export default function KhoMayPage() {
                   onClick={() => setIsAddSoftwareModalOpen(false)}
                   className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium"
                 >
-                  Hủy bỏ
+                  Hủy
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Xác Nhận Thêm Phần Mềm
+                  Lưu Phần Mềm
                 </button>
               </div>
             </form>

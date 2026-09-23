@@ -60,39 +60,39 @@ export default function CuuHoOnsitePage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            Điều Phối Cứu Hộ Tận Nơi (&lt;5km Hỏa Tốc 2H)
+            Cứu Hộ Tận Nơi
             <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full flex items-center gap-1">
               <Radio className="w-3 h-3 animate-pulse text-indigo-600" />
               {activeCount} ca đang chạy
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Phản ứng hỏa tốc trong 2 giờ cho khu vực &lt;5km từ trung tâm Tân An.
+            Điều phối kỹ thuật viên cứu hộ hỏa tốc trong bán kính 5km.
           </p>
         </div>
       </div>
 
-      {/* 10km Coverage Map Info Banner - WHITE & BLUE THEME */}
-      <div className="bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 text-slate-800 p-5 rounded-2xl shadow-xs border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-xs">
-            <Compass className="w-6 h-6 text-blue-600" />
+      {/* Coverage Info Banner */}
+      <div className="bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 text-slate-800 p-4 rounded-xl shadow-xs border border-blue-200 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-blue-100 border border-blue-200 flex items-center justify-center flex-shrink-0 text-blue-600 shadow-xs">
+            <Compass className="w-5 h-5 text-blue-600" />
           </div>
           <div>
-            <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              Trụ Sở Điều Phối: Tân An & Các Huyện Lân Cận
+            <div className="text-sm font-bold text-slate-900">
+              Phạm Vi Phục Vụ: Bán Kính 5km
             </div>
-            <div className="text-xs text-blue-700 font-medium mt-0.5">
-              Phạm vi phục vụ: TP. Tân An (Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn) và các huyện lân cận theo lịch hẹn.
+            <div className="text-xs text-blue-700 mt-0.5">
+              Hỗ trợ TP. Tân An và các khu vực lân cận theo lịch hẹn.
             </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <a
             href="tel:0909053058"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
           >
-            <Phone className="w-3.5 h-3.5" /> Hotline: 0909.053.058
+            <Phone className="w-3.5 h-3.5" /> 0909.053.058
           </a>
         </div>
       </div>
@@ -100,11 +100,11 @@ export default function CuuHoOnsitePage() {
       {/* Filter Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
         {[
-          { id: 'all', label: 'Tất cả ca' },
-          { id: 'pending', label: 'Chờ điều phối' },
-          { id: 'dispatched', label: 'KTV đang chạy xe' },
-          { id: 'in_progress', label: 'Đang xử lý tại nhà' },
-          { id: 'completed', label: 'Đã hoàn tất' },
+          { id: 'all', label: 'Tất cả' },
+          { id: 'pending', label: 'Chờ xử lý' },
+          { id: 'dispatched', label: 'Đang di chuyển' },
+          { id: 'in_progress', label: 'Đang xử lý' },
+          { id: 'completed', label: 'Đã xong' },
         ].map((tab) => (
           <button
             key={tab.id}

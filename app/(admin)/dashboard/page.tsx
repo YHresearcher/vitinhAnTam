@@ -79,26 +79,17 @@ export default function DashboardPage() {
         <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-blue-50 blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200 tracking-wide uppercase">
-                Trạm Kỹ Thuật Số 01
-              </span>
-              <span className="text-xs text-slate-500 flex items-center gap-1 font-mono">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Long An - Tây Ninh
-              </span>
-            </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Trạm Kỹ Thuật Vi tính An Tâm
+              Tổng Quan Vận Hành
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 max-w-2xl">
-              Bàn điều khiển Kỹ thuật viên &amp; Giám sát vận hành - Kiểm định linh kiện, cứu hộ Onsite và bảo hành refurbished PC.
+              Theo dõi tồn kho, tiếp nhận sửa chữa và điều phối cứu hộ kỹ thuật.
             </p>
           </div>
 
           <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-100 border border-slate-200 self-start lg:self-center">
             <span className="px-3.5 py-1.5 rounded-md text-xs font-semibold text-blue-700 bg-white shadow-2xs">
-              Hôm nay (20/05/2025)
+              Hôm nay
             </span>
             <span className="px-3 py-1 text-xs text-slate-500 font-mono">Ca 1</span>
           </div>
@@ -109,7 +100,7 @@ export default function DashboardPage() {
           {/* KPI 1 */}
           <div className="rounded-xl bg-white border border-slate-200 p-5 hover:border-blue-300 hover:shadow-xs transition-all shadow-2xs">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-medium text-slate-500">Máy sẵn sàng bán</span>
+              <span className="text-xs font-medium text-slate-500">Máy sẵn bán (RTS)</span>
               <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
                 <Monitor className="w-5 h-5 text-blue-600" />
               </span>
@@ -136,7 +127,7 @@ export default function DashboardPage() {
           {/* KPI 2 */}
           <div className="rounded-xl bg-white border border-slate-200 p-5 hover:border-blue-300 hover:shadow-xs transition-all shadow-2xs">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-medium text-slate-500">Phiếu đang xử lý</span>
+              <span className="text-xs font-medium text-slate-500">Phiếu đang sửa</span>
               <span className="p-2 rounded-lg bg-blue-50 text-blue-600">
                 <Wrench className="w-5 h-5 text-blue-600" />
               </span>
@@ -148,7 +139,7 @@ export default function DashboardPage() {
               <span className="text-xs text-blue-600 font-medium">tiến độ 65%</span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">2 chờ RAM/SSD • 1 chờ giao</span>
+              <span className="text-slate-500">2 chờ linh kiện • 1 chờ giao</span>
               <span className="px-2 py-0.5 rounded font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                 Đang sửa
               </span>
@@ -161,7 +152,7 @@ export default function DashboardPage() {
           {/* KPI 3 */}
           <div className="rounded-xl bg-white border border-slate-200 p-5 hover:border-blue-300 hover:shadow-xs transition-all shadow-2xs">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-medium text-slate-500">Lịch cứu hộ Onsite</span>
+              <span className="text-xs font-medium text-slate-500">Cứu hộ tận nơi</span>
               <span className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
                 <Bike className="w-5 h-5 text-indigo-600" />
               </span>
@@ -173,9 +164,9 @@ export default function DashboardPage() {
               <span className="text-xs text-indigo-600 font-medium">điểm hẹn</span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">Long An - Tây Ninh</span>
+              <span className="text-slate-500">Bán kính 5km</span>
               <span className="px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                Đúng tiến độ
+                Đang xử lý
               </span>
             </div>
             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2.5 overflow-hidden">
@@ -186,7 +177,7 @@ export default function DashboardPage() {
           {/* KPI 4 */}
           <div className="rounded-xl bg-white border border-slate-200 p-5 hover:border-red-300 hover:shadow-xs transition-all shadow-2xs">
             <div className="flex items-start justify-between">
-              <span className="text-xs font-medium text-slate-500">Cảnh báo hết hạn BH</span>
+              <span className="text-xs font-medium text-slate-500">Sắp hết bảo hành</span>
               <span className="p-2 rounded-lg bg-red-50 text-red-600">
                 <AlertTriangle className="w-5 h-5 text-red-600" />
               </span>
@@ -198,9 +189,9 @@ export default function DashboardPage() {
               <span className="text-xs text-red-600 font-semibold">máy trong tuần</span>
             </div>
             <div className="mt-3 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500">Gọi gia hạn &amp; vệ sinh</span>
+              <span className="text-slate-500">Gọi nhắc bảo dưỡng</span>
               <span className="px-2 py-0.5 rounded font-semibold bg-red-50 text-red-700 border border-red-200">
-                Khẩn cấp
+                Theo dõi
               </span>
             </div>
             <div className="w-full bg-slate-100 h-1.5 rounded-full mt-2.5 overflow-hidden">
@@ -223,13 +214,13 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                    Lịch điều phối cứu hộ Onsite hôm nay
+                    Lịch Cứu Hộ Tận Nơi
                   </h2>
-                  <p className="text-xs text-slate-500">Nhiệm vụ kỹ thuật lưu động tại địa phương (Bán kính 10km)</p>
+                  <p className="text-xs text-slate-500">Điều phối kỹ thuật viên trong bán kính 5km</p>
                 </div>
               </div>
               <span className="self-start sm:self-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                KTV chính: Huỳnh Minh Trí
+                KTV: Huỳnh Minh Trí
               </span>
             </div>
 
@@ -323,7 +314,7 @@ export default function DashboardPage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 ml-auto"
                     >
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Cập nhật bước tiếp theo</span>
+                      <span>Cập nhật tiến độ</span>
                     </button>
                   </div>
                 </div>
@@ -331,7 +322,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Section 2: Hàng máy nhập kho cần kiểm định (Trạng thái Đang kiểm tra) */}
+          {/* Section 2: Hàng máy nhập kho cần kiểm định */}
           <div className="rounded-xl bg-white border border-slate-200 p-6 sm:p-7 shadow-xs">
             <div className="flex items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
@@ -340,16 +331,13 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                    Máy đang trong quy trình kiểm tra (Testing Status)
+                    Máy Đang Kiểm Định (QC)
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Trạng thái kiểm định đạt chuẩn trước khi niêm yết lên kệ bán
+                    Đo kiểm tra tải và nhiệt độ trước khi đưa lên kệ
                   </p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                QC Hub Long An - Tây Ninh
-              </span>
             </div>
 
             <div className="grid grid-cols-1 gap-5">
@@ -495,28 +483,28 @@ export default function DashboardPage() {
                 className="p-3.5 rounded-xl bg-blue-50/60 hover:bg-blue-50 border border-blue-200 text-blue-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
                 <PlusCircle className="w-6 h-6 text-blue-600" />
-                <span className="text-xs font-bold">Tiếp Nhận Máy Mới</span>
+                <span className="text-xs font-bold">Tạo Phiếu Sửa</span>
               </Link>
               <Link
                 href="/kho-may"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
                 <FilePlus className="w-6 h-6 text-slate-700" />
-                <span className="text-xs font-bold">Nhập Máy Vào Kho</span>
+                <span className="text-xs font-bold">Nhập Máy Mới</span>
               </Link>
               <Link
                 href="/cuu-ho-onsite"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
                 <Send className="w-6 h-6 text-slate-700" />
-                <span className="text-xs font-bold">Điều Phối 10km</span>
+                <span className="text-xs font-bold">Cứu Hộ 5km</span>
               </Link>
               <Link
                 href="/tra-cuu-bao-hanh"
                 className="p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-all flex flex-col items-center justify-center text-center gap-1.5"
               >
                 <ShieldCheck className="w-6 h-6 text-slate-700" />
-                <span className="text-xs font-bold">Tra Cứu Khách</span>
+                <span className="text-xs font-bold">Tra Cứu BH</span>
               </Link>
             </div>
           </div>
