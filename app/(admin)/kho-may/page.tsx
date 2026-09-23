@@ -683,7 +683,7 @@ export default function KhoMayPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm Service Tag, Model, Kệ..."
+              placeholder="Tìm Service Tag, Model..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
@@ -757,7 +757,6 @@ export default function KhoMayPage() {
                 <th className="py-3 px-4">Model</th>
                 <th className="py-3 px-4">Service Tag</th>
                 <th className="py-3 px-4">Cấu Hình</th>
-                <th className="py-3 px-4">Kệ</th>
                 <th className="py-3 px-4">Trạng Thái</th>
                 <th className="py-3 px-4">Tồn Kho</th>
                 <th className="py-3 px-4 text-right">Giá Bán</th>
@@ -767,7 +766,7 @@ export default function KhoMayPage() {
             <tbody className="divide-y divide-slate-200 text-sm">
               {filteredInventory.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     Không tìm thấy thiết bị nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -828,14 +827,6 @@ export default function KhoMayPage() {
                               </span>
                             );
                           })()}
-                        </div>
-                      </td>
-
-                      {/* Shelf location */}
-                      <td className="py-3.5 px-4">
-                        <div className="inline-flex items-center gap-1 text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-mono">
-                          <MapPin className="w-3 h-3 text-slate-400" />
-                          {item.shelf_location}
                         </div>
                       </td>
 
@@ -1014,7 +1005,7 @@ export default function KhoMayPage() {
                   type="text"
                   value={partSearchQuery}
                   onChange={(e) => setPartSearchQuery(e.target.value)}
-                  placeholder="Tìm linh kiện, kệ kho..."
+                  placeholder="Tìm linh kiện..."
                   className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
                 />
                 {partSearchQuery && (
@@ -1101,7 +1092,6 @@ export default function KhoMayPage() {
                     <th className="py-3 px-4">Linh Kiện</th>
                     <th className="py-3 px-4">Loại</th>
                     <th className="py-3 px-4">Tình Trạng</th>
-                    <th className="py-3 px-4">Kệ</th>
                     <th className="py-3 px-4">Tồn Kho</th>
                     <th className="py-3 px-4">Giá Nhập</th>
                     <th className="py-3 px-4 text-right">Giá Bán</th>
@@ -1112,7 +1102,7 @@ export default function KhoMayPage() {
                 <tbody className="divide-y divide-slate-200 text-sm">
                   {filteredSpareParts.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
                         Không tìm thấy linh kiện nào phù hợp với bộ lọc hiện tại.
                       </td>
                     </tr>
@@ -1156,14 +1146,6 @@ export default function KhoMayPage() {
                                 Zin bóc máy (Cũ)
                               </span>
                             )}
-                          </td>
-
-                          {/* Shelf Location */}
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-1 text-xs text-slate-600 font-medium">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{part.shelf_location || 'Kệ Linh Kiện L1'}</span>
-                            </div>
                           </td>
 
                           {/* Stock Quantity */}
@@ -1656,19 +1638,6 @@ export default function KhoMayPage() {
                   />
                 </div>
 
-                {/* Vị trí kệ */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Vị Trí Kệ
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Kệ A1-04"
-                    value={newItem.shelf_location}
-                    onChange={(e) => setNewItem({ ...newItem, shelf_location: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
 
                 {/* Initial Stock */}
                 <div>
@@ -1787,7 +1756,6 @@ export default function KhoMayPage() {
                   </div>
                   <div className="text-slate-500 mt-0.5 flex items-center gap-2">
                     <span>Tag: <strong className="text-blue-700 font-mono">{sellingItem.service_tag}</strong></span>
-                    <span>• Kệ: {sellingItem.shelf_location}</span>
                   </div>
                 </div>
                 <div className="text-right">
@@ -2037,19 +2005,6 @@ export default function KhoMayPage() {
                   </select>
                 </div>
 
-                {/* Shelf Location */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Vị Trí Kệ
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Kệ L1-03"
-                    value={newPart.shelf_location}
-                    onChange={(e) => setNewPart({ ...newPart, shelf_location: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  />
-                </div>
 
                 {/* Initial Stock */}
                 <div>

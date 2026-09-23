@@ -574,9 +574,6 @@ function ProductsCatalogContent() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-slate-600 text-[11px]">
                   <div>
-                    • {t.qcModal.shelfLocation} <strong className="text-slate-900">{selectedProduct.shelfLocation}</strong>
-                  </div>
-                  <div>
                     • {t.qcModal.burnInDuration} <strong className="text-slate-900 font-mono">{selectedProduct.burnInDuration} {t.qcModal.minutes}</strong>
                   </div>
                   <div>
