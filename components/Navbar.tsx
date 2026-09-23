@@ -50,8 +50,12 @@ export function Navbar() {
             {t.whyUs}
           </Link>
           <Link
-            href="/#danh-muc-san-pham"
-            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            href="/danh-muc-san-pham"
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+              pathname === '/danh-muc-san-pham'
+                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
+                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
+            }`}
           >
             {t.products}
           </Link>
@@ -168,9 +172,11 @@ export function Navbar() {
             {t.whyUs}
           </Link>
           <Link
-            href="/#danh-muc-san-pham"
+            href="/danh-muc-san-pham"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
+            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+              pathname === '/danh-muc-san-pham' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
+            }`}
           >
             {t.products}
           </Link>

@@ -262,7 +262,7 @@ export default function WhyUsPage() {
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
-              href="/#danh-muc-san-pham"
+              href="/danh-muc-san-pham"
               className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors"
             >
               {t.btnBrowseInventory}

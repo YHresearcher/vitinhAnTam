@@ -28,33 +28,7 @@ import {
   ENGLISH_PRODUCT_DETAILS,
   ENGLISH_FAQS,
 } from '@/lib/translations';
-
-interface ShowcaseItem {
-  id: string;
-  name: string;
-  serviceTag: string;
-  img: string;
-  category: 'office' | 'laptop' | 'workstation';
-  badge: string;
-  subBadge: string;
-  desc: string;
-  price: number;
-  specs: {
-    cpu: string;
-    ram: string;
-    storage: string;
-    highlight: string;
-    gift: string;
-  };
-  stockCount: number;
-  shelfLocation: string;
-  qcStatus: string;
-  burnInDuration: number;
-  isSold?: boolean;
-  customerName?: string;
-  customerArea?: string;
-  handoverDate?: string;
-}
+import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 export default function HomePage() {
   const router = useRouter();
@@ -69,8 +43,6 @@ export default function HomePage() {
 
   // Category filter
   const [activeCategory, setActiveCategory] = useState<'all' | 'office' | 'laptop' | 'workstation'>('all');
-  // Status tab: 'in_stock' (Máy đang sẵn) | 'sold' (Máy đã bán) | 'all' (Tất cả)
-  const [statusTab, setStatusTab] = useState<'in_stock' | 'sold' | 'all'>('in_stock');
 
   // Modal for QC & S/N inspection
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
@@ -90,318 +62,13 @@ export default function HomePage() {
     router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
   };
 
-  // Raw base products (Phân chia minh bạch: Máy đang sẵn & Máy đã bán)
-  const baseProducts = [
-    // --- 1. MÁY ĐANG SẴN TẠI SHOP (IN-STOCK) ---
-    {
-      id: 'p2',
-      serviceTag: 'HP-400G5M',
-      img: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80',
-      category: 'office' as const,
-      price: 4350000,
-      stockCount: inventory.find((i) => i.service_tag === 'HP-400G5M')?.quantity ?? 5,
-      shelfLocation: isEn ? 'Cabinet Mini B2' : (inventory.find((i) => i.service_tag === 'HP-400G5M')?.shelf_location || 'Kệ A1 - Tầng 2'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 30,
-      isSold: false,
-      vi: {
-        name: 'HP ProDesk 400 G5 Mini (Siêu Nhỏ Gọn)',
-        badge: 'TIẾT KIỆM ĐIỆN 65W',
-        subBadge: 'Nhỏ như quyển sổ tay',
-        desc: 'Gọn gàng trên bàn làm việc, tích hợp sẵn Wi-Fi + Bluetooth.',
-        specs: {
-          cpu: 'Core i5-8500T (Tiết kiệm điện, mát máy)',
-          ram: 'RAM 8GB DDR4 (Hỗ trợ nâng lên 32GB)',
-          storage: 'SSD M.2 NVMe 256GB Siêu Tốc (Mới BH 36T)',
-          highlight: 'Có Wi-Fi AC + Bluetooth bắt sóng xa',
-          gift: 'Tặng combo phím chuột văn phòng mới',
-        },
-      },
-    },
-    {
-      id: 'p3',
-      serviceTag: 'TP-994L2A',
-      img: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80',
-      category: 'laptop' as const,
-      price: 6850000,
-      stockCount: inventory.find((i) => i.service_tag === 'TP-994L2A')?.quantity ?? 3,
-      shelfLocation: isEn ? 'Laptop Display Area C' : (inventory.find((i) => i.service_tag === 'TP-994L2A')?.shelf_location || 'Kệ Laptop L1'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 60,
-      isSold: false,
-      vi: {
-        name: 'Lenovo ThinkPad T480s (Doanh Nhân Vỏ Carbon)',
-        badge: 'CHUẨN ĐỘ BỀN QUÂN ĐỘI',
-        subBadge: 'Pin 4-6h liên tục',
-        desc: 'Khung magie siêu bền 1.3kg, bàn phím gõ êm số 1 thế giới.',
-        specs: {
-          cpu: 'Core i5-8350U vPro (Bảo mật phần cứng)',
-          ram: 'RAM 16GB DDR4 2400MHz',
-          storage: 'SSD NVMe 256GB Tốc độ cao (Mới BH 36T)',
-          highlight: 'Màn hình 14.0 inch Full HD IPS chống chói',
-          gift: 'Tặng túi chống sốc cao cấp + Chuột quang',
-        },
-      },
-    },
-    {
-      id: 'p4',
-      serviceTag: 'DL-7490A1',
-      img: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&auto=format&fit=crop&q=80',
-      category: 'laptop' as const,
-      price: 5950000,
-      stockCount: inventory.find((i) => i.service_tag === 'DL-7490A1')?.quantity ?? 2,
-      shelfLocation: isEn ? 'Technical Storage D1' : (inventory.find((i) => i.service_tag === 'DL-7490A1')?.shelf_location || 'Tủ bảo quản kỹ thuật D1'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 40,
-      isSold: false,
-      vi: {
-        name: 'Dell Latitude 7490 Nhôm Nguyên Khối',
-        badge: 'VIỀN MÀN HÌNH SIÊU MỎNG',
-        subBadge: 'Nhẹ 1.4kg',
-        desc: 'Vỏ hợp kim Carbon đen mờ sang trọng, mở rộng góc 180 độ.',
-        specs: {
-          cpu: 'Core i5-8350U (4 nhân 8 luồng upto 3.60GHz)',
-          ram: 'RAM 8GB DDR4 (Lên 16GB +400k)',
-          storage: 'SSD M.2 256GB (Khởi động máy 5 giây)',
-          highlight: 'Bàn phím có đèn LED nền làm việc ban đêm',
-          gift: 'Balo chống nước An Tâm + Sạc Oval zin',
-        },
-      },
-    },
-    {
-      id: 'p5',
-      serviceTag: 'WS-T3620',
-      img: 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&auto=format&fit=crop&q=80',
-      category: 'workstation' as const,
-      price: 7850000,
-      stockCount: inventory.find((i) => i.service_tag === 'WS-T3620')?.quantity ?? 1,
-      shelfLocation: isEn ? 'Technical Inspection Area E' : (inventory.find((i) => i.service_tag === 'WS-T3620')?.shelf_location || 'Khu vực kiểm tra kỹ thuật E'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 90,
-      isSold: false,
-      vi: {
-        name: 'Dell Precision Tower 3620 Workstation',
-        badge: 'ĐỒ HỌA CHUYÊN NGHIỆP',
-        subBadge: 'Nguồn 80 Plus Gold',
-        desc: 'Chuyên trị AutoCAD, Revit, SketchUp, Photoshop mượt mà.',
-        specs: {
-          cpu: 'Intel Xeon E3-1240 v5 / Core i7-6700',
-          ram: 'RAM 16GB DDR4 ECC Tự Sửa Lỗi',
-          storage: 'SSD 256GB + HDD 1TB Lưu Trữ Dữ Liệu Lớn',
-          highlight: 'Card rời NVIDIA Quadro Render 24/24',
-          gift: 'Cài đặt miễn phí bộ Adobe, CAD bản quyền ổn định',
-        },
-      },
-    },
-    {
-      id: 'p6',
-      serviceTag: 'DELL-3670-MT',
-      img: 'https://images.unsplash.com/photo-1547082299-de196ea013d6?w=800&auto=format&fit=crop&q=80',
-      category: 'office' as const,
-      price: 7500000,
-      stockCount: inventory.find((i) => i.service_tag === 'DELL-3670-MT')?.quantity ?? 2,
-      shelfLocation: isEn ? 'Testing Rack C1' : (inventory.find((i) => i.service_tag === 'DELL-3670-MT')?.shelf_location || 'Kệ Kiểm Thử C1'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 45,
-      isSold: false,
-      vi: {
-        name: 'Dell Vostro 3670 MT (Core i7 Đa Nhiệm)',
-        badge: 'HIỆU NĂNG CAO CẤP',
-        subBadge: 'Thùng máy tản nhiệt êm',
-        desc: 'Xử lý mượt mà tác vụ văn phòng nặng, xuất nhiều màn hình cùng lúc.',
-        specs: {
-          cpu: 'Core i7-8700 (6 nhân 12 luồng Turbo 4.6GHz)',
-          ram: 'RAM 16GB DDR4 Kênh Đôi',
-          storage: 'SSD 512GB NVMe Mới 100% (BH 36T)',
-          highlight: 'Card đồ họa rời GTX 1050Ti 4GB GDDR5',
-          gift: 'Combo phím chuột giả cơ + Lót chuột lớn',
-        },
-      },
-    },
-    {
-      id: 'p7',
-      serviceTag: 'NB-ASUS-2024',
-      img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80',
-      category: 'laptop' as const,
-      price: 13500000,
-      stockCount: inventory.find((i) => i.service_tag === 'NB-ASUS-2024')?.quantity ?? 1,
-      shelfLocation: isEn ? 'Laptop Rack L2' : (inventory.find((i) => i.service_tag === 'NB-ASUS-2024')?.shelf_location || 'Kệ Laptop L2'),
-      qcStatus: 'ready_to_sell',
-      burnInDuration: 45,
-      isSold: false,
-      vi: {
-        name: 'Asus Zenbook 14 OLED UX3402',
-        badge: 'MÀN HÌNH 2.8K OLED 90HZ',
-        subBadge: 'Siêu mỏng nhẹ 1.39kg',
-        desc: 'Màn hình màu 100% DCI-P3 chuẩn điện ảnh, vỏ nhôm xanh sang trọng.',
-        specs: {
-          cpu: 'Core i5-1240P (12 nhân 16 luồng thế hệ mới)',
-          ram: 'RAM 16GB LPDDR5 4800MHz Siêu Nhanh',
-          storage: 'SSD 512GB PCIe 4.0 NVMe Tốc Độ Cao',
-          highlight: 'Màn hình OLED 2.8K sắc nét bảo vệ mắt',
-          gift: 'Bao da chính hãng + Chuột Bluetooth',
-        },
-      },
-    },
-
-    // --- 2. MÁY ĐÃ BÁN / ĐÃ BÀN GIAO THỰC TẾ (SOLD ARCHIVE) ---
-    {
-      id: 's1',
-      serviceTag: 'ST-8F4K92X',
-      img: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=800&auto=format&fit=crop&q=80',
-      category: 'office' as const,
-      price: 4950000,
-      stockCount: 0,
-      shelfLocation: isEn ? 'Delivered' : 'Đã bàn giao khách hàng',
-      qcStatus: 'sold',
-      burnInDuration: 45,
-      isSold: true,
-      customerName: 'Cty TNHH Vận Tải Long An (Anh Tuấn)',
-      customerArea: 'KCN Lợi Bình Nhơn, Tân An',
-      handoverDate: '15/05/2025',
-      vi: {
-        name: 'Dell OptiPlex 7060 SFF Đồng Bộ',
-        badge: 'ĐÃ BÀN GIAO TẬN NƠI',
-        subBadge: 'Bảo hành 1 đổi 1 2h',
-        desc: 'Đã hoàn tất bàn giao và lắp đặt mạng LAN cho bộ phận kế toán.',
-        specs: {
-          cpu: 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
-          ram: 'RAM 16GB DDR4 Bus 2666',
-          storage: 'SSD NVMe 256GB Kingston Mới 100%',
-          highlight: 'Hợp đồng bảo trì định kỳ 10 máy OptiPlex',
-          gift: 'Kèm màn hình Dell 24" & bộ phím chuột đồng bộ',
-        },
-      },
-    },
-    {
-      id: 's2',
-      serviceTag: 'PC-GAMING-9921',
-      img: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&auto=format&fit=crop&q=80',
-      category: 'workstation' as const,
-      price: 16800000,
-      stockCount: 0,
-      shelfLocation: isEn ? 'Delivered' : 'Đã bàn giao khách hàng',
-      qcStatus: 'sold',
-      burnInDuration: 60,
-      isSold: true,
-      customerName: 'Chú Bảy Tân An (Nguyễn Văn Bảy)',
-      customerArea: 'Số 15 Huỳnh Văn Nhất, P.3, Tân An',
-      handoverDate: '20/04/2025',
-      vi: {
-        name: 'PC Gaming & Đồ Họa Core i5 13400F',
-        badge: 'ĐÃ GIAO KHÁCH HÀNG',
-        subBadge: 'Bảo hành 24 tháng',
-        desc: 'Bộ PC dựng hình AutoCAD và render video cho văn phòng gia đình.',
-        specs: {
-          cpu: 'Core i5-13400F (10C/16T Turbo 4.6GHz)',
-          ram: 'RAM 32GB DDR4 Bus 3200 Tản Thép',
-          storage: 'SSD NVMe 512GB Kingston NV2 Gen4',
-          highlight: 'Card rời RTX 3060 12GB GDDR6 Dual Fan',
-          gift: 'Nguồn Xigmatek 650W 80 Plus + Vỏ case kính',
-        },
-      },
-    },
-    {
-      id: 's3',
-      serviceTag: 'HP-840G5-HQ',
-      img: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800&auto=format&fit=crop&q=80',
-      category: 'laptop' as const,
-      price: 6200000,
-      stockCount: 0,
-      shelfLocation: isEn ? 'Delivered' : 'Đã bàn giao khách hàng',
-      qcStatus: 'sold',
-      burnInDuration: 45,
-      isSold: true,
-      customerName: 'Cty Thiết Kế Hoàng Quân (Anh Quân)',
-      customerArea: 'Số 88 Hùng Vương, P.2, Tân An',
-      handoverDate: '02/05/2025',
-      vi: {
-        name: 'HP EliteBook 840 G5 Vỏ Nhôm Bạc',
-        badge: 'ĐÃ BÀN GIAO DOANH NGHIỆP',
-        subBadge: 'Hóa đơn VAT đầy đủ',
-        desc: 'Máy làm việc cơ động cho kỹ sư công trình, bàn phím gõ êm nhẹ.',
-        specs: {
-          cpu: 'Core i5-8250U (4 nhân 8 luồng)',
-          ram: 'RAM 16GB DDR4 Kênh Đôi',
-          storage: 'SSD 256GB M.2 NVMe Siêu Bền',
-          highlight: 'Màn hình 14.0" Full HD IPS chống chói',
-          gift: 'Dock chuyển đổi Type-C + Cặp da cao cấp',
-        },
-      },
-    },
-    {
-      id: 's4',
-      serviceTag: 'HP-400G4-POS',
-      img: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80',
-      category: 'office' as const,
-      price: 3450000,
-      stockCount: 0,
-      shelfLocation: isEn ? 'Delivered' : 'Đã bàn giao khách hàng',
-      qcStatus: 'sold',
-      burnInDuration: 30,
-      isSold: true,
-      customerName: 'Chị Lan - Tạp hoá Tân Tây',
-      customerArea: 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa',
-      handoverDate: '18/05/2025',
-      vi: {
-        name: 'HP ProDesk 400 G4 Mini (Máy Tính Tiền POS)',
-        badge: 'ĐÃ LẮP ĐẶT TẬN NƠI',
-        subBadge: 'Cài sẵn KiotViet & MISA',
-        desc: 'Hệ thống bán hàng chạy 24/7 ổn định, kích thước siêu nhỏ gọn.',
-        specs: {
-          cpu: 'Core i3-7100T (Tiết kiệm điện 35W)',
-          ram: 'RAM 8GB DDR4 Bus 2400',
-          storage: 'SSD 128GB NVMe + HDD 500GB',
-          highlight: 'Lắp gọn sau lưng màn hình POS',
-          gift: 'KTV hỗ trợ đấu nối máy in nhiệt & quét mã vạch',
-        },
-      },
-    },
-  ];
-
-  const showcaseProducts: ShowcaseItem[] = baseProducts.map((p) => {
-    const en = ENGLISH_PRODUCT_DETAILS[p.id];
-    return {
-      id: p.id,
-      serviceTag: p.serviceTag,
-      img: p.img,
-      category: p.category,
-      price: p.price,
-      stockCount: p.stockCount,
-      shelfLocation: p.shelfLocation,
-      qcStatus: p.qcStatus,
-      burnInDuration: p.burnInDuration,
-      isSold: p.isSold,
-      customerName: p.customerName,
-      customerArea: p.customerArea,
-      handoverDate: p.handoverDate,
-      name: isEn && en ? en.name : p.vi.name,
-      badge: isEn && en ? en.badge : p.vi.badge,
-      subBadge: isEn && en ? en.subBadge : p.vi.subBadge,
-      desc: isEn && en ? en.desc : p.vi.desc,
-      specs: isEn && en ? {
-        cpu: en.cpu,
-        ram: en.ram,
-        storage: en.storage,
-        highlight: en.highlight,
-        gift: en.gift,
-      } : p.vi.specs,
-    };
-  });
-
-  const inStockProducts = showcaseProducts.filter((p) => !p.isSold);
-  const soldProducts = showcaseProducts.filter((p) => p.isSold);
-
+  // Trang chủ chỉ thể hiện máy đang có sẵn tại shop
+  const allProducts = getShowcaseProducts(isEn, inventory);
+  const inStockProducts = allProducts.filter((p) => !p.isSold);
   const filteredInStock = inStockProducts.filter((p) => {
     if (activeCategory === 'all') return true;
     return p.category === activeCategory;
   });
-
-  const filteredSold = soldProducts.filter((p) => {
-    if (activeCategory === 'all') return true;
-    return p.category === activeCategory;
-  });
-
   const totalReadyStock = inStockProducts.reduce((acc, curr) => acc + curr.stockCount, 0);
 
 
@@ -534,7 +201,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 2. KHỐI 1: DANH MỤC THIẾT BỊ (PHÂN CHIA 2 PHẦN: MÁY ĐANG SẴN & MÁY ĐÃ BÁN) */}
+        {/* 2. KHỐI 1: DANH MỤC MÁY ĐANG CÓ SẴN TẠI SHOP */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20 font-inter" id="danh-muc-san-pham">
           {/* Header */}
           <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -549,87 +216,13 @@ export default function HomePage() {
             <div className="text-xs text-[#6E5D53] font-medium bg-[#FAF7F2] px-3.5 py-2 rounded-lg border border-[#E8E2D9] inline-flex items-center gap-2 self-start sm:self-auto">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               <span>
-                {t.products.readyCount} <strong className="text-[#C0392B] font-bold">{totalReadyStock}</strong> {t.products.readyCountSuffix}
+                {t.products.readyCount} <strong className="text-[#C0392B] font-bold font-mono">{totalReadyStock}</strong> {t.products.readyCountSuffix}
               </span>
             </div>
           </div>
 
-          {/* Controls: Status Tabs (Máy Sẵn vs Máy Đã Bán) & Category Filter Chips */}
-          <div className="space-y-4 mb-8">
-            {/* Status Switcher Tabs */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-1.5 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
-              <div className="inline-flex p-1 rounded-lg bg-white border border-[#E8E2D9] gap-1 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setStatusTab('in_stock')}
-                  className={`px-3.5 sm:px-4 py-2 rounded-md font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
-                    statusTab === 'in_stock'
-                      ? 'bg-[#C0392B] text-white shadow-xs'
-                      : 'text-[#6E5D53] hover:text-[#2B1810]'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'in_stock' ? 'bg-white' : 'bg-emerald-500'}`}></span>
-                  <span>{t.products.tabInStock}</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[11px] font-mono ${
-                    statusTab === 'in_stock' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-800'
-                  }`}>
-                    {inStockProducts.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStatusTab('sold')}
-                  className={`px-3.5 sm:px-4 py-2 rounded-md font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
-                    statusTab === 'sold'
-                      ? 'bg-[#2B1810] text-white shadow-xs'
-                      : 'text-[#6E5D53] hover:text-[#2B1810]'
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'sold' ? 'bg-white' : 'bg-slate-400'}`}></span>
-                  <span>{t.products.tabSold}</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[11px] font-mono ${
-                    statusTab === 'sold' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    {soldProducts.length}
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setStatusTab('all')}
-                  className={`px-3 sm:px-3.5 py-2 rounded-md font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 ${
-                    statusTab === 'all'
-                      ? 'bg-[#6E5D53] text-white shadow-xs'
-                      : 'text-[#6E5D53] hover:text-[#2B1810]'
-                  }`}
-                >
-                  <span>{t.products.tabAll}</span>
-                </button>
-              </div>
-
-              {/* Informational Sub-badge */}
-              <div className="text-xs text-[#6E5D53] px-2 sm:px-3 font-medium">
-                {statusTab === 'in_stock' && (
-                  <span className="text-emerald-700 font-semibold flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    Đã kiểm định 24 bước • Sẵn sàng giao hỏa tốc 2 giờ
-                  </span>
-                )}
-                {statusTab === 'sold' && (
-                  <span className="text-slate-600 font-semibold flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
-                    Hồ sơ máy đã giao thực tế • Đang bảo hộ 1 đổi 1 tận nơi
-                  </span>
-                )}
-                {statusTab === 'all' && (
-                  <span className="text-[#6E5D53]">
-                    Hiển thị cả máy sẵn kho và danh mục hồ sơ đã bàn giao
-                  </span>
-                )}
-              </div>
-            </div>
-
+          {/* Controls: Category Filter Chips & Quick Note */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
             {/* Category Filter Chips */}
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -677,246 +270,141 @@ export default function HomePage() {
                 {t.products.catWorkstation}
               </button>
             </div>
+
+            {/* Informational Sub-badge */}
+            <div className="text-xs text-emerald-800 font-medium flex items-center gap-1.5 px-1">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{isEn ? '100% In-Stock • 2h Fast Delivery in Tan An' : '100% Máy sẵn kho • Giao hỏa tốc 2 giờ TP. Tân An'}</span>
+            </div>
           </div>
 
-          {/* PHẦN 1: MÁY ĐANG SẴN TẠI SHOP (IN-STOCK) */}
-          {(statusTab === 'in_stock' || statusTab === 'all') && (
-            <div className="space-y-4 mb-12">
-              {statusTab === 'all' && (
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <h3 className="text-base sm:text-lg font-black text-[#2B1810] uppercase tracking-wide">
-                      {t.products.tabInStock}
-                    </h3>
-                  </div>
-                  <span className="text-xs text-[#6E5D53] font-medium">
-                    {filteredInStock.length} cấu hình sẵn sàng giao
-                  </span>
-                </div>
-              )}
-
-              {filteredInStock.length === 0 ? (
-                <div className="p-8 rounded-lg bg-white border border-slate-200 text-center text-xs text-slate-500">
-                  {t.products.emptyInStock}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredInStock.map((prod) => (
-                    <div
-                      key={prod.id}
-                      className="p-4 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col justify-between hover:border-[#C0392B]/50 hover:shadow-md transition-all font-inter group relative"
-                    >
-                      <div>
-                        <div className="relative h-44 rounded-md overflow-hidden mb-3.5 bg-slate-50 border border-slate-200">
-                          <Image
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            alt={prod.name}
-                            src={prod.img}
-                            unoptimized
-                          />
-                          <span className="absolute top-2 left-2 bg-[#D9531E] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs z-10 font-inter">
-                            {prod.badge}
-                          </span>
-                          <span className="absolute bottom-2 right-2 bg-white/95 text-slate-700 border border-slate-200 text-[10px] font-medium px-2 py-0.5 rounded font-inter">
-                            {prod.subBadge}
-                          </span>
-                          {/* Real stock badge */}
-                          <span className="absolute top-2 right-2 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1 font-inter">
-                            <Check className="w-3 h-3" strokeWidth={2} />
-                            <span>{t.products.inStock} {prod.stockCount} {t.products.inStockSuffix}</span>
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-1 mb-1">
-                          <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">{prod.name}</h3>
-                          <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 font-semibold shrink-0 border border-slate-200">
-                            S/N: {prod.serviceTag}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-slate-500 font-inter line-clamp-2 mt-0.5">{prod.desc}</p>
-                        <ul className="my-3 space-y-1.5 text-xs text-slate-700 font-inter">
-                          <li className="flex items-center gap-1.5">
-                            <Cpu className="w-3.5 h-3.5 text-[#C0392B] shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.cpu}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-3.5 h-3.5 text-center font-bold text-[10px] text-[#C0392B]">RAM</span>
-                            <span className="truncate">{prod.specs.ram}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <HardDrive className="w-3.5 h-3.5 text-[#C0392B] shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.storage}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5 text-emerald-800 font-medium">
-                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.highlight}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5 text-slate-500">
-                            <Gift className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.gift}</span>
-                          </li>
-                        </ul>
-                      </div>
-
-                      <div className="pt-3 border-t border-slate-200 mt-2 space-y-2">
-                        <div className="flex items-baseline justify-between font-inter">
-                          <span className="text-xs text-slate-500">{t.products.priceLabel}</span>
-                          <span className="text-lg font-bold text-[#C0392B] font-mono">
-                            {formatVND(prod.price)}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedProduct(prod)}
-                            className="w-full py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs tracking-wide transition-colors text-center block shadow-xs border border-slate-200"
-                          >
-                            {t.products.btnInspect}
-                          </button>
-                          <Link
-                            href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent(isEn ? 'Purchase In-Stock Unit' : 'Đặt mua máy có sẵn')}`}
-                            className="w-full py-2 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-colors text-center block shadow-xs"
-                          >
-                            {t.products.btnOrder}
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* PHẦN 2: MÁY ĐÃ BÀN GIAO THỰC TẾ (SOLD ARCHIVE) */}
-          {(statusTab === 'sold' || statusTab === 'all') && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-                  <h3 className="text-base sm:text-lg font-black text-[#2B1810] uppercase tracking-wide">
-                    {t.products.tabSold}
-                  </h3>
-                </div>
-                <p className="text-xs text-[#6E5D53]">
-                  Hồ sơ thiết bị đã bàn giao thực tế tại Long An • Tra cứu bảo hành minh bạch theo S/N
-                </p>
+          {/* MÁY ĐANG SẴN TẠI SHOP (IN-STOCK) */}
+          <div className="space-y-4 mb-8">
+            {filteredInStock.length === 0 ? (
+              <div className="p-8 rounded-lg bg-white border border-slate-200 text-center text-xs text-slate-500">
+                {t.products.emptyInStock}
               </div>
-
-              {filteredSold.length === 0 ? (
-                <div className="p-8 rounded-lg bg-white border border-slate-200 text-center text-xs text-slate-500">
-                  {t.products.emptySold}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredSold.map((prod) => (
-                    <div
-                      key={prod.id}
-                      className="p-4 rounded-lg bg-[#FAF7F2] border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-400 transition-all font-inter group relative"
-                    >
-                      <div>
-                        <div className="relative h-44 rounded-md overflow-hidden mb-3.5 bg-slate-100 border border-slate-200">
-                          <Image
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                            className="object-cover group-hover:scale-105 transition-transform duration-500 grayscale-[20%]"
-                            alt={prod.name}
-                            src={prod.img}
-                            unoptimized
-                          />
-                          {/* Sold Badge */}
-                          <span className="absolute top-2 left-2 bg-[#2B1810] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs z-10 font-inter flex items-center gap-1">
-                            <Check className="w-3 h-3 text-emerald-400" strokeWidth={2} />
-                            <span>{t.products.soldBadge}</span>
-                          </span>
-                          {/* Service Tag */}
-                          <span className="absolute top-2 right-2 bg-white/95 text-slate-800 font-mono text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200 shadow-xs z-10">
-                            S/N: {prod.serviceTag}
-                          </span>
-                          {/* Delivery date badge */}
-                          {prod.handoverDate && (
-                            <span className="absolute bottom-2 right-2 bg-white/90 text-slate-600 text-[10px] font-medium px-2 py-0.5 rounded border border-slate-200 font-inter">
-                              {t.products.handoverDateLabel} {prod.handoverDate}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between gap-1 mb-1.5">
-                          <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">{prod.name}</h3>
-                        </div>
-
-                        {/* Handover recipient box */}
-                        {prod.customerName && (
-                          <div className="mb-2.5 p-2 rounded bg-white border border-slate-200 text-[11px] text-[#6E5D53] space-y-0.5">
-                            <div className="font-semibold text-[#2B1810] truncate">
-                              {t.products.soldToLabel} {prod.customerName}
-                            </div>
-                            {prod.customerArea && (
-                              <div className="text-[10px] text-slate-500 truncate">
-                                {prod.customerArea}
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        <ul className="my-2.5 space-y-1.5 text-xs text-slate-700 font-inter">
-                          <li className="flex items-center gap-1.5">
-                            <Cpu className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.cpu}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <span className="w-3.5 h-3.5 text-center font-bold text-[10px] text-slate-500">RAM</span>
-                            <span className="truncate">{prod.specs.ram}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5">
-                            <HardDrive className="w-3.5 h-3.5 text-slate-500 shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{prod.specs.storage}</span>
-                          </li>
-                          <li className="flex items-center gap-1.5 text-emerald-800 font-medium">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={1.5} />
-                            <span className="truncate">{t.products.warrantyActiveLabel}</span>
-                          </li>
-                        </ul>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {filteredInStock.map((prod) => (
+                  <div
+                    key={prod.id}
+                    className="p-4 rounded-lg bg-white border border-slate-200 shadow-xs flex flex-col justify-between hover:border-[#C0392B]/50 hover:shadow-md transition-all font-inter group relative"
+                  >
+                    <div>
+                      <div className="relative h-44 rounded-md overflow-hidden mb-3.5 bg-slate-50 border border-slate-200">
+                        <Image
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          alt={prod.name}
+                          src={prod.img}
+                          unoptimized
+                        />
+                        <span className="absolute top-2 left-2 bg-[#D9531E] text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs z-10 font-inter">
+                          {prod.badge}
+                        </span>
+                        <span className="absolute bottom-2 right-2 bg-white/95 text-slate-700 border border-slate-200 text-[10px] font-medium px-2 py-0.5 rounded font-inter">
+                          {prod.subBadge}
+                        </span>
+                        {/* Real stock badge */}
+                        <span className="absolute top-2 right-2 bg-emerald-700 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-xs flex items-center gap-1 font-inter">
+                          <Check className="w-3 h-3" strokeWidth={2} />
+                          <span>{t.products.inStock} {prod.stockCount} {t.products.inStockSuffix}</span>
+                        </span>
                       </div>
 
-                      <div className="pt-3 border-t border-slate-200 mt-2 space-y-2">
-                        <div className="flex items-baseline justify-between font-inter">
-                          <span className="text-xs text-slate-500">Giá đã giao:</span>
-                          <div className="text-right">
-                            <span className="text-base font-bold text-slate-800 font-mono">
-                              {formatVND(prod.price)}
-                            </span>
-                            <span className="text-[10px] text-emerald-700 block font-medium">Đã thanh toán</span>
-                          </div>
-                        </div>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <h3 className="text-sm font-bold text-slate-900 leading-snug line-clamp-1">{prod.name}</h3>
+                        <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 font-semibold shrink-0 border border-slate-200">
+                          S/N: {prod.serviceTag}
+                        </span>
+                      </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <Link
-                            href={`/tra-cuu-bao-hanh?tag=${encodeURIComponent(prod.serviceTag)}`}
-                            className="w-full py-2 rounded-lg bg-white hover:bg-slate-100 text-slate-800 font-semibold text-xs tracking-wide transition-colors text-center block shadow-xs border border-slate-200"
-                            title="Tra cứu hồ sơ bảo hành điện tử theo S/N"
-                          >
-                            {t.products.btnLookupWarranty}
-                          </Link>
-                          <Link
-                            href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent(isEn ? 'Consult Similar Machine' : 'Tư vấn lắp máy tương tự')}`}
-                            className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs tracking-wide transition-colors text-center block shadow-xs"
-                          >
-                            {t.products.btnOrderSimilar}
-                          </Link>
-                        </div>
+                      <p className="text-xs text-slate-500 font-inter line-clamp-2 mt-0.5">{prod.desc}</p>
+                      <ul className="my-3 space-y-1.5 text-xs text-slate-700 font-inter">
+                        <li className="flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5 text-[#C0392B] shrink-0" strokeWidth={1.5} />
+                          <span className="truncate">{prod.specs.cpu}</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="w-3.5 h-3.5 text-center font-bold text-[10px] text-[#C0392B]">RAM</span>
+                          <span className="truncate">{prod.specs.ram}</span>
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <HardDrive className="w-3.5 h-3.5 text-[#C0392B] shrink-0" strokeWidth={1.5} />
+                          <span className="truncate">{prod.specs.storage}</span>
+                        </li>
+                        <li className="flex items-center gap-1.5 text-emerald-800 font-medium">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={1.5} />
+                          <span className="truncate">{prod.specs.highlight}</span>
+                        </li>
+                        <li className="flex items-center gap-1.5 text-slate-500">
+                          <Gift className="w-3.5 h-3.5 text-[#D97706] shrink-0" strokeWidth={1.5} />
+                          <span className="truncate">{prod.specs.gift}</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-200 mt-2 space-y-2">
+                      <div className="flex items-baseline justify-between font-inter">
+                        <span className="text-xs text-slate-500">{t.products.priceLabel}</span>
+                        <span className="text-lg font-bold text-[#C0392B] font-mono">
+                          {formatVND(prod.price)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedProduct(prod)}
+                          className="w-full py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs tracking-wide transition-colors text-center block shadow-xs border border-slate-200"
+                        >
+                          {t.products.btnInspect}
+                        </button>
+                        <Link
+                          href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent(isEn ? 'Purchase In-Stock Unit' : 'Đặt mua máy có sẵn')}`}
+                          className="w-full py-2 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-colors text-center block shadow-xs"
+                        >
+                          {t.products.btnOrder}
+                        </Link>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* CTA Banner dẫn sang Trang Danh Mục Sản Phẩm Đầy Đủ (/danh-muc-san-pham) */}
+          <div className="p-6 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              <h4 className="text-sm font-bold text-[#2B1810] flex items-center gap-2 justify-center sm:justify-start">
+                <ShieldCheck className="w-4 h-4 text-[#C0392B]" />
+                <span>{isEn ? 'Delivered Machine Archives & Full Catalog' : 'Tra cứu hồ sơ máy đã bán & Toàn bộ danh mục'}</span>
+              </h4>
+              <p className="text-xs text-[#6E5D53]">
+                {isEn
+                  ? 'Explore our dedicated catalog page with both in-stock units and delivered machines archives.'
+                  : 'Xem trang Danh Mục Sản Phẩm riêng biệt để tra cứu cả máy đang sẵn và lưu trữ hồ sơ thiết bị đã bàn giao thực tế.'}
+              </p>
             </div>
-          )}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Link
+                href="/danh-muc-san-pham?tab=sold"
+                className="px-4 py-2.5 rounded-lg bg-white border border-[#E8E2D9] hover:bg-[#FAF7F2] text-[#2B1810] font-bold text-xs shadow-2xs transition-all"
+              >
+                {isEn ? 'Delivered Machines' : 'Xem Máy Đã Bán'}
+              </Link>
+              <Link
+                href="/danh-muc-san-pham"
+                className="px-4 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5"
+              >
+                <span>{isEn ? 'View Full Catalog' : 'Trang Danh Mục Sản Phẩm'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          </div>
         </section>
 
         {/* 3. KHỐI 2: MENU GÓI DỊCH VỤ & SPA */}
