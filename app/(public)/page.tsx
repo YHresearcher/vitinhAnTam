@@ -128,31 +128,27 @@ export default function HomePage() {
               </div>
             </div>
 
-            <p className="text-base sm:text-lg text-[#6E5D53] font-medium leading-relaxed">
-              {t.hero.description}
-            </p>
-
-            {/* 3 Trụ Cột Nổi Bật - Clean Typography */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
-              <div className="p-4 rounded-lg bg-[#FFFDF9] border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-                <h3 className="text-xs font-bold text-[#C0392B] uppercase tracking-wide">01 • {t.hero.pillar1Title}</h3>
-                <p className="text-xs text-[#6E5D53] mt-1.5 leading-snug">
-                  {t.hero.pillar1Desc}
-                </p>
+            {/* 3 Trụ Cột Nổi Bật */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              {/* Pillar 01 */}
+              <div className="p-5 rounded-xl bg-white border-2 border-[#C0392B]/20 shadow-md hover:border-[#C0392B] hover:shadow-lg transition-all group">
+                <div className="text-3xl font-black text-[#E8E2D9] leading-none mb-3 font-mono">01</div>
+                <h3 className="text-sm font-black text-[#2B1810] uppercase tracking-wide leading-snug">{t.hero.pillar1Title}</h3>
+                <p className="text-xs text-[#6E5D53] mt-2 leading-snug">{t.hero.pillar1Desc}</p>
               </div>
 
-              <div className="p-4 rounded-lg bg-[#FFFDF9] border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-                <h3 className="text-xs font-bold text-[#C0392B] uppercase tracking-wide">02 • {t.hero.pillar2Title}</h3>
-                <p className="text-xs text-[#6E5D53] mt-1.5 leading-snug">
-                  {t.hero.pillar2Desc}
-                </p>
+              {/* Pillar 02 - Nổi bật */}
+              <div className="p-5 rounded-xl bg-[#C0392B] border-2 border-[#C0392B] shadow-lg shadow-[#C0392B]/20 hover:bg-[#A93226] transition-all group">
+                <div className="text-3xl font-black text-white/30 leading-none mb-3 font-mono">02</div>
+                <h3 className="text-sm font-black text-white uppercase tracking-wide leading-snug">{t.hero.pillar2Title}</h3>
+                <p className="text-xs text-white/80 mt-2 leading-snug">{t.hero.pillar2Desc}</p>
               </div>
 
-              <div className="p-4 rounded-lg bg-[#FFFDF9] border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-                <h3 className="text-xs font-bold text-[#C0392B] uppercase tracking-wide">03 • {t.hero.pillar3Title}</h3>
-                <p className="text-xs text-[#6E5D53] mt-1.5 leading-snug">
-                  {t.hero.pillar3Desc}
-                </p>
+              {/* Pillar 03 */}
+              <div className="p-5 rounded-xl bg-white border-2 border-[#C0392B]/20 shadow-md hover:border-[#C0392B] hover:shadow-lg transition-all group">
+                <div className="text-3xl font-black text-[#E8E2D9] leading-none mb-3 font-mono">03</div>
+                <h3 className="text-sm font-black text-[#2B1810] uppercase tracking-wide leading-snug">{t.hero.pillar3Title}</h3>
+                <p className="text-xs text-[#6E5D53] mt-2 leading-snug">{t.hero.pillar3Desc}</p>
               </div>
             </div>
 
