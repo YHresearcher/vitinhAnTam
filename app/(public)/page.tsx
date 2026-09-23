@@ -830,11 +830,7 @@ export default function HomePage() {
 
               {/* Mạng lưới lưu động & Khung giờ cứu hộ khẩn */}
               <div className="lg:col-span-7 space-y-5">
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-[#2B1810] mb-3">
-                    Địa Bàn Phục Vụ Kỹ Thuật Tận Nơi:
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                     <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold">TP. Tân An (P1 - P7, Khánh Hậu, Tân Khánh)</span>
@@ -875,7 +871,6 @@ export default function HomePage() {
                       <p className="text-[11px] text-[#6E5D53]">Hỗ trợ tận nơi theo lịch hẹn ưu tiên, trang thiết bị chuyên dụng.</p>
                     </div>
                   </div>
-                </div>
 
                 {/* Hộp Khung Giờ Cứu Hộ Khẩn */}
                 <div className="p-4 rounded-lg bg-[#FAF7F2] border-l-4 border-[#C0392B] border border-slate-200">
