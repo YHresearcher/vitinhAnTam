@@ -3,14 +3,6 @@
 import React, { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { OnsiteDispatch } from '@/lib/supabase';
-import {
-  MapPin,
-  Phone,
-  User,
-  Navigation,
-  CheckCircle2,
-  Radio
-} from 'lucide-react';
 
 const STATUS_CONFIG: Record<
   OnsiteDispatch['status'],
@@ -46,12 +38,11 @@ export default function CuuHoOnsitePage() {
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Toast Notice */}
       {notice && (
-        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-blue-600" />
-          <span className="text-sm font-medium">{notice}</span>
+        <div className="fixed top-20 right-6 z-50 bg-white text-slate-900 px-4 py-3 rounded-xl shadow-2xl border-2 border-blue-600 flex items-center gap-2">
+          <span className="text-xs font-semibold">{notice}</span>
         </div>
       )}
 
@@ -60,8 +51,7 @@ export default function CuuHoOnsitePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Cứu Hộ Tận Nơi
-            <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full flex items-center gap-1">
-              <Radio className="w-3 h-3 animate-pulse text-indigo-600" />
+            <span className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full">
               {activeCount} ca đang chạy
             </span>
           </h1>
@@ -126,8 +116,8 @@ export default function CuuHoOnsitePage() {
                 </div>
 
                 {/* Contact phone */}
-                <div className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 p-2 rounded-lg">
-                  <Phone className="w-3.5 h-3.5 text-blue-600" />
+                <div className="flex items-center justify-between text-xs text-slate-600 bg-slate-50 p-2 rounded-lg">
+                  <span className="text-slate-500">SĐT:</span>
                   <a
                     href={`tel:${dispatch.customer_phone}`}
                     className="font-mono font-bold text-blue-700 hover:underline"
@@ -138,11 +128,11 @@ export default function CuuHoOnsitePage() {
 
                 {/* Address & Distance */}
                 <div className="space-y-1 text-xs">
-                  <div className="flex items-start gap-1.5 text-slate-700">
-                    <MapPin className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-slate-700">
+                    <span className="font-medium text-slate-500">Địa chỉ: </span>
                     <span>{dispatch.address}</span>
                   </div>
-                  <div className="flex items-center gap-3 pl-5 text-[11px] text-slate-500 font-medium">
+                  <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
                     <span>Khoảng cách: <strong className="text-slate-800">{dispatch.distance_km} km</strong></span>
                     <span>•</span>
                     <span>Dự kiến đến: <strong className="text-blue-700">{dispatch.estimated_arrival_minutes} phút</strong></span>
@@ -156,9 +146,8 @@ export default function CuuHoOnsitePage() {
                 </div>
 
                 {/* Technician assigned */}
-                <div className="text-xs text-slate-600 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-slate-400" />
-                  <span>KTV điều động: </span>
+                <div className="text-xs text-slate-600 flex items-center justify-between">
+                  <span className="text-slate-500">KTV điều động:</span>
                   <span className="font-semibold text-slate-800">{dispatch.technician_name}</span>
                 </div>
               </div>
@@ -170,24 +159,27 @@ export default function CuuHoOnsitePage() {
                   href={mapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
                 >
-                  <Navigation className="w-3.5 h-3.5 text-blue-600" />
-                  Chỉ Đường
+                  Bản đồ Maps
                 </a>
 
-                {/* Change status selector */}
+                {/* Status Updater Dropdown/Buttons */}
                 <select
                   value={dispatch.status}
                   onChange={(e) =>
                     handleStatusChange(dispatch.id, e.target.value as OnsiteDispatch['status'])
                   }
-                  className="text-xs font-semibold px-2 py-1.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="text-xs font-semibold bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
                 >
                   <option value="pending">Chờ điều phối</option>
+                  <option value="preparing">Chuẩn bị linh kiện</option>
                   <option value="dispatched">KTV đang di chuyển</option>
+                  <option value="on_the_way">Đang trên đường</option>
+                  <option value="arrived">Đã đến điểm hẹn</option>
                   <option value="in_progress">Đang xử lý</option>
-                  <option value="completed">✓ Đã xong</option>
+                  <option value="completed">Hoàn tất</option>
+                  <option value="cancelled">Hủy ca</option>
                 </select>
               </div>
             </div>

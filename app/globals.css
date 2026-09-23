@@ -71,6 +71,15 @@ strong, b, .font-semibold, .font-medium {
   font-feature-settings: "tnum" on;
 }
 
+/* Gỡ bỏ 100% tất cả icon trong toàn bộ hệ thống quản lý */
+.admin-scope svg.lucide,
+.admin-scope svg[class*="lucide"],
+.admin-scope [class*="lucide-"],
+.admin-scope .anticon,
+.admin-scope [role="img"]:not(img) {
+  display: none !important;
+}
+
 /* Smooth custom scrollbars in warm earth tones */
 ::-webkit-scrollbar {
   width: 6px;

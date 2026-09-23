@@ -5,28 +5,6 @@ import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { ThermalLabelModal } from '@/components/admin/ThermalLabelModal';
 import { InventoryItem, OnsiteDispatch } from '@/lib/supabase';
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Monitor,
-  Wrench,
-  Bike,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-  Phone,
-  MapPin,
-  Printer,
-  Check,
-  Cpu,
-  Plus,
-  FileText,
-  Layers,
-  ChevronRight,
-  Sparkles,
-} from 'lucide-react';
 
 export default function DashboardPage() {
   const {
@@ -146,7 +124,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col w-full gap-6 font-sans">
       {/* Thermal Label Modal */}
       <ThermalLabelModal
         item={selectedItemForLabel}
@@ -159,7 +137,7 @@ export default function DashboardPage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
             Tổng Quan Quản Trị
             <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-              Admin Dashboard
+              Admin
             </span>
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -171,23 +149,20 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href="/phieu-sua-chua/tao-moi"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" />
-            Tạo Phiếu Sửa
+            + Tạo Phiếu Sửa
           </Link>
           <Link
             href="/kho-may"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs transition-colors"
           >
-            <Layers className="w-3.5 h-3.5 text-slate-500" />
             Quản Lý Kho
           </Link>
           <Link
             href="/cuu-ho-onsite"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs transition-colors"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs transition-colors"
           >
-            <Bike className="w-3.5 h-3.5 text-slate-500" />
             Cứu Hộ
           </Link>
         </div>
@@ -199,16 +174,15 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-300 transition-colors">
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
             <span>Dòng Tiền Ròng ({cashflowTimeframe.toUpperCase()})</span>
-            <span className="p-1 rounded bg-emerald-50 text-emerald-600">
-              <DollarSign className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+              LÃI RÒNG
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tracking-tight">
             +{netCashflow.toLocaleString('vi-VN')}₫
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-600 mt-1 font-medium">
-            <TrendingUp className="w-3 h-3" />
-            <span>Biên lợi nhuận gộp {profitMargin}%</span>
+          <div className="text-[11px] text-emerald-600 mt-1 font-medium">
+            Biên lợi nhuận gộp: {profitMargin}%
           </div>
         </div>
 
@@ -216,15 +190,15 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors">
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
             <span>Doanh Thu ({cashflowTimeframe.toUpperCase()})</span>
-            <span className="p-1 rounded bg-blue-50 text-blue-600">
-              <TrendingUp className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+              TỔNG THU
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
             {totalIncome.toLocaleString('vi-VN')}₫
           </div>
           <div className="text-[11px] text-slate-500 mt-1">
-            Chi: {totalExpense.toLocaleString('vi-VN')}₫
+            Chi vật tư: {totalExpense.toLocaleString('vi-VN')}₫
           </div>
         </div>
 
@@ -232,8 +206,8 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-indigo-300 transition-colors">
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
             <span>Thiết Bị Kho</span>
-            <span className="p-1 rounded bg-indigo-50 text-indigo-600">
-              <Monitor className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded">
+              TỒN KHO
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
@@ -252,8 +226,8 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-purple-300 transition-colors">
           <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
             <span>Tiến Độ Vận Hành</span>
-            <span className="p-1 rounded bg-purple-50 text-purple-600">
-              <Wrench className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
+              DỊCH VỤ
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
@@ -278,8 +252,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                <h2 className="text-sm font-bold text-slate-900">
                   Biểu Đồ Dòng Tiền &amp; Doanh Thu
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -474,7 +447,7 @@ export default function DashboardPage() {
 
             {/* Hover Tooltip Info if active */}
             {hoveredDataPoint !== null && (
-              <div className="bg-slate-900 text-white rounded-lg p-2.5 text-xs flex items-center justify-between gap-4 mt-1 animate-fade-in">
+              <div className="bg-slate-900 text-white rounded-lg p-2.5 text-xs flex items-center justify-between gap-4 mt-1">
                 <span className="font-semibold text-slate-300">
                   {cashflowData[hoveredDataPoint].label} ({cashflowData[hoveredDataPoint].date}):
                 </span>
@@ -521,8 +494,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center justify-between gap-2 mb-4">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <Monitor className="w-4 h-4 text-blue-600" />
+                <h2 className="text-sm font-bold text-slate-900">
                   Cơ Cấu Thiết Bị Kho
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -545,7 +517,7 @@ export default function DashboardPage() {
 
                 // Chu vi hình tròn bán kính r=38
                 const radius = 38;
-                const circumference = 2 * Math.PI * radius; // ~238.76
+                const circumference = 2 * Math.PI * radius;
 
                 const strokeRTS = rtsRatio * circumference;
                 const strokeQC = qcRatio * circumference;
@@ -717,35 +689,32 @@ export default function DashboardPage() {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveListTab('tickets')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                 activeListTab === 'tickets'
                   ? 'bg-blue-600 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
-              <FileText className="w-3.5 h-3.5" />
               Phiếu Sửa Chữa ({tickets.length})
             </button>
             <button
               onClick={() => setActiveListTab('onsite')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                 activeListTab === 'onsite'
                   ? 'bg-blue-600 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
-              <Bike className="w-3.5 h-3.5" />
               Cứu Hộ Tận Nơi ({onsiteDispatches.length})
             </button>
             <button
               onClick={() => setActiveListTab('qc')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
                 activeListTab === 'qc'
                   ? 'bg-blue-600 text-white shadow-2xs'
                   : 'text-slate-600 hover:bg-slate-200/70'
               }`}
             >
-              <Cpu className="w-3.5 h-3.5" />
               Đang Kiểm Định ({qcTestingItems.length})
             </button>
           </div>
@@ -758,9 +727,9 @@ export default function DashboardPage() {
                 ? '/cuu-ho-onsite'
                 : '/kho-may'
             }
-            className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-0.5"
+            className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
           >
-            Quản lý chi tiết <ChevronRight className="w-3.5 h-3.5" />
+            Quản lý chi tiết →
           </Link>
         </div>
 
@@ -820,10 +789,9 @@ export default function DashboardPage() {
 
                   <Link
                     href={`/phieu-sua-chua`}
-                    className="p-1 text-slate-400 hover:text-blue-600 rounded transition-colors"
-                    title="Xem chi tiết"
+                    className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded font-semibold transition-colors"
                   >
-                    <ArrowUpRight className="w-4 h-4" />
+                    Xem
                   </Link>
                 </div>
               </div>
@@ -856,7 +824,6 @@ export default function DashboardPage() {
 
                   {/* Cột 2: Địa chỉ & Sự cố */}
                   <div className="flex items-center gap-2 text-slate-600 truncate max-w-md">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">{disp.address}</span>
                     <span className="text-slate-400 shrink-0">•</span>
                     <span className="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded text-[11px] truncate">
@@ -885,10 +852,9 @@ export default function DashboardPage() {
                     {tel && (
                       <a
                         href={`tel:${tel}`}
-                        className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded"
-                        title="Gọi khách"
+                        className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded font-semibold"
                       >
-                        <Phone className="w-3.5 h-3.5" />
+                        Gọi
                       </a>
                     )}
 
@@ -946,10 +912,9 @@ export default function DashboardPage() {
 
                     <button
                       onClick={() => setSelectedItemForLabel(item)}
-                      className="p-1 text-slate-500 hover:text-blue-600 hover:bg-slate-100 rounded"
-                      title="In tem S/N"
+                      className="px-2 py-1 text-xs text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded font-semibold"
                     >
-                      <Printer className="w-3.5 h-3.5" />
+                      In tem
                     </button>
 
                     <button
