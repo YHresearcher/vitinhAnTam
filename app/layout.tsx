@@ -27,7 +27,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://vitinhantham.vn'),
-  title: 'Máy tính cũ chuẩn A Tân An | Vi Tính An Tâm — Long An',
+  title: {
+    default: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
+    template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
+  },
   description:
     'PC đồng bộ & laptop doanh nhân tuyển chọn, Win bản quyền, bảo hành 1 đổi 1 hỏa tốc trong 2 giờ (<5km Tân An), hỗ trợ Thủ Thừa, Châu Thành, Tân Trụ. Hotline 0909.053.058.',
   keywords: [
@@ -56,7 +59,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Vi Tính An Tâm — Máy tính cũ chuẩn A tại Tân An',
+    title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'Bảo hành 1 đổi 1 hỏa tốc 2 giờ (<5km Tân An). SSD/RAM mới BH 36 tháng. Hotline: 0909.053.058.',
     url: 'https://vitinhantham.vn',
     siteName: 'Vi Tính An Tâm',
@@ -73,7 +76,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Vi Tính An Tâm — Máy tính cũ chuẩn A tại Tân An',
+    title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'Bảo hành 1 đổi 1 hỏa tốc 2 giờ (<5km Tân An). SSD/RAM mới BH 36 tháng.',
     images: ['https://vitinhantham.vn/anh-that-cua-hang.jpg'],
   },
