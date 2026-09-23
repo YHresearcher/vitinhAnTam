@@ -130,7 +130,7 @@ export const TRANSLATIONS = {
       feeLabel: 'Chi phí dịch vụ:',
       btnBookPkg: 'Đặt Lịch Gói Này',
       btnBigDispatch:
-        'Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ (Hotline: 0909.053.058)',
+        'Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ. Liên hệ ngay số hotline',
     },
     warrantyBanner: {
       title: 'CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ THEO S/N',

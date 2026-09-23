@@ -252,7 +252,7 @@ export default function HomePage() {
     {
       question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ Hotline 0909.053.058 hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà trong bán kính 10km (Tân An, Thủ Thừa, Châu Thành, Tân Trụ) trong vòng 2 giờ. Đặc biệt ưu tiên khung giờ vàng từ 17:30 đến 21:00.',
+        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà trong bán kính 10km (Tân An, Thủ Thừa, Châu Thành, Tân Trụ) trong vòng 2 giờ. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
     },
     {
       question: 'Windows bản quyền số vĩnh viễn có lợi ích gì cho kế toán và văn phòng?',
@@ -674,38 +674,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 4. KHỐI NỀN TỐI #0F4C5C: HOTLINE & CỨU HỘ ONSITE 2H (Phá nhịp toàn trắng) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="tra-cuu-bao-hanh">
-          <div className="p-8 sm:p-10 rounded-lg bg-[#0F4C5C] text-white shadow-xl border border-[#166072] flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-                <Clock className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.5} />
-                <span>HOTLINE TRỰC CHIẾN 24/7 • CỨU HỘ TẬN NƠI 2H</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
-                GẶP SỰ CỐ MÁY TÍNH? GỌI NGAY {systemSettings.hotline || '0909.053.058'}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-200 max-w-2xl leading-relaxed">
-                Kỹ thuật viên cơ động mang sẵn linh kiện thay thế đến tận nơi trong 2 giờ tại Tân An, Thủ Thừa, Châu Thành, Tân Trụ. Không chờ đợi, không gián đoạn công việc.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 shrink-0">
-              <Link
-                href="/dat-lich"
-                className="px-6 py-3.5 rounded-lg bg-[#D9531E] hover:bg-[#C0392B] text-white font-bold text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2"
-              >
-                <span>Đặt Lịch Hẹn Tận Nơi</span>
-                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
-              </Link>
-              <Link
-                href="/tra-cuu-bao-hanh"
-                className="px-5 py-3.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all flex items-center gap-2"
-              >
-                <span>{t.warrantyBanner.btnCheck}</span>
-              </Link>
-            </div>
-          </div>
-        </section>
 
         {/* 5. KHỐI 4: QUY TRÌNH KIỂM ĐỊNH 4 BƯỚC (Phá grid: bước 03 lệch nhịp, typography số đậm) */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -823,13 +791,11 @@ export default function HomePage() {
                 </p>
               </div>
 
-              {/* Hotline display as clean info text (bỏ nút gọi trùng lặp, đã có widget nổi bên phải) */}
-              <div className="bg-[#FAF7F2] border border-[#E8E2D9] rounded-lg p-3.5 text-left md:text-right shrink-0">
-                <div className="text-[11px] text-[#6E5D53] font-medium">{t.coverage.hotlineLabel}</div>
-                <div className="text-xl sm:text-2xl font-black text-[#C0392B] tracking-tight font-mono">
-                  {systemSettings.hotline || '0909.053.058'}
-                </div>
-                <div className="text-[10px] text-[#6E5D53]">Kỹ thuật viên trực ca hỗ trợ 24/7</div>
+              {/* Thông tin hỗ trợ kỹ thuật (hướng dẫn dùng widget góc phải) */}
+              <div className="bg-[#FAF7F2] border border-slate-200 rounded-lg p-3.5 text-left md:text-right shrink-0">
+                <div className="text-[11px] text-[#C0392B] font-bold uppercase tracking-wider">Hỗ Trợ Kỹ Thuật 24/7</div>
+                <div className="text-xs text-slate-800 font-semibold mt-1">Cứu hộ tận nơi trong 2 giờ</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Bấm nút gọi / nhắn tin nhanh ở góc phải màn hình</div>
               </div>
             </div>
 
