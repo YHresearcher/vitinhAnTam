@@ -385,7 +385,7 @@ export default function DashboardPage() {
                             textAnchor="end"
                             fontSize="9"
                             fill="#94a3b8"
-                            fontFamily="monospace"
+                            fontFamily="sans-serif"
                           >
                             {val.toFixed(0)}Tr
                           </text>

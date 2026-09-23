@@ -3,7 +3,7 @@
 @theme {
   --font-sans: var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-inter: var(--font-inter), "Inter", system-ui, sans-serif;
-  --font-mono: var(--font-mono), "JetBrains Mono", monospace;
+  --font-mono: var(--font-inter), var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   /* Hệ màu Ngũ Hành Lư Trung Hỏa */
   --color-canvas: #FAF7F2;
@@ -25,6 +25,8 @@
 
 :root {
   --font-be-vietnam-pro: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-inter), var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
   --color-brand-primary: #C0392B;
   --color-brand-accent: #D9531E;
   --color-surface-canvas: #FAF7F2;
@@ -60,6 +62,13 @@ p, span, li, input, textarea {
 
 strong, b, .font-semibold, .font-medium {
   font-weight: 600;
+}
+
+/* Ép toàn bộ các phần tử hiển thị số, mã code, tiền tệ sang font Sans-Serif hiện đại */
+.font-mono, [class*="font-mono"] {
+  font-family: var(--font-inter), var(--font-be-vietnam-pro), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" on;
 }
 
 /* Smooth custom scrollbars in warm earth tones */

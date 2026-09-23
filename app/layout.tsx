@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Be_Vietnam_Pro, JetBrains_Mono, Inter } from 'next/font/google';
+import { Be_Vietnam_Pro, Inter } from 'next/font/google';
 import './globals.css';
 import { ClientProvider } from '@/components/ClientProvider';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
@@ -13,14 +13,8 @@ export const beVietnamPro = Be_Vietnam_Pro({
 
 export const inter = Inter({
   subsets: ['vietnamese', 'latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-inter',
-  display: 'swap',
-});
-
-export const jetbrainsMono = JetBrains_Mono({
-  subsets: ['vietnamese', 'latin'],
-  variable: '--font-mono',
   display: 'swap',
 });
 
@@ -135,7 +129,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable}`}>
       <head>
         {/* Schema.org Structured Data for Local SEO */}
         <script
