@@ -252,7 +252,7 @@ export default function HomePage() {
     {
       question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà phản ứng hỏa tốc trong 2 giờ cho khu vực <5km từ trung tâm Tân An (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
+        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
     },
     {
       question: 'Windows bản quyền số vĩnh viễn có lợi ích gì cho kế toán và văn phòng?',
@@ -823,7 +823,7 @@ export default function HomePage() {
                     <strong className="text-[#2B1810]">Chức năng:</strong> Tiếp nhận kiểm tra máy theo Service Tag, kiểm tra tải trực tiếp tại quầy, đổi mới linh kiện ngay trong ngày.
                   </p>
                   <p>
-                    <strong className="text-[#2B1810]">Phạm vi phục vụ:</strong> Phản ứng hỏa tốc trong 2 giờ cho khu vực &lt;5km từ trung tâm Tân An. Hỗ trợ kỹ thuật lưu động nhanh tại các địa bàn lân cận ({systemSettings.serviceAreas || 'Thủ Thừa, Châu Thành, Tân Trụ'}).
+                    <strong className="text-[#2B1810]">Phạm vi phục vụ:</strong> Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi. Hỗ trợ kỹ thuật lưu động nhanh tại các địa bàn lân cận ({systemSettings.serviceAreas || 'Thủ Thừa, Châu Thành, Tân Trụ'}).
                   </p>
                 </div>
               </div>
@@ -842,7 +842,7 @@ export default function HomePage() {
                           Hỏa tốc &lt;2h (&lt;5km)
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#6E5D53]">Khu vực bán kính &lt;5km từ trung tâm Tân An, có mặt xử lý trong 2 giờ.</p>
+                      <p className="text-[11px] text-[#6E5D53]">Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi.</p>
                     </div>
 
                     <div className="p-3 rounded-lg bg-white border border-slate-200 text-[#2B1810]">

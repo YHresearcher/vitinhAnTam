@@ -20,8 +20,8 @@ export const TRANSLATIONS = {
       techSupportLabel: 'Hỗ trợ kỹ thuật:',
       techSupportValue: '24/7 trực ca tiếp nhận',
       emailLabel: 'Email:',
-      radiusTitle: 'PHẠM VI HỎA TỐC (<5KM TÂN AN)',
-      radiusDesc: 'Đội cơ động phản ứng hỏa tốc trong 2 giờ cho khu vực <5km từ trung tâm Tân An, và hỗ trợ theo lịch hẹn tại các huyện lân cận:',
+      radiusTitle: 'PHẠM VI PHỤC VỤ (BÁN KÍNH 5KM)',
+      radiusDesc: 'Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi, và hỗ trợ theo lịch hẹn tại các huyện lân cận:',
       tanAn: 'TP. Tân An (P1-P7, Khánh Hậu, Tân Khánh): Hỏa tốc 2 giờ',
       thuThua: 'Huyện Thủ Thừa: Phục vụ theo lịch hẹn nhanh',
       chauThanh: 'Huyện Châu Thành: Phục vụ theo lịch hẹn nhanh',
@@ -166,7 +166,7 @@ export const TRANSLATIONS = {
     },
     coverage: {
       title: 'TRỤ SỞ CHÍNH & MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG LONG AN - TÂY NINH',
-      desc: 'Đội cơ động phản ứng hỏa tốc trong 2 giờ cho khu vực <5km từ trung tâm Tân An và hỗ trợ theo lịch hẹn tại:',
+      desc: 'Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi và điều phối kỹ thuật lưu động nhanh tại:',
       goldenHourTitle:
         'KHUNG GIỜ CỨU HỘ KHẨN (DÀNH CHO CƠ QUAN & DÂN VĂN PHÒNG)',
       goldenHourDesc:
@@ -240,13 +240,13 @@ export const TRANSLATIONS = {
     booking: {
       breadcrumbHome: 'Trang chủ',
       breadcrumbBooking: 'Đặt lịch dịch vụ',
-      badge2h: 'Phản Ứng Hỏa Tốc Trong 2 Giờ (Khu Vực <5km Từ Trung Tâm Tân An)',
+      badge2h: 'Cứu Hộ Kỹ Thuật Hỏa Tốc (Bán Kính 5KM Từ Cửa Hàng)',
       title: 'Đặt Lịch Sửa Chữa & Nâng Cấp Máy Tính',
       subtitle:
         'Kỹ thuật viên An Tâm mang đầy đủ trang thiết bị chuyên dụng đến kiểm tra, bảo dưỡng và xử lý trực tiếp trước sự giám sát của quý khách.',
       step1Title: '1. Chọn hình thức phục vụ',
       modeOnsiteTitle: 'KTV Đến Tận Nơi (Hỏa tốc 2 giờ khu vực <5km)',
-      modeOnsiteDesc: 'Phản ứng hỏa tốc trong 2 giờ cho khu vực <5km từ trung tâm Tân An (P1 - P7, Khánh Hậu, Tân Khánh); các khu vực lân cận phục vụ theo lịch hẹn nhanh.',
+      modeOnsiteDesc: 'Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi; các khu vực lân cận phục vụ theo lịch hẹn nhanh.',
       modeCounterTitle: 'Mang Máy Đến Cửa Hàng',
       modeCounterDesc: '45 Nguyễn Huệ, P.1, Tân An (Có chỗ đỗ xe, kiểm tra & lấy ngay sau 30 phút)',
       step2Title: '2. Thông tin khách hàng',
@@ -410,9 +410,9 @@ export const TRANSLATIONS = {
       techSupportLabel: 'Tech Support:',
       techSupportValue: '24/7 on-duty dispatch',
       emailLabel: 'Email:',
-      radiusTitle: 'RAPID DISPATCH RADIUS (<5KM)',
+      radiusTitle: 'SERVICE COVERAGE (5KM RADIUS)',
       radiusDesc:
-        'Mobile rapid response engineers arrive on-site within 2 hours for areas <5km from Tan An center, and prompt scheduled dispatch for:',
+        'Rapid technical emergency dispatch within a 5km radius from our store, and prompt scheduled dispatch for:',
       tanAn: 'Tan An City (Wards 1-7, Khanh Hau, Tan Khanh): Rapid 2h response',
       thuThua: 'Thu Thua District: Prompt scheduled dispatch',
       chauThanh: 'Chau Thanh District: Prompt scheduled dispatch',
@@ -558,7 +558,7 @@ export const TRANSLATIONS = {
     },
     coverage: {
       title: 'MOBILE TECHNICAL DISPATCH NETWORK (LONG AN - TAY NINH)',
-      desc: 'Our mobile field units provide 2-hour rapid on-site response (<5km from Tan An center) and prompt scheduling across:',
+      desc: 'Rapid technical emergency dispatch within a 5km radius from our store and prompt scheduling across:',
       goldenHourTitle:
         'PRIORITY EVENING ON-SITE SUPPORT (FOR BUSINESSES & OFFICE PROFESSIONALS)',
       goldenHourDesc:
@@ -632,13 +632,13 @@ export const TRANSLATIONS = {
     booking: {
       breadcrumbHome: 'Home',
       breadcrumbBooking: 'Service Booking',
-      badge2h: '2-Hour Rapid On-Site Response (<5km From Tan An Center)',
+      badge2h: 'Rapid Technical Dispatch (5KM Radius From Our Store)',
       title: 'Schedule Computer Repair & Upgrade Services',
       subtitle:
         'Certified An Tam engineers arrive equipped with professional diagnostic gear to inspect, tune, and optimize your systems directly under your supervision.',
       step1Title: '1. Select Service Delivery Mode',
       modeOnsiteTitle: 'On-Site Technician (Rapid 2-Hour for <5km)',
-      modeOnsiteDesc: '2-hour rapid on-site response for areas <5km from Tan An center (Wards 1-7, Khanh Hau, Tan Khanh); neighboring areas served via prompt appointments.',
+      modeOnsiteDesc: 'Rapid technical emergency dispatch within a 5km radius from our store; neighboring areas served via prompt appointments.',
       modeCounterTitle: 'Bring Computer to Hub',
       modeCounterDesc: '45 Nguyen Hue, Ward 1, Tan An (Convenient parking, rapid 30-min express checkout)',
       step2Title: '2. Client Information',
