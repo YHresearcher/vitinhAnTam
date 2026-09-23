@@ -14,7 +14,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, canAccessPayroll, canAccessSettings, systemSettings, customers, logout } = useViTinhAnTamStore();
+  const { tickets, currentUser, canAccessPayroll, canAccessSettings, customers, logout } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing').length;
 
@@ -167,16 +167,9 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       </div>
 
       {/* Footer Info */}
-      <div className="p-4 flex flex-col gap-2 border-t border-slate-100">
-        <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-          <div className="flex flex-col leading-tight">
-            <span className="text-[11px] font-semibold text-slate-800">Hotline Kỹ thuật</span>
-            <span className="text-[10px] text-slate-500">{systemSettings.hotline}</span>
-          </div>
-          <span className="text-[10px] text-blue-600 font-bold">24/7</span>
-        </div>
-        <div className="text-[11px] text-center text-slate-400 font-medium">
-          Vi tính An Tâm
+      <div className="p-4 border-t border-slate-100 text-center">
+        <div className="text-[11px] text-slate-400 font-medium">
+          Vi Tính An Tâm
         </div>
       </div>
     </div>
