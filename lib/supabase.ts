@@ -147,12 +147,28 @@ export interface InventoryItem {
 export interface SparePart {
   id: string;
   part_name: string;
-  part_type: 'SSD' | 'RAM' | 'ThermalPaste' | 'Adapter' | 'Mainboard' | string;
+  part_type: 'SSD' | 'RAM' | 'CPU' | 'VGA' | 'PSU' | 'Mainboard' | 'Screen' | 'Adapter' | 'ThermalPaste' | 'KeyboardMouse' | string;
+  condition: 'new' | 'used'; // Mới 100% hoặc Zin bóc máy / Cũ 99%
   quantity_in_stock: number;
   warranty_months: number;
   distributor?: string;
   unit_cost?: number;
   unit_price: number;
+  shelf_location?: string;
+  notes?: string;
+}
+
+export interface SoftwareLicense {
+  id: string;
+  software_name: string;
+  software_type: 'os' | 'office' | 'antivirus' | 'accounting' | 'pos' | 'utility' | string;
+  license_type: 'oem' | 'retail' | 'subscription' | 'fpp' | string;
+  quantity_in_stock: number; // Số lượng license / key sẵn có
+  unit_cost: number;         // Giá nhập
+  unit_price: number;        // Giá bán lẻ
+  duration_months?: number;  // 0 = Vĩnh viễn (Lifetime), 12, 24, 36 tháng
+  distributor?: string;
+  notes?: string;
 }
 
 export interface MultiTierWarranty {

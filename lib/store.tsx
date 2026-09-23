@@ -9,6 +9,7 @@ import {
   Customer,
   InventoryItem,
   SparePart,
+  SoftwareLicense,
   ServiceTicket,
   OnsiteDispatch,
   ShiftLog,
@@ -18,6 +19,7 @@ import {
   initialCustomers,
   initialInventory,
   initialSpareParts,
+  initialSoftwareLicenses,
   initialTickets,
   initialOnsiteDispatches,
   initialShiftLogs,
@@ -122,6 +124,7 @@ interface StoreContextType {
   customers: Customer[];
   tickets: ServiceTicket[];
   spareParts: SparePart[];
+  softwareLicenses: SoftwareLicense[];
   onsiteDispatches: OnsiteDispatch[];
   shiftLogs: ShiftLog[];
 
@@ -145,6 +148,16 @@ interface StoreContextType {
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
   updateQcStatus: (id: string, status: InventoryItem['qc_status']) => Promise<void>; // Tech & Admin
   deleteInventoryItem: (id: string) => Promise<boolean>; // Restricted to Admin
+
+  // Spare parts actions (Linh kiện mới & cũ)
+  addSparePart: (part: Omit<SparePart, 'id'>) => Promise<SparePart>;
+  updateSparePart: (id: string, data: Partial<SparePart>) => Promise<boolean>;
+  deleteSparePart: (id: string) => Promise<boolean>;
+
+  // Software license actions (Phần mềm & Bản quyền)
+  addSoftwareLicense: (item: Omit<SoftwareLicense, 'id'>) => Promise<SoftwareLicense>;
+  updateSoftwareLicense: (id: string, data: Partial<SoftwareLicense>) => Promise<boolean>;
+  deleteSoftwareLicense: (id: string) => Promise<boolean>;
 
   // Ticket actions
   addServiceTicket: (ticket: Omit<ServiceTicket, 'id' | 'created_at'>) => Promise<ServiceTicket>;
@@ -180,6 +193,7 @@ const STORAGE_KEYS = {
   customers: 'vtat_customers_v2',
   tickets: 'vtat_tickets_v2',
   spareParts: 'vtat_spare_parts_v2',
+  softwareLicenses: 'vtat_software_licenses_v1',
   onsiteDispatches: 'vtat_onsite_dispatches_v2',
   shiftLogs: 'vtat_shift_logs_v2',
   faqs: 'vtat_faqs_v2',
@@ -199,6 +213,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [reviews, setReviews] = useState<CustomerReview[]>(initialCustomerReviews);
   const [tickets, setTickets] = useState<ServiceTicket[]>(initialTickets);
   const [spareParts, setSpareParts] = useState<SparePart[]>(initialSpareParts);
+  const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>(initialSoftwareLicenses);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(initialSystemSettings);
@@ -472,6 +487,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const savedCus = localStorage.getItem(STORAGE_KEYS.customers);
         const savedTck = localStorage.getItem(STORAGE_KEYS.tickets);
         const savedSp = localStorage.getItem(STORAGE_KEYS.spareParts);
+        const savedSw = localStorage.getItem(STORAGE_KEYS.softwareLicenses);
         const savedOns = localStorage.getItem(STORAGE_KEYS.onsiteDispatches);
         const savedShf = localStorage.getItem(STORAGE_KEYS.shiftLogs);
         const savedFaqs = localStorage.getItem(STORAGE_KEYS.faqs);
@@ -481,6 +497,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedCus) setCustomers(JSON.parse(savedCus));
         if (savedTck) setTickets(JSON.parse(savedTck));
         if (savedSp) setSpareParts(JSON.parse(savedSp));
+        if (savedSw) setSoftwareLicenses(JSON.parse(savedSw));
         if (savedOns) setOnsiteDispatches(JSON.parse(savedOns));
         if (savedShf) setShiftLogs(JSON.parse(savedShf));
         if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
@@ -633,6 +650,76 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         console.warn('Supabase delete failed:', e);
       }
     }
+    return true;
+  };
+
+  // Spare parts management (Linh kiện mới & cũ)
+  const addSparePart = async (partData: Omit<SparePart, 'id'>): Promise<SparePart> => {
+    const newPart: SparePart = {
+      ...partData,
+      id: `sp-${Date.now()}`,
+    };
+    setSpareParts((prev) => {
+      const next = [newPart, ...prev];
+      saveToLocal(STORAGE_KEYS.spareParts, next);
+      return next;
+    });
+    return newPart;
+  };
+
+  const updateSparePart = async (id: string, data: Partial<SparePart>): Promise<boolean> => {
+    setSpareParts((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      saveToLocal(STORAGE_KEYS.spareParts, next);
+      return next;
+    });
+    return true;
+  };
+
+  const deleteSparePart = async (id: string): Promise<boolean> => {
+    if (!canEditStock()) {
+      return false;
+    }
+    setSpareParts((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      saveToLocal(STORAGE_KEYS.spareParts, next);
+      return next;
+    });
+    return true;
+  };
+
+  // Software license management (Phần mềm & Bản quyền)
+  const addSoftwareLicense = async (swData: Omit<SoftwareLicense, 'id'>): Promise<SoftwareLicense> => {
+    const newSw: SoftwareLicense = {
+      ...swData,
+      id: `sw-${Date.now()}`,
+    };
+    setSoftwareLicenses((prev) => {
+      const next = [newSw, ...prev];
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return newSw;
+  };
+
+  const updateSoftwareLicense = async (id: string, data: Partial<SoftwareLicense>): Promise<boolean> => {
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const deleteSoftwareLicense = async (id: string): Promise<boolean> => {
+    if (!canEditStock()) {
+      return false;
+    }
+    setSoftwareLicenses((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
     return true;
   };
 
@@ -924,6 +1011,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCustomers(initialCustomers);
     setTickets(initialTickets);
     setSpareParts(initialSpareParts);
+    setSoftwareLicenses(initialSoftwareLicenses);
     setOnsiteDispatches(initialOnsiteDispatches);
     setShiftLogs(initialShiftLogs);
     setFaqs(initialFaqs);
@@ -935,6 +1023,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.customers);
       localStorage.removeItem(STORAGE_KEYS.tickets);
       localStorage.removeItem(STORAGE_KEYS.spareParts);
+      localStorage.removeItem(STORAGE_KEYS.softwareLicenses);
       localStorage.removeItem(STORAGE_KEYS.onsiteDispatches);
       localStorage.removeItem(STORAGE_KEYS.shiftLogs);
       localStorage.removeItem(STORAGE_KEYS.faqs);
@@ -976,6 +1065,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         customers,
         tickets,
         spareParts,
+        addSparePart,
+        updateSparePart,
+        deleteSparePart,
+        softwareLicenses,
+        addSoftwareLicense,
+        updateSoftwareLicense,
+        deleteSoftwareLicense,
         onsiteDispatches,
         shiftLogs,
         faqs,
