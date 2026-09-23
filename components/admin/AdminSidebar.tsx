@@ -143,7 +143,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       {/* Footer Info */}
       <div className="p-4 border-t border-slate-100 text-center">
         <div className="text-[11px] text-slate-400 font-medium">
-          Vi Tính An Tâm
+          Copyright {new Date().getFullYear()} by An Tam Computer
         </div>
       </div>
     </div>
