@@ -11,7 +11,6 @@ import {
   HardDrive,
   ShieldCheck,
   Zap,
-  Clock,
   ArrowRight,
   ArrowUp,
   PhoneCall,
@@ -252,7 +251,7 @@ export default function HomePage() {
     {
       question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
+        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà hỗ trợ nhanh chóng tại TP. Tân An (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00.',
     },
     {
       question: 'Windows bản quyền số vĩnh viễn có lợi ích gì cho kế toán và văn phòng?',
@@ -771,93 +770,6 @@ export default function HomePage() {
                 </div>
               );
             })}
-          </div>
-        </section>
-
-        {/* 7. TRỤ SỞ CHÍNH & MẠNG LƯỚI KỸ THUẬT LƯU ĐỘNG */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="chinh-sach">
-          <div className="p-6 sm:p-10 rounded-lg bg-white border border-slate-200 shadow-xs space-y-8 font-inter">
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-200 pb-5">
-              <div>
-                <div className="inline-flex items-center px-2 py-0.5 rounded bg-[#FAF7F2] text-[#C0392B] border border-[#E8E2D9] text-[10px] font-bold uppercase tracking-wider mb-1.5">
-                  TRỤ SỞ & ĐIỀU PHỐI KỸ THUẬT
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
-                  {t.coverage.title}
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-[#6E5D53] max-w-md md:text-right">
-                {t.coverage.desc}
-              </p>
-            </div>
-
-            {/* Content grid: Trụ sở Tân An & Các địa bàn cơ động */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Trụ sở chính: Hub Tân An */}
-              <div className="lg:col-span-5 p-5 rounded-lg bg-[#FAF7F2] border border-slate-200 space-y-3 text-xs text-[#6E5D53]">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#C0392B] text-white text-[10px] font-bold">
-                    TRỤ SỞ CHÍNH
-                  </span>
-                  <h3 className="text-sm font-bold text-[#2B1810]">
-                    {systemSettings.storeName || 'Vi Tính An Tâm'} (TP. Tân An)
-                  </h3>
-                </div>
-
-                <div className="space-y-1.5 leading-relaxed">
-                  <p>
-                    <strong className="text-[#2B1810]">Địa chỉ:</strong> {systemSettings.address || '45 Nguyễn Huệ, Phường 1, Tân An, Long An'}
-                  </p>
-                  <p>
-                    <strong className="text-[#2B1810]">Mở cửa:</strong> {systemSettings.workingHoursWeekday || '08:00 – 21:00'} (Hàng ngày, xuyên trưa)
-                  </p>
-                  <p>
-                    <strong className="text-[#2B1810]">Phạm vi:</strong> Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi.
-                  </p>
-                </div>
-              </div>
-
-              {/* Mạng lưới lưu động & Khung giờ cứu hộ khẩn */}
-              <div className="lg:col-span-7 space-y-3.5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3.5 rounded-lg bg-white border border-slate-200 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#2B1810]">Hỏa Tốc Bán Kính 5km</span>
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#C0392B]/10 text-[#C0392B]">
-                        Hỏa tốc 2h
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#6E5D53]">
-                      TP. Tân An (P1 - P7), Khánh Hậu, Tân Khánh, Lợi Bình Nhơn.
-                    </p>
-                  </div>
-
-                  <div className="p-3.5 rounded-lg bg-white border border-slate-200 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-[#2B1810]">Địa Bàn Lân Cận</span>
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-800">
-                        Theo lịch hẹn
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#6E5D53]">
-                      Thủ Thừa, Châu Thành, Tân Trụ, KCN Tân Hương.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Hộp Khung Giờ Cứu Hộ Khẩn */}
-                <div className="p-3.5 rounded-lg bg-[#FAF7F2] border-l-4 border-[#C0392B] border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
-                  <div className="flex items-center gap-2 text-[#2B1810] font-bold">
-                    <Clock className="w-4 h-4 text-[#C0392B] shrink-0" strokeWidth={1.5} />
-                    <span>{t.coverage.goldenHourTitle}: 17h30 – 21h00</span>
-                  </div>
-                  <span className="text-[11px] text-[#6E5D53]">
-                    Hỗ trợ ngoài giờ hành chính • Không phụ thu phí
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
       </main>

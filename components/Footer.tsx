@@ -11,7 +11,7 @@ export function Footer() {
   const t = TRANSLATIONS[currentLang || 'vi'].footer;
 
   return (
-    <footer className="w-full bg-[#1C130E] border-t border-[#332219] pt-12 pb-10 text-[#D7CCC8] mt-16 shadow-[0_-4px_24px_rgba(0,0,0,0.2)]">
+    <footer id="chinh-sach" className="w-full bg-[#1C130E] border-t border-[#332219] pt-12 pb-10 text-[#D7CCC8] mt-16 shadow-[0_-4px_24px_rgba(0,0,0,0.2)] scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 text-sm">
           {/* Cột 1: Trụ sở & Hotline */}

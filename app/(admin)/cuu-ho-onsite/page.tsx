@@ -83,7 +83,7 @@ export default function CuuHoOnsitePage() {
               Trụ Sở Điều Phối: Tân An & Các Huyện Lân Cận
             </div>
             <div className="text-xs text-blue-700 font-medium mt-0.5">
-              Phạm vi phục vụ: Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi (Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn). Huyện lân cận theo lịch hẹn.
+              Phạm vi phục vụ: TP. Tân An (Phường 1-7, Khánh Hậu, Tân Khánh, Lợi Bình Nhơn) và các huyện lân cận theo lịch hẹn.
             </div>
           </div>
         </div>

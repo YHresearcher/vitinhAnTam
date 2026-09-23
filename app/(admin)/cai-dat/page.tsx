@@ -127,7 +127,7 @@ export default function CaiDatPage() {
           streetAddress: '45 Nguyễn Huệ, Phường 1',
           district: 'Tân An',
           city: 'Long An',
-          serviceAreas: 'Bán kính 5km từ cửa hàng (Hỏa tốc), Thủ Thừa, Châu Thành, Tân Trụ',
+          serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
           workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
@@ -643,7 +643,7 @@ export default function CaiDatPage() {
 
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Phạm vi phục vụ (Cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi)
+                        Phạm vi phục vụ
                       </label>
                       <input
                         type="text"
@@ -651,7 +651,7 @@ export default function CaiDatPage() {
                         onChange={(e) => handleChange('serviceAreas', e.target.value)}
                         className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
                       />
-                      <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: Bán kính 5km từ cửa hàng (Hỏa tốc), Thủ Thừa, Châu Thành, Tân Trụ</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">Ví dụ: Tân An (Hỏa tốc), Thủ Thừa, Châu Thành, Tân Trụ</span>
                     </div>
                   </div>
 

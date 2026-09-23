@@ -60,7 +60,7 @@ export const initialSystemSettings: SystemSettings = {
   streetAddress: '45 Nguyễn Huệ, Phường 1',
   district: 'Tân An',
   city: 'Long An',
-  serviceAreas: 'Bán kính 5km từ cửa hàng (Hỏa tốc), Thủ Thừa, Châu Thành, Tân Trụ',
+  serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
   workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',

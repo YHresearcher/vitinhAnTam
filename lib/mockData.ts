@@ -506,7 +506,7 @@ export const initialFaqs: FaqItem[] = [
     id: 'faq-1',
     icon: 'Clock',
     question: 'Chính sách phản ứng hỏa tốc tận nơi trong 2 giờ áp dụng vào thời gian & địa bàn nào?',
-    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag (S/N) hoặc liên hệ qua kênh hỗ trợ. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi cứu hộ kỹ thuật hỏa tốc trong bán kính 5km từ cửa hàng của chúng tôi (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt, dịch vụ hỏa tốc được ưu tiên cao điểm nhất trong khung giờ cứu hộ khẩn từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00).',
+    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag (S/N) hoặc liên hệ qua kênh hỗ trợ. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi hỗ trợ nhanh chóng tại TP. Tân An (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt, dịch vụ hỏa tốc được ưu tiên cao điểm nhất trong khung giờ cứu hộ khẩn từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00).',
   },
   {
     id: 'faq-2',
