@@ -376,35 +376,6 @@ export default function HomePage() {
             )}
           </div>
 
-          {/* CTA Banner dẫn sang Trang Danh Mục Sản Phẩm Đầy Đủ (/danh-muc-san-pham) */}
-          <div className="p-6 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="space-y-1 text-center sm:text-left">
-              <h4 className="text-sm font-bold text-[#2B1810] flex items-center gap-2 justify-center sm:justify-start">
-                <ShieldCheck className="w-4 h-4 text-[#C0392B]" />
-                <span>{isEn ? 'Delivered Machine Archives & Full Catalog' : 'Tra cứu hồ sơ máy đã bán & Toàn bộ danh mục'}</span>
-              </h4>
-              <p className="text-xs text-[#6E5D53]">
-                {isEn
-                  ? 'Explore our dedicated catalog page with both in-stock units and delivered machines archives.'
-                  : 'Xem trang Danh Mục Sản Phẩm riêng biệt để tra cứu cả máy đang sẵn và lưu trữ hồ sơ thiết bị đã bàn giao thực tế.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2.5 shrink-0">
-              <Link
-                href="/danh-muc-san-pham?tab=sold"
-                className="px-4 py-2.5 rounded-lg bg-white border border-[#E8E2D9] hover:bg-[#FAF7F2] text-[#2B1810] font-bold text-xs shadow-2xs transition-all"
-              >
-                {isEn ? 'Delivered Machines' : 'Xem Máy Đã Bán'}
-              </Link>
-              <Link
-                href="/danh-muc-san-pham"
-                className="px-4 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-2xs transition-all flex items-center gap-1.5"
-              >
-                <span>{isEn ? 'View Full Catalog' : 'Trang Danh Mục Sản Phẩm'}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
         </section>
 
         {/* 3. KHỐI 2: MENU GÓI DỊCH VỤ & SPA */}
@@ -572,9 +543,9 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {/* Step 01 */}
-            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all relative">
+            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
               <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">01</div>
               <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s1Title}</h3>
               <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
@@ -583,7 +554,7 @@ export default function HomePage() {
             </div>
 
             {/* Step 02 */}
-            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all relative">
+            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
               <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">02</div>
               <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s2Title}</h3>
               <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
@@ -591,17 +562,17 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Step 03 - PHÁ GRID: Dịch chuyển nhẹ zic-zac */}
-            <div className="p-6 rounded-lg bg-[#FFFDF9] border-2 border-[#D9531E] shadow-sm hover:border-[#C0392B] transition-all relative lg:translate-y-3">
-              <div className="text-4xl font-black text-[#F2C4B2] leading-none mb-3">03</div>
-              <h3 className="text-sm font-bold text-[#C0392B] uppercase">{t.qcProcess.s3Title}</h3>
+            {/* Step 03 */}
+            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">03</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s3Title}</h3>
               <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
                 {t.qcProcess.s3Desc}
               </p>
             </div>
 
             {/* Step 04 */}
-            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all relative">
+            <div className="p-6 rounded-lg bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
               <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">04</div>
               <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s4Title}</h3>
               <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">

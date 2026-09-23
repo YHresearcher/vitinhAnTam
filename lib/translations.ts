@@ -43,18 +43,18 @@ export const TRANSLATIONS = {
       brandTag: 'VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM',
       mainTitle: 'MÁY TÍNH CŨ TUYỂN CHỌN LOẠI 1',
       badgeWindows: 'WINDOWS BẢN QUYỀN',
-      badge2h: 'PHẢN ỨNG HỎA TỐC 2 GIỜ (<5KM TÂN AN)',
+      badge2h: 'PHẢN ỨNG HỎA TỐC 2 GIỜ (<5KM TỪ CỬA HÀNG)',
       description:
-        'Chuyên cung cấp PC/laptop nồi đồng cối đá Dell, HP, ThinkPad nguyên bản loại A, kiểm định 24 bước kỹ thuật nghiêm ngặt.',
-      pillar1Title: 'DELL, HP, IBM NGUYÊN BẢN',
+        'Chuyên các dòng máy Dell, IBM, HP chuẩn doanh nghiệp. QUY TRÌNH KIỂM ĐỊNH 4 LỚP kỹ lưỡng trước khi bán.',
+      pillar1Title: 'CHUYÊN DELL, IBM, HP DOANH NGHIỆP',
       pillar1Desc:
-        'Ngoại hình đẹp >95%, bo mạch nguyên bản, kiểm định 24 bước kỹ thuật nghiêm ngặt.',
+        'Chuyên các dòng máy Dell, IBM, HP chuẩn doanh nghiệp. QUY TRÌNH KIỂM ĐỊNH 4 LỚP kỹ lưỡng trước khi bán.',
       pillar2Title: 'WINDOWS BẢN QUYỀN',
       pillar2Desc:
         'Kích hoạt kỹ thuật số sạch vĩnh viễn, an toàn dữ liệu thuế và kế toán MISA.',
-      pillar3Title: 'HỎA TỐC 2 GIỜ (<5KM TÂN AN)',
+      pillar3Title: 'HỎA TỐC 2 GIỜ (<5KM TỪ CỬA HÀNG)',
       pillar3Desc:
-        'Đổi mới linh kiện tại chỗ cho khu vực <5km từ trung tâm Tân An, ưu tiên khung giờ cứu hộ khẩn 17:30 – 21:00.',
+        'Đổi mới linh kiện tại chỗ cho khu vực <5km từ cửa hàng, ưu tiên khung giờ cứu hộ khẩn 17:30 – 21:00.',
       quickSearchLabel: 'Tra Cứu Nhanh S/N:',
       quickSearchPlaceholder: 'Nhập Service Tag hoặc Số điện thoại...',
       quickSearchBtn: 'Tra Cứu Hồ Sơ',
@@ -141,8 +141,7 @@ export const TRANSLATIONS = {
       pkg3Sub: 'Hỗ trợ phần mềm văn phòng & kết nối máy in',
       feeLabel: 'Chi phí dịch vụ:',
       btnBookPkg: 'Đặt Lịch Gói Này',
-      btnBigDispatch:
-        'Đặt Lịch Kỹ Thuật Viên Qua Tận Nơi Trong 2 Giờ. Liên hệ ngay số hotline',
+      btnBigDispatch: 'Đặt Lịch Kỹ Thuật Viên Tận Nơi',
     },
     warrantyBanner: {
       title: 'CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ THEO S/N',
