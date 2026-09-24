@@ -28,9 +28,10 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1" aria-label="Menu chính">
           <Link
             href="/"
+            aria-current={pathname === '/' ? 'page' : undefined}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/'
                 ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
@@ -41,6 +42,7 @@ export function Navbar() {
           </Link>
           <Link
             href="/vi-sao-chon-an-tam"
+            aria-current={pathname === '/vi-sao-chon-an-tam' ? 'page' : undefined}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/vi-sao-chon-an-tam'
                 ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
@@ -51,6 +53,7 @@ export function Navbar() {
           </Link>
           <Link
             href="/danh-muc-san-pham"
+            aria-current={pathname === '/danh-muc-san-pham' ? 'page' : undefined}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
               pathname === '/danh-muc-san-pham'
                 ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'

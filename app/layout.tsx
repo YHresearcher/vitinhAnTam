@@ -101,12 +101,19 @@ const jsonLd = {
   url: 'https://vitinhantham.vn',
   telephone: '+84909053058',
   email: 'lienhe@vitinhantham.vn',
+  image: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '45 Nguyễn Huệ, Phường 1',
     addressLocality: 'Tân An',
     addressRegion: 'Long An',
+    postalCode: '820000',
     addressCountry: 'VN',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 10.5333,
+    longitude: 106.4167,
   },
   openingHoursSpecification: [
     {
@@ -123,7 +130,16 @@ const jsonLd = {
     },
   ],
   priceRange: '3.000.000₫ - 8.000.000₫',
-  areaServed: ['Tân An', 'Thủ Thừa', 'Châu Thành', 'Tân Trụ'],
+  areaServed: [
+    { '@type': 'City', name: 'Tân An' },
+    { '@type': 'City', name: 'Thủ Thừa' },
+    { '@type': 'City', name: 'Châu Thành' },
+    { '@type': 'City', name: 'Tân Trụ' },
+  ],
+  sameAs: [
+    'https://zalo.me/0909053058',
+    'https://wa.me/84909053058',
+  ],
 };
 
 export default function RootLayout({
@@ -134,7 +150,6 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable}`}>
       <head>
-        <title>Vi tính An Tâm - Bán bằng tâm để bạn an tâm</title>
         {/* Schema.org Structured Data for Local SEO */}
         <script
           type="application/ld+json"
