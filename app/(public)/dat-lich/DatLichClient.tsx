@@ -77,7 +77,7 @@ function AppointmentBookingContent() {
         ticket_code: ticketCode,
         customer_name: customerName.trim(),
         customer_phone: customerPhone.trim(),
-        customer_address: address.trim() || 'Tại quầy 45 Nguyễn Huệ, P.1 Tân An',
+        customer_address: address.trim() || 'Tại quầy 52 Nguyễn Cửu Vân, P. Long An, Tây Ninh',
         device_service_tag: 'ST-PENDING',
         device_name: deviceType,
         reception_mode: locationType === 'onsite' ? 'mobile' : 'counter',
@@ -85,13 +85,13 @@ function AppointmentBookingContent() {
         issue_description: `Đặt lịch: ${serviceNeeded || 'Kiểm tra máy tổng quát'}`,
         estimated_cost: locationType === 'onsite' ? 150000 : 100000,
         dispatch_address: locationType === 'onsite' ? address.trim() : undefined,
-        technician_name: 'KTV Trực ca Long An',
+        technician_name: 'KTV Trực ca Tây Ninh',
         selected_services: [
           {
             id: 'srv-booking',
             name: serviceNeeded,
             price: locationType === 'onsite' ? 150000 : 100000,
-            warranty_tier: currentLang === 'en' ? '2-Hour Rapid Response (<5km)' : 'Hỏa tốc 2 giờ (<5km Tân An)',
+            warranty_tier: currentLang === 'en' ? '2-Hour Rapid Response' : 'Hỏa tốc 2 giờ',
           },
         ],
         multi_tier_warranty: {
@@ -116,7 +116,7 @@ function AppointmentBookingContent() {
         location:
           locationType === 'onsite'
             ? address
-            : (currentLang === 'en' ? 'Vi Tinh An Tam Hub (45 Nguyen Hue, Ward 1, Tan An)' : 'Trụ sở Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Long An - Tây Ninh)'),
+            : (currentLang === 'en' ? 'Vi Tinh An Tam Store (52 Nguyen Cuu Van, Long An Ward, Tay Ninh)' : 'Cửa hàng Vi Tính An Tâm (52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh)'),
         service: serviceNeeded,
       });
     } catch {
@@ -135,11 +135,11 @@ function AppointmentBookingContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF7F2] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Header Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-xs text-slate-500">
-          <Link href="/" className="hover:text-blue-600">
+          <Link href="/" className="hover:text-[#C0392B] transition-colors">
             {t.breadcrumbHome}
           </Link>
           <span>/</span>
@@ -148,8 +148,8 @@ function AppointmentBookingContent() {
 
         {/* Title */}
         <div className="text-center mb-8">
-          <span className="text-xs uppercase tracking-widest text-blue-700 font-bold bg-blue-50 border border-blue-200 px-3.5 py-1 rounded-full inline-flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+          <span className="text-xs uppercase tracking-widest text-[#C0392B] font-bold bg-[#FBE8DE] border border-[#F2C4B2] px-3.5 py-1 rounded-full inline-flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#C0392B]" />
             <span>{t.badge2h}</span>
           </span>
           <h1 className="text-2xl sm:text-4xl font-black text-slate-900 mt-3 tracking-tight">
@@ -179,10 +179,10 @@ function AppointmentBookingContent() {
               </p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-5 text-xs text-left max-w-md mx-auto space-y-2.5 border border-slate-200">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200">
+            <div className="bg-[#FAF7F2] rounded-2xl p-5 text-xs text-left max-w-md mx-auto space-y-2.5 border border-[#E8E2D9]">
+              <div className="flex justify-between items-center pb-2 border-b border-[#E8E2D9]">
                 <span className="text-slate-500">{t.ticketCodeLabel}</span>
-                <span className="font-mono font-black text-sm text-blue-700">{bookingSuccess.code}</span>
+                <span className="font-mono font-black text-sm text-[#C0392B]">{bookingSuccess.code}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.customerLabel}</span>
@@ -194,7 +194,7 @@ function AppointmentBookingContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.timeLabel}</span>
-                <span className="font-semibold text-blue-700">
+                <span className="font-semibold text-[#C0392B]">
                   {bookingSuccess.slot} • {bookingSuccess.date}
                 </span>
               </div>
@@ -211,7 +211,7 @@ function AppointmentBookingContent() {
                 href={getZaloShareUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all flex items-center gap-2"
+                className="px-5 py-3 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white text-xs font-bold shadow-md shadow-[#0068FF]/20 transition-all flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>{t.btnZaloConfirm}</span>
@@ -232,7 +232,7 @@ function AppointmentBookingContent() {
           </div>
         ) : (
           /* Booking Form */
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-md p-6 sm:p-8">
+          <div className="bg-white rounded-3xl border border-[#E8E2D9] shadow-md p-6 sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
               {errorMsg && (
                 <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
@@ -251,11 +251,11 @@ function AppointmentBookingContent() {
                     onClick={() => setLocationType('onsite')}
                     className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 ${
                       locationType === 'onsite'
-                        ? 'border-blue-600 bg-blue-50/50 shadow-xs'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-[#C0392B] bg-[#FBE8DE]/30 shadow-xs'
+                        : 'border-[#E8E2D9] bg-white hover:border-[#C0392B]/50'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center shrink-0">
                       <Bike className="w-5 h-5" />
                     </div>
                     <div>
@@ -270,11 +270,11 @@ function AppointmentBookingContent() {
                     onClick={() => setLocationType('counter')}
                     className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 ${
                       locationType === 'counter'
-                        ? 'border-blue-600 bg-blue-50/50 shadow-xs'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-[#C0392B] bg-[#FBE8DE]/30 shadow-xs'
+                        : 'border-[#E8E2D9] bg-white hover:border-[#C0392B]/50'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center shrink-0">
                       <Store className="w-5 h-5" />
                     </div>
                     <div>
@@ -300,7 +300,7 @@ function AppointmentBookingContent() {
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
                       placeholder={t.namePlaceholder}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       required
                     />
                   </div>
@@ -311,7 +311,7 @@ function AppointmentBookingContent() {
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       placeholder={t.phonePlaceholder}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       required
                     />
                   </div>
@@ -325,7 +325,7 @@ function AppointmentBookingContent() {
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder={t.addressPlaceholder}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       required={locationType === 'onsite'}
                     />
                   </div>
@@ -345,7 +345,7 @@ function AppointmentBookingContent() {
                     value={deviceType}
                     onChange={(e) => setDeviceType(e.target.value)}
                     placeholder={t.devicePlaceholder}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors mb-2"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all mb-2"
                   />
                 </div>
 
@@ -357,7 +357,7 @@ function AppointmentBookingContent() {
                       key={idx}
                       type="button"
                       onClick={() => handleSelectQuickService(qs)}
-                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 transition-colors text-left"
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#FAF7F2] hover:bg-[#FBE8DE] hover:text-[#C0392B] text-slate-700 border border-[#E8E2D9] transition-colors text-left"
                     >
                       + {qs}
                     </button>
@@ -369,7 +369,7 @@ function AppointmentBookingContent() {
                   value={serviceNeeded}
                   onChange={(e) => setServiceNeeded(e.target.value)}
                   placeholder={t.issuePlaceholder}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                   required
                 />
               </div>
@@ -386,7 +386,7 @@ function AppointmentBookingContent() {
                     type="date"
                     value={appointmentDate}
                     onChange={(e) => setAppointmentDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-blue-500 bg-slate-50 focus:bg-white transition-colors"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                   />
                 </div>
 
@@ -400,8 +400,8 @@ function AppointmentBookingContent() {
                         onClick={() => setTimeSlot(ts.label)}
                         className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
                           isSelected
-                            ? 'border-blue-600 bg-blue-50 text-blue-900 font-bold shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 bg-slate-50/50 text-slate-700'
+                            ? 'border-[#C0392B] bg-[#FBE8DE]/40 text-[#2B1810] font-bold shadow-xs'
+                            : 'border-[#E8E2D9] hover:border-[#C0392B]/50 bg-white text-slate-700'
                         }`}
                       >
                         <span className="text-xl">{ts.icon}</span>
@@ -420,7 +420,7 @@ function AppointmentBookingContent() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
+                  className="w-full py-4 rounded-2xl bg-[#C0392B] hover:bg-[#A93226] text-white font-black text-sm shadow-md shadow-[#C0392B]/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99]"
                 >
                   <Calendar className="w-4 h-4" />
                   <span>{isSubmitting ? t.submitting : t.btnSubmit}</span>
@@ -441,8 +441,8 @@ export default function AppointmentBookingPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-white flex items-center justify-center">
-          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+          <div className="w-8 h-8 border-3 border-[#C0392B] border-t-transparent rounded-full animate-spin"></div>
         </div>
       }
     >

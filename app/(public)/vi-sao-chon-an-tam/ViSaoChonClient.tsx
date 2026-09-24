@@ -64,14 +64,14 @@ export default function WhyUsPage() {
   return (
     <div className="w-full">
       {/* 1. HERO BANNER */}
-      <section className="relative bg-gradient-to-b from-blue-50/80 via-white to-slate-50/50 py-12 sm:py-16 border-b border-slate-200/80">
+      <section className="relative bg-gradient-to-b from-[#FDFBF7] via-white to-[#FAF7F2] py-12 sm:py-16 border-b border-slate-200/80">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider">
-            <Zap className="w-4 h-4 text-blue-700" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
+            <Zap className="w-4 h-4 text-[#C0392B]" />
             <span>{t.heroBadge}</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight leading-tight">
             {t.heroTitle}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
@@ -84,10 +84,10 @@ export default function WhyUsPage() {
         {/* 2. BẢNG NGUYÊN NHÂN - KẾT QUẢ (CAUSE & EFFECT MATRIX) */}
         <section className="space-y-6">
           <div className="text-center space-y-1.5">
-            <span className="text-xs uppercase font-bold text-blue-700 tracking-wider">
+            <span className="text-xs uppercase font-bold text-[#C0392B] tracking-wider">
               {t.matrixTag}
             </span>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+            <h2 className="text-xl sm:text-2xl font-black text-[#1A0F0A]">
               {t.matrixTitle}
             </h2>
           </div>
@@ -97,7 +97,7 @@ export default function WhyUsPage() {
               return (
                 <div
                   key={item.id}
-                  className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-blue-300 transition-all grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
+                  className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/50 transition-all grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
                 >
                   <div className="md:col-span-5 space-y-1.5 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-4">
                     <div className="flex items-center gap-1.5 text-rose-600 font-bold text-xs uppercase tracking-wide">
@@ -122,12 +122,12 @@ export default function WhyUsPage() {
         </section>
 
         {/* 3. GIẢI PHÁP TƯƠNG TÁC CHO TỪNG NHÓM KHÁCH HÀNG (INTERACTIVE TABS) */}
-        <section className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white space-y-6">
+        <section className="p-6 sm:p-8 rounded-3xl bg-[#1C130E] border border-[#332219] text-white space-y-6 shadow-xl">
           <div className="text-center space-y-2">
             <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight">
               {t.solutionsTitle}
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
+            <p className="text-xs sm:text-sm text-[#D7CCC8]">
               {t.solutionsDesc}
             </p>
           </div>
@@ -144,8 +144,8 @@ export default function WhyUsPage() {
                   onClick={() => setSelectedSegment(seg.key as SegmentKey)}
                   className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shadow-xs ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-blue-500/25 ring-2 ring-blue-400'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                      ? 'bg-[#C0392B] text-white shadow-[#C0392B]/25 ring-2 ring-[#F2C4B2]'
+                      : 'bg-[#271B14] text-[#D7CCC8] hover:bg-[#332219] hover:text-white border border-[#3E291F]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -161,7 +161,7 @@ export default function WhyUsPage() {
               {/* Nhóm 1: Business */}
               <div className="p-5 rounded-2xl bg-white space-y-3 flex flex-col justify-between">
                 <div>
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-bold mb-2">
                     <Store className="w-5 h-5" />
                   </div>
                   <h3 className="text-sm font-bold uppercase">{t.segments.business}</h3>
@@ -170,7 +170,7 @@ export default function WhyUsPage() {
                     <strong>{t.actualResultLabel}</strong> {t.segmentDetails.business.solution}
                   </p>
                 </div>
-                <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-blue-700">
+                <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-[#C0392B]">
                   {t.recommendedModelLabel} {t.segmentDetails.business.recommendedDevice}
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function WhyUsPage() {
           ) : (
             <div className="p-6 rounded-2xl bg-white text-slate-900 space-y-4 animate-fade-in">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center shrink-0">
                   {React.createElement(currentSegment.icon, { className: 'w-6 h-6' })}
                 </div>
                 <div>
@@ -238,10 +238,10 @@ export default function WhyUsPage() {
                   <div className="text-sm font-bold text-slate-900 mt-0.5">{currentSegment.recommendedDevice}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-base font-black text-orange-600 font-mono">{currentSegment.priceRange}</span>
+                  <span className="text-base font-black text-[#C0392B] font-mono">{currentSegment.priceRange}</span>
                   <Link
                     href={`/dat-lich?device=${encodeURIComponent(currentSegment.recommendedDevice || '')}`}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-xs"
+                    className="px-4 py-2 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-colors shadow-xs"
                   >
                     {t.btnBookInspect}
                   </Link>
@@ -252,7 +252,7 @@ export default function WhyUsPage() {
         </section>
 
         {/* 4. LỜI KẾT & NÚT HÀNH ĐỘNG */}
-        <section className="p-7 sm:p-8 rounded-3xl bg-blue-50/70 border border-blue-200/80 text-center space-y-4">
+        <section className="p-7 sm:p-8 rounded-3xl bg-[#FAF7F2] border border-[#E8E2D9] text-center space-y-4">
           <h3 className="text-base sm:text-xl font-bold text-slate-900">
             {t.ctaTitle}
           </h3>
@@ -263,13 +263,13 @@ export default function WhyUsPage() {
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
               href="/danh-muc-san-pham"
-              className="px-5 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-xs transition-colors"
             >
               {t.btnBrowseInventory}
             </Link>
             <a
               href="tel:0909053058"
-              className="px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-md shadow-orange-500/20 transition-all flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#D9531E] hover:bg-[#C0392B] text-white font-bold text-xs shadow-md shadow-[#D9531E]/20 transition-all flex items-center gap-1.5"
             >
               <Phone className="w-4 h-4" />
               <span>{t.btnHotline}</span>
@@ -278,7 +278,7 @@ export default function WhyUsPage() {
               href="/dat-lich"
               className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5"
             >
-              <Calendar className="w-4 h-4 text-blue-600" />
+              <Calendar className="w-4 h-4 text-[#C0392B]" />
               <span>{t.btnBookOnsiteTech}</span>
             </Link>
           </div>
