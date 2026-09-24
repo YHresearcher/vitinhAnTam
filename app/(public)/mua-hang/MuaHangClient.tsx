@@ -28,9 +28,27 @@ type DeliveryMethod = 'pickup' | 'delivery' | null;
 type Step = 'payment' | 'delivery' | 'confirm' | 'success';
 
 const INSTALLMENT_PARTNERS = [
-  { id: 'home_credit', name: 'Home Credit', logo: '🏦', note: '0% lãi suất 6 tháng (duyệt nhanh 15 phút)' },
-  { id: 'fecredit', name: 'FE Credit', logo: '💳', note: 'Trả góp linh hoạt 6-36 tháng' },
-  { id: 'shinhan', name: 'Shinhan Finance', logo: '🏧', note: 'Lãi suất ưu đãi, không cần tài sản đảm bảo' },
+  {
+    id: 'home_credit',
+    name: 'Home Credit',
+    logo: '🏦',
+    noteVi: '0% lãi suất 6 tháng (duyệt nhanh 15 phút)',
+    noteEn: '0% interest for 6 months (quick 15-min approval)',
+  },
+  {
+    id: 'fecredit',
+    name: 'FE Credit',
+    logo: '💳',
+    noteVi: 'Trả góp linh hoạt 6-36 tháng',
+    noteEn: 'Flexible installments from 6 to 36 months',
+  },
+  {
+    id: 'shinhan',
+    name: 'Shinhan Finance',
+    logo: '🏧',
+    noteVi: 'Lãi suất ưu đãi, không cần tài sản đảm bảo',
+    noteEn: 'Preferential rates, zero collateral required',
+  },
 ];
 
 // ------------------------------------------------------------------
@@ -39,9 +57,10 @@ const INSTALLMENT_PARTNERS = [
 export default function MuaHangClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { systemSettings } = useViTinhAnTamStore();
+  const { systemSettings, currentLang } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
 
-  const deviceName = searchParams.get('device') || 'Máy tính tuyển chọn';
+  const deviceName = searchParams.get('device') || (isEn ? 'Selected Computer' : 'Máy tính tuyển chọn');
   const devicePrice = Number(searchParams.get('price')) || 0;
   const deviceTag = searchParams.get('tag') || '';
 
@@ -68,9 +87,9 @@ export default function MuaHangClient() {
   // Step indicators
   // ------------------------------------------------------------------
   const steps: { id: Step; label: string }[] = [
-    { id: 'payment', label: 'Thanh toán' },
-    { id: 'delivery', label: 'Nhận hàng' },
-    { id: 'confirm', label: 'Xác nhận' },
+    { id: 'payment', label: isEn ? 'Payment' : 'Thanh toán' },
+    { id: 'delivery', label: isEn ? 'Delivery' : 'Nhận hàng' },
+    { id: 'confirm', label: isEn ? 'Confirm' : 'Xác nhận' },
   ];
   const stepOrder: Step[] = ['payment', 'delivery', 'confirm', 'success'];
   const currentStepIndex = stepOrder.indexOf(step);
@@ -94,9 +113,9 @@ export default function MuaHangClient() {
             className="flex items-center gap-1.5 text-xs font-semibold text-[#6E5D53] hover:text-[#2B1810] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{step === 'payment' ? 'Quay lại' : 'Bước trước'}</span>
+            <span>{step === 'payment' ? (isEn ? 'Back' : 'Quay lại') : (isEn ? 'Previous Step' : 'Bước trước')}</span>
           </button>
-          <span className="text-xs font-bold text-[#2B1810]">ĐẶT MUA MÁY</span>
+          <span className="text-xs font-bold text-[#2B1810]">{isEn ? 'PURCHASE ORDER' : 'ĐẶT MUA MÁY'}</span>
           <a
             href={`tel:${(systemSettings.hotline || '0909053058').replace(/\./g, '')}`}
             className="flex items-center gap-1 text-xs font-semibold text-[#C0392B]"
@@ -115,7 +134,9 @@ export default function MuaHangClient() {
             <ShieldCheck className="w-5 h-5 text-[#C0392B]" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] uppercase tracking-wider text-[#C0392B] font-bold mb-0.5">Sản phẩm đặt mua</div>
+            <div className="text-[10px] uppercase tracking-wider text-[#C0392B] font-bold mb-0.5">
+              {isEn ? 'Selected Computer' : 'Sản phẩm đặt mua'}
+            </div>
             <div className="text-sm font-bold text-[#2B1810] truncate">{deviceName}</div>
             {deviceTag && (
               <div className="text-[11px] text-slate-500 font-mono">S/N: {deviceTag}</div>
@@ -163,7 +184,9 @@ export default function MuaHangClient() {
         {/* ============================================================ */}
         {step === 'payment' && (
           <div className="space-y-3">
-            <h2 className="text-base font-black text-[#2B1810]">Chọn hình thức thanh toán</h2>
+            <h2 className="text-base font-black text-[#2B1810]">
+              {isEn ? 'Select Payment Method' : 'Chọn hình thức thanh toán'}
+            </h2>
 
             {/* QR Code / Chuyển khoản */}
             <div
@@ -178,11 +201,15 @@ export default function MuaHangClient() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-[#2B1810]">Thanh toán QR Code</h3>
+                  <h3 className="text-sm font-bold text-[#2B1810]">
+                    {isEn ? 'VietQR Code / Bank Transfer' : 'Thanh toán QR Code'}
+                  </h3>
                   {paymentMethod === 'qr' && <Check className="w-4 h-4 text-[#C0392B]" />}
                 </div>
                 <p className="text-xs text-[#6E5D53] mt-0.5 leading-snug">
-                  Quét mã VietQR qua app ngân hàng, ví MoMo, ZaloPay. Xác nhận tức thì.
+                  {isEn
+                    ? 'Scan VietQR code using mobile banking apps, MoMo, or ZaloPay. Instant confirmation.'
+                    : 'Quét mã VietQR qua app ngân hàng, ví MoMo, ZaloPay. Xác nhận tức thì.'}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {['VietQR', 'MoMo', 'ZaloPay', 'BIDV', 'Vietcombank'].map((b) => (
@@ -192,7 +219,7 @@ export default function MuaHangClient() {
               </div>
             </div>
 
-            {/* Tiền mặt */}
+            {/* Trả góp */}
             <div
               onClick={() => { setPaymentMethod('installment'); setSelectedInstallmentPartner(null); }}
               className={`bg-white rounded-xl border-2 cursor-pointer transition-all p-4 ${paymentMethod === 'installment'
@@ -206,11 +233,15 @@ export default function MuaHangClient() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[#2B1810]">Trả góp qua công ty tài chính</h3>
+                    <h3 className="text-sm font-bold text-[#2B1810]">
+                      {isEn ? 'Financing Company Installment' : 'Trả góp qua công ty tài chính'}
+                    </h3>
                     {paymentMethod === 'installment' && <Check className="w-4 h-4 text-[#C0392B]" />}
                   </div>
                   <p className="text-xs text-[#6E5D53] mt-0.5 leading-snug">
-                    Duyệt nhanh 15 -60 phút, không cần tài sản đảm bảo. Kì hạn 6-36 tháng.
+                    {isEn
+                      ? 'Fast 15-60 minute approval, no collateral needed. Flexible 6-36 month terms.'
+                      : 'Duyệt nhanh 15 -60 phút, không cần tài sản đảm bảo. Kì hạn 6-36 tháng.'}
                   </p>
                 </div>
               </div>
@@ -218,7 +249,9 @@ export default function MuaHangClient() {
               {/* Installment partner options */}
               {paymentMethod === 'installment' && (
                 <div className="mt-4 pt-3 border-t border-[#E8E2D9] space-y-2">
-                  <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">Chọn đối tác tài chính:</div>
+                  <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">
+                    {isEn ? 'Select financing partner:' : 'Chọn đối tác tài chính:'}
+                  </div>
                   {INSTALLMENT_PARTNERS.map((partner) => (
                     <div
                       key={partner.id}
@@ -231,7 +264,7 @@ export default function MuaHangClient() {
                       <span className="text-xl">{partner.logo}</span>
                       <div className="flex-1">
                         <div className="text-xs font-bold text-[#2B1810]">{partner.name}</div>
-                        <div className="text-[11px] text-[#6E5D53]">{partner.note}</div>
+                        <div className="text-[11px] text-[#6E5D53]">{isEn ? partner.noteEn : partner.noteVi}</div>
                       </div>
                       {selectedInstallmentPartner === partner.id && (
                         <Check className="w-4 h-4 text-[#C0392B] shrink-0" />
@@ -246,7 +279,11 @@ export default function MuaHangClient() {
             <div className="bg-white rounded-xl border border-[#E8E2D9] p-3 flex items-center gap-2.5">
               <CreditCard className="w-4 h-4 text-[#6E5D53] shrink-0" />
               <p className="text-xs text-[#6E5D53]">
-                Hoặc <strong className="text-[#2B1810]">thanh toán tiền mặt / thẻ ngân hàng trực tiếp</strong> tại cửa hàng.
+                {isEn ? (
+                  <>Or <strong className="text-[#2B1810]">pay with cash or bank card directly</strong> at the showroom.</>
+                ) : (
+                  <>Hoặc <strong className="text-[#2B1810]">thanh toán tiền mặt / thẻ ngân hàng trực tiếp</strong> tại cửa hàng.</>
+                )}
               </p>
             </div>
 
@@ -259,7 +296,7 @@ export default function MuaHangClient() {
               disabled={!paymentMethod || (paymentMethod === 'installment' && !selectedInstallmentPartner)}
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-40 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
-              <span>Tiếp tục</span>
+              <span>{isEn ? 'Continue' : 'Tiếp tục'}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -270,7 +307,9 @@ export default function MuaHangClient() {
         {/* ============================================================ */}
         {step === 'delivery' && (
           <div className="space-y-3">
-            <h2 className="text-base font-black text-[#2B1810]">Chọn hình thức nhận hàng</h2>
+            <h2 className="text-base font-black text-[#2B1810]">
+              {isEn ? 'Select Delivery Method' : 'Chọn hình thức nhận hàng'}
+            </h2>
 
             {/* Mua tại cửa hàng */}
             <div
@@ -285,17 +324,24 @@ export default function MuaHangClient() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-[#2B1810]">Mua tại cửa hàng</h3>
+                  <h3 className="text-sm font-bold text-[#2B1810]">
+                    {isEn ? 'Pick Up at Showroom' : 'Mua tại cửa hàng'}
+                  </h3>
                   {deliveryMethod === 'pickup' && <Check className="w-4 h-4 text-[#C0392B]" />}
                 </div>
                 <p className="text-xs text-[#6E5D53] mt-1 leading-snug">
-                  52 Nguyễn Cửu Vân, p. Long An, tỉnh Tây Ninh
-
+                  {isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, p. Long An, tỉnh Tây Ninh'}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Có bãi đỗ xe</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-[#FBE8DE] text-[#C0392B] font-semibold border border-[#F2C4B2]">Xuất hóa đơn ngay</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">Bàn giao hồ sơ tại chỗ</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
+                    {isEn ? 'Free Car Parking' : 'Có bãi đỗ xe'}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-[#FBE8DE] text-[#C0392B] font-semibold border border-[#F2C4B2]">
+                    {isEn ? 'Instant VAT Invoice' : 'Xuất hóa đơn ngay'}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-semibold border border-amber-200">
+                    {isEn ? 'On-site Handover Dossier' : 'Bàn giao hồ sơ tại chỗ'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -314,15 +360,23 @@ export default function MuaHangClient() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[#2B1810]">Giao hàng tận nơi</h3>
+                    <h3 className="text-sm font-bold text-[#2B1810]">
+                      {isEn ? 'On-Site Delivery & Setup' : 'Giao hàng tận nơi'}
+                    </h3>
                     {deliveryMethod === 'delivery' && <Check className="w-4 h-4 text-[#C0392B]" />}
                   </div>
                   <p className="text-xs text-[#6E5D53] mt-1 leading-snug">
-                    Hỏa tốc 2 giờ tại TP. Tân An.
+                    {isEn
+                      ? 'Personal delivery and on-site testing scheduled at your convenience.'
+                      : 'Hỗ trợ giao máy và kiểm tra tận nơi theo lịch hẹn.'}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#FBE8DE] text-[#C0392B] font-semibold border border-[#F2C4B2]">Hỏa tốc 2H (&lt;5km)</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">Kiểm tra máy tại nhà</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-[#FBE8DE] text-[#C0392B] font-semibold border border-[#F2C4B2]">
+                      {isEn ? 'Doorstep Handover' : 'Giao máy tận nơi'}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
+                      {isEn ? 'Inspection at Your Location' : 'Kiểm tra máy tại nhà'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -330,19 +384,25 @@ export default function MuaHangClient() {
               {/* Delivery address form */}
               {deliveryMethod === 'delivery' && (
                 <div className="mt-4 pt-3 border-t border-[#E8E2D9] space-y-3">
-                  <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">Thông tin giao hàng:</div>
+                  <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">
+                    {isEn ? 'Delivery Information:' : 'Thông tin giao hàng:'}
+                  </div>
                   <div>
-                    <label className="text-xs text-[#6E5D53] mb-1 block">Họ và tên *</label>
+                    <label className="text-xs text-[#6E5D53] mb-1 block">
+                      {isEn ? 'Full Name *' : 'Họ và tên *'}
+                    </label>
                     <input
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder="Nguyễn Văn An"
+                      placeholder={isEn ? 'e.g. John Doe / Nguyen Van An' : 'Nguyễn Văn An'}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-[#6E5D53] mb-1 block">Số điện thoại *</label>
+                    <label className="text-xs text-[#6E5D53] mb-1 block">
+                      {isEn ? 'Phone Number *' : 'Số điện thoại *'}
+                    </label>
                     <input
                       type="tel"
                       value={customerPhone}
@@ -352,12 +412,14 @@ export default function MuaHangClient() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-[#6E5D53] mb-1 block">Địa chỉ giao hàng *</label>
+                    <label className="text-xs text-[#6E5D53] mb-1 block">
+                      {isEn ? 'Delivery Address *' : 'Địa chỉ giao hàng *'}
+                    </label>
                     <input
                       type="text"
                       value={customerAddress}
                       onChange={(e) => setCustomerAddress(e.target.value)}
-                      placeholder="Số nhà, đường, phường, TP. Tân An..."
+                      placeholder={isEn ? 'House number, street name, area...' : 'Số nhà, đường, khu vực của bạn...'}
                       className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
                     />
                   </div>
@@ -377,7 +439,7 @@ export default function MuaHangClient() {
               }
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-40 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
-              <span>Xem xác nhận đơn hàng</span>
+              <span>{isEn ? 'Review Order Summary' : 'Xem xác nhận đơn hàng'}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -388,12 +450,16 @@ export default function MuaHangClient() {
         {/* ============================================================ */}
         {step === 'confirm' && (
           <div className="space-y-4">
-            <h2 className="text-base font-black text-[#2B1810]">Xác nhận đơn hàng</h2>
+            <h2 className="text-base font-black text-[#2B1810]">
+              {isEn ? 'Order Confirmation' : 'Xác nhận đơn hàng'}
+            </h2>
 
             <div className="bg-white rounded-xl border border-[#E8E2D9] divide-y divide-[#E8E2D9] overflow-hidden shadow-xs">
               {/* Product */}
               <div className="p-4 space-y-1">
-                <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">Sản phẩm</div>
+                <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">
+                  {isEn ? 'Product' : 'Sản phẩm'}
+                </div>
                 <div className="text-sm font-bold text-[#2B1810]">{deviceName}</div>
                 {deviceTag && <div className="text-xs text-slate-500 font-mono">S/N: {deviceTag}</div>}
                 {devicePrice > 0 && <div className="text-base font-bold text-[#C0392B] font-mono">{formatVND(devicePrice)}</div>}
@@ -402,24 +468,30 @@ export default function MuaHangClient() {
               {/* Payment */}
               <div className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">Thanh toán</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">
+                    {isEn ? 'Payment' : 'Thanh toán'}
+                  </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
-                    {paymentMethod === 'qr' && 'QR Code / Chuyển khoản'}
-                    {paymentMethod === 'installment' && `Trả góp — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
+                    {paymentMethod === 'qr' && (isEn ? 'VietQR Code / Bank Transfer' : 'QR Code / Chuyển khoản')}
+                    {paymentMethod === 'installment' && `${isEn ? 'Installment' : 'Trả góp'} — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
                   </div>
                 </div>
-                <button onClick={() => setStep('payment')} className="text-xs text-[#C0392B] font-semibold hover:underline">Sửa</button>
+                <button onClick={() => setStep('payment')} className="text-xs text-[#C0392B] font-semibold hover:underline">
+                  {isEn ? 'Edit' : 'Sửa'}
+                </button>
               </div>
 
               {/* Delivery */}
               <div className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">Nhận hàng</div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">
+                    {isEn ? 'Delivery' : 'Nhận hàng'}
+                  </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
-                    {deliveryMethod === 'pickup' && 'Mua tại cửa hàng — 45 Nguyễn Huệ, P.1, Tân An'}
+                    {deliveryMethod === 'pickup' && (isEn ? 'Showroom Pickup — 52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : 'Mua tại cửa hàng — 52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh')}
                     {deliveryMethod === 'delivery' && (
                       <>
-                        Giao tận nơi (hỏa tốc 2H)
+                        <span>{isEn ? 'Doorstep Delivery' : 'Giao hàng tận nơi'}</span>
                         {customerAddress && <span className="block text-xs text-[#6E5D53]">{customerAddress}</span>}
                       </>
                     )}
@@ -428,16 +500,24 @@ export default function MuaHangClient() {
                     <div className="text-xs text-[#6E5D53] mt-0.5">{customerName} • {customerPhone}</div>
                   )}
                 </div>
-                <button onClick={() => setStep('delivery')} className="text-xs text-[#C0392B] font-semibold hover:underline">Sửa</button>
+                <button onClick={() => setStep('delivery')} className="text-xs text-[#C0392B] font-semibold hover:underline">
+                  {isEn ? 'Edit' : 'Sửa'}
+                </button>
               </div>
             </div>
 
             {/* Warranty note */}
             <div className="bg-[#FBE8DE] border border-[#F2C4B2] rounded-xl p-4 flex items-start gap-3">
               <ShieldCheck className="w-5 h-5 text-[#C0392B] shrink-0 mt-0.5" />
-              <div className="text-xs text-[#6E5D53] leading-relaxed">
-                <strong className="text-[#2B1810]">Bảo hành đi kèm:</strong> Máy đi kèm phiếu bảo hành 12 tháng, SSD/RAM mới 100% bảo hành 36 tháng hãng. Đổi mới 1:1 tận nơi trong 2 giờ nếu có sự cố phần cứng.
-              </div>
+              {isEn ? (
+                <div className="text-xs text-[#6E5D53] leading-relaxed">
+                  <strong className="text-[#2B1810]">Warranty &amp; Support:</strong> Every computer comes with a clear warranty receipt. Both brand-new and tested pulled components are 100% transparent. In case of issues, we respond promptly to keep your workflow uninterrupted.
+                </div>
+              ) : (
+                <div className="text-xs text-[#6E5D53] leading-relaxed">
+                  <strong className="text-[#2B1810]">Bảo hành &amp; Hỗ trợ:</strong> Máy đi kèm phiếu bảo hành rõ ràng, linh kiện mới hay cũ bóc máy đều minh bạch thông tin. Nếu phát sinh sự cố, cửa hàng hỗ trợ xử lý nhanh chóng để không gián đoạn công việc của bạn.
+                </div>
+              )}
             </div>
 
             <button
@@ -445,11 +525,13 @@ export default function MuaHangClient() {
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Xác nhận đặt mua</span>
+              <span>{isEn ? 'Confirm Purchase Order' : 'Xác nhận đặt mua'}</span>
             </button>
 
             <p className="text-[11px] text-[#6E5D53] text-center">
-              Sau khi xác nhận, kỹ thuật viên sẽ liên hệ trong 10 phút để thu xếp lịch hẹn và thanh toán.
+              {isEn
+                ? 'After confirmation, an An Tam technician will contact you within 10 minutes to arrange schedule and payment.'
+                : 'Sau khi xác nhận, kỹ thuật viên sẽ liên hệ trong 10 phút để thu xếp lịch hẹn và thanh toán.'}
             </p>
           </div>
         )}
@@ -463,37 +545,45 @@ export default function MuaHangClient() {
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#2B1810]">Đặt mua thành công!</h2>
+              <h2 className="text-xl font-black text-[#2B1810]">
+                {isEn ? 'Order Placed Successfully!' : 'Đặt mua thành công!'}
+              </h2>
               <p className="text-xs text-[#6E5D53] mt-2">
-                Kỹ thuật viên An Tâm sẽ liên hệ xác nhận trong vòng <strong className="text-[#2B1810]">10 phút</strong>.
+                {isEn ? (
+                  <>An Tam technician will contact you to verify within <strong className="text-[#2B1810]">10 minutes</strong>.</>
+                ) : (
+                  <>Kỹ thuật viên An Tâm sẽ liên hệ xác nhận trong vòng <strong className="text-[#2B1810]">10 phút</strong>.</>
+                )}
               </p>
             </div>
 
             <div className="bg-[#FAF7F2] rounded-xl p-4 text-xs text-left space-y-2.5 border border-[#E8E2D9]">
               <div className="flex justify-between items-center border-b border-[#E8E2D9] pb-2">
-                <span className="text-[#6E5D53]">Mã đơn hàng:</span>
+                <span className="text-[#6E5D53]">{isEn ? 'Order Code:' : 'Mã đơn hàng:'}</span>
                 <span className="font-mono font-black text-sm text-[#C0392B]">{orderCode}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6E5D53]">Sản phẩm:</span>
+                <span className="text-[#6E5D53]">{isEn ? 'Product:' : 'Sản phẩm:'}</span>
                 <span className="font-semibold text-[#2B1810] text-right max-w-[200px] truncate">{deviceName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6E5D53]">Thanh toán:</span>
+                <span className="text-[#6E5D53]">{isEn ? 'Payment:' : 'Thanh toán:'}</span>
                 <span className="font-semibold text-[#2B1810]">
-                  {paymentMethod === 'qr' && 'QR Code'}
-                  {paymentMethod === 'installment' && `Trả góp — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
+                  {paymentMethod === 'qr' && (isEn ? 'VietQR Code' : 'QR Code')}
+                  {paymentMethod === 'installment' && `${isEn ? 'Installment' : 'Trả góp'} — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#6E5D53]">Nhận hàng:</span>
+                <span className="text-[#6E5D53]">{isEn ? 'Delivery:' : 'Nhận hàng:'}</span>
                 <span className="font-semibold text-[#2B1810]">
-                  {deliveryMethod === 'pickup' ? 'Tại cửa hàng' : 'Giao tận nơi'}
+                  {deliveryMethod === 'pickup'
+                    ? (isEn ? 'At Showroom' : 'Tại cửa hàng')
+                    : (isEn ? 'Doorstep Delivery' : 'Giao tận nơi')}
                 </span>
               </div>
               {devicePrice > 0 && (
                 <div className="flex justify-between border-t border-[#E8E2D9] pt-2">
-                  <span className="text-[#6E5D53] font-bold">Tổng tiền:</span>
+                  <span className="text-[#6E5D53] font-bold">{isEn ? 'Total Amount:' : 'Tổng tiền:'}</span>
                   <span className="font-bold text-[#C0392B] font-mono">{formatVND(devicePrice)}</span>
                 </div>
               )}
@@ -501,19 +591,23 @@ export default function MuaHangClient() {
 
             <div className="flex flex-col gap-2.5">
               <a
-                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(`Chào An Tâm, tôi vừa đặt mua máy trên website:\n- Mã đơn: ${orderCode}\n- Máy: ${deviceName}\n- Thanh toán: ${paymentMethod === 'qr' ? 'QR Code' : 'Trả góp'}\n- Nhận: ${deliveryMethod === 'pickup' ? 'Tại cửa hàng' : `Giao tận nơi — ${customerAddress}`}\nNhờ xác nhận giúp tôi!`)}`}
+                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(
+                  isEn
+                    ? `Hello An Tam, I just placed an order on the website:\n- Order Code: ${orderCode}\n- Computer: ${deviceName}\n- Payment: ${paymentMethod === 'qr' ? 'VietQR Code' : 'Installment'}\n- Delivery: ${deliveryMethod === 'pickup' ? 'Showroom Pickup' : `Doorstep Delivery — ${customerAddress}`}\nPlease confirm my order!`
+                    : `Chào An Tâm, tôi vừa đặt mua máy trên website:\n- Mã đơn: ${orderCode}\n- Máy: ${deviceName}\n- Thanh toán: ${paymentMethod === 'qr' ? 'QR Code' : 'Trả góp'}\n- Nhận: ${deliveryMethod === 'pickup' ? 'Tại cửa hàng' : `Giao tận nơi — ${customerAddress}`}\nNhờ xác nhận giúp tôi!`
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-3 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Gửi xác nhận qua Zalo</span>
+                <span>{isEn ? 'Send Confirmation via Zalo' : 'Gửi xác nhận qua Zalo'}</span>
               </a>
               <Link
                 href="/"
                 className="w-full py-3 rounded-xl bg-[#FAF7F2] hover:bg-[#F0EBE3] text-[#2B1810] font-semibold text-sm flex items-center justify-center border border-[#E8E2D9] transition-all"
               >
-                Về trang chủ
+                {isEn ? 'Back to Homepage' : 'Về trang chủ'}
               </Link>
             </div>
           </div>

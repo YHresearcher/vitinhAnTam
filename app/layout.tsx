@@ -32,17 +32,16 @@ export const metadata: Metadata = {
     template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
   },
   description:
-    'PC đồng bộ & laptop doanh nhân tuyển chọn, Win bản quyền, bảo hành 1 đổi 1 hỏa tốc trong 2 giờ (<5km Tân An), hỗ trợ Thủ Thừa, Châu Thành, Tân Trụ. Hotline 0909.053.058.',
+    'PC đồng bộ & laptop tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng, bảo hành chu đáo và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',
   keywords: [
-    'Máy tính cũ chuẩn A Tân An',
+    'Máy tính văn phòng',
     'Vi Tính An Tâm',
     'máy tính Long An',
-    'laptop cũ Tân An',
-    'Dell OptiPlex Long An',
-    'ThinkPad Tân An',
-    'hỏa tốc trong 2 giờ <5km Tân An',
-    'sửa máy tính Tân An',
-    'cứu hộ máy tính Long An',
+    'laptop văn phòng',
+    'Dell OptiPlex',
+    'ThinkPad',
+    'sửa máy tính tận nơi',
+    'cứu hộ máy tính',
   ],
   icons: {
     icon: '/favicon.ico',
@@ -60,7 +59,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
-    description: 'Bảo hành 1 đổi 1 hỏa tốc 2 giờ (<5km Tân An). SSD/RAM mới BH 36 tháng. Hotline: 0909.053.058.',
+    description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, bảo hành chu đáo. Hotline: 0909.053.058.',
     url: 'https://vitinhantham.vn',
     siteName: 'Vi Tính An Tâm',
     locale: 'vi_VN',
@@ -70,14 +69,14 @@ export const metadata: Metadata = {
         url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
-        alt: 'Vi Tính An Tâm — Máy Tính Cũ Chuẩn A Tại Tân An Long An',
+        alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
-    description: 'Bảo hành 1 đổi 1 hỏa tốc 2 giờ (<5km Tân An). SSD/RAM mới BH 36 tháng.',
+    description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, hỗ trợ tận tâm.',
     images: ['https://vitinhantham.vn/anh-that-cua-hang.jpg'],
   },
   robots: {
@@ -131,10 +130,7 @@ const jsonLd = {
   ],
   priceRange: '3.000.000₫ - 8.000.000₫',
   areaServed: [
-    { '@type': 'City', name: 'Tân An' },
-    { '@type': 'City', name: 'Thủ Thừa' },
-    { '@type': 'City', name: 'Châu Thành' },
-    { '@type': 'City', name: 'Tân Trụ' },
+    { '@type': 'AdministrativeArea', name: 'Long An' },
   ],
   sameAs: [
     'https://zalo.me/0909053058',
@@ -148,7 +144,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable}`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`}>
       <head>
         {/* Schema.org Structured Data for Local SEO */}
         <script

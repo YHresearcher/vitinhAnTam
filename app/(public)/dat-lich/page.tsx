@@ -4,14 +4,14 @@ import AppointmentBookingPage from './DatLichClient';
 export const metadata: Metadata = {
   title: 'Đặt Lịch Sửa Chữa & Cứu Hộ Máy Tính Tận Nơi',
   description:
-    'Đặt lịch sửa máy tính tận nhà tại Tân An, Thủ Thừa, Châu Thành, Tân Trụ. Cứu hộ khẩn 17h30–21h. Kỹ thuật viên đến trong 2 giờ. Hotline: 0909.053.058.',
+    'Đặt lịch sửa chữa và kiểm tra máy tính tận nơi theo lịch hẹn thuận tiện. Kỹ thuật viên hỗ trợ tận tình. Hotline: 0909.053.058.',
   alternates: {
     canonical: '/dat-lich',
   },
   openGraph: {
     title: 'Đặt Lịch Sửa Máy Tính Tận Nơi — Vi Tính An Tâm',
     description:
-      'Đặt lịch cứu hộ khẩn, sửa chữa máy tính tận nhà tại Tân An & các huyện lân cận. Phục vụ 7 ngày/tuần.',
+      'Đặt lịch kiểm tra và sửa chữa máy tính tận nơi linh hoạt. Phục vụ cả ngày trong tuần và ngoài giờ.',
     url: 'https://vitinhantham.vn/dat-lich',
     images: [
       {

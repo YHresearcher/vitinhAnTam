@@ -21,7 +21,7 @@ export function Footer() {
               <span>{t.hubTitle}</span>
             </h3>
             <p className="text-[#BCAAA4] text-xs leading-relaxed">
-              {systemSettings.address || t.hubAddress}
+              {currentLang === 'en' ? t.hubAddress : (systemSettings.address || t.hubAddress)}
             </p>
             <div className="pt-1 space-y-1.5 text-xs text-[#BCAAA4]">
               <p>
@@ -112,7 +112,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-[#332219] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8D7B73]">
-          <p>© {new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.</p>
+          <p>© {new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - {currentLang === 'en' ? 'Sold with Care, Keeping You Carefree.' : 'Bán bằng tâm để bạn an tâm.'}</p>
           <div className="flex flex-wrap items-center gap-5">
             <a className="hover:text-[#E67E22] transition-colors font-medium" href="#chinh-sach">
               {t.warrantyTerms}

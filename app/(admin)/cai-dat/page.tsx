@@ -18,16 +18,19 @@ import {
   Tag,
   Space,
 } from 'antd';
-import { UserAccount } from '@/lib/supabase';
 import {
   Upload,
-  Image as ImageIcon,
   Globe,
   RotateCcw,
   Trash2,
   Eye,
   Sparkles,
   Palette,
+  PhoneCall,
+  HelpCircle,
+  MessageSquareQuote,
+  Save,
+  CheckCircle2,
 } from 'lucide-react';
 
 const { TextArea } = Input;
@@ -40,7 +43,7 @@ const FAVICON_PRESETS = [
   },
   {
     name: 'Chữ [AT] Đỏ Gạch',
-    desc: 'Monogram tối giản, siêu sắc nét trên thanh tab',
+    desc: 'Monogram tối giản, sắc nét trên thanh tab',
     url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="%23C0392B"/><text x="32" y="42" font-family="sans-serif" font-size="28" font-weight="900" fill="white" text-anchor="middle">AT</text></svg>',
   },
   {
@@ -76,8 +79,6 @@ export default function CaiDatPage() {
     reviews,
     addReview,
     deleteReview,
-    users,
-    changeUserPassword,
   } = useViTinhAnTamStore();
 
   const [formData, setFormData] = useState<SystemSettings>({
@@ -102,11 +103,6 @@ export default function CaiDatPage() {
   // Review Modal states
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForm] = Form.useForm();
-
-  // Member Password Modal states
-  const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
-  const [memberNewPassword, setMemberNewPassword] = useState('');
-  const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
 
   const handleChange = (field: keyof SystemSettings, val: string) => {
     setFormData((prev) => ({
@@ -147,12 +143,24 @@ export default function CaiDatPage() {
     e.target.value = '';
   };
 
-  const handleSubmitSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSaving(true);
-    await updateSystemSettings(formData);
+
+    const cleanZalo = formData.zaloNumber?.trim() || '';
+    const cleanWhatsapp = formData.whatsappNumber?.trim() || '';
+
+    const payload: SystemSettings = {
+      ...formData,
+      zaloLink: cleanZalo ? `https://zalo.me/${cleanZalo.replace(/\./g, '')}` : formData.zaloLink,
+      whatsappLink: cleanWhatsapp
+        ? `https://wa.me/${cleanWhatsapp.replace(/\./g, '').replace(/^0/, '84')}`
+        : formData.whatsappLink,
+    };
+
+    await updateSystemSettings(payload);
     setIsSaving(false);
-    message.success('Đã lưu cấu hình thông tin hệ thống thành công!');
+    message.success('Đã lưu cấu hình hệ thống thành công!');
   };
 
   const handleResetDefaults = () => {
@@ -178,11 +186,11 @@ export default function CaiDatPage() {
           streetAddress: '52 Nguyễn Cửu Vân',
           district: 'P. Long An',
           city: 'Tây Ninh',
-          serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
-          workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
+          serviceAreas: 'Khu vực địa phương & các vùng lân cận',
+          workingHoursWeekday: '08h00 - 17h30 (Hỗ trợ linh hoạt: 17h30 - 21h00)',
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
-          footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành hỏa tốc trong 2 giờ (<5km Tân An).',
+          footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
           footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
           storeName: 'Vi Tính An Tâm',
         };
@@ -244,45 +252,27 @@ export default function CaiDatPage() {
       role: values.role,
       comment: values.comment,
       service: values.service,
-      location: values.location || 'Long An - Tây Ninh',
+      location: values.location || 'Địa phương',
       rating: values.rating || 5,
     });
     message.success('Đã thêm đánh giá khách hàng mới!');
     setIsReviewModalOpen(false);
   };
 
-  const handleSaveMemberPassword = async () => {
-    if (!memberForPassword) return;
-    if (!memberNewPassword.trim() || memberNewPassword.trim().length < 4) {
-      message.error('Mật khẩu phải có tối thiểu 4 ký tự!');
-      return;
-    }
-    setIsChangingMemberPassword(true);
-    const ok = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
-    setIsChangingMemberPassword(false);
-    if (ok) {
-      message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
-      setMemberForPassword(null);
-      setMemberNewPassword('');
-    } else {
-      message.error('Không thể cập nhật mật khẩu.');
-    }
-  };
-
   const handleDeleteReview = async (id: string) => {
     await deleteReview(id);
-    message.success('Đã xóa phản hồi của khách hàng!');
+    message.success('Đã xóa đánh giá!');
   };
 
-  if (!canAccessSettings()) {
+  if (!canAccessSettings) {
     return (
-      <div className="p-8 text-center max-w-lg mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm mt-12">
+      <div className="p-8 text-center max-w-lg mx-auto bg-white rounded-2xl border border-slate-200 mt-12 shadow-sm">
         <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-3">
           Bảo Mật Hệ Thống
         </span>
         <h2 className="text-lg font-bold text-slate-900 mb-1">YÊU CẦU QUYỀN QUẢN TRỊ VIÊN (ADMIN)</h2>
         <p className="text-xs text-slate-600 mb-4">
-          Chỉ tài khoản Admin mới có quyền điều chỉnh số hotline, thông tin Zalo, quản lý FAQ và đánh giá khách hàng.
+          Chỉ tài khoản Admin mới có quyền điều chỉnh thông tin thương hiệu, số hotline và cấu hình hệ thống.
         </p>
         <Link
           href="/dashboard"
@@ -300,6 +290,7 @@ export default function CaiDatPage() {
       title: 'Câu hỏi',
       dataIndex: 'question',
       key: 'question',
+      width: '35%',
       render: (text: string) => (
         <span className="font-semibold text-slate-900 text-xs sm:text-sm">{text}</span>
       ),
@@ -309,19 +300,16 @@ export default function CaiDatPage() {
       dataIndex: 'answer',
       key: 'answer',
       render: (text: string) => (
-        <p className="text-xs text-slate-600 max-w-xl line-clamp-3 leading-relaxed">{text}</p>
+        <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">{text}</p>
       ),
     },
     {
       title: 'Hành động',
       key: 'actions',
-      width: 140,
+      width: 130,
       render: (_: unknown, record: FaqItem) => (
         <Space size="small">
-          <Button
-            size="small"
-            onClick={() => handleOpenFaqModal(record)}
-          >
+          <Button size="small" onClick={() => handleOpenFaqModal(record)}>
             Sửa
           </Button>
           <Popconfirm
@@ -344,11 +332,12 @@ export default function CaiDatPage() {
     {
       title: 'Khách hàng',
       key: 'customer',
+      width: '25%',
       render: (_: unknown, record: CustomerReview) => (
         <div>
           <div className="font-bold text-slate-900 text-xs sm:text-sm">{record.name}</div>
           <div className="text-[11px] text-slate-500">{record.role}</div>
-          <Tag color="blue" className="mt-1 text-[10px]">
+          <Tag color="orange" className="mt-1 text-[10px]">
             {record.location}
           </Tag>
         </div>
@@ -358,7 +347,8 @@ export default function CaiDatPage() {
       title: 'Dịch vụ / Thiết bị',
       dataIndex: 'service',
       key: 'service',
-      render: (text: string) => <span className="text-xs font-semibold text-blue-700">{text}</span>,
+      width: '20%',
+      render: (text: string) => <span className="text-xs font-semibold text-[#C0392B]">{text}</span>,
     },
     {
       title: 'Nội dung nhận xét',
@@ -371,7 +361,7 @@ export default function CaiDatPage() {
               <span key={i}>★</span>
             ))}
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed max-w-lg">{text}</p>
+          <p className="text-xs text-slate-600 leading-relaxed">{text}</p>
         </div>
       ),
     },
@@ -395,21 +385,39 @@ export default function CaiDatPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
+    <div className="space-y-5 max-w-5xl mx-auto">
+      {/* Header gọn gàng với nút Lưu nhanh */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Cấu hình hệ thống
           </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Quản lý nhận diện thương hiệu, thông tin liên hệ, câu hỏi thường gặp và phản hồi khách hàng.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleResetDefaults} danger className="text-xs">
+            Đặt lại mặc định
+          </Button>
+          <Button
+            type="primary"
+            icon={<Save className="w-3.5 h-3.5" />}
+            loading={isSaving}
+            onClick={() => handleSaveSettings()}
+            className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-9 px-4 rounded-lg text-xs shadow-sm shadow-[#C0392B]/20"
+          >
+            Lưu cấu hình
+          </Button>
         </div>
       </div>
 
-      {/* Tabs Layout */}
+      {/* Tabs Layout tinh giản thành 4 mục rõ ràng */}
       <Tabs
         defaultActiveKey="branding"
         type="card"
         items={[
+          // TAB 1: NHẬN DIỆN THƯƠNG HIỆU
           {
             key: 'branding',
             label: (
@@ -420,335 +428,164 @@ export default function CaiDatPage() {
             ),
             children: (
               <Card className="rounded-xl border-slate-200 shadow-xs">
-                <form onSubmit={handleSubmitSettings} className="space-y-6">
-                  {/* PHẦN 1: LIVE PREVIEWS */}
-                  <div>
-                    <div className="border-b border-slate-100 pb-2 mb-3">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <form onSubmit={handleSaveSettings} className="space-y-6">
+                  {/* Xem trước Logo x2 */}
+                  <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[#6E5D53] flex items-center gap-1.5">
                         <Eye className="w-4 h-4 text-[#C0392B]" />
-                        Xem trước trực quan
-                      </h3>
+                        Xem trước Logo (Hiển thị kích thước thực x2)
+                      </span>
+                      {formData.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleChange('logoUrl', '');
+                            message.info('Đã chuyển về biểu tượng Khiên An Tâm gốc.');
+                          }}
+                          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Dùng khiên gốc</span>
+                        </button>
+                      )}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                      {/* Live Header Preview - Light Mode */}
-                      <div className="rounded-xl border border-[#E8E2D9] bg-[#FAF7F2] p-4 flex flex-col justify-between shadow-xs">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-[#6E5D53] mb-3 flex items-center justify-between">
-                          <span>Thanh Điều Hướng Website (Header)</span>
-                          <span className="text-[10px] bg-white px-2 py-0.5 rounded-md border border-[#E8E2D9] font-medium text-slate-600">
-                            Desktop / Mobile
-                          </span>
-                        </div>
-                        <div className="bg-white/95 backdrop-blur-xs p-3 rounded-lg border border-[#E8E2D9] flex items-center justify-between shadow-2xs">
-                          {/* Live Logo Render */}
-                          <div className="flex items-center gap-2.5">
-                            {formData.logoUrl ? (
-                              formData.logoDisplayMode === 'image_only' ? (
-                                /* eslint-disable-next-line @next/next/no-img-element */
-                                <img
-                                  src={formData.logoUrl}
-                                  alt="Logo Preview"
-                                  className="h-9 w-auto max-h-10 max-w-[190px] object-contain"
-                                />
-                              ) : (
-                                <div className="relative w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center shrink-0 bg-white/40 p-0.5 border border-[#C0392B]/20 shadow-xs">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={formData.logoUrl}
-                                    alt="Logo Preview"
-                                    className="w-full h-full object-contain"
-                                  />
-                                </div>
-                              )
-                            ) : (
-                              <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-[#C0392B] to-[#D9531E] flex items-center justify-center shadow-md shadow-[#C0392B]/20 shrink-0">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  className="w-5 h-5 text-white"
-                                >
-                                  <path
-                                    d="M12 2l7 3.5v5.5c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V5.5L12 2z"
-                                    fill="currentColor"
-                                    fillOpacity="0.15"
-                                    stroke="currentColor"
-                                    strokeWidth="1.75"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M9 12l2 2 4-4"
-                                    stroke="currentColor"
-                                    strokeWidth="2.25"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </div>
-                            )}
-
-                            {formData.logoDisplayMode !== 'image_only' && (
-                              <div className="flex flex-col leading-none">
-                                <div className="flex items-center gap-1">
-                                  <span className="font-black text-sm tracking-tight text-[#2B1810]">
-                                    {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
-                                  </span>
-                                  <span className="font-black text-sm tracking-tight text-[#C0392B]">
-                                    {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
-                                  </span>
-                                </div>
-                                <span className="text-[9px] font-semibold tracking-wider uppercase mt-0.5 text-[#6E5D53]">
-                                  {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Demo Nav items */}
-                          <div className="hidden sm:flex items-center gap-2 text-[11px] font-medium text-slate-500">
-                            <span className="px-2 py-1 text-[#C0392B] font-bold">Trang chủ</span>
-                            <span className="px-2 py-1">Sản phẩm</span>
-                            <span className="px-2 py-1">Đặt lịch</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Live Browser Tab Preview */}
-                      <div className="rounded-xl border border-slate-700 bg-[#1E1F22] p-4 flex flex-col justify-between shadow-xs text-white">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
-                          <span>Tab Trình Duyệt Web (Favicon Browser Tab)</span>
-                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md border border-slate-700">
-                            Chrome / Safari / Edge
-                          </span>
-                        </div>
-                        <div className="bg-[#2B2D30] rounded-t-xl px-3 pt-2 pb-1.5 flex items-center gap-2 border-b border-black/40">
-                          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1E1F22] rounded-t-lg text-xs text-slate-200 border-t-2 border-[#C0392B] shadow-inner max-w-xs flex-1 truncate">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <div className="bg-white p-5 rounded-lg border border-[#E8E2D9] flex items-center justify-center min-h-[90px]">
+                      {formData.logoDisplayMode === 'image_only' && formData.logoUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={formData.logoUrl}
+                          alt="Logo Preview"
+                          className="h-16 sm:h-20 max-h-24 w-auto max-w-[360px] sm:max-w-[480px] object-contain"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-3.5">
+                          {formData.logoUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
                             <img
-                              src={formData.faviconUrl || '/favicon.ico'}
-                              alt="Favicon"
-                              className="w-4 h-4 object-contain shrink-0 rounded-xs"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/favicon.ico';
-                              }}
+                              src={formData.logoUrl}
+                              alt="Logo Icon"
+                              className="h-14 sm:h-18 w-auto max-h-20 max-w-[120px] sm:max-w-[160px] object-contain"
                             />
-                            <span className="truncate text-[11px] font-medium text-slate-200">
-                              {formData.storeName || 'Vi tính An Tâm'} - {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
-                            </span>
-                            <span className="ml-auto text-slate-500 hover:text-white text-xs pl-1 cursor-default">×</span>
-                          </div>
-                          <span className="text-slate-500 text-xs px-1 cursor-default">+</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* PHẦN 2: CẤU HÌNH LOGO */}
-                  <div className="pt-4 border-t border-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
-                      <ImageIcon className="w-4 h-4 text-[#C0392B]" />
-                      Logo Website
-                    </h3>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                      {/* Upload File Logo */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Tải ảnh từ máy tính
-                        </label>
-                        <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-white rounded-xl p-4 text-center transition-colors">
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                            onChange={(e) => handleFileUpload(e, 'logoUrl')}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            title="Chọn tệp ảnh logo"
-                          />
-                          <div className="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
-                            <Upload className="w-5 h-5 text-[#C0392B]" />
-                            <span className="text-xs font-bold text-slate-800">
-                              Chọn ảnh logo
-                            </span>
-                            <span className="text-[11px] text-slate-400">
-                              PNG, SVG, JPG, WebP (&lt;2MB)
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* URL Input & Mode */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Đường dẫn ảnh (URL)
-                        </label>
-                        <div className="space-y-3">
-                          <input
-                            type="text"
-                            placeholder="https://... hoặc /images/..."
-                            value={formData.logoUrl || ''}
-                            onChange={(e) => handleChange('logoUrl', e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-white font-mono"
-                          />
-
-                          {/* Display Mode */}
-                          <div>
-                            <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                              Kiểu hiển thị:
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <button
-                                type="button"
-                                onClick={() => handleChange('logoDisplayMode', 'icon_with_text')}
-                                className={`px-3 py-2 text-left rounded-lg border text-xs transition-all ${
-                                  formData.logoDisplayMode !== 'image_only'
-                                    ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                }`}
+                          ) : (
+                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#C0392B] to-[#D9531E] flex items-center justify-center shadow-lg shadow-[#C0392B]/25 shrink-0">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="w-8 h-8 sm:w-9 sm:h-9 text-white"
                               >
-                                <div className="font-semibold">Biểu tượng + Tên &amp; Slogan</div>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleChange('logoDisplayMode', 'image_only')}
-                                className={`px-3 py-2 text-left rounded-lg border text-xs transition-all ${
-                                  formData.logoDisplayMode === 'image_only'
-                                    ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
-                                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                                }`}
-                              >
-                                <div className="font-semibold">Chỉ dùng ảnh Logo đầy đủ</div>
-                              </button>
+                                <path
+                                  d="M12 2l7 3.5v5.5c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V5.5L12 2z"
+                                  fill="currentColor"
+                                  fillOpacity="0.15"
+                                  stroke="currentColor"
+                                  strokeWidth="1.75"
+                                  strokeLinejoin="round"
+                                />
+                                <path
+                                  d="M9 12l2 2 4-4"
+                                  stroke="currentColor"
+                                  strokeWidth="2.25"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
                             </div>
-                          </div>
-
-                          {/* Clear Logo button */}
-                          {formData.logoUrl && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleChange('logoUrl', '');
-                                message.info('Đã khôi phục biểu tượng Khiên An Tâm gốc.');
-                              }}
-                              className="inline-flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Xóa logo tùy chỉnh, dùng lại biểu tượng gốc</span>
-                            </button>
                           )}
+                          <div className="flex flex-col leading-none">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-xl sm:text-2xl text-[#2B1810]">
+                                {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
+                              </span>
+                              <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
+                                {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
+                              </span>
+                            </div>
+                            <span className="text-xs sm:text-[13px] font-semibold text-[#6E5D53] tracking-wider uppercase mt-1">
+                              {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* PHẦN 3: CẤU HÌNH FAVICON */}
-                  <div className="pt-4 border-t border-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
-                      <Globe className="w-4 h-4 text-[#C0392B]" />
-                      Favicon Trình Duyệt
-                    </h3>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                      {/* Upload File Favicon */}
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Tải file favicon
-                        </label>
-                        <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-white rounded-xl p-4 text-center transition-colors">
-                          <input
-                            type="file"
-                            accept=".ico,image/png,image/svg+xml,image/webp,image/jpeg"
-                            onChange={(e) => handleFileUpload(e, 'faviconUrl')}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            title="Chọn file favicon"
-                          />
-                          <div className="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
-                            <Upload className="w-5 h-5 text-[#C0392B]" />
-                            <span className="text-xs font-bold text-slate-800">
-                              Chọn file favicon (.ico, .png, .svg)
-                            </span>
-                            <span className="text-[11px] text-slate-400">
-                              Chuẩn 32x32px hoặc 64x64px
-                            </span>
-                          </div>
+                  {/* Cấu hình Logo */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                        Tải ảnh Logo (PNG, JPG, SVG, WebP)
+                      </label>
+                      <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-slate-50/50 hover:bg-red-50/20 rounded-xl p-4 text-center transition-colors">
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                          onChange={(e) => handleFileUpload(e, 'logoUrl')}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          title="Chọn file ảnh logo"
+                        />
+                        <div className="flex flex-col items-center justify-center gap-1 pointer-events-none">
+                          <Upload className="w-5 h-5 text-[#C0392B]" />
+                          <span className="text-xs font-bold text-slate-800">Chọn file ảnh từ máy tính</span>
+                          <span className="text-[11px] text-slate-500">Hỗ trợ ảnh trong suốt PNG/SVG (tối đa 2MB)</span>
                         </div>
                       </div>
+                    </div>
 
-                      {/* URL Input & Presets */}
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                            Đường dẫn URL
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="/favicon.ico hoặc URL hình ảnh"
-                            value={formData.faviconUrl || ''}
-                            onChange={(e) => handleChange('faviconUrl', e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-white font-mono"
-                          />
-                        </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1">
+                          Hoặc dán URL ảnh Logo
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="https://... hoặc /images/..."
+                          value={formData.logoUrl || ''}
+                          onChange={(e) => handleChange('logoUrl', e.target.value)}
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
+                        />
+                      </div>
 
-                        {/* Quick Presets */}
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-600 mb-1.5">
-                            Mẫu biểu tượng có sẵn:
-                          </label>
-                          <div className="space-y-1.5">
-                            {FAVICON_PRESETS.map((preset, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  handleChange('faviconUrl', preset.url);
-                                  message.success(`Đã áp dụng mẫu ${preset.name}!`);
-                                }}
-                                className="w-full flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 hover:border-[#C0392B] hover:bg-red-50/30 text-left transition-colors cursor-pointer"
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={preset.url}
-                                    alt={preset.name}
-                                    className="w-5 h-5 object-contain rounded-xs shrink-0"
-                                    onError={(e) => {
-                                      (e.target as HTMLImageElement).src = '/favicon.ico';
-                                    }}
-                                  />
-                                  <div>
-                                    <div className="text-xs font-bold text-slate-800">{preset.name}</div>
-                                  </div>
-                                </div>
-                                <span className="text-[11px] text-[#C0392B] font-semibold">Chọn</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {formData.faviconUrl && (
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1">
+                          Kiểu hiển thị Logo:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
-                            onClick={() => {
-                              handleChange('faviconUrl', '');
-                              message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
-                            }}
-                            className="inline-flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
+                            onClick={() => handleChange('logoDisplayMode', 'icon_with_text')}
+                            className={`p-2 text-center rounded-lg border text-xs transition-all ${
+                              formData.logoDisplayMode !== 'image_only'
+                                ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                            }`}
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Khôi phục Favicon mặc định</span>
+                            Biểu tượng + Tên &amp; Slogan
                           </button>
-                        )}
+                          <button
+                            type="button"
+                            onClick={() => handleChange('logoDisplayMode', 'image_only')}
+                            className={`p-2 text-center rounded-lg border text-xs transition-all ${
+                              formData.logoDisplayMode === 'image_only'
+                                ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
+                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                            }`}
+                          >
+                            Chỉ dùng hình ảnh Logo
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* PHẦN 4: TÊN THƯƠNG HIỆU & SLOGAN */}
+                  {/* Tên thương hiệu & Slogan */}
                   <div className="pt-4 border-t border-slate-100">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-[#C0392B]" />
-                      Thông Tin Thương Hiệu
+                      Tên Thương Hiệu &amp; Slogan
                     </h3>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -759,10 +596,9 @@ export default function CaiDatPage() {
                           required
                           value={formData.storeName || ''}
                           onChange={(e) => handleChange('storeName', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
                         />
                       </div>
-
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Khẩu hiệu (Slogan) *
@@ -772,359 +608,298 @@ export default function CaiDatPage() {
                           required
                           value={formData.brandSlogan || ''}
                           onChange={(e) => handleChange('brandSlogan', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm text-slate-900 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Nút lưu */}
-                  <div className="pt-6 border-t border-slate-200 flex items-center justify-between gap-3">
-                    <Button
-                      type="default"
-                      danger
-                      onClick={handleResetDefaults}
-                      className="text-xs"
-                    >
-                      Đặt lại mặc định ban đầu
-                    </Button>
+                  {/* Cấu hình Favicon */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-[#C0392B]" />
+                      Favicon Tab Trình Duyệt
+                    </h3>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                          Tải file favicon (.ico, .png, .svg)
+                        </label>
+                        <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-slate-50/50 hover:bg-red-50/20 rounded-xl p-4 text-center transition-colors">
+                          <input
+                            type="file"
+                            accept=".ico,image/png,image/svg+xml,image/webp"
+                            onChange={(e) => handleFileUpload(e, 'faviconUrl')}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            title="Chọn file favicon"
+                          />
+                          <div className="flex flex-col items-center justify-center gap-1 pointer-events-none">
+                            <Upload className="w-5 h-5 text-[#C0392B]" />
+                            <span className="text-xs font-bold text-slate-800">Chọn file favicon</span>
+                            <span className="text-[11px] text-slate-500">Chuẩn 32x32px hoặc 64x64px</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                          Chọn mẫu có sẵn:
+                        </label>
+                        <div className="space-y-1.5">
+                          {FAVICON_PRESETS.map((preset, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => {
+                                handleChange('faviconUrl', preset.url);
+                                message.success(`Đã áp dụng mẫu ${preset.name}!`);
+                              }}
+                              className="w-full flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 hover:border-[#C0392B] hover:bg-red-50/20 text-left transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2.5">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={preset.url}
+                                  alt={preset.name}
+                                  className="w-5 h-5 object-contain rounded-xs shrink-0"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/favicon.ico';
+                                  }}
+                                />
+                                <div className="text-xs font-bold text-slate-800">{preset.name}</div>
+                              </div>
+                              <span className="text-xs text-[#C0392B] font-semibold">Chọn</span>
+                            </button>
+                          ))}
+                        </div>
+                        {formData.faviconUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleChange('faviconUrl', '');
+                              message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
+                            }}
+                            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 font-medium mt-2 cursor-pointer"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Khôi phục Favicon mặc định</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nút lưu riêng của tab */}
+                  <div className="pt-4 border-t border-slate-200 flex justify-end">
                     <Button
                       type="primary"
                       htmlType="submit"
                       loading={isSaving}
-                      className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-10 px-6 rounded-lg text-xs sm:text-sm shadow-md shadow-[#C0392B]/20"
+                      className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-9 px-6 rounded-lg text-xs"
                     >
-                      Lưu Cấu Hình Nhận Diện Thương Hiệu
+                      Lưu Nhận Diện Thương Hiệu
                     </Button>
                   </div>
                 </form>
               </Card>
             ),
           },
+
+          // TAB 2: THÔNG TIN LIÊN HỆ & CỬA HÀNG (HỢP NHẤT GỌN GÀNG)
           {
-            key: 'contacts',
+            key: 'contact_store',
             label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Phương Tiện Liên Lạc
+              <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-slate-800">
+                <PhoneCall className="w-4 h-4 text-slate-700" />
+                <span>Liên Hệ &amp; Cơ Sở</span>
               </span>
             ),
             children: (
               <Card className="rounded-xl border-slate-200 shadow-xs">
-                <form onSubmit={handleSubmitSettings} className="space-y-6">
+                <form onSubmit={handleSaveSettings} className="space-y-6">
+                  {/* Nhóm 1: Hotline, Email, Zalo, WhatsApp */}
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-4">
-                      Kênh Liên Hệ Trực Tiếp &amp; Widget
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                      1. Kênh Liên Lạc Trực Tiếp
                     </h3>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Hotline */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Số Hotline *
+                          Số Hotline tư vấn *
                         </label>
                         <input
                           type="text"
                           required
                           value={formData.hotline}
                           onChange={(e) => handleChange('hotline', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-[#C0392B] focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-bold text-[#C0392B] focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
                         />
                       </div>
 
-                      {/* Email */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Email tiếp nhận thông tin *
+                          Email tiếp nhận *
                         </label>
                         <input
                           type="email"
                           required
                           value={formData.email}
                           onChange={(e) => handleChange('email', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
                         />
                       </div>
 
-                      {/* Zalo */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Số điện thoại Zalo kết nối *
+                          Số điện thoại Zalo *
                         </label>
                         <input
                           type="text"
                           required
                           value={formData.zaloNumber}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleChange('zaloNumber', val);
-                            if (val.trim()) {
-                              handleChange('zaloLink', `https://zalo.me/${val.trim().replace(/\./g, '')}`);
-                            }
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#0068FF] bg-slate-50 focus:bg-white font-mono"
+                          onChange={(e) => handleChange('zaloNumber', e.target.value)}
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#0068FF] bg-slate-50 focus:bg-white font-mono"
                         />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Tự động kết nối link chat: zalo.me/{formData.zaloNumber?.replace(/\./g, '')}
+                        </span>
                       </div>
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Đường dẫn kết nối Zalo (Tự động cập nhật)
+                          Số điện thoại WhatsApp
                         </label>
                         <input
                           type="text"
-                          value={formData.zaloLink}
-                          onChange={(e) => handleChange('zaloLink', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono text-blue-700 focus:outline-none focus:border-[#0068FF] bg-slate-50 focus:bg-white"
-                        />
-                      </div>
-
-                      {/* WhatsApp */}
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Số điện thoại WhatsApp *
-                        </label>
-                        <input
-                          type="text"
-                          required
                           value={formData.whatsappNumber}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleChange('whatsappNumber', val);
-                            if (val.trim()) {
-                              const clean = val.trim().replace(/\./g, '').replace(/^0/, '84');
-                              handleChange('whatsappLink', `https://wa.me/${clean}`);
-                            }
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#25D366] bg-slate-50 focus:bg-white font-mono"
+                          onChange={(e) => handleChange('whatsappNumber', e.target.value)}
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-800 focus:outline-none focus:border-[#25D366] bg-slate-50 focus:bg-white font-mono"
                         />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Đường dẫn WhatsApp Chat (Tự động cập nhật)
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.whatsappLink}
-                          onChange={(e) => handleChange('whatsappLink', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono text-emerald-700 focus:outline-none focus:border-[#25D366] bg-slate-50 focus:bg-white"
-                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Tự động kết nối link chat: wa.me/84...
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Nút hành động */}
-                  <div className="flex flex-wrap items-center justify-between pt-4 border-t border-slate-200 gap-3">
-                    <button
-                      type="button"
-                      onClick={handleResetDefaults}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
-                    >
-                      Đặt lại mặc định
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="px-6 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
-                    >
-                      {isSaving ? 'Đang lưu...' : 'Lưu Phương Tiện Liên Lạc'}
-                    </button>
-                  </div>
-                </form>
-              </Card>
-            ),
-          },
-          {
-            key: 'address',
-            label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Địa Chỉ &amp; Showroom
-              </span>
-            ),
-            children: (
-              <Card className="rounded-xl border-slate-200 shadow-xs">
-                <form onSubmit={handleSubmitSettings} className="space-y-6">
-                  {/* Nhóm 1: Địa chỉ chi tiết */}
-                  <div className="space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">
-                      Địa Chỉ Showroom &amp; Trạm Kỹ Thuật
+                  {/* Nhóm 2: Địa chỉ & Phạm vi */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                      2. Địa Chỉ &amp; Phạm Vi Phục Vụ
                     </h3>
-
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Tên thương hiệu / Cơ sở
+                          Địa chỉ showroom / trạm kỹ thuật (Hiển thị website) *
                         </label>
                         <input
                           type="text"
                           required
-                          value={formData.storeName}
-                          onChange={(e) => handleChange('storeName', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
+                          value={formData.address}
+                          onChange={(e) => handleChange('address', e.target.value)}
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Số nhà &amp; Tên đường (Địa chỉ trụ sở) *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.streetAddress}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleChange('streetAddress', val);
-                            handleChange('address', `${val}, ${formData.district}, ${formData.city}`);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-900 focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Quận / Huyện / Thành Phố Trực Thuộc
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.district}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleChange('district', val);
-                            handleChange('address', `${formData.streetAddress}, ${val}, ${formData.city}`);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Tỉnh / Thành phố
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={formData.city}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            handleChange('city', val);
-                            handleChange('address', `${formData.streetAddress}, ${formData.district}, ${val}`);
-                          }}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
-                        />
-                      </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Địa chỉ đầy đủ hiển thị trên toàn trang web *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.address}
-                        onChange={(e) => handleChange('address', e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-[#2B1810] focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Phạm vi phục vụ
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.serviceAreas}
-                        onChange={(e) => handleChange('serviceAreas', e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white"
-                      />
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Phạm vi hỗ trợ &amp; phục vụ
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.serviceAreas}
+                          onChange={(e) => handleChange('serviceAreas', e.target.value)}
+                          placeholder="VD: Khu vực địa phương & các vùng lân cận"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Nhóm 2: Giờ phục vụ */}
-                  <div className="space-y-4 pt-2 border-t border-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2">
-                      Khung Giờ Phục Vụ
+                  {/* Nhóm 3: Giờ làm việc & Giới thiệu Chân trang */}
+                  <div className="pt-2 border-t border-slate-100">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3">
+                      3. Thời Gian Làm Việc &amp; Thông Tin Chân Trang
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Thứ 2 đến Thứ 6 (Giờ hành chính &amp; ca tối)
+                          Thứ 2 đến Thứ 6
                         </label>
                         <input
                           type="text"
                           value={formData.workingHoursWeekday}
                           onChange={(e) => handleChange('workingHoursWeekday', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white font-mono"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Thứ 7 &amp; Chủ Nhật (Cuối tuần)
+                          Thứ 7 &amp; Chủ Nhật
                         </label>
                         <input
                           type="text"
                           value={formData.workingHoursWeekend}
                           onChange={(e) => handleChange('workingHoursWeekend', e.target.value)}
-                          className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-[#D9531E] bg-slate-50 focus:bg-white font-mono"
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Đoạn giới thiệu ngắn ở chân trang (Footer About)
+                        </label>
+                        <TextArea
+                          rows={2}
+                          value={formData.footerAbout}
+                          onChange={(e) => handleChange('footerAbout', e.target.value)}
+                          className="rounded-lg text-xs"
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Nhóm 3: Giới thiệu Footer */}
-                  <div className="space-y-4 pt-2 border-t border-slate-100">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Đoạn văn giới thiệu ngắn chân trang (Footer About)
-                      </label>
-                      <TextArea
-                        rows={2}
-                        value={formData.footerAbout}
-                        onChange={(e) => handleChange('footerAbout', e.target.value)}
-                        className="rounded-lg"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nút hành động */}
-                  <div className="flex flex-wrap items-center justify-between pt-4 border-t border-slate-200 gap-3">
-                    <button
-                      type="button"
-                      onClick={handleResetDefaults}
-                      className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-colors"
+                  {/* Nút lưu */}
+                  <div className="pt-4 border-t border-slate-200 flex justify-end">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isSaving}
+                      className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-9 px-6 rounded-lg text-xs"
                     >
-                      Đặt lại mặc định
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="px-6 py-2.5 rounded-lg bg-[#D9531E] hover:bg-[#C0392B] text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50"
-                    >
-                      {isSaving ? 'Đang lưu...' : 'Lưu Cấu Hình Địa Chỉ'}
-                    </button>
+                      Lưu Thông Tin Liên Hệ &amp; Cơ Sở
+                    </Button>
                   </div>
                 </form>
               </Card>
             ),
           },
+
+          // TAB 3: QUẢN LÝ FAQ
           {
             key: 'faqs',
             label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Quản Lý FAQ ({faqs.length})
+              <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-slate-800">
+                <HelpCircle className="w-4 h-4 text-blue-600" />
+                <span>Câu Hỏi FAQ ({faqs.length})</span>
               </span>
             ),
             children: (
-              <Card className="rounded-2xl border-slate-200 shadow-xs space-y-4">
+              <Card className="rounded-xl border-slate-200 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">
                       Danh Sách Câu Hỏi Thường Gặp
                     </h3>
+                    <p className="text-xs text-slate-500">
+                      Hiển thị tại mục FAQ ở chân trang chủ để giải tỏa lo lắng của khách hàng.
+                    </p>
                   </div>
                   <Button
                     type="primary"
                     onClick={() => handleOpenFaqModal()}
-                    className="bg-blue-600"
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     + Thêm Câu Hỏi Mới
                   </Button>
@@ -1134,31 +909,37 @@ export default function CaiDatPage() {
                   dataSource={faqs}
                   columns={faqColumns}
                   rowKey="id"
-                  pagination={{ pageSize: 5 }}
+                  pagination={{ pageSize: 6 }}
                   scroll={{ x: 600 }}
                 />
               </Card>
             ),
           },
+
+          // TAB 4: ĐÁNH GIÁ KHÁCH HÀNG
           {
             key: 'reviews',
             label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Đánh Giá Khách Hàng ({reviews.length})
+              <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-slate-800">
+                <MessageSquareQuote className="w-4 h-4 text-purple-600" />
+                <span>Đánh Giá Khách Hàng ({reviews.length})</span>
               </span>
             ),
             children: (
-              <Card className="rounded-2xl border-slate-200 shadow-xs space-y-4">
+              <Card className="rounded-xl border-slate-200 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900">
-                      Đánh Giá Khách Hàng
+                      Đánh Giá &amp; Nhận Xét Của Khách Hàng
                     </h3>
+                    <p className="text-xs text-slate-500">
+                      Hiển thị đánh giá thực tế từ người dùng trên trang chủ.
+                    </p>
                   </div>
                   <Button
                     type="primary"
                     onClick={handleOpenReviewModal}
-                    className="bg-purple-600"
+                    className="bg-purple-600 hover:bg-purple-700"
                   >
                     + Thêm Đánh Giá Mới
                   </Button>
@@ -1168,96 +949,9 @@ export default function CaiDatPage() {
                   dataSource={reviews}
                   columns={reviewColumns}
                   rowKey="id"
-                  pagination={{ pageSize: 5 }}
+                  pagination={{ pageSize: 6 }}
                   scroll={{ x: 600 }}
                 />
-              </Card>
-            ),
-          },
-          {
-            key: 'security',
-            label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Bảo Mật &amp; Mật Khẩu
-              </span>
-            ),
-            children: (
-              <Card className="rounded-2xl border-slate-200 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">Đổi Mật Khẩu Thành Viên</h3>
-                  </div>
-                  <Link
-                    href="/thanh-vien"
-                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
-                  >
-                    Quản lý phân quyền chi tiết →
-                  </Link>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {users.map((u) => (
-                    <div
-                      key={u.id}
-                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-xl ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs shadow-xs`}
-                        >
-                          {u.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs sm:text-sm text-slate-900">{u.name}</span>
-                            <Tag
-                              color={
-                                u.role === 'admin'
-                                    ? 'blue'
-                                  : u.role === 'technician'
-                                  ? 'green'
-                                  : 'purple'
-                              }
-                              className="text-[10px] m-0 font-bold"
-                            >
-                              {u.role === 'admin'
-                                ? 'ADMIN'
-                                : u.role === 'technician'
-                                ? 'KỸ THUẬT'
-                                : 'KINH DOANH'}
-                            </Tag>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
-                            <span>
-                              Tên đăng nhập:{' '}
-                              <strong className="font-mono text-slate-800">{u.email}</strong>
-                            </span>
-                            <span>•</span>
-                            <span>
-                              SĐT: <span className="font-mono text-slate-700">{u.phone}</span>
-                            </span>
-                            <span>•</span>
-                            <span>
-                              Mật khẩu: <span className="font-mono text-blue-600 font-bold">••••••</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button
-                          onClick={() => {
-                            setMemberForPassword(u);
-                            setMemberNewPassword('');
-                          }}
-                          className="text-xs font-semibold hover:border-amber-500 hover:text-amber-600"
-                        >
-                          Đổi Mật Khẩu
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </Card>
             ),
           },
@@ -1272,68 +966,70 @@ export default function CaiDatPage() {
         footer={null}
         destroyOnClose
       >
-        <Form form={faqForm} layout="vertical" onFinish={handleSaveFaq}>
+        <Form form={faqForm} layout="vertical" onFinish={handleSaveFaq} className="pt-2">
           <Form.Item
             name="question"
-            label="Tiêu đề câu hỏi"
-            rules={[{ required: true, message: 'Vui lòng nhập nội dung câu hỏi' }]}
+            label="Câu hỏi của khách hàng"
+            rules={[{ required: true, message: 'Vui lòng nhập câu hỏi' }]}
           >
-            <Input placeholder="VD: Chính sách kiểm tra bảo hành theo S/N máy ra sao?" />
+            <Input placeholder="VD: Khi máy tính gặp sự cố, An Tâm hỗ trợ kỹ thuật như thế nào?" />
           </Form.Item>
 
           <Form.Item
             name="answer"
-            label="Nội dung câu trả lời chi tiết"
+            label="Câu trả lời giải thích chi tiết"
             rules={[{ required: true, message: 'Vui lòng nhập câu trả lời' }]}
           >
-            <TextArea rows={4} placeholder="Mô tả cụ thể và thuyết phục..." />
+            <TextArea rows={4} placeholder="Nhập câu trả lời rõ ràng, minh bạch..." />
           </Form.Item>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button onClick={() => setIsFaqModalOpen(false)}>Hủy</Button>
             <Button type="primary" htmlType="submit" className="bg-blue-600">
-              Lưu Câu Hỏi
+              {editingFaq ? 'Cập Nhật' : 'Thêm Mới'}
             </Button>
           </div>
         </Form>
       </Modal>
 
-      {/* Modal Thêm Đánh Giá Mới */}
+      {/* Modal Thêm Đánh Giá Khách Hàng */}
       <Modal
-        title="Thêm Phản Hồi Khách Hàng Mới"
+        title="Thêm Đánh Giá Khách Hàng Mới"
         open={isReviewModalOpen}
         onCancel={() => setIsReviewModalOpen(false)}
         footer={null}
         destroyOnClose
       >
-        <Form form={reviewForm} layout="vertical" onFinish={handleSaveReview}>
-          <Form.Item
-            name="name"
-            label="Họ tên khách hàng"
-            rules={[{ required: true, message: 'Vui lòng nhập tên khách hàng' }]}
-          >
-            <Input placeholder="VD: Anh Quốc Hoàng" />
-          </Form.Item>
+        <Form form={reviewForm} layout="vertical" onFinish={handleSaveReview} className="pt-2">
+          <div className="grid grid-cols-2 gap-3">
+            <Form.Item
+              name="name"
+              label="Tên khách hàng"
+              rules={[{ required: true, message: 'Vui lòng nhập tên' }]}
+            >
+              <Input placeholder="VD: Anh Minh Tuấn" />
+            </Form.Item>
 
-          <Form.Item
-            name="role"
-            label="Chức danh / Nghề nghiệp"
-            rules={[{ required: true, message: 'Vui lòng nhập vai trò của khách hàng' }]}
-          >
-            <Input placeholder="VD: Kế toán trưởng - Cty Vận Tải" />
-          </Form.Item>
+            <Form.Item
+              name="role"
+              label="Nghề nghiệp / Đơn vị"
+              rules={[{ required: true, message: 'Vui lòng nhập chức danh' }]}
+            >
+              <Input placeholder="VD: Kế toán trưởng" />
+            </Form.Item>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <Form.Item
               name="service"
-              label="Dòng máy / Dịch vụ"
+              label="Dịch vụ / Thiết bị mua"
               rules={[{ required: true, message: 'Vui lòng nhập dịch vụ' }]}
             >
               <Input placeholder="VD: Dell OptiPlex 7060" />
             </Form.Item>
 
             <Form.Item name="location" label="Khu vực">
-              <Input placeholder="VD: Tân An (Long An)" />
+              <Input placeholder="VD: Tại địa phương" />
             </Form.Item>
           </div>
 
@@ -1346,7 +1042,7 @@ export default function CaiDatPage() {
             label="Nội dung nhận xét thực tế"
             rules={[{ required: true, message: 'Vui lòng nhập nhận xét' }]}
           >
-            <TextArea rows={3} placeholder="Chia sẻ cảm nhận về tốc độ máy, KTV tận nơi..." />
+            <TextArea rows={3} placeholder="Chia sẻ cảm nhận về tốc độ máy, kỹ thuật hỗ trợ..." />
           </Form.Item>
 
           <div className="flex justify-end gap-2 pt-2">
@@ -1356,86 +1052,6 @@ export default function CaiDatPage() {
             </Button>
           </div>
         </Form>
-      </Modal>
-
-      {/* Modal Đổi Mật Khẩu Thành Viên */}
-      <Modal
-        title={
-          <div className="text-amber-700 font-bold">
-            Đổi Mật Khẩu Thành Viên
-          </div>
-        }
-        open={Boolean(memberForPassword)}
-        onCancel={() => {
-          setMemberForPassword(null);
-          setMemberNewPassword('');
-        }}
-        footer={null}
-        destroyOnClose
-      >
-        {memberForPassword && (
-          <div className="space-y-4 pt-2">
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Họ và tên:</span>
-                <strong className="text-slate-900">{memberForPassword.name}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Tên đăng nhập (Email):</span>
-                <strong className="font-mono text-slate-900">{memberForPassword.email}</strong>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Vai trò:</span>
-                <strong className="text-blue-700 uppercase">{memberForPassword.role}</strong>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-700">Mật khẩu mới</label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
-                    let res = '';
-                    for (let i = 0; i < 8; i++) {
-                      res += chars.charAt(Math.floor(Math.random() * chars.length));
-                    }
-                    setMemberNewPassword(res);
-                  }}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer"
-                >
-                  Tạo ngẫu nhiên
-                </button>
-              </div>
-              <Input.Password
-                value={memberNewPassword}
-                onChange={(e) => setMemberNewPassword(e.target.value)}
-                placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)..."
-                className="font-mono text-xs"
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                onClick={() => {
-                  setMemberForPassword(null);
-                  setMemberNewPassword('');
-                }}
-              >
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                loading={isChangingMemberPassword}
-                onClick={handleSaveMemberPassword}
-                className="bg-amber-600 hover:bg-amber-700"
-              >
-                Cập Nhật Mật Khẩu
-              </Button>
-            </div>
-          </div>
-        )}
       </Modal>
     </div>
   );

@@ -1,263 +1,354 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { TRANSLATIONS } from '@/lib/translations';
 import {
-  AlertTriangle,
-  CheckCircle2,
-  Zap,
-  Store,
-  GraduationCap,
-  Briefcase,
+  ShieldCheck,
+  Cpu,
+  HardDrive,
+  Thermometer,
+  Clock,
   Phone,
+  ArrowRight,
+  CheckCircle2,
+  XCircle,
   Calendar,
-  ThumbsUp,
 } from 'lucide-react';
 
-type SegmentKey = 'all' | 'business' | 'student' | 'officer';
-
 export default function WhyUsPage() {
-  const { currentLang } = useViTinhAnTamStore();
-  const t = TRANSLATIONS[currentLang || 'vi'].whyUs;
-
-  const [selectedSegment, setSelectedSegment] = useState<SegmentKey>('all');
-
-  const segments = [
-    {
-      key: 'all',
-      label: t.segments.all,
-      icon: ThumbsUp,
-    },
-    {
-      key: 'business',
-      label: t.segments.business,
-      icon: Store,
-      problem: t.segmentDetails.business.problem,
-      solution: t.segmentDetails.business.solution,
-      recommendedDevice: t.segmentDetails.business.recommendedDevice,
-      priceRange: t.segmentDetails.business.priceRange,
-    },
-    {
-      key: 'student',
-      label: t.segments.student,
-      icon: GraduationCap,
-      problem: t.segmentDetails.student.problem,
-      solution: t.segmentDetails.student.solution,
-      recommendedDevice: t.segmentDetails.student.recommendedDevice,
-      priceRange: t.segmentDetails.student.priceRange,
-    },
-    {
-      key: 'officer',
-      label: t.segments.officer,
-      icon: Briefcase,
-      problem: t.segmentDetails.officer.problem,
-      solution: t.segmentDetails.officer.solution,
-      recommendedDevice: t.segmentDetails.officer.recommendedDevice,
-      priceRange: t.segmentDetails.officer.priceRange,
-    },
-  ];
-
-  const currentSegment = segments.find((s) => s.key === selectedSegment) || segments[0];
+  const { currentLang, systemSettings } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
+  const hotline = systemSettings?.hotline || '0909.053.058';
+  const cleanHotline = hotline.replace(/\./g, '');
 
   return (
     <div className="w-full">
-      {/* 1. HERO BANNER */}
-      <section className="relative bg-gradient-to-b from-[#FDFBF7] via-white to-[#FAF7F2] py-12 sm:py-16 border-b border-slate-200/80">
+      {/* 1. HERO BANNER: Chân thành, đúng thực tế */}
+      <section className="relative bg-gradient-to-b from-[#FDFBF7] via-white to-[#FAF7F2] py-12 sm:py-18 border-b border-[#E8E2D9]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
-            <Zap className="w-4 h-4 text-[#C0392B]" />
-            <span>{t.heroBadge}</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-[#C0392B]" />
+            <span>{isEn ? 'SOLD WITH CARE, KEEPING YOU CAREFREE' : 'BÁN BẰNG TÂM ĐỂ BẠN AN TÂM'}</span>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight leading-tight">
-            {t.heroTitle}
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#1A0F0A] tracking-tight leading-tight">
+            {isEn ? 'Why Clients Choose Vi Tinh An Tam' : 'Lý Do Khách Hàng Chọn Vi Tính An Tâm'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            {t.heroDesc}
+          
+          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            {isEn
+              ? 'We approach our craft with honesty and genuine responsibility. Whether supplying pre-owned enterprise computers or performing technical repairs, An Tam focuses on meticulous hardware selection, verified components, and prompt support so your daily work stays uninterrupted.'
+              : 'Chúng tôi làm nghề bằng sự trung thực và trách nhiệm. Khi bán máy tính hay nhận sửa chữa, An Tâm luôn nỗ lực làm tốt nhất từ khâu chọn lọc máy, kiểm tra linh kiện đến khâu hỗ trợ kỹ thuật để công việc của bạn luôn suôn sẻ.'}
           </p>
+
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/danh-muc-san-pham"
+              className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <span>{isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+            <a
+              href={`tel:${cleanHotline}`}
+              className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-2xs"
+            >
+              <Phone className="w-3.5 h-3.5 text-[#C0392B]" />
+              <span>{isEn ? `Direct Hotline: ${hotline}` : `Tư Vấn Nhanh: ${hotline}`}</span>
+            </a>
+          </div>
         </div>
       </section>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-12 text-slate-700">
-        {/* 2. BẢNG NGUYÊN NHÂN - KẾT QUẢ (CAUSE & EFFECT MATRIX) */}
-        <section className="space-y-6">
-          <div className="text-center space-y-1.5">
-            <span className="text-xs uppercase font-bold text-[#C0392B] tracking-wider">
-              {t.matrixTag}
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black text-[#1A0F0A]">
-              {t.matrixTitle}
-            </h2>
-          </div>
-
-          <div className="space-y-4">
-            {t.comparisons.map((item) => {
-              return (
-                <div
-                  key={item.id}
-                  className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/50 transition-all grid grid-cols-1 md:grid-cols-12 gap-4 items-center"
-                >
-                  <div className="md:col-span-5 space-y-1.5 border-b md:border-b-0 md:border-r border-slate-200 pb-3 md:pb-0 md:pr-4">
-                    <div className="flex items-center gap-1.5 text-rose-600 font-bold text-xs uppercase tracking-wide">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span>{t.riskTag}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900">{item.riskTitle}</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{item.riskDesc}</p>
-                  </div>
-                  <div className="md:col-span-7 space-y-1.5 md:pl-2">
-                    <div className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs uppercase tracking-wide">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>{t.resultTag}</span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900">{item.resultTitle}</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{item.resultDesc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* 3. GIẢI PHÁP TƯƠNG TÁC CHO TỪNG NHÓM KHÁCH HÀNG (INTERACTIVE TABS) */}
-        <section className="p-6 sm:p-8 rounded-3xl bg-[#1C130E] border border-[#332219] text-white space-y-6 shadow-xl">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 space-y-16 text-slate-700">
+        {/* 2. BỐN ĐIỂM TỰA THỰC TẾ (ĐÚNG NĂNG LỰC & CÁCH LÀM VIỆC) */}
+        <section className="space-y-8">
           <div className="text-center space-y-2">
-            <h2 className="text-lg sm:text-2xl font-black text-white uppercase tracking-tight">
-              {t.solutionsTitle}
+            <span className="text-xs uppercase font-bold text-[#C0392B] tracking-wider">
+              {isEn ? 'HOW WE OPERATE' : 'CÁCH CHÚNG TÔI LÀM VIỆC'}
+            </span>
+            <h2 className="text-xl sm:text-3xl font-black text-[#1A0F0A]">
+              {isEn ? '4 Realistic Pillars That Give You Complete Peace of Mind' : '4 Điểm Tựa Giúp Bạn Yên Tâm Khi Mua & Dùng Máy'}
             </h2>
-            <p className="text-xs sm:text-sm text-[#D7CCC8]">
-              {t.solutionsDesc}
+            <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto">
+              {isEn
+                ? 'No exaggerated claims or unrealistic promises. Here is what An Tam genuinely commits to and delivers every day.'
+                : 'Không quảng cáo quá lời hay hứa hẹn viển vông. Dưới đây là những gì An Tâm thực tế cam kết và thực hiện mỗi ngày.'}
             </p>
           </div>
 
-          {/* Interactive Category Selector Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {segments.map((seg) => {
-              const Icon = seg.icon;
-              const isSelected = selectedSegment === seg.key;
-              return (
-                <button
-                  key={seg.key}
-                  type="button"
-                  onClick={() => setSelectedSegment(seg.key as SegmentKey)}
-                  className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shadow-xs ${
-                    isSelected
-                      ? 'bg-[#C0392B] text-white shadow-[#C0392B]/25 ring-2 ring-[#F2C4B2]'
-                      : 'bg-[#271B14] text-[#D7CCC8] hover:bg-[#332219] hover:text-white border border-[#3E291F]'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{seg.label}</span>
-                </button>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Điểm 1: Bo mạch nguyên bản */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/40 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold">
+                  <Cpu className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEn ? '1. Original Motherboards, Never Repaired' : '1. Bo Mạch Nguyên Bản, Chưa Qua Sửa Chữa'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {isEn
+                    ? 'All enterprise desktops and laptops undergo thorough technician inspections before entering our inventory. We strictly prioritize clean, original hardware that has never undergone reballing, soldering repairs, or makeshift board patching.'
+                    : 'Máy tính để bàn đồng bộ và laptop trước khi nhập kho đều được thợ kiểm tra kỹ phần cứng. Chúng tôi ưu tiên các dòng máy nguyên bản, sạch đẹp, hoạt động ổn định, không thu nhận những máy đã qua sửa chữa mạch hay chắp vá.'}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-blue-700">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>{isEn ? 'Selectively chosen hardware with stable original boards' : 'Máy tuyển chọn kỹ, phần cứng nguyên bản ổn định'}</span>
+              </div>
+            </div>
+
+            {/* Điểm 2: Linh kiện rõ ràng */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/40 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                  <HardDrive className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEn ? '2. Transparent Parts — New is New, Used is Used' : '2. Linh Kiện Rõ Ràng — Mới Báo Mới, Cũ Báo Cũ'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {isEn
+                    ? 'We stock both brand-new retail components with multi-year factory warranties and authentic pulled parts to fit varying budgets. Whether you choose a brand-new boxed SSD or cost-effective pulled memory, we state conditions openly without deceptive marketing.'
+                    : 'Cửa hàng có cả linh kiện mới chính hãng lẫn linh kiện cũ tháo máy nguyên zin để bạn lựa chọn theo túi tiền. Dù chọn SSD/RAM mới đập hộp bảo hành hãng 3 năm hay đồ cũ bóc máy zin tiết kiệm chi phí, An Tâm đều công khai rõ ràng tình trạng, bảo hành chu đáo, tuyệt đối không mập mờ.'}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-emerald-700">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{isEn ? 'Clear provenance and honest component conditions' : 'Minh bạch xuất xứ và tình trạng linh kiện'}</span>
+              </div>
+            </div>
+
+            {/* Điểm 3: Vệ sinh cẩn thận & Chạy thử thực tế */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/40 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-11 h-11 rounded-xl bg-orange-50 text-orange-700 flex items-center justify-center font-bold">
+                  <Thermometer className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEn ? '3. Careful Dust Removal, Repasting & Practical Load Testing' : '3. Vệ Sinh Cẩn Thận, Thay Keo & Chạy Thử Thực Tế'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {isEn
+                    ? 'Every machine is thoroughly blown clean of dust, repasted with quality thermal compound, and tested under real-world daily workloads before handover. This ensures quiet cooling fans, low operating temperatures, and no overheating freezes.'
+                    : 'Mỗi cỗ máy trước khi bàn giao đều được vệ sinh sạch sẽ bụi bẩn, tra keo tản nhiệt mới và cho chạy thử các tác vụ thực tế. Đảm bảo máy vận hành êm ái, quạt mát mẻ, không bị quá nhiệt hay giật lag khi bạn mở phần mềm làm việc.'}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-orange-700">
+                <CheckCircle2 className="w-4 h-4 text-orange-600 shrink-0" />
+                <span>{isEn ? 'Quiet, cool, and dependable operation under workload' : 'Máy chạy êm, mát và ổn định khi sử dụng'}</span>
+              </div>
+            </div>
+
+            {/* Điểm 4: Ứng phó nhanh, hỗ trợ tối đa */}
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs hover:border-[#C0392B]/40 transition-all space-y-3 flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center font-bold">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {isEn ? '4. Swift Response & Maximum Support Within Our Means' : '4. Ứng Phó Nhanh, Hỗ Trợ Tối Đa Trong Khả Năng'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  {isEn
+                    ? 'When technical issues arise, our highest priority is keeping your productivity moving. Our technicians offer rapid remote support via UltraViewer or on-site inspections where feasible. Any faulty part under warranty is promptly swapped without dragging delays.'
+                    : 'Khi máy tính gặp trục trặc, chúng tôi luôn ưu tiên hỗ trợ nhanh nhất để công việc của bạn không bị gián đoạn. Thợ sẵn sàng hỗ trợ từ xa qua UltraViewer hoặc đến kiểm tra tận nơi trong khả năng. Nếu linh kiện bị lỗi trong thời gian bảo hành, An Tâm linh hoạt đổi ngay để bạn có máy dùng tiếp.'}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-purple-700">
+                <CheckCircle2 className="w-4 h-4 text-purple-600 shrink-0" />
+                <span>{isEn ? 'Minimizing downtime is our top operational goal' : 'Ưu tiên hàng đầu là không để công việc của khách bị ngưng trệ'}</span>
+              </div>
+            </div>
           </div>
-
-          {/* Segment Details Content */}
-          {selectedSegment === 'all' ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-slate-900 pt-2">
-              {/* Nhóm 1: Business */}
-              <div className="p-5 rounded-2xl bg-white space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-bold mb-2">
-                    <Store className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-bold uppercase">{t.segments.business}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                    <strong>{t.concernLabel}</strong> {t.segmentDetails.business.problem}<br />
-                    <strong>{t.actualResultLabel}</strong> {t.segmentDetails.business.solution}
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-[#C0392B]">
-                  {t.recommendedModelLabel} {t.segmentDetails.business.recommendedDevice}
-                </div>
-              </div>
-
-              {/* Nhóm 2: Student */}
-              <div className="p-5 rounded-2xl bg-white space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-700 flex items-center justify-center font-bold mb-2">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-bold uppercase">{t.segments.student}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                    <strong>{t.concernLabel}</strong> {t.segmentDetails.student.problem}<br />
-                    <strong>{t.actualResultLabel}</strong> {t.segmentDetails.student.solution}
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-orange-700">
-                  {t.recommendedModelLabel} {t.segmentDetails.student.recommendedDevice}
-                </div>
-              </div>
-
-              {/* Nhóm 3: Officer */}
-              <div className="p-5 rounded-2xl bg-white space-y-3 flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold mb-2">
-                    <Briefcase className="w-5 h-5" />
-                  </div>
-                  <h3 className="text-sm font-bold uppercase">{t.segments.officer}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed mt-2">
-                    <strong>{t.concernLabel}</strong> {t.segmentDetails.officer.problem}<br />
-                    <strong>{t.actualResultLabel}</strong> {t.segmentDetails.officer.solution}
-                  </p>
-                </div>
-                <div className="pt-3 border-t border-slate-100 text-xs font-semibold text-emerald-700">
-                  {t.recommendedModelLabel} {t.segmentDetails.officer.recommendedDevice}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-6 rounded-2xl bg-white text-slate-900 space-y-4 animate-fade-in">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center shrink-0">
-                  {React.createElement(currentSegment.icon, { className: 'w-6 h-6' })}
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">{currentSegment.label}</h3>
-                  <p className="text-xs text-slate-500">{t.specializedLabel}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-rose-50/70 border border-rose-200">
-                  <span className="font-bold text-rose-700 uppercase block mb-1">{t.concernLabel}</span>
-                  <p className="text-slate-700 leading-relaxed">{currentSegment.problem}</p>
-                </div>
-                <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
-                  <span className="font-bold text-emerald-700 uppercase block mb-1">{t.actualResultLabel}</span>
-                  <p className="text-slate-700 leading-relaxed">{currentSegment.solution}</p>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <span className="text-[11px] text-slate-500 uppercase font-bold">{t.recommendedModelLabel}</span>
-                  <div className="text-sm font-bold text-slate-900 mt-0.5">{currentSegment.recommendedDevice}</div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-black text-[#C0392B] font-mono">{currentSegment.priceRange}</span>
-                  <Link
-                    href={`/dat-lich?device=${encodeURIComponent(currentSegment.recommendedDevice || '')}`}
-                    className="px-4 py-2 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-colors shadow-xs"
-                  >
-                    {t.btnBookInspect}
-                  </Link>
-                </div>
-              </div>
-            </div>
-          )}
         </section>
 
-        {/* 4. LỜI KẾT & NÚT HÀNH ĐỘNG */}
-        <section className="p-7 sm:p-8 rounded-3xl bg-[#FAF7F2] border border-[#E8E2D9] text-center space-y-4">
-          <h3 className="text-base sm:text-xl font-bold text-slate-900">
-            {t.ctaTitle}
+        {/* 3. CAM KẾT 4 "KHÔNG" (MINH BẠCH, THỰC TẾ) */}
+        <section className="p-6 sm:p-8 rounded-3xl bg-[#1C130E] border border-[#332219] text-white space-y-6 shadow-xl">
+          <div className="text-center space-y-1.5">
+            <span className="text-xs uppercase font-bold text-[#E67E22] tracking-wider">
+              {isEn ? 'STORE PRINCIPLES' : 'CAM KẾT CỬA HÀNG'}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-white">
+              {isEn ? 'Our 4 "NO" Commitments at Vi Tinh An Tam' : 'Cam Kết 4 KHÔNG Tại Vi Tính An Tâm'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  {isEn ? 'NO repaired or unstable motherboards' : 'KHÔNG bán máy nát, máy sửa main chập chờn'}
+                </h4>
+                <p className="text-xs text-[#D7CCC8] mt-1 leading-relaxed">
+                  {isEn
+                    ? 'Only accepting healthy, original systems so our customers can rely on them long-term.'
+                    : 'Chỉ nhận máy còn hoạt động tốt, bo mạch nguyên bản để khách hàng yên tâm sử dụng lâu dài.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  {isEn ? 'NO deceptive labeling of component conditions' : 'KHÔNG mập mờ tình trạng linh kiện'}
+                </h4>
+                <p className="text-xs text-[#D7CCC8] mt-1 leading-relaxed">
+                  {isEn
+                    ? 'New is stated as new, used is stated as used. Upfront pricing and accurate quality descriptions.'
+                    : 'Hàng mới báo mới, hàng cũ bóc máy báo cũ. Giá cả công khai, đúng linh kiện đúng chất lượng.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  {isEn ? 'NO inflated diagnostics or surprise hidden fees' : 'KHÔNG "vẽ bệnh" phát sinh chi phí'}
+                </h4>
+                <p className="text-xs text-[#D7CCC8] mt-1 leading-relaxed">
+                  {isEn
+                    ? 'Inspections identify real root causes. Transparent quotes upfront before any work begins.'
+                    : 'Kiểm tra máy báo đúng lỗi thực tế. Báo giá trước rõ ràng, khách đồng ý mới tiến hành làm.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-start gap-3">
+              <XCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-white">
+                  {isEn ? 'NO customer abandonment after purchase' : 'KHÔNG bỏ rơi khách sau khi bán máy'}
+                </h4>
+                <p className="text-xs text-[#D7CCC8] mt-1 leading-relaxed">
+                  {isEn
+                    ? 'Ongoing software and setup guidance with active accountability for any technical hiccups.'
+                    : 'Hỗ trợ kỹ thuật phần mềm cần thiết, luôn có trách nhiệm giải quyết thắc mắc và sự cố phát sinh.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. QUY TRÌNH MUA & NHẬN MÁY THỰC TẾ */}
+        <section className="space-y-6">
+          <div className="text-center space-y-1.5">
+            <span className="text-xs uppercase font-bold text-[#C0392B] tracking-wider">
+              {isEn ? 'CLEAR & CONVENIENT' : 'RÕ RÀNG & TIỆN LỢI'}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-black text-[#1A0F0A]">
+              {isEn ? '4-Step Buying & Handover Process' : 'Quy Trình Mua & Nhận Máy'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
+              {isEn
+                ? 'Straightforward, transparent steps helping you pick the right machine for your workload and budget.'
+                : 'Các bước đơn giản, minh bạch giúp bạn chọn được chiếc máy phù hợp với công việc và ngân sách.'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-[#FBE8DE] text-[#C0392B] font-black text-sm flex items-center justify-center">
+                1
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">
+                {isEn ? 'Needs Assessment' : 'Tư Vấn Đúng Nhu Cầu'}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {isEn
+                  ? 'Understanding your exact tasks (office, point-of-sale, study, accounting) to suggest a balanced, cost-effective setup.'
+                  : 'Tìm hiểu công việc cụ thể của bạn (văn phòng, bán hàng, học tập, kế toán...) để gợi ý cấu hình vừa đủ, tiết kiệm ngân sách.'}
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-[#FBE8DE] text-[#C0392B] font-black text-sm flex items-center justify-center">
+                2
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">
+                {isEn ? 'Hands-on Inspection' : 'Kiểm Tra Linh Kiện'}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {isEn
+                  ? 'You inspect the real hardware, review drive health, RAM specs, and cosmetic condition prior to committing.'
+                  : 'Khách hàng xem máy thực tế, kiểm tra cấu hình, tình trạng ổ cứng, bộ nhớ RAM và ngoại hình máy trước khi quyết định.'}
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-[#FBE8DE] text-[#C0392B] font-black text-sm flex items-center justify-center">
+                3
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">
+                {isEn ? 'Clean OS & Setup' : 'Cài Đặt Phần Mềm Sạch'}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {isEn
+                  ? 'Deploying a clean, bloatware-free operating system, essential office tools, and network printer connections upon request.'
+                  : 'Cài hệ điều hành hoạt động mượt mà, bộ gõ tiếng Việt, phần mềm văn phòng cơ bản và kết nối máy in nếu có yêu cầu.'}
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 space-y-2">
+              <div className="w-8 h-8 rounded-lg bg-[#FBE8DE] text-[#C0392B] font-black text-sm flex items-center justify-center">
+                4
+              </div>
+              <h4 className="text-sm font-bold text-slate-900">
+                {isEn ? 'Handover & Warranty' : 'Bàn Giao & Bảo Hành'}
+              </h4>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {isEn
+                  ? 'Device delivery with a clearly documented warranty slip and prompt technical backup whenever you need it.'
+                  : 'Giao máy kèm phiếu bảo hành rõ ràng thời gian và điều kiện. Hỗ trợ kỹ thuật kịp thời khi bạn cần.'}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. GÓC TÂM NIỆM LÀM NGHỀ */}
+        <section className="p-6 sm:p-8 rounded-3xl bg-[#FAF7F2] border border-[#E8E2D9] space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-[#1A0F0A]">
+                {isEn ? 'Our Craftsman Philosophy at Vi Tinh An Tam' : 'Tâm Niệm Làm Nghề Tại Vi Tính An Tâm'}
+              </h3>
+              <p className="text-xs text-slate-500">
+                {isEn ? 'Holding onto sincerity and care in every computer and service' : 'Giữ trọn chữ TÂM trong từng chiếc máy và dịch vụ'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="text-xs sm:text-sm text-slate-700 leading-relaxed space-y-2 pl-0 sm:pl-15">
+            <p>
+              {isEn
+                ? '"Selling a computer or fixing a machine for a client is a relationship built on trust. We believe in honest craftsmanship—diagnosing truthfully, pricing fairly, and representing hardware exactly as it is so that customers can rely on us for years to come."'
+                : '"Bán được một cỗ máy hay sửa được một chiếc máy tính cho khách là một cái duyên. Chúng tôi tâm niệm làm nghề tử tế, báo đúng bệnh, lấy đúng giá, máy có sao nói vậy để người dùng tin cậy và gắn bó dài lâu."'}
+            </p>
+            <p>
+              {isEn
+                ? '"Client satisfaction and systems that run smoothly each day remain the greatest reward for every technician at Vi Tinh An Tam."'
+                : '"Sự hài lòng của khách hàng và những chiếc máy chạy ổn định hàng ngày chính là niềm vui lớn nhất của người làm thợ tại Vi Tính An Tâm."'}
+            </p>
+          </div>
+        </section>
+
+        {/* 6. CALL TO ACTION CUỐI TRANG */}
+        <section className="p-8 rounded-3xl bg-white border border-[#E8E2D9] text-center space-y-4 shadow-sm">
+          <h3 className="text-lg sm:text-xl font-bold text-slate-900">
+            {isEn ? 'Need Computer Consultation or Technical Support?' : 'Bạn Cần Tư Vấn Máy Tính Hay Cần Hỗ Trợ Kỹ Thuật?'}
           </h3>
           <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
-            {t.ctaDesc}
+            {isEn
+              ? 'Contact us directly for detailed answers and the best solution tailored to your workflow and budget.'
+              : 'Liên hệ trực tiếp với chúng tôi để được giải đáp cụ thể và tư vấn giải pháp phù hợp nhất với nhu cầu của bạn.'}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -265,21 +356,21 @@ export default function WhyUsPage() {
               href="/danh-muc-san-pham"
               className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-xs transition-colors"
             >
-              {t.btnBrowseInventory}
+              {isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}
             </Link>
             <a
-              href="tel:0909053058"
+              href={`tel:${cleanHotline}`}
               className="px-5 py-2.5 rounded-xl bg-[#D9531E] hover:bg-[#C0392B] text-white font-bold text-xs shadow-md shadow-[#D9531E]/20 transition-all flex items-center gap-1.5"
             >
               <Phone className="w-4 h-4" />
-              <span>{t.btnHotline}</span>
+              <span>{isEn ? `Call Hotline: ${hotline}` : `Gọi Trực Tiếp: ${hotline}`}</span>
             </a>
             <Link
               href="/dat-lich"
               className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5"
             >
               <Calendar className="w-4 h-4 text-[#C0392B]" />
-              <span>{t.btnBookOnsiteTech}</span>
+              <span>{isEn ? 'Schedule Inspection' : 'Đặt Lịch Kiểm Tra Máy'}</span>
             </Link>
           </div>
         </section>

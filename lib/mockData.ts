@@ -764,14 +764,14 @@ export const initialFaqs: FaqItem[] = [
   {
     id: 'faq-1',
     icon: 'Clock',
-    question: 'Chính sách phản ứng hỏa tốc tận nơi trong 2 giờ áp dụng vào thời gian & địa bàn nào?',
-    answer: 'Khi máy tính gặp sự cố hoặc cần hỗ trợ linh kiện, quý khách chỉ cần nhập SĐT / Service Tag (S/N) hoặc liên hệ qua kênh hỗ trợ. Đội ngũ kỹ thuật cơ động của Vi tính An Tâm sẽ mang sẵn linh kiện hoặc máy thay thế đến tận nơi hỗ trợ nhanh chóng tại TP. Tân An (Phường 1 đến Phường 7, Khánh Hậu, Tân Khánh); các khu vực lân cận (Thủ Thừa, Châu Thành, Tân Trụ) hỗ trợ theo lịch hẹn nhanh trong ngày. Đặc biệt, dịch vụ hỏa tốc được ưu tiên cao điểm nhất trong khung giờ cứu hộ khẩn từ 17:30 đến 21:00 các ngày trong tuần (và trọn ngày Thứ 7, Chủ Nhật từ 08:00 đến 21:00).',
+    question: 'Khi máy tính gặp sự cố, An Tâm hỗ trợ kỹ thuật như thế nào?',
+    answer: 'Khi máy tính phát sinh vấn đề hoặc cần xử lý kỹ thuật, quý khách chỉ cần nhắn Zalo hoặc gọi trực tiếp. An Tâm luôn ưu tiên ứng phó nhanh nhất có thể: hỗ trợ xử lý từ xa qua UltraViewer/TeamViewer ngay lập tức cho các lỗi phần mềm, hoặc linh hoạt đến hỗ trợ tận nơi đối với các vấn đề phần cứng để công việc của quý khách không bị gián đoạn.',
   },
   {
     id: 'faq-2',
     icon: 'RefreshCw',
-    question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 15 phút hoạt động ra sao?',
-    answer: 'Đối với linh kiện phần cứng (SSD, RAM, nguồn, quạt) phát sinh lỗi, kỹ thuật viên mang linh kiện mới chính hãng nguyên tem đến tận nơi thay thế ngay tại chỗ trong 15 - 30 phút theo Số Serial (S/N) lưu trong hệ thống, cam kết không giữ máy ngâm đồ làm ảnh hưởng đến tiến độ công việc của khách hàng.',
+    question: 'Chính sách bảo hành và đổi trả linh kiện được xử lý ra sao?',
+    answer: 'Linh kiện hoặc máy phát sinh sự cố trong thời gian bảo hành sẽ được kiểm tra và xử lý nhanh chóng. Trường hợp linh kiện lỗi, An Tâm đổi ngay linh kiện tương đương hoặc mới tùy theo cam kết của từng gói cấu hình, không giam máy kéo dài làm ảnh hưởng đến tiến độ công việc của khách hàng.',
   },
   {
     id: 'faq-3',
@@ -783,7 +783,7 @@ export const initialFaqs: FaqItem[] = [
     id: 'faq-4',
     icon: 'CheckCircle2',
     question: 'Máy tính cũ tại An Tâm có được mở nắp kiểm tra linh kiện bên trong không?',
-    answer: 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp bo mạch sạch đẹp nguyên bản, đối chiếu Số Serial (S/N) trên bo mạch và vỏ máy, xem nhãn SSD / RAM chính hãng mới nguyên hộp và chạy phần mềm kiểm tra sức khỏe ổ cứng CrystalDiskInfo 100% Good trước khi quyết định thanh toán.',
+    answer: 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp: bo mạch sạch đẹp nguyên bản chưa qua sửa chữa, tình trạng linh kiện (mới báo mới, cũ báo cũ minh bạch), kiểm tra sức khỏe ổ cứng bằng phần mềm trước khi quyết định nhận máy.',
   },
 ];
 
@@ -829,7 +829,7 @@ export const initialCustomerReviews: CustomerReview[] = [
     id: 'rev-4',
     name: 'Anh Quốc Hoàng',
     role: 'Giám đốc Công ty Xây Dựng',
-    comment: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ và tra cứu bảo hành theo S/N máy rất minh bạch. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
+    comment: 'Chính sách bảo hành đổi trả linh hoạt, hỗ trợ kỹ thuật rất nhanh và tra cứu bảo hành theo S/N máy rất minh bạch. Yên tâm tuyệt đối về an toàn dữ liệu nội bộ.',
     service: 'Bảo trì hệ thống PC văn phòng',
     location: 'KCN Đức Hòa (Long An - Tây Ninh)',
     rating: 5,

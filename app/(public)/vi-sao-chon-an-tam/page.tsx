@@ -2,23 +2,23 @@ import type { Metadata } from 'next';
 import WhyUsPage from './ViSaoChonClient';
 
 export const metadata: Metadata = {
-  title: 'Vì Sao Chọn Vi Tính An Tâm? — 5 Lý Do Hàng Đầu',
+  title: 'Lý Do Chọn Vi Tính An Tâm — Trung Thực, Trách Nhiệm & Tận Tâm',
   description:
-    'Khám phá lý do Vi Tính An Tâm là địa chỉ mua máy tính cũ uy tín #1 Tân An, Long An: bo mạch chủ nguyên bản 100%, SSD/RAM mới BH 36 tháng, Win bản quyền vĩnh viễn, bảo hành 1 đổi 1 hỏa tốc.',
+    'Khám phá lý do khách hàng tin tưởng Vi Tính An Tâm: máy tính bo mạch nguyên bản chưa sửa chữa, linh kiện minh bạch rõ ràng mới/cũ, vệ sinh tra keo cẩn thận và hỗ trợ kỹ thuật nhanh chóng.',
   alternates: {
     canonical: '/vi-sao-chon-an-tam',
   },
   openGraph: {
-    title: 'Vì Sao Chọn Vi Tính An Tâm? — Mua Máy Tính Cũ Uy Tín Tân An',
+    title: 'Lý Do Chọn Vi Tính An Tâm — Mua Máy Tính & Dịch Vụ Uy Tín',
     description:
-      '5 lý do chọn Vi Tính An Tâm: Bo mạch chủ nguyên bản, SSD/RAM mới, Win bản quyền, BH 1 đổi 1 hỏa tốc, kỹ thuật tận nhà.',
+      'Lý do chọn Vi Tính An Tâm: Bo mạch nguyên bản, linh kiện mới cũ minh bạch, kiểm tra cẩn thận và hỗ trợ kỹ thuật nhanh chóng không làm gián đoạn công việc của bạn.',
     url: 'https://vitinhantham.vn/vi-sao-chon-an-tam',
     images: [
       {
         url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
-        alt: 'Vì sao chọn Vi Tính An Tâm — Máy tính cũ uy tín Tân An',
+        alt: 'Lý do chọn Vi Tính An Tâm',
       },
     ],
   },
@@ -38,7 +38,7 @@ const breadcrumbJsonLd = {
     {
       '@type': 'ListItem',
       position: 2,
-      name: 'Vì sao chọn An Tâm',
+      name: 'Lý do chọn An Tâm',
       item: 'https://vitinhantham.vn/vi-sao-chon-an-tam',
     },
   ],

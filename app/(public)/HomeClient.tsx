@@ -70,24 +70,24 @@ export default function HomePage() {
 
   const activeFaqs = isEn && ENGLISH_FAQS ? ENGLISH_FAQS : [
     {
-      question: 'Tại sao máy tính cũ tại Vi Tính An Tâm được gọi là "Chuẩn A Tuyển Chọn"?',
+      question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
       answer:
-        'Toàn bộ máy tại Vi Tính An Tâm đều được tuyển chọn kỹ lưỡng từ các tập đoàn doanh nghiệp, cam kết 100% bo mạch chủ nguyên bản, không sửa chữa chắp vá. Mỗi máy trước khi đến tay khách hàng đều trải qua quy trình kiểm định 24 bước (test RAM, stress test CPU, kiểm tra bad sector SSD 100% health).',
+        'Toàn bộ máy tại Vi Tính An Tâm đều được tuyển chọn kỹ lưỡng, ưu tiên các dòng máy đồng bộ và laptop doanh nghiệp có bo mạch nguyên bản, chưa qua sửa chữa chắp vá. Trước khi giao, máy được vệ sinh sạch sẽ bụi bẩn, tra keo tản nhiệt và chạy thử các tác vụ thực tế để đảm bảo hoạt động êm ái, mát mẻ.',
     },
     {
-      question: 'Chính sách bảo hành 1 đổi 1 tận nơi trong 2 giờ hoạt động như thế nào?',
+      question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố phần cứng nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu mã S/N trên web. Đội ngũ kỹ thuật sẽ mang linh kiện thay thế trực tiếp đến tận nhà hỗ trợ nhanh chóng tại TP. Tân An và khu vực lân cận; ưu tiên khung giờ cứu hộ khẩn từ 17:30 đến 21:00 không gián đoạn công việc.',
+        'Khi máy gặp bất kỳ sự cố nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu theo số Serial (S/N). Chúng tôi luôn ứng phó nhanh với tình huống, hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng, đổi linh kiện kịp thời để công việc của quý khách không bị ảnh hưởng.',
     },
     {
-      question: 'Windows bản quyền số vĩnh viễn có lợi ích gì cho kế toán và văn phòng?',
+      question: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và kế toán?',
       answer:
-        'Máy được kích hoạt bản quyền số Microsoft OEM chính thức theo bo mạch chủ. Hệ thống hoàn toàn sạch, cập nhật bảo mật liên tục từ Microsoft, không chứa mã độc hay công cụ bẻ khóa, an toàn tuyệt đối cho dữ liệu kế toán MISA, hóa đơn điện tử và giao dịch ngân hàng.',
+        'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu kế toán, hóa đơn điện tử và giao dịch ngân hàng.',
     },
     {
-      question: 'Tôi có thể nâng cấp RAM hoặc SSD theo nhu cầu riêng được không?',
+      question: 'Tôi có thể nâng cấp linh kiện RAM hoặc ổ cứng SSD theo nhu cầu được không?',
       answer:
-        'Hoàn toàn được. Vi Tính An Tâm luôn sẵn linh kiện RAM Kingston/Samsung và SSD NVMe chính hãng mới 100% bảo hành 36 tháng để nâng cấp theo nhu cầu công việc của quý khách ngay khi bàn giao.',
+        'Hoàn toàn được. Cửa hàng có sẵn cả linh kiện mới chính hãng bảo hành dài hạn lẫn linh kiện cũ tháo máy chất lượng tốt. An Tâm luôn tư vấn rõ ràng tình trạng (mới báo mới, cũ báo cũ) để quý khách an tâm lựa chọn theo ngân sách.',
     },
   ];
 
@@ -114,12 +114,12 @@ export default function HomePage() {
                 </span>
                 <span className="hidden sm:inline text-slate-300">|</span>
                 <span className="text-slate-600 font-medium hidden sm:inline">
-                  Chuyên Dell • HP • Lenovo ThinkPad Doanh Nghiệp
+                  {isEn ? 'Specializing in Enterprise Dell • HP • Lenovo ThinkPad' : 'Chuyên Dell • HP • Lenovo ThinkPad Doanh Nghiệp'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-slate-500 font-medium">
                 <MapPin className="w-3.5 h-3.5 text-[#C0392B] shrink-0" />
-                <span>52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh</span>
+                <span>{isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh'}</span>
               </div>
             </div>
 
@@ -163,7 +163,7 @@ export default function HomePage() {
                 <div className="pt-2">
                   <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Tra cứu bảo hành & hồ sơ xuất xưởng theo Service Tag / Số điện thoại:</span>
+                    <span>{isEn ? 'Check warranty & factory QC records by Service Tag / Phone number:' : 'Tra cứu bảo hành & hồ sơ xuất xưởng theo Service Tag / Số điện thoại:'}</span>
                   </div>
                   <form
                     onSubmit={handleSearchSubmit}
@@ -210,17 +210,17 @@ export default function HomePage() {
                   <div className="absolute top-3.5 left-3.5">
                     <div className="px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-lg flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>100% Mainboard Nguyên Zin Chuẩn A</span>
+                      <span>{isEn ? '100% Grade-A Original Motherboards' : '100% Mainboard Nguyên Zin Chuẩn A'}</span>
                     </div>
                   </div>
 
                   <div className="absolute bottom-3.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between gap-2">
                     <div className="px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md text-[#1A0F0A] text-xs font-bold shadow-lg border border-white flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Bảo hành 1 đổi 1 tận nơi</span>
+                      <span>{isEn ? 'On-site warranty replacement' : 'Bảo hành 1 đổi 1 tận nơi'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-[#C0392B] text-white text-xs font-bold shadow-lg">
-                      ⚡ Trả góp 0% qua CCCD
+                      {isEn ? '⚡ 0% Installment via ID' : '⚡ Trả góp 0% qua CCCD'}
                     </div>
                   </div>
                 </div>
@@ -228,14 +228,14 @@ export default function HomePage() {
                 {/* Sub-card trust badges underneath image */}
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Hệ thống</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">Windows Bản Quyền Số</div>
-                    <div className="text-[11px] text-slate-500">Vĩnh viễn theo bo mạch chủ</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'System' : 'Hệ thống'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Digital Windows' : 'Windows Bản Quyền Số'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'Permanent motherboard entitlement' : 'Vĩnh viễn theo bo mạch chủ'}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Hỗ trợ hỏa tốc</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">Giao Trong 2 Giờ</div>
-                    <div className="text-[11px] text-slate-500">Ưu tiên ca tối 17:30 - 21:00</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Support' : 'Hỗ trợ kỹ thuật'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Prompt Response' : 'Ứng Phó Nhanh'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'On-site or via UltraViewer' : 'Tận nơi hoặc qua UltraViewer'}</div>
                   </div>
                 </div>
               </div>
@@ -249,34 +249,34 @@ export default function HomePage() {
                   {totalReadyStock}
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                  Máy có sẵn trong kho
+                  {isEn ? 'Units in stock' : 'Máy có sẵn trong kho'}
                 </div>
                 <div className="text-[11px] text-slate-500 hidden sm:block">
-                  Sẵn sàng bàn giao hỏa tốc & test máy
+                  {isEn ? 'Ready for immediate testing & handover' : 'Sẵn sàng bàn giao & kiểm tra máy'}
                 </div>
               </div>
 
               <div className="px-2 sm:px-6 text-center sm:text-left">
                 <div className="text-2xl sm:text-3xl font-black text-[#C0392B] font-mono">
-                  36T
+                  100%
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                  Bảo hành SSD / RAM mới
+                  {isEn ? 'Component transparency' : 'Minh bạch linh kiện'}
                 </div>
                 <div className="text-[11px] text-slate-500 hidden sm:block">
-                  100% linh kiện nâng cấp mới chính hãng
+                  {isEn ? 'New is new, used is used — fully honest' : 'Mới báo mới, cũ báo cũ rõ ràng'}
                 </div>
               </div>
 
               <div className="px-2 sm:px-6 text-center sm:text-left">
                 <div className="text-2xl sm:text-3xl font-black text-[#1A0F0A] font-mono">
-                  2 Giờ
+                  {isEn ? 'Dedicated' : 'Tận Tâm'}
                 </div>
                 <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                  Cứu hộ & Đổi máy tận nơi
+                  {isEn ? 'Prompt assistance' : 'Hỗ trợ nhanh chóng'}
                 </div>
                 <div className="text-[11px] text-slate-500 hidden sm:block">
-                  Khắc phục sự cố phần cứng không gián đoạn
+                  {isEn ? 'Minimizing workflow disruption' : 'Hạn chế tối đa gián đoạn công việc'}
                 </div>
               </div>
             </div>
@@ -291,7 +291,7 @@ export default function HomePage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBE8DE] text-[#C0392B] text-xs font-bold uppercase tracking-wider mb-2 border border-[#F2C4B2]">
                 <Sparkles className="w-3.5 h-3.5 text-[#C0392B]" />
-                <span>TOP 3 THIẾT BỊ NỔI BẬT</span>
+                <span>{isEn ? 'TOP 3 FEATURED SYSTEMS' : 'TOP 3 THIẾT BỊ NỔI BẬT'}</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight">
                 {t.products.title}
@@ -306,7 +306,7 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>{totalReadyStock} máy đang sẵn kho</span>
+                <span>{isEn ? `${totalReadyStock} units in stock` : `${totalReadyStock} máy đang sẵn kho`}</span>
               </span>
             </div>
           </div>
@@ -447,10 +447,10 @@ export default function HomePage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute bottom-3 left-3 right-3 text-white">
                     <span className="text-[10px] font-mono uppercase bg-[#C0392B] px-2 py-0.5 rounded font-bold">
-                      TIÊU CHUẨN KỸ THUẬT
+                      {isEn ? 'TECHNICAL STANDARD' : 'TIÊU CHUẨN KỸ THUẬT'}
                     </span>
                     <p className="text-xs font-semibold mt-1">
-                      Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64
+                      {isEn ? 'Sonic cleaning • Arctic MX-4 paste • FurMark / AIDA64 load testing' : 'Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64'}
                     </p>
                   </div>
                 </div>
@@ -464,17 +464,19 @@ export default function HomePage() {
                     {t.services.title}
                   </h2>
                   <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed">
-                    Mọi thiết bị tiếp nhận sửa chữa hoặc xuất xưởng đều được đo kiểm xung nhịp, nhiệt độ full-load và ghi nhận nhật ký phần cứng minh bạch. Cam kết không tráo đổi linh kiện, không phát sinh chi phí ẩn.
+                    {isEn
+                      ? 'Every device serviced or delivered undergoes thermal and clock testing under realistic workloads with open hardware tracking. Zero component swapping, zero hidden fees.'
+                      : 'Mọi thiết bị tiếp nhận sửa chữa hoặc xuất xưởng đều được đo kiểm xung nhịp, nhiệt độ full-load và ghi nhận nhật ký phần cứng minh bạch. Cam kết không tráo đổi linh kiện, không phát sinh chi phí ẩn.'}
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
-                      <div className="text-xs font-bold text-[#2B1810]">Keo Tản Nhiệt Cao Cấp</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5 - 12°C.</div>
+                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Premium Thermal Compound' : 'Keo Tản Nhiệt Cao Cấp'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Authentic Arctic MX-4 paste, drops heat by 5 - 12°C.' : 'Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5 - 12°C.'}</div>
                     </div>
                     <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
-                      <div className="text-xs font-bold text-[#2B1810]">Bản Quyền Số OEM</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">Windows sạch vĩnh viễn theo mainboard, an toàn cho kế toán.</div>
+                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Digital OEM License' : 'Bản Quyền Số OEM'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for accounting.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho kế toán.'}</div>
                     </div>
                   </div>
                 </div>

@@ -91,7 +91,7 @@ function AppointmentBookingContent() {
             id: 'srv-booking',
             name: serviceNeeded,
             price: locationType === 'onsite' ? 150000 : 100000,
-            warranty_tier: currentLang === 'en' ? '2-Hour Rapid Response' : 'Hỏa tốc 2 giờ',
+            warranty_tier: currentLang === 'en' ? 'Prompt Technical Support' : 'Hỗ trợ kỹ thuật nhanh',
           },
         ],
         multi_tier_warranty: {
