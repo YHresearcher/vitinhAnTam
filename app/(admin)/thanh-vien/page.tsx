@@ -240,19 +240,9 @@ export default function MemberManagementPage() {
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1 text-xs text-slate-500 font-medium">
-            <Link href="/dashboard" className="hover:text-blue-600">
-              CRM
-            </Link>
-            <span>/</span>
-            <span className="text-blue-700 font-semibold">Quản lý thành viên &amp; Phân quyền</span>
-          </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Thành Viên &amp; Phân Quyền Hệ Thống
+            Thành Viên &amp; Phân Quyền
           </h1>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Toàn quyền sửa thông tin, cập nhật mật khẩu, phân bổ vai trò và cấp phép cho tất cả nhân sự (kể cả Admin).
-          </p>
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
@@ -784,7 +774,6 @@ export default function MemberManagementPage() {
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
               <div>
                 <h2 className="text-base font-bold text-slate-900">Thêm Thành Viên Mới</h2>
-                <p className="text-xs text-slate-500">Cấp tài khoản đăng nhập nội bộ cho nhân sự</p>
               </div>
               <button
                 onClick={() => setIsAddingUser(false)}

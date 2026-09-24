@@ -158,6 +158,16 @@ export interface SparePart {
   notes?: string;
 }
 
+export interface SoftwareKeyItem {
+  id: string;
+  key_code: string;                          // Chuỗi mã key (VD: W269N-WFGWX-YVC9B-4J6C9-T83GX)
+  status: 'available' | 'used' | 'revoked'; // Sẵn sàng | Đã kích hoạt/bàn giao | Đã thu hồi/lỗi
+  assigned_customer?: string;                // Khách hàng nhận key
+  assigned_ticket_code?: string;             // Phiếu sửa chữa / đơn hàng liên kết
+  assigned_at?: string;                      // Ngày giờ xuất key
+  notes?: string;                            // Ghi chú riêng
+}
+
 export interface SoftwareLicense {
   id: string;
   software_name: string;
@@ -169,6 +179,7 @@ export interface SoftwareLicense {
   duration_months?: number;  // 0 = Vĩnh viễn (Lifetime), 12, 24, 36 tháng
   distributor?: string;
   notes?: string;
+  license_keys?: SoftwareKeyItem[]; // Bể chứa key (Key Pool) chi tiết
 }
 
 export interface MultiTierWarranty {

@@ -10,6 +10,7 @@ import {
   InventoryItem,
   SparePart,
   SoftwareLicense,
+  SoftwareKeyItem,
   ServiceTicket,
   OnsiteDispatch,
   ShiftLog,
@@ -32,6 +33,10 @@ import {
 
 
 export interface SystemSettings {
+  logoUrl?: string;
+  logoDisplayMode?: 'icon_with_text' | 'image_only';
+  faviconUrl?: string;
+  brandSlogan?: string;
   hotline: string;
   zaloNumber: string;
   zaloLink: string;
@@ -52,6 +57,10 @@ export interface SystemSettings {
 }
 
 export const initialSystemSettings: SystemSettings = {
+  logoUrl: '',
+  logoDisplayMode: 'icon_with_text',
+  faviconUrl: '',
+  brandSlogan: 'Bán bằng tâm để bạn an tâm',
   hotline: '0909.053.058',
   zaloNumber: '0909053058',
   zaloLink: 'https://zalo.me/0909053058',
@@ -158,6 +167,10 @@ interface StoreContextType {
   addSoftwareLicense: (item: Omit<SoftwareLicense, 'id'>) => Promise<SoftwareLicense>;
   updateSoftwareLicense: (id: string, data: Partial<SoftwareLicense>) => Promise<boolean>;
   deleteSoftwareLicense: (id: string) => Promise<boolean>;
+  addSoftwareKeys: (softwareId: string, keys: string[], notes?: string) => Promise<boolean>;
+  assignSoftwareKey: (softwareId: string, keyId: string, info: { customerName: string; ticketCode?: string; notes?: string }) => Promise<boolean>;
+  updateSoftwareKeyStatus: (softwareId: string, keyId: string, status: SoftwareKeyItem['status'], notes?: string) => Promise<boolean>;
+  deleteSoftwareKey: (softwareId: string, keyId: string) => Promise<boolean>;
 
   // Ticket actions
   addServiceTicket: (ticket: Omit<ServiceTicket, 'id' | 'created_at'>) => Promise<ServiceTicket>;
@@ -503,6 +516,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
         if (savedRevs) setReviews(JSON.parse(savedRevs));
 
+        const savedSettings = localStorage.getItem('vtat_system_settings_v2');
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings);
+            setSystemSettings((prev) => ({ ...prev, ...parsed }));
+          } catch (e) {
+            console.warn('Failed to parse saved system settings', e);
+          }
+        }
+
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
           setCurrentLang(savedLang);
@@ -717,6 +740,115 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     setSoftwareLicenses((prev) => {
       const next = prev.filter((item) => item.id !== id);
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const addSoftwareKeys = async (softwareId: string, keys: string[], notes?: string): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    const cleanKeys = keys.map((k) => k.trim()).filter((k) => k.length > 0);
+    if (cleanKeys.length === 0) return false;
+
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const existingKeys = item.license_keys || [];
+        const newKeyItems: SoftwareKeyItem[] = cleanKeys.map((k, idx) => ({
+          id: `key-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+          key_code: k,
+          status: 'available' as const,
+          notes: notes || undefined,
+        }));
+        const updatedKeys = [...existingKeys, ...newKeyItems];
+        return {
+          ...item,
+          license_keys: updatedKeys,
+          quantity_in_stock: updatedKeys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const assignSoftwareKey = async (
+    softwareId: string,
+    keyId: string,
+    info: { customerName: string; ticketCode?: string; notes?: string }
+  ): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).map((k) => {
+          if (k.id !== keyId) return k;
+          return {
+            ...k,
+            status: 'used' as const,
+            assigned_customer: info.customerName,
+            assigned_ticket_code: info.ticketCode || undefined,
+            assigned_at: new Date().toISOString(),
+            notes: info.notes ? (k.notes ? `${k.notes} | ${info.notes}` : info.notes) : k.notes,
+          };
+        });
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const updateSoftwareKeyStatus = async (
+    softwareId: string,
+    keyId: string,
+    status: SoftwareKeyItem['status'],
+    notes?: string
+  ): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).map((k) => {
+          if (k.id !== keyId) return k;
+          return {
+            ...k,
+            status,
+            notes: notes ? (k.notes ? `${k.notes} | ${notes}` : notes) : k.notes,
+            ...(status === 'available' ? { assigned_customer: undefined, assigned_ticket_code: undefined, assigned_at: undefined } : {}),
+          };
+        });
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const deleteSoftwareKey = async (softwareId: string, keyId: string): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).filter((k) => k.id !== keyId);
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
       saveToLocal(STORAGE_KEYS.softwareLicenses, next);
       return next;
     });
@@ -1072,6 +1204,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         addSoftwareLicense,
         updateSoftwareLicense,
         deleteSoftwareLicense,
+        addSoftwareKeys,
+        assignSoftwareKey,
+        updateSoftwareKeyStatus,
+        deleteSoftwareKey,
         onsiteDispatches,
         shiftLogs,
         faqs,

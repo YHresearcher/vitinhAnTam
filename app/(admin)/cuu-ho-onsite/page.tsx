@@ -55,9 +55,6 @@ export default function CuuHoOnsitePage() {
               {activeCount} ca đang chạy
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Theo dõi và cập nhật trạng thái các ca xử lý tận nơi.
-          </p>
         </div>
       </div>
 

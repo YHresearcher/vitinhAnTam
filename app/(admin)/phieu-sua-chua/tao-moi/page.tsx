@@ -167,9 +167,6 @@ export default function TaoPhieuSuaChuaPage() {
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Lập Phiếu Tiếp Nhận Máy Mới
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Ghi nhận thông tin ngoại quan, lỗi kỹ thuật, phụ kiện đi kèm và tính tự động bảo hành phân tầng.
-          </p>
         </div>
 
         {/* Type Toggle: Counter vs Onsite */}
@@ -221,9 +218,6 @@ export default function TaoPhieuSuaChuaPage() {
                   className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none"
                 />
               </div>
-              <span className="text-[11px] text-slate-400 mt-1 block">
-                Tự động nhận diện khách hàng cũ khi nhập xong SĐT.
-              </span>
             </div>
 
             <div>
@@ -328,9 +322,6 @@ export default function TaoPhieuSuaChuaPage() {
               <div className="text-base font-bold text-slate-900">
                 3. Dịch Vụ Sửa Chữa &amp; Linh Kiện Dự Kiến Thay Thế
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Chọn hình thức xử lý, nhập thời hạn hoàn thành và phụ tùng dự kiến.
-              </p>
             </div>
 
             {/* Switch: Sửa chữa vs Bảo hành */}
@@ -488,10 +479,6 @@ export default function TaoPhieuSuaChuaPage() {
                 </div>
               </div>
             </div>
-
-            <p className="text-[11px] text-slate-500 italic">
-              * Hệ thống tự động ghi nhận thời gian này. Khi thời hạn bàn giao máy còn &lt; 3 ngày hoặc đã quá hạn, widget ở góc phải màn hình quản trị sẽ hiển thị cảnh báo nhấp nháy cho quản trị viên và KTV.
-            </p>
           </div>
 
           {/* Checklist Gói Dịch Vụ */}

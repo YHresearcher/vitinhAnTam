@@ -3,9 +3,32 @@
 import React, { useEffect } from 'react';
 import { ConfigProvider } from 'antd';
 import viVN from 'antd/locale/vi_VN';
-import { StoreProvider } from '@/lib/store';
+import { StoreProvider, useViTinhAnTamStore } from '@/lib/store';
 
 const DEFAULT_TITLE = 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm';
+
+function FaviconUpdater() {
+  const { systemSettings } = useViTinhAnTamStore();
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const targetFavicon = systemSettings.faviconUrl?.trim() || '/favicon.ico';
+
+    const links = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
+    if (links.length > 0) {
+      links.forEach((l) => {
+        l.href = targetFavicon;
+      });
+    } else {
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.href = targetFavicon;
+      document.head.appendChild(link);
+    }
+  }, [systemSettings.faviconUrl]);
+
+  return null;
+}
 
 export function ClientProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -40,7 +63,10 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <StoreProvider>{children}</StoreProvider>
+      <StoreProvider>
+        <FaviconUpdater />
+        {children}
+      </StoreProvider>
     </ConfigProvider>
   );
 }

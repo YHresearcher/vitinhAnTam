@@ -245,9 +245,6 @@ export default function KhachHangCrmPage() {
               {customers.length} khách hàng
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Danh sách khách hàng và lịch sử dịch vụ.
-          </p>
         </div>
 
         {/* Action Buttons */}
@@ -778,9 +775,6 @@ export default function KhachHangCrmPage() {
                 <h3 className="text-base font-bold text-slate-900">
                   {editingCustomer ? 'Chỉnh Sửa Hồ Sơ Khách Hàng' : 'Thêm Khách Hàng Mới Vào CRM'}
                 </h3>
-                <p className="text-xs text-slate-500">
-                  Phân quyền: <span className="font-semibold text-emerald-700">{currentUser.name}</span> ({currentUser.roleTitle})
-                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
