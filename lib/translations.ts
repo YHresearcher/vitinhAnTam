@@ -33,7 +33,7 @@ export const TRANSLATIONS = {
       weekendTitle: 'Thứ 7 & Chủ Nhật:',
       weekendHours: 'Phục vụ trọn ngày: 08h00 - 21h00',
       policiesTitle: 'CHÍNH SÁCH & ĐIỀU LỆ',
-      swapPolicy: 'Hỗ trợ kỹ thuật nhanh chóng, hạn chế gián đoạn công việc',
+      swapPolicy: 'Bảo hành nhanh chóng, hỗ trợ tận nơi trong bán kính <5km từ cửa hàng',
       privacyPolicy: 'Cam kết tuyệt đối bảo mật dữ liệu khách hàng',
       copyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.`,
       warrantyTerms: 'Quy định bảo hành',
@@ -105,7 +105,7 @@ export const TRANSLATIONS = {
       osLicense: 'Bản quyền:',
       osLicenseVal: 'Windows Pro Bản Quyền Số',
       policy: 'Chính sách:',
-      policyVal: 'Bảo hành 12 tháng, hỗ trợ kỹ thuật tận nơi khi cần',
+      policyVal: 'Bảo hành nhanh chóng, hỗ trợ tận nơi trong bán kính <5km',
       btnReserve: 'Mua Ngay',
       btnZaloPhotos: 'Chat Zalo Xem Ảnh Thật Máy',
     },
@@ -151,7 +151,7 @@ export const TRANSLATIONS = {
     qcProcess: {
       title: 'QUY TRÌNH KIỂM TRA CẨN THẬN TRƯỚC KHI GIAO',
       subtitle:
-        'Chúng tôi từ chối nhập máy sửa chữa chắp vá. Mỗi linh kiện xuất kho đều được kiểm tra cẩn thận để máy chạy ổn định.',
+        'Máy tuyển chọn cao cấp nguyên bản, kỹ thuật viên không can thiệp kiểm tra thủ công trên mainboard để giữ zin tuyệt đối. 100% linh kiện được kiểm tra thực tế qua phần mềm chuyên dụng (FurMark, AIDA64, CrystalDiskInfo).',
       s1Title: 'NGUỒN ĐIỆN ỔN ĐỊNH',
       s1Desc:
         'Kiểm tra điện áp thực tế, đảm bảo máy hoạt động ổn định trong giờ làm việc cao điểm.',
@@ -434,7 +434,7 @@ export const TRANSLATIONS = {
       weekendTitle: 'Saturday & Sunday:',
       weekendHours: 'Full weekend service: 08:00 - 21:00',
       policiesTitle: 'POLICIES & COMMITMENTS',
-      swapPolicy: 'Prompt technical support to minimize business downtime',
+      swapPolicy: 'Prompt warranty with on-site support within <5km radius from store',
       privacyPolicy: '100% strict corporate data confidentiality',
       copyright:
         `© ${new Date().getFullYear()} Vi Tinh An Tam (vitinhantham.vn) - Dedicated to Premium Quality.`,

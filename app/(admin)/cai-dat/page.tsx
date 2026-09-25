@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
+import { useViTinhAnTamStore, SystemSettings, ZaloContactItem } from '@/lib/store';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { UserAccount } from '@/lib/supabase';
 import Link from 'next/link';
@@ -780,7 +780,7 @@ export default function CaiDatPage() {
 
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Số điện thoại Zalo *
+                          Số điện thoại Zalo chính (Hotline) *
                         </label>
                         <input
                           type="text"
@@ -808,6 +808,113 @@ export default function CaiDatPage() {
                           Tự động kết nối link chat: wa.me/84...
                         </span>
                       </div>
+                    </div>
+                  </div>
+
+                  
+                  {/* QUẢN LÝ 3 SỐ ĐIỆN THOẠI WIDGET NHẮN ZALO */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                      <div>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-[#0068FF] flex items-center gap-1.5">
+                          <span>3 SỐ ĐIỆN THOẠI WIDGET NHẮN ZALO TRÊN TRANG CHỦ</span>
+                        </h3>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Khi khách hàng bấm vào nút Zalo tròn trên website, hệ thống sẽ mở danh sách 3 số này để khách chọn người hỗ trợ.
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        Admin tùy chỉnh
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {([0, 1, 2]).map((idx) => {
+                        const contacts = formData.zaloContacts || [
+                          { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
+                          { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
+                          { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+                        ];
+                        const contact = contacts[idx] || { id: `zalo-${idx+1}`, name: `Kỹ Thuật ${idx+1}`, phone: '', role: '' };
+
+                        return (
+                          <div key={idx} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-[#0068FF] uppercase">
+                                Hotline Zalo #{idx + 1}
+                              </span>
+                              <span className="text-[10px] font-mono text-slate-500">
+                                zalo.me/{contact.phone || '...'}
+                              </span>
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                Số điện thoại Zalo *
+                              </label>
+                              <input
+                                type="text"
+                                required
+                                value={contact.phone}
+                                onChange={(e) => {
+                                  const newPhone = e.target.value.trim();
+                                  const nextContacts = [...(formData.zaloContacts || [
+                                    { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
+                                    { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
+                                    { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+                                  ])];
+                                  nextContacts[idx] = { ...contact, phone: newPhone };
+                                  setFormData((prev) => ({ ...prev, zaloContacts: nextContacts }));
+                                }}
+                                placeholder="VD: 123456..."
+                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-[#0068FF] focus:outline-none focus:border-[#0068FF] bg-white font-mono"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                Tên hiển thị
+                              </label>
+                              <input
+                                type="text"
+                                value={contact.name}
+                                onChange={(e) => {
+                                  const nextContacts = [...(formData.zaloContacts || [
+                                    { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
+                                    { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
+                                    { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+                                  ])];
+                                  nextContacts[idx] = { ...contact, name: e.target.value };
+                                  setFormData((prev) => ({ ...prev, zaloContacts: nextContacts }));
+                                }}
+                                placeholder="VD: Kỹ Thuật 1"
+                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:border-[#0068FF] bg-white"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                                Phụ trách / Nhiệm vụ
+                              </label>
+                              <input
+                                type="text"
+                                value={contact.role || ''}
+                                onChange={(e) => {
+                                  const nextContacts = [...(formData.zaloContacts || [
+                                    { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
+                                    { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
+                                    { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+                                  ])];
+                                  nextContacts[idx] = { ...contact, role: e.target.value };
+                                  setFormData((prev) => ({ ...prev, zaloContacts: nextContacts }));
+                                }}
+                                placeholder="VD: Tư vấn bán hàng..."
+                                className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-600 focus:outline-none focus:border-[#0068FF] bg-white"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

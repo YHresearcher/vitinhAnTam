@@ -91,7 +91,7 @@ export default function WhyUsPage() {
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {isEn
                     ? 'All enterprise desktops and laptops undergo thorough technician inspections before entering our inventory. We strictly prioritize clean, original hardware that has never undergone reballing, soldering repairs, or makeshift board patching.'
-                    : 'Máy tính để bàn đồng bộ và laptop trước khi nhập kho đều được thợ kiểm tra kỹ phần cứng. Chúng tôi ưu tiên các dòng máy nguyên bản, sạch đẹp, hoạt động ổn định, không thu nhận những máy đã qua sửa chữa mạch hay chắp vá.'}
+                    : 'Do máy thuộc phân khúc tuyển chọn cao cấp nguyên bản chuẩn A, kỹ thuật viên của An Tâm không tháo dỡ kiểm tra chi tiết trên bo mạch chủ (mainboard) nhằm giữ nguyên trạng zin của nhà sản xuất. Thay vào đó, toàn bộ quy trình kiểm định chất lượng được thực hiện thực tế 100% qua các phần mềm đo kiểm chuyên dụng (stress test nhiệt độ, xung nhịp và sức khỏe linh kiện).'}
                 </p>
               </div>
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-blue-700">
@@ -154,7 +154,7 @@ export default function WhyUsPage() {
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {isEn
                     ? 'When technical issues arise, our highest priority is keeping your productivity moving. Our technicians offer rapid remote support via UltraViewer or on-site inspections where feasible. Any faulty part under warranty is promptly swapped without dragging delays.'
-                    : 'Khi máy tính gặp trục trặc, chúng tôi luôn ưu tiên hỗ trợ nhanh nhất để công việc của bạn không bị gián đoạn. Thợ sẵn sàng hỗ trợ từ xa qua UltraViewer hoặc đến kiểm tra tận nơi trong khả năng. Nếu linh kiện bị lỗi trong thời gian bảo hành, An Tâm linh hoạt đổi ngay để bạn có máy dùng tiếp.'}
+                    : 'An Tâm cam kết bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi trong bán kính < 5km từ cửa hàng. Ngoài phạm vi 5km, cửa hàng tiếp nhận xử lý nhanh tại shop hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk, ưu tiên tối đa để công việc của quý khách không bị gián đoạn.'}
                 </p>
               </div>
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-purple-700">

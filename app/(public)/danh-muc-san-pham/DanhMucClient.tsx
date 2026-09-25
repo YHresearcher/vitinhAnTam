@@ -102,7 +102,7 @@ function ProductsCatalogContent() {
               <p className="text-sm text-[#6E5D53] mt-2 max-w-2xl">
                 {isEn
                   ? 'All devices are tested rigorously with stress-tests, registered serial numbers, and covered with 1-to-1 on-site warranty.'
-                  : 'Toàn bộ thiết bị đều được kiểm định phần cứng chuyên sâu, lưu vết Service Tag độc bản và hưởng trọn chính sách bảo hành 1 đổi 1 tận nơi.'}
+                  : 'Toàn bộ thiết bị đều được kiểm định phần cứng thực tế qua phần mềm chuyên dụng, lưu vết Service Tag độc bản và bảo hành nhanh chóng tận nơi trong bán kính <5km.'}
               </p>
             </div>
 

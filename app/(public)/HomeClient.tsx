@@ -47,6 +47,7 @@ export default function HomePage() {
 
   // Modal for Buying License Keys
   const [isBuyKeyModalOpen, setIsBuyKeyModalOpen] = useState(false);
+  const [isZaloModalOpen, setIsZaloModalOpen] = useState(false);
   const [selectedKeyType, setSelectedKeyType] = useState<'windows' | 'office'>('windows');
   const [homeProductTab, setHomeProductTab] = useState<'all' | 'hardware' | 'software'>('all');
 
@@ -107,12 +108,12 @@ export default function HomePage() {
     {
       question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
       answer:
-        'Toàn bộ máy tại Vi Tính An Tâm đều được tuyển chọn kỹ lưỡng, ưu tiên các dòng máy đồng bộ và laptop doanh nghiệp có bo mạch nguyên bản, chưa qua sửa chữa chắp vá. Trước khi giao, máy được vệ sinh sạch sẽ bụi bẩn, tra keo tản nhiệt và chạy thử các tác vụ thực tế để đảm bảo hoạt động êm ái, mát mẻ.',
+        'Toàn bộ máy tại Vi Tính An Tâm đều thuộc dòng tuyển chọn cao cấp nguyên bản. Kỹ thuật viên không can thiệp hay kiểm tra chi tiết trên bo mạch chủ (mainboard) nhằm giữ nguyên trạng zin tuyệt đối của máy. Mọi quy trình kiểm định chất lượng được thực hiện thực tế 100% qua các phần mềm đo kiểm chuyên dụng: chạy thử tải nặng (stress test) FurMark / AIDA64, đo xung nhịp, nhiệt độ và kiểm tra sức khỏe ổ cứng trước khi bàn giao.',
     },
     {
       question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
       answer:
-        'Khi máy gặp bất kỳ sự cố nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu theo số Serial (S/N). Chúng tôi luôn ứng phó nhanh với tình huống, hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng, đổi linh kiện kịp thời để công việc của quý khách không bị ảnh hưởng.',
+        'An Tâm áp dụng chính sách bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi trong bán kính < 5km từ cửa hàng. Với các khách hàng ngoài bán kính 5km, chúng tôi tiếp nhận xử lý nhanh tại cửa hàng hoặc hỗ trợ kỹ thuật trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của quý khách không bị gián đoạn.',
     },
     {
       question: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và kế toán?',
@@ -252,7 +253,7 @@ export default function HomePage() {
                   <div className="absolute bottom-3.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between gap-2">
                     <div className="px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md text-[#1A0F0A] text-xs font-bold shadow-lg border border-white flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{isEn ? 'On-site warranty replacement' : 'Bảo hành 1 đổi 1 tận nơi'}</span>
+                      <span>{isEn ? 'Prompt warranty • On-site <5km' : 'Bảo hành nhanh • Tận nơi <5km'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-[#C0392B] text-white text-xs font-bold shadow-lg">
                       {isEn ? '⚡ 0% Installment via ID' : '⚡ Trả góp 0% qua CCCD'}
@@ -334,7 +335,7 @@ export default function HomePage() {
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl">
                 {isEn
                   ? 'Showcasing 3 featured enterprise computers in stock. Tested with deep hardware stress-tests and covered by on-site warranty.'
-                  : 'Trưng bày 3 mẫu máy tiêu biểu đang sẵn sàng tại cửa hàng. Kiểm định QC chuẩn mực 100%, bảo hành 1 đổi 1 tận nơi.'}
+                  : 'Trưng bày 3 mẫu máy tiêu biểu đang sẵn sàng tại cửa hàng. Kiểm định 100% qua phần mềm chuyên dụng, bảo hành nhanh chóng tận nơi <5km.'}
               </p>
             </div>
 
@@ -397,7 +398,7 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <div className="text-xs text-emerald-800 font-semibold flex items-center gap-1.5 px-1">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>{isEn ? 'Live Inventory • 1-to-1 Replacement Warranty' : 'Sẵn Hàng Thực Tế • Bảo Hành 1 Đổi 1 Tận Nơi'}</span>
+                <span>{isEn ? 'Live Inventory • Prompt Warranty (<5km On-site)' : 'Sẵn Hàng Thực Tế • Bảo Hành Nhanh Tận Nơi <5km'}</span>
               </div>
             </div>
           </div>
@@ -666,7 +667,7 @@ export default function HomePage() {
                   <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed">
                     {isEn
                       ? 'Every device serviced or delivered undergoes thermal and clock testing under realistic workloads with open hardware tracking. Zero component swapping, zero hidden fees.'
-                      : 'Mọi thiết bị tiếp nhận sửa chữa hoặc xuất xưởng đều được đo kiểm xung nhịp, nhiệt độ full-load và ghi nhận nhật ký phần cứng minh bạch. Cam kết không tráo đổi linh kiện, không phát sinh chi phí ẩn.'}
+                      : 'Do máy thuộc dòng tuyển chọn cao cấp nguyên bản, kỹ thuật viên không can thiệp hay kiểm tra chi tiết trên bo mạch chủ (mainboard) để giữ nguyên trạng zin của máy. Toàn bộ quy trình kiểm định chất lượng được kiểm tra thực tế 100% qua các phần mềm đo kiểm chuyên dụng (stress test full-load nhiệt độ, xung nhịp vi xử lý, sức khỏe ổ cứng).'}
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -950,20 +951,95 @@ export default function HomePage() {
           </span>
         </a>
 
-        {/* 3. Nhắn Zalo Kỹ Thuật — Hình tròn */}
-        <a
-          href={systemSettings.zaloLink || 'https://zalo.me/0909053058'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pointer-events-auto w-12 h-12 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="Zalo: Nhắn Kỹ Thuật Trực Ca"
-        >
-          <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
-          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span className="font-bold text-sky-300">Zalo:</span>
-            <span>{isEn ? 'Direct Tech Chat' : 'Nhắn kỹ thuật trực ca'}</span>
-          </span>
-        </a>
+        {/* 3. Nhắn Zalo Kỹ Thuật — Mở danh sách 3 số Zalo */}
+        <div className="relative pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setIsZaloModalOpen(!isZaloModalOpen)}
+            className="w-12 h-12 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative cursor-pointer"
+            title="Nhắn Zalo: Chọn kỹ thuật viên trực ca"
+            aria-label="Mở danh sách 3 số Zalo kỹ thuật"
+          >
+            <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C0392B] text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+              3
+            </span>
+            <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
+              <span className="font-bold text-sky-300">Zalo:</span>
+              <span>{isEn ? '3 Tech Hotlines' : '3 Số Zalo Kỹ Thuật'}</span>
+            </span>
+          </button>
+
+          {/* Popover danh sách 3 số Zalo trực ca */}
+          {isZaloModalOpen && (
+            <div className="absolute right-0 bottom-14 w-72 sm:w-80 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xl p-4 z-50 animate-fade-in font-sans">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#0068FF] text-white flex items-center justify-center text-xs font-black">
+                    Z
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-[#2B1810] uppercase tracking-wide">
+                      CHỌN KỸ THUẬT VIÊN ZALO
+                    </h4>
+                    <p className="text-[10px] text-[#6E5D53]">
+                      Kết nối nhanh • Phục vụ trực tiếp
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsZaloModalOpen(false)}
+                  className="w-6 h-6 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="py-2.5 space-y-2">
+                {(systemSettings.zaloContacts || [
+                  { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
+                  { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
+                  { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+                ]).map((contact, idx) => {
+                  const cleanPhone = (contact.phone || '').replace(/\D/g, '');
+                  return (
+                    <a
+                      key={contact.id || idx}
+                      href={`https://zalo.me/${cleanPhone}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2.5 rounded-xl border border-slate-100 hover:border-[#0068FF] bg-[#FAF7F2]/60 hover:bg-blue-50/40 transition-all flex items-center justify-between gap-2.5 group/item"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-bold text-[#2B1810] group-hover/item:text-[#0068FF] transition-colors">
+                            {contact.name || `Kỹ Thuật ${idx + 1}`}
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-white text-[#0068FF] border border-blue-200">
+                            {contact.phone}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[#6E5D53] line-clamp-1">
+                          {contact.role || 'Hỗ trợ kỹ thuật'}
+                        </p>
+                      </div>
+
+                      <div className="px-2.5 py-1 rounded-lg bg-[#0068FF] text-white text-[11px] font-bold shrink-0 shadow-2xs group-hover/item:bg-[#0054d1] transition-colors">
+                        Nhắn tin
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-[#6E5D53]">
+                <span>Tất cả số đều được Admin xác thực</span>
+                <span className="font-semibold text-emerald-700">● Đang trực tuyến</span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* 4. Widget Nút WhatsApp — Hình tròn */}
         <a
