@@ -98,33 +98,33 @@ export function Navbar() {
 
         {/* Right CTAs */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Language Switcher Vi / En */}
-          <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-0.5 text-xs font-bold">
+          {/* Language Switcher - Flags Only */}
+          <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
             <button
               type="button"
               onClick={() => setLang('vi')}
-              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${
+              className={`w-7 h-7 rounded-md transition-all flex items-center justify-center text-sm ${
                 !isEn
-                  ? 'bg-[#C0392B] text-white shadow-xs'
-                  : 'text-[#6E5D53] hover:text-[#C0392B]'
+                  ? 'bg-white shadow-xs border border-[#D5CCC1] scale-105'
+                  : 'opacity-40 hover:opacity-100 hover:bg-white/60'
               }`}
-              title="Tiếng Việt (Mặc định)"
+              title="Tiếng Việt"
+              aria-label="Tiếng Việt"
             >
-              <span>🇻🇳</span>
-              <span>VI</span>
+              <span className="leading-none select-none">🇻🇳</span>
             </button>
             <button
               type="button"
               onClick={() => setLang('en')}
-              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${
+              className={`w-7 h-7 rounded-md transition-all flex items-center justify-center text-sm ${
                 isEn
-                  ? 'bg-[#C0392B] text-white shadow-xs'
-                  : 'text-[#6E5D53] hover:text-[#C0392B]'
+                  ? 'bg-white shadow-xs border border-[#D5CCC1] scale-105'
+                  : 'opacity-40 hover:opacity-100 hover:bg-white/60'
               }`}
-              title="English (Professional)"
+              title="English"
+              aria-label="English"
             >
-              <span>🇬🇧</span>
-              <span>EN</span>
+              <span className="leading-none select-none">🇬🇧</span>
             </button>
           </div>
 

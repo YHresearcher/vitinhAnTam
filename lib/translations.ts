@@ -406,7 +406,7 @@ export const TRANSLATIONS = {
       slogan: 'Sold with Care, Keeping You Carefree',
       home: 'Home',
       whyUs: 'Reasons to Choose Us',
-      products: 'Certified PCs',
+      products: 'Products',
       services: 'On-site Services',
       contact: 'Contact',
       adminPortal: 'Admin Dashboard',
@@ -443,7 +443,7 @@ export const TRANSLATIONS = {
     },
     hero: {
       brandTag: 'VI TINH AN TAM • PROFESSIONAL & DEDICATED',
-      mainTitle: 'CERTIFIED GRADE-A REFURBISHED COMPUTERS',
+      mainTitle: 'QUALITY COMPUTERS & GENUINE SOFTWARE LICENSES',
       badgeWindows: 'GENUINE CLEAN WINDOWS',
       badge2h: 'RAPID RESPONSE • DEDICATED SUPPORT',
       description:
@@ -465,7 +465,7 @@ export const TRANSLATIONS = {
     },
     products: {
       tag: 'QC-CERTIFIED INVENTORY • HONEST QUALITY',
-      title: 'CERTIFIED COMPUTERS & HANDOVER ARCHIVE',
+      title: 'COMPUTERS, LAPTOPS & GENUINE SOFTWARE LICENSES',
       readyCount: 'Currently',
       readyCountSuffix: 'units in stock ready for delivery',
       catAll: 'All Form Factors',
