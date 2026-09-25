@@ -43,12 +43,36 @@ export interface UserAccount extends UserProfile {
   username?: string;
   email: string;
   phone: string;
-  password: string;
+  /** Mật khẩu KHÔNG bao giờ lưu plaintext ở client. Server giữ hash trong .data/users.json. */
+  password?: string;
   status: 'active' | 'suspended';
   created_at: string;
   last_login?: string;
   permissions: UserPermissions;
 }
+
+/**
+ * Sinh id dạng UUID v4.
+ * Dùng UUID vì cột `id` trong Supabase là UUID — id kiểu `inv-123` sẽ làm hỏng lệnh insert.
+ * `crypto.randomUUID()` bắt buộc phải chạy trong secure context nên cần fallback.
+ */
+export const createId = (): string => {
+  const cryptoApi = globalThis.crypto as Crypto | undefined;
+  if (cryptoApi && typeof cryptoApi.randomUUID === 'function') {
+    return cryptoApi.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = (Math.random() * 16) | 0;
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+};
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** Chỉ id dạng UUID mới được đẩy lên Supabase (dữ liệu mock `inv-1` không tồn tại ở đó). */
+export const isUuid = (value: string): boolean => UUID_PATTERN.test(value);
+
 
 export const MOCK_USERS: Record<UserRole, UserProfile> = {
   admin: {
@@ -206,6 +230,9 @@ export interface LicenseKeyItem {
   request_id?: string;
   faulty_reason?: string;
   release_request_id?: string;
+  /** Giá nhập (giá đầu vào) — dùng cho quản lý doanh thu / lãi gộp (chỉ Admin xem) */
+  import_price?: number;
+  /** Giá bán tham khảo */
   unit_price?: number;
   notes?: string;
   created_at: string;

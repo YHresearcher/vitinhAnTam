@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -11,16 +11,13 @@ import {
   ShieldCheck,
   Zap,
   ArrowRight,
-  PhoneCall,
   MessageSquare,
   Gift,
   Check,
   ScanLine,
   Search,
-  CheckCircle,
   Home,
   ChevronRight,
-  Sparkles,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
@@ -33,9 +30,13 @@ function ProductsCatalogContent() {
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
-  // Status Tab: 'in_stock' | 'sold'
-  const initialTab = searchParams.get('tab') === 'sold' ? 'sold' : 'in_stock';
-  const [statusTab, setStatusTab] = useState<'in_stock' | 'sold'>(initialTab);
+  // Status Tab & Modal mua key được SUY RA từ URL.
+  // State chỉ đóng vai trò GHI DE khi người dùng bấm nút — nhờ vậy không cần
+  // useEffect + setState (tránh cascading render và lỗi react-hooks/set-state-in-effect).
+  const tabParam = searchParams.get('tab') === 'sold' ? 'sold' : 'in_stock';
+  const [statusTabOverride, setStatusTabOverride] = useState<'in_stock' | 'sold' | null>(null);
+  const statusTab = statusTabOverride ?? tabParam;
+  const setStatusTab = (tab: 'in_stock' | 'sold') => setStatusTabOverride(tab);
 
   // Search keyword inside catalog
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -43,28 +44,18 @@ function ProductsCatalogContent() {
   // Selected product for QC inspection modal
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
 
-  // Modal for Buying License Keys
-  const [isBuyKeyModalOpen, setIsBuyKeyModalOpen] = useState(false);
-  const [selectedKeyType, setSelectedKeyType] = useState<'windows' | 'office'>('windows');
+  // Modal for Buying License Keys — mở theo ?action=buy_key / ?buy_key=true / ?type=
+  const buyKeyFromUrl =
+    searchParams.get('action') === 'buy_key' || searchParams.get('buy_key') === 'true';
+  const [buyKeyOpenOverride, setBuyKeyOpenOverride] = useState<boolean | null>(null);
+  const isBuyKeyModalOpen = buyKeyOpenOverride ?? buyKeyFromUrl;
+  const setIsBuyKeyModalOpen = (open: boolean) => setBuyKeyOpenOverride(open);
 
-  // Open modal if URL has ?action=buy_key or ?buy_key=true
-  useEffect(() => {
-    const action = searchParams.get('action');
-    const buyKeyParam = searchParams.get('buy_key');
-    const typeParam = searchParams.get('type');
-    if (action === 'buy_key' || buyKeyParam === 'true') {
-      if (typeParam === 'office') setSelectedKeyType('office');
-      else setSelectedKeyType('windows');
-      setIsBuyKeyModalOpen(true);
-    }
-  }, [searchParams]);
-
-  // Update tab if URL searchParam changes
-  useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam === 'sold') setStatusTab('sold');
-    else setStatusTab('in_stock');
-  }, [searchParams]);
+  const keyTypeFromUrl =
+    buyKeyFromUrl && searchParams.get('type') === 'office' ? 'office' : 'windows';
+  const [keyTypeOverride, setKeyTypeOverride] = useState<'windows' | 'office' | null>(null);
+  const selectedKeyType = keyTypeOverride ?? keyTypeFromUrl;
+  const setSelectedKeyType = (type: 'windows' | 'office') => setKeyTypeOverride(type);
 
   const inStockKeyCategories = (keyCategories || [])
     .filter((cat) => {

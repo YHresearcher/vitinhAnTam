@@ -11,9 +11,14 @@ export default function DashboardPage() {
     inventory,
     tickets,
     onsiteDispatches,
+    licenseKeys,
+    currentUser,
     updateDispatchStatus,
     updateQcStatus,
   } = useViTinhAnTamStore();
+
+  // Doanh thu / dòng tiền CHỈ dành cho Admin
+  const isAdmin = currentUser.role === 'admin';
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
   const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('week');
@@ -57,57 +62,131 @@ export default function DashboardPage() {
     };
   }, [inventory]);
 
-  // ==========================================
-  // THỐNG KÊ DÒNG TIỀN (CASH FLOW DATA)
-  // ==========================================
+  // QUẢN LÝ DOANH THU — tính THẬT từ giá đầu vào & giá bán
+  // đã nhập ở các màn hình nhập kho (thiết bị / key / phiếu sửa chữa).
   const cashflowData = useMemo(() => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dow = (startOfDay.getDay() + 6) % 7; // 0 = Thứ 2
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfDay.getDate() - dow);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+
+    const dLabel = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}`;
+    const WEEK_LABELS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+    let buckets: { start: Date; end: Date; label: string; date: string }[] = [];
+
     switch (cashflowTimeframe) {
       case 'day':
-        return [
-          { label: '08:00', income: 1200000, expense: 450000, date: '08:00' },
-          { label: '10:00', income: 3800000, expense: 1200000, date: '10:00' },
-          { label: '12:00', income: 2400000, expense: 800000, date: '12:00' },
-          { label: '14:00', income: 5900000, expense: 2100000, date: '14:00' },
-          { label: '16:00', income: 8400000, expense: 3200000, date: '16:00' },
-          { label: '18:00', income: 6700000, expense: 1900000, date: '18:00' },
-          { label: '20:00', income: 3500000, expense: 950000, date: '20:00' },
-        ];
+        buckets = Array.from({ length: 8 }, (_, i) => {
+          const h = i * 3;
+          const s = new Date(startOfDay);
+          s.setHours(h, 0, 0, 0);
+          const e = new Date(startOfDay);
+          e.setHours(h + 3, 0, 0, 0);
+          return { start: s, end: e, label: `${String(h).padStart(2, '0')}h`, date: dLabel(startOfDay) };
+        });
+        break;
       case 'week':
-        return [
-          { label: 'T2', income: 4200000, expense: 1800000, date: 'T2' },
-          { label: 'T3', income: 6800000, expense: 2500000, date: 'T3' },
-          { label: 'T4', income: 5100000, expense: 1200000, date: 'T4' },
-          { label: 'T5', income: 9400000, expense: 3800000, date: 'T5' },
-          { label: 'T6', income: 7300000, expense: 2100000, date: 'T6' },
-          { label: 'T7', income: 11200000, expense: 4500000, date: 'T7' },
-          { label: 'CN', income: 8900000, expense: 2300000, date: 'CN' },
-        ];
+        buckets = Array.from({ length: 7 }, (_, i) => {
+          const s = new Date(startOfWeek);
+          s.setDate(startOfWeek.getDate() + i);
+          const e = new Date(s);
+          e.setDate(s.getDate() + 1);
+          return { start: s, end: e, label: WEEK_LABELS[i], date: dLabel(s) };
+        });
+        break;
       case 'month':
-        return [
-          { label: 'Tuần 1', income: 28500000, expense: 11200000, date: '01-07' },
-          { label: 'Tuần 2', income: 34200000, expense: 14500000, date: '08-14' },
-          { label: 'Tuần 3', income: 39800000, expense: 16100000, date: '15-21' },
-          { label: 'Tuần 4', income: 32600000, expense: 12800000, date: '22-28' },
-        ];
+        buckets = Array.from({ length: 5 }, (_, i) => {
+          const s = new Date(startOfMonth);
+          s.setDate(startOfMonth.getDate() + i * 7);
+          const e = new Date(s);
+          e.setDate(s.getDate() + 7);
+          return { start: s, end: e, label: `Tuần ${i + 1}`, date: dLabel(s) };
+        });
+        break;
       case 'quarter':
-        return [
-          { label: 'Quý 1', income: 268000000, expense: 115000000, date: 'Q1' },
-          { label: 'Quý 2', income: 312000000, expense: 138000000, date: 'Q2' },
-          { label: 'Quý 3', income: 385000000, expense: 162000000, date: 'Q3' },
-          { label: 'Quý 4', income: 420000000, expense: 179000000, date: 'Q4' },
-        ];
+        buckets = Array.from({ length: 3 }, (_, i) => {
+          const s = new Date(now.getFullYear(), quarterMonth + i, 1);
+          const e = new Date(now.getFullYear(), quarterMonth + i + 1, 1);
+          return {
+            start: s,
+            end: e,
+            label: `Tháng ${quarterMonth + i + 1}`,
+            date: `${quarterMonth + i + 1}/${now.getFullYear()}`,
+          };
+        });
+        break;
       case 'year':
-        return [
-          { label: '2022', income: 820000000, expense: 390000000, date: '2022' },
-          { label: '2023', income: 1050000000, expense: 480000000, date: '2023' },
-          { label: '2024', income: 1320000000, expense: 590000000, date: '2024' },
-          { label: '2025', income: 1580000000, expense: 690000000, date: '2025' },
-          { label: '2026', income: 1890000000, expense: 780000000, date: '2026' },
-        ];
+        buckets = Array.from({ length: 12 }, (_, i) => {
+          const s = new Date(now.getFullYear(), i, 1);
+          const e = new Date(now.getFullYear(), i + 1, 1);
+          return { start: s, end: e, label: `T${i + 1}`, date: `${i + 1}/${now.getFullYear()}` };
+        });
+        break;
       default:
-        return [];
+        buckets = [];
     }
-  }, [cashflowTimeframe]);
+
+    const parse = (value?: string): Date | null => {
+      if (!value) return null;
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+
+    type CashflowEvent = { at: Date | null; income: number; expense: number };
+    const events: CashflowEvent[] = [];
+
+    // THIẾT BỊ: giá đầu vào = vốn nhập khi về kho; giá bán = doanh thu khi đã bán
+    inventory.forEach((item) => {
+      const qty = item.quantity ?? item.stock_quantity ?? 1;
+      const importPrice = item.import_price ?? item.cost_price ?? 0;
+      if (importPrice > 0) {
+        events.push({ at: parse(item.created_at), income: 0, expense: importPrice * qty });
+      }
+      if (item.qc_status === 'sold') {
+        const sellPrice = item.price ?? item.retail_price ?? 0;
+        if (sellPrice > 0) {
+          events.push({ at: parse(item.handover_date || item.created_at), income: sellPrice, expense: 0 });
+        }
+      }
+    });
+
+    // KEY: giá đầu vào khi nhập kho; giá bán khi đã gán cho khách
+    licenseKeys.forEach((key) => {
+      const importPrice = key.import_price ?? 0;
+      if (importPrice > 0) {
+        events.push({ at: parse(key.created_at), income: 0, expense: importPrice });
+      }
+      const delivered = ['assigned', 'used', 'activated'].includes(key.status);
+      const sellPrice = key.unit_price ?? 0;
+      if (delivered && sellPrice > 0) {
+        events.push({ at: parse(key.assigned_at || key.created_at), income: sellPrice, expense: 0 });
+      }
+    });
+
+    // PHIẾU SỬA CHỮA: tổng tiền phiếu khi đã hoàn tất
+    tickets.forEach((ticket) => {
+      const done = ticket.status === 'completed' || ticket.status === 'delivered';
+      const amount = ticket.total_amount ?? ticket.actual_cost ?? 0;
+      if (done && amount > 0) {
+        events.push({ at: parse(ticket.completed_at || ticket.created_at), income: amount, expense: 0 });
+      }
+    });
+
+    return buckets.map((bucket) => {
+      let income = 0;
+      let expense = 0;
+      events.forEach((ev) => {
+        if (!ev.at || ev.at < bucket.start || ev.at >= bucket.end) return;
+        income += ev.income;
+        expense += ev.expense;
+      });
+      return { label: bucket.label, date: bucket.date, income, expense };
+    });
+  }, [inventory, licenseKeys, tickets, cashflowTimeframe]);
 
   const totalIncome = cashflowData.reduce((acc, cur) => acc + cur.income, 0);
   const totalExpense = cashflowData.reduce((acc, cur) => acc + cur.expense, 0);

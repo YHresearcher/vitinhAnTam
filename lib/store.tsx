@@ -19,6 +19,8 @@ import {
   LicenseKeyItem,
   KeyReleaseRequest,
   KeyEmailTemplateConfig,
+  createId,
+  isUuid,
 } from './supabase';
 import {
   initialCustomers,
@@ -112,10 +114,10 @@ interface StoreContextType {
   currentUser: UserAccount;
   users: UserAccount[];
   isLoggedIn: boolean;
-  setCurrentUserRole: (role: UserRole) => void;
-  setCurrentUserById: (id: string) => void;
-  login: (role: UserRole) => void;
-  loginWithCredentials: (email: string, password: string) => { success: boolean; message: string; user?: UserAccount };
+  loginWithCredentials: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string; user?: UserAccount }>;
   logout: () => void;
   canEditStock: () => boolean;
   canUpdateRepairStatus: () => boolean;
@@ -220,10 +222,15 @@ interface StoreContextType {
   addKeyCategory: (category: { name: string; type: 'windows' | 'office' | 'others'; description: string }) => Promise<KeyCategory>;
   deleteKeyCategory: (id: string) => Promise<{ success: boolean; message: string }>;
   addLicenseKey: (item: Omit<LicenseKeyItem, 'id' | 'created_at'>) => Promise<LicenseKeyItem>;
-  addBatchLicenseKeys: (categoryId: string, categoryName: string, rawKeysText: string, unitPrice?: number) => Promise<{ success: boolean; addedCount: number }>;
+  addBatchLicenseKeys: (categoryId: string, categoryName: string, rawKeysText: string, unitPrice?: number, importPrice?: number) => Promise<{ success: boolean; addedCount: number }>;
   deleteLicenseKey: (id: string) => Promise<boolean>;
   updateLicenseKey: (id: string, updates: Partial<LicenseKeyItem>) => Promise<boolean>;
-  createKeyReleaseRequest: (data: { customer_name: string; customer_phone: string; customer_email: string; category_id: string }) => Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }>;
+  takeKeyForCustomer: (data: {
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string;
+    category_id: string;
+  }) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem; request?: KeyReleaseRequest }>;
   approveKeyReleaseRequest: (requestId: string, adminNote?: string) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem }>;
   confirmKeyActive: (requestId: string) => Promise<{ success: boolean; message: string }>;
   reportKeyFaulty: (requestId: string, reason: string) => Promise<{ success: boolean; message: string }>;
@@ -299,20 +306,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const canSellAndEditWarranty = () => currentUser.role === 'admin' || currentUser.role === 'sales';
   const canAccessCRM = () => currentUser.role === 'admin' || currentUser.role === 'sales';
 
-  const setCurrentUserRole = (role: UserRole) => {
-    const found = users.find((u) => u.role === role) || initialUsers.find((u) => u.role === role) || initialUsers[0];
-    setCurrentUser(found);
-    setIsLoggedIn(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.role, role);
-      localStorage.setItem(STORAGE_KEYS.userId, found.id);
-      localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
-    }
-  };
+  /**
+   * Đăng nhập: xác thực SERVER-SIDE qua /api/auth/login.
+   * Server kiểm tra hash mật khẩu và cấp cookie httpOnly đã ký — client không bao giờ
+   * lưu/tự so sánh mật khẩu plaintext nữa.
+   */
+  const loginWithCredentials = async (
+    identifier: string,
+    password: string
+  ): Promise<{ success: boolean; message: string; user?: UserAccount }> => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        success?: boolean;
+        message?: string;
+        user?: UserAccount;
+      } | null;
 
-  const setCurrentUserById = (id: string) => {
-    const found = users.find((u) => u.id === id);
-    if (found) {
+      if (!response.ok || !data?.success || !data.user) {
+        return {
+          success: false,
+          message: data?.message || 'Đăng nhập thất bại. Vui lòng thử lại!',
+        };
+      }
+
+      const found = data.user;
       setCurrentUser(found);
       setIsLoggedIn(true);
       if (typeof window !== 'undefined') {
@@ -320,47 +342,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_KEYS.userId, found.id);
         localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
       }
+      return {
+        success: true,
+        message: data.message || `Đăng nhập thành công: ${found.roleTitle} (${found.name})!`,
+        user: found,
+      };
+    } catch (err) {
+      console.warn('Không gọi được /api/auth/login:', err);
+      return {
+        success: false,
+        message: 'Không kết nối được máy chủ xác thực. Vui lòng thử lại sau!',
+      };
     }
-  };
-
-  const login = (role: UserRole) => {
-    setCurrentUserRole(role);
-  };
-
-  const loginWithCredentials = (
-    identifier: string,
-    password: string
-  ): { success: boolean; message: string; user?: UserAccount } => {
-    const raw = identifier.trim().toLowerCase();
-    const cleanPhone = identifier.replace(/\D/g, '');
-    const found = users.find((u) => {
-      const uUsername = u.username?.toLowerCase();
-      const uEmail = u.email?.toLowerCase();
-      const uPhone = u.phone?.replace(/\D/g, '');
-      return (
-        (uUsername && uUsername === raw) ||
-        (uEmail && uEmail === raw) ||
-        (cleanPhone.length >= 8 && uPhone && uPhone === cleanPhone)
-      );
-    });
-
-    if (!found) {
-      return { success: false, message: 'Tên đăng nhập hoặc Email không tồn tại trên hệ thống.' };
-    }
-    if (found.password !== password.trim()) {
-      return { success: false, message: 'Mật khẩu không chính xác. Vui lòng kiểm tra lại!' };
-    }
-    if (found.status === 'suspended') {
-      return { success: false, message: 'Tài khoản này đang bị tạm khóa. Vui lòng liên hệ Admin!' };
-    }
-    setCurrentUser(found);
-    setIsLoggedIn(true);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEYS.role, found.role);
-      localStorage.setItem(STORAGE_KEYS.userId, found.id);
-      localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
-    }
-    return { success: true, message: `Đăng nhập thành công: ${found.roleTitle} (${found.name})!`, user: found };
   };
 
   const logout = () => {
@@ -370,74 +363,110 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.userId);
       localStorage.removeItem(STORAGE_KEYS.role);
     }
+    fetch('/api/auth/logout', { method: 'POST' }).catch((err) => {
+      console.warn('Không gọi được /api/auth/logout:', err);
+    });
   };
 
-  // Member Management Actions
-  const updateUser = async (id: string, data: Partial<UserAccount>): Promise<boolean> => {
-    let updated = false;
-    setUsers((prev) => {
-      const next = prev.map((u) => {
-        if (u.id === id) {
-          updated = true;
-          const updatedUser: UserAccount = {
-            ...u,
-            ...data,
-            permissions: {
-              ...u.permissions,
-              ...(data.permissions || {}),
-            },
-          };
-          if (currentUser.id === id) {
-            setCurrentUser(updatedUser);
-          }
-          return updatedUser;
-        }
-        return u;
+  // ===== Member Management Actions =====
+  // Danh sách thành viên ở client chỉ là bản sao để hiển thị;
+  // mật khẩu và toàn bộ quyền hạn thực sự nằm ở server (.data/users.json).
+
+  const persistUsersLocally = (next: UserAccount[]) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
+    }
+  };
+
+  const callUsersApi = async (payload: Record<string, unknown>): Promise<Response | null> => {
+    try {
+      return await fetch('/api/auth/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
-      }
-      return next;
-    });
-    return updated;
+    } catch (err) {
+      console.warn('Không gọi được /api/auth/users:', err);
+      return null;
+    }
+  };
+
+  const updateUser = async (id: string, data: Partial<UserAccount>): Promise<boolean> => {
+    const { password, ...patch } = data;
+    const target = users.find((u) => u.id === id);
+    if (!target) return false;
+
+    const updatedUser: UserAccount = {
+      ...target,
+      ...patch,
+      permissions: {
+        ...target.permissions,
+        ...(patch.permissions || {}),
+      },
+    };
+    const next = users.map((u) => (u.id === id ? updatedUser : u));
+    setUsers(next);
+    persistUsersLocally(next);
+    if (currentUser.id === id) setCurrentUser(updatedUser);
+
+    const response = await callUsersApi({ action: 'update', id, patch, password });
+    if (response && !response.ok) {
+      console.warn('Máy chủ từ chối cập nhật tài khoản:', await response.text().catch(() => ''));
+      return false;
+    }
+    return true;
   };
 
   const changeUserPassword = async (id: string, newPassword: string): Promise<boolean> => {
-    return updateUser(id, { password: newPassword });
+    const response = await callUsersApi({ action: 'password', id, password: newPassword });
+    if (!response || !response.ok) {
+      console.warn('Không đổi được mật khẩu trên máy chủ.');
+      return false;
+    }
+    return true;
   };
 
   const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {
+    const { password, ...rest } = userData;
     const newUser: UserAccount = {
-      ...userData,
-      username: userData.username || userData.email.split('@')[0],
+      ...rest,
+      username: rest.username || rest.email.split('@')[0],
       id: `u-${Date.now()}`,
       created_at: new Date().toISOString(),
-      permissions: userData.permissions || {
-        can_edit_stock: userData.role === 'admin',
-        can_update_repair_status: userData.role === 'admin' || userData.role === 'technician',
-        can_access_payroll: userData.role === 'admin',
-        can_manage_users: userData.role === 'admin',
+      permissions: rest.permissions || {
+        can_edit_stock: rest.role === 'admin',
+        can_update_repair_status: rest.role === 'admin' || rest.role === 'technician',
+        can_access_payroll: rest.role === 'admin',
+        can_manage_users: rest.role === 'admin',
       },
     };
-    setUsers((prev) => {
-      const next = [newUser, ...prev];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
-      }
-      return next;
-    });
+
+    const response = await callUsersApi({ action: 'create', user: newUser, password });
+    if (response?.ok) {
+      const created = (await response.json().catch(() => null)) as { user?: UserAccount } | null;
+      if (created?.user) Object.assign(newUser, created.user);
+    } else {
+      console.warn('Máy chủ chưa ghi nhận tài khoản mới — thành viên sẽ không đăng nhập được.');
+    }
+
+    const next = [newUser, ...users];
+    setUsers(next);
+    persistUsersLocally(next);
     return newUser;
   };
 
   const deleteUser = async (id: string): Promise<boolean> => {
     if (id === currentUser.id) return false;
-    setUsers((prev) => {
-      const next = prev.filter((u) => u.id !== id);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(next));
-      }
-      return next;
-    });
+
+    const response = await callUsersApi({ action: 'delete', id });
+    if (!response || !response.ok) {
+      console.warn('Máy chủ từ chối xóa tài khoản.');
+      return false;
+    }
+
+    const next = users.filter((u) => u.id !== id);
+    setUsers(next);
+    persistUsersLocally(next);
     return true;
   };
 
@@ -470,11 +499,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Ghi lên Supabase CÓ KIỂM TRA LỖI.
+   * supabase-js không ném exception — `{ error }` nằm trong kết quả — nên try/catch đơn thuần
+   * sẽ không bao giờ bắt được gì và UI vẫn báo thành công trong khi DB không ghi gì.
+   */
+  const runSupabaseWrite = async (
+    operation: () => PromiseLike<{ error: { message: string } | null }>,
+    label: string
+  ): Promise<boolean> => {
+    try {
+      const { error } = await operation();
+      if (error) {
+        console.warn(`${label}: Supabase trả lỗi -> ${error.message}`);
+        setSyncStatus('local');
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn(`${label}: không gọi được Supabase ->`, err);
+      setSyncStatus('local');
+      return false;
+    }
+  };
+
   // Load from Storage or Supabase
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
-
+      try {
       // Load saved users
       let currentUsersList = initialUsers;
       if (typeof window !== 'undefined') {
@@ -483,8 +536,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           try {
             const parsed = JSON.parse(savedUsersJson);
             if (Array.isArray(parsed) && parsed.length > 0) {
-              currentUsersList = parsed;
-              setUsers(parsed);
+              // Không bao giờ khôi phục mật khẩu plaintext (nếu còn sót từ bản cũ)
+              currentUsersList = parsed.map((item: Partial<UserAccount>) => {
+                const safe: Partial<UserAccount> = { ...item };
+                delete safe.password;
+                return safe as UserAccount;
+              });
+              setUsers(currentUsersList);
             }
           } catch (e) {
             console.warn('Failed to parse saved users:', e);
@@ -509,79 +567,84 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      if (isUsingSupabase && supabase) {
-        try {
-          const [
-            { data: invData },
-            { data: cusData },
-            { data: tckData },
-            { data: spData },
-            { data: onsData },
-            { data: shfData },
-          ] = await Promise.all([
-            supabase.from('inventory_items').select('*'),
-            supabase.from('customers').select('*'),
-            supabase.from('service_tickets').select('*'),
-            supabase.from('spare_parts').select('*'),
-            supabase.from('onsite_dispatches').select('*'),
-            supabase.from('shift_logs').select('*'),
-          ]);
+      // Đọc dữ liệu từ Supabase. supabase-js KHÔNG ném exception — lỗi nằm trong `.error`,
+      // nên bắt buộc phải kiểm tra từng kết quả, nếu không sẽ báo "đã đồng bộ" sai sự thật.
+      const pullFromSupabase = async (): Promise<boolean> => {
+        if (!isUsingSupabase || !supabase) return false;
 
-          if (invData && invData.length > 0) setInventory(invData as InventoryItem[]);
-          if (cusData && cusData.length > 0) setCustomers(cusData as Customer[]);
-          if (tckData && tckData.length > 0) setTickets(tckData as ServiceTicket[]);
-          if (spData && spData.length > 0) setSpareParts(spData as SparePart[]);
-          if (onsData && onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
-          if (shfData && shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+        const results = await Promise.all([
+          supabase.from('inventory_items').select('*'),
+          supabase.from('customers').select('*'),
+          supabase.from('service_tickets').select('*'),
+          supabase.from('spare_parts').select('*'),
+          supabase.from('onsite_dispatches').select('*'),
+          supabase.from('shift_logs').select('*'),
+        ]);
 
-          setSyncStatus('synced');
-          setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
-          setIsLoading(false);
-          return;
-        } catch (err) {
-          console.warn('Could not fetch from Supabase, fallback to local storage:', err);
+        const failures = results.flatMap((result) => (result.error ? [result.error] : []));
+        if (failures.length > 0) {
+          throw new Error(failures.map((failure) => failure.message).join(' | '));
         }
+
+        const [
+          invData = [],
+          cusData = [],
+          tckData = [],
+          spData = [],
+          onsData = [],
+          shfData = [],
+        ] = results.map((result) => result.data ?? []);
+
+        if (invData.length > 0) setInventory(invData as InventoryItem[]);
+        if (cusData.length > 0) setCustomers(cusData as Customer[]);
+        if (tckData.length > 0) setTickets(tckData as ServiceTicket[]);
+        if (spData.length > 0) setSpareParts(spData as SparePart[]);
+        if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
+        if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+
+        setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
+        return true;
+      };
+
+      try {
+        if (await pullFromSupabase()) {
+          setSyncStatus('synced');
+          return;
+        }
+      } catch (err) {
+        console.warn('Could not fetch from Supabase, fallback to local storage:', err);
       }
 
-      // Local storage fallback
+      // Local storage fallback — bọc try/catch để localStorage hỏng không làm treo app
       if (typeof window !== 'undefined') {
-        const savedInv = localStorage.getItem(STORAGE_KEYS.inventory);
-        const savedCus = localStorage.getItem(STORAGE_KEYS.customers);
-        const savedTck = localStorage.getItem(STORAGE_KEYS.tickets);
-        const savedSp = localStorage.getItem(STORAGE_KEYS.spareParts);
-        const savedSw = localStorage.getItem(STORAGE_KEYS.softwareLicenses);
-        const savedOns = localStorage.getItem(STORAGE_KEYS.onsiteDispatches);
-        const savedShf = localStorage.getItem(STORAGE_KEYS.shiftLogs);
-        const savedFaqs = localStorage.getItem(STORAGE_KEYS.faqs);
-        const savedRevs = localStorage.getItem(STORAGE_KEYS.reviews);
-        const savedKeyCats = localStorage.getItem(STORAGE_KEYS.keyCategories);
-        const savedKeys = localStorage.getItem(STORAGE_KEYS.licenseKeys);
-        const savedReqs = localStorage.getItem(STORAGE_KEYS.keyReleaseRequests);
-        const savedTpl = localStorage.getItem(STORAGE_KEYS.keyEmailTemplate);
-
-        if (savedInv) setInventory(JSON.parse(savedInv));
-        if (savedCus) setCustomers(JSON.parse(savedCus));
-        if (savedTck) setTickets(JSON.parse(savedTck));
-        if (savedSp) setSpareParts(JSON.parse(savedSp));
-        if (savedSw) setSoftwareLicenses(JSON.parse(savedSw));
-        if (savedOns) setOnsiteDispatches(JSON.parse(savedOns));
-        if (savedShf) setShiftLogs(JSON.parse(savedShf));
-        if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
-        if (savedRevs) setReviews(JSON.parse(savedRevs));
-        if (savedKeyCats) setKeyCategories(JSON.parse(savedKeyCats));
-        if (savedKeys) setLicenseKeys(JSON.parse(savedKeys));
-        if (savedReqs) setKeyReleaseRequests(JSON.parse(savedReqs));
-        if (savedTpl) setKeyEmailTemplate(JSON.parse(savedTpl));
-
-        const savedSettings = localStorage.getItem('vtat_system_settings_v2');
-        if (savedSettings) {
+        const readJson = <T,>(key: string, apply: (value: T) => void) => {
+          const raw = localStorage.getItem(key);
+          if (!raw) return;
           try {
-            const parsed = JSON.parse(savedSettings);
-            setSystemSettings((prev) => ({ ...prev, ...parsed }));
+            apply(JSON.parse(raw) as T);
           } catch (e) {
-            console.warn('Failed to parse saved system settings', e);
+            console.warn(`Bỏ qua dữ liệu hỏng trong localStorage (${key}):`, e);
+            localStorage.removeItem(key);
           }
-        }
+        };
+
+        readJson<InventoryItem[]>(STORAGE_KEYS.inventory, setInventory);
+        readJson<Customer[]>(STORAGE_KEYS.customers, setCustomers);
+        readJson<ServiceTicket[]>(STORAGE_KEYS.tickets, setTickets);
+        readJson<SparePart[]>(STORAGE_KEYS.spareParts, setSpareParts);
+        readJson<SoftwareLicense[]>(STORAGE_KEYS.softwareLicenses, setSoftwareLicenses);
+        readJson<OnsiteDispatch[]>(STORAGE_KEYS.onsiteDispatches, setOnsiteDispatches);
+        readJson<ShiftLog[]>(STORAGE_KEYS.shiftLogs, setShiftLogs);
+        readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
+        readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
+        readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, setKeyCategories);
+        readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, setLicenseKeys);
+        readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
+        readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
+
+        readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
+          setSystemSettings((prev) => ({ ...prev, ...parsed }));
+        });
 
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
@@ -590,13 +653,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
 
       setSyncStatus('local');
+    } finally {
+      // Luôn tắt loading — kể cả khi JSON.parse/Supabase lỗi, nếu không app sẽ treo màn hình chờ.
       setIsLoading(false);
     }
+  }
 
-    loadData();
-  }, [isUsingSupabase]);
+  loadData();
+}, [isUsingSupabase]);
 
-  // Sync back to Supabase if configured
+  // Đồng bộ thủ công: kéo dữ liệu mới nhất từ Supabase về (ghi đã xảy ra inline ở từng hành động)
   const syncWithSupabase = async () => {
     if (!isUsingSupabase || !supabase) {
       setSyncStatus('local');
@@ -604,6 +670,43 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     setSyncStatus('syncing');
     try {
+      const [
+        invResult,
+        cusResult,
+        tckResult,
+        spResult,
+        onsResult,
+        shfResult,
+      ] = await Promise.all([
+        supabase.from('inventory_items').select('*'),
+        supabase.from('customers').select('*'),
+        supabase.from('service_tickets').select('*'),
+        supabase.from('spare_parts').select('*'),
+        supabase.from('onsite_dispatches').select('*'),
+        supabase.from('shift_logs').select('*'),
+      ]);
+
+      const failures = [invResult, cusResult, tckResult, spResult, onsResult, shfResult].flatMap(
+        (result) => (result.error ? [result.error] : [])
+      );
+      if (failures.length > 0) {
+        throw new Error(failures.map((failure) => failure.message).join(' | '));
+      }
+
+      const invData = invResult.data ?? [];
+      const cusData = cusResult.data ?? [];
+      const tckData = tckResult.data ?? [];
+      const spData = spResult.data ?? [];
+      const onsData = onsResult.data ?? [];
+      const shfData = shfResult.data ?? [];
+
+      if (invData.length > 0) setInventory(invData as InventoryItem[]);
+      if (cusData.length > 0) setCustomers(cusData as Customer[]);
+      if (tckData.length > 0) setTickets(tckData as ServiceTicket[]);
+      if (spData.length > 0) setSpareParts(spData as SparePart[]);
+      if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
+      if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
       setSyncStatus('synced');
     } catch (err) {
@@ -663,7 +766,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addInventoryItem = async (itemData: Omit<InventoryItem, 'id' | 'created_at'>): Promise<InventoryItem> => {
     const newItem: InventoryItem = {
       ...itemData,
-      id: `inv-${Date.now()}`,
+      // UUID để khớp cột `id UUID` của Supabase
+      id: createId(),
       created_at: new Date().toISOString(),
     };
 
@@ -674,11 +778,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('inventory_items').insert([newItem]);
-      } catch (e) {
-        console.warn('Supabase insert failed, local updated:', e);
-      }
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('inventory_items').insert([newItem]),
+        'Thêm thiết bị'
+      );
     }
     return newItem;
   };
@@ -690,12 +794,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('inventory_items').update(data).eq('id', id);
-      } catch (e) {
-        console.warn('Supabase update failed:', e);
-      }
+    // Dữ liệu mock (inv-1, inv-2...) không tồn tại trong DB — chỉ ghi khi id là UUID hợp lệ
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('inventory_items').update(data).eq('id', id),
+        'Cập nhật thiết bị'
+      );
     }
   };
 
@@ -723,12 +828,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       saveToLocal(STORAGE_KEYS.inventory, next);
       return next;
     });
-    if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('inventory_items').delete().eq('id', id);
-      } catch (e) {
-        console.warn('Supabase delete failed:', e);
-      }
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('inventory_items').delete().eq('id', id),
+        'Xóa thiết bị'
+      );
     }
     return true;
   };
@@ -737,7 +842,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addSparePart = async (partData: Omit<SparePart, 'id'>): Promise<SparePart> => {
     const newPart: SparePart = {
       ...partData,
-      id: `sp-${Date.now()}`,
+      id: createId(),
     };
     setSpareParts((prev) => {
       const next = [newPart, ...prev];
@@ -985,7 +1090,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     categoryId: string,
     categoryName: string,
     rawKeysText: string,
-    unitPrice?: number
+    unitPrice?: number,
+    importPrice?: number
   ): Promise<{ success: boolean; addedCount: number }> => {
     const lines = rawKeysText.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) return { success: false, addedCount: 0 };
@@ -995,6 +1101,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       category_name: categoryName,
       license_code: code.toUpperCase(),
       status: 'available',
+      import_price: importPrice || 0,
       unit_price: unitPrice || 350000,
       created_at: new Date().toISOString(),
     }));
@@ -1024,19 +1131,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const createKeyReleaseRequest = async (data: {
+  /**
+   * LẤY KEY TRỰC TIẾP cho khách hàng — không qua bước "tạo yêu cầu" rồi chờ Admin duyệt.
+   * Tạo phiếu + bốc key + gán key diễn ra trong MỘT lần gọi (không phụ thuộc state vừa setState),
+   * nên không bao giờ gặp lỗi "không tìm thấy yêu cầu" do state cũ.
+   */
+  const takeKeyForCustomer = async (data: {
     customer_name: string;
     customer_phone: string;
     customer_email: string;
     category_id: string;
-  }): Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }> => {
+  }): Promise<{ success: boolean; message: string; key?: LicenseKeyItem; request?: KeyReleaseRequest }> => {
     const email = data.customer_email?.trim();
     if (!email || !email.includes('@') || !email.includes('.')) {
       return {
         success: false,
-        message: 'Bắt buộc phải có email khách hàng hợp lệ để hệ thống gửi key sau khi xác nhận hoạt động!',
+        message: 'Bắt buộc phải có email khách hàng hợp lệ để hệ thống gửi key cho khách!',
       };
     }
+    if (!data.customer_name.trim()) {
+      return { success: false, message: 'Vui lòng nhập họ tên khách hàng!' };
+    }
+
     const cat = keyCategories.find((c) => c.id === data.category_id);
     if (!cat) {
       return { success: false, message: 'Phân loại key không tồn tại!' };
@@ -1048,10 +1164,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!availableKey) {
       return {
         success: false,
-        message: `Hết key trong kho cho danh mục "${cat.name}". Vui lòng báo Admin nhập thêm key!`,
+        message: `Hết key trong kho cho danh mục "${cat.name}". Vui lòng nhập thêm key!`,
       };
     }
 
+    const now = new Date().toISOString();
     const newReq: KeyReleaseRequest = {
       id: `req-${Date.now()}`,
       request_code: `REL-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -1062,10 +1179,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       category_name: cat.name,
       requester_name: currentUser.name,
       requester_role: currentUser.role,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      // Đã lấy key ngay lập tức -> không còn trạng thái "chờ Admin duyệt"
+      status: 'approved_waiting_test',
+      released_key_id: availableKey.id,
+      released_key_code: availableKey.license_code,
+      approved_by_admin: currentUser.name,
+      approved_at: now,
+      created_at: now,
+      updated_at: now,
     };
+
+    const assignedKey: LicenseKeyItem = {
+      ...availableKey,
+      status: 'assigned',
+      assigned_to_customer: newReq.customer_name,
+      assigned_to_phone: newReq.customer_phone,
+      assigned_at: now,
+      request_id: newReq.id,
+    };
+
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) => (k.id === availableKey.id ? assignedKey : k));
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
 
     setKeyReleaseRequests((prev) => {
       const next = [newReq, ...prev];
@@ -1075,7 +1212,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     return {
       success: true,
-      message: `Đã tạo yêu cầu cấp key [${newReq.request_code}]. Đang chờ Admin phê duyệt qua popup!`,
+      message: `Đã LẤY key [${assignedKey.license_code}] cho khách ${newReq.customer_name} (phiếu ${newReq.request_code}).`,
+      key: assignedKey,
       request: newReq,
     };
   };
@@ -1266,7 +1404,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const addServiceTicket = async (ticketData: Omit<ServiceTicket, 'id' | 'created_at'>): Promise<ServiceTicket> => {
     const newTicket: ServiceTicket = {
       ...ticketData,
-      id: `ticket-${Date.now()}`,
+      id: createId(),
       created_at: new Date().toISOString(),
     };
 
@@ -1277,11 +1415,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('service_tickets').insert([newTicket]);
-      } catch (e) {
-        console.warn('Supabase insert failed:', e);
-      }
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('service_tickets').insert([newTicket]),
+        'Tạo phiếu sửa chữa'
+      );
     }
     return newTicket;
   };
@@ -1296,12 +1434,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
-      try {
-        await supabase.from('service_tickets').update({ status }).eq('id', id);
-      } catch (e) {
-        console.warn('Supabase ticket status update failed:', e);
-      }
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('service_tickets').update({ status }).eq('id', id),
+        'Cập nhật trạng thái phiếu'
+      );
     }
     return true;
   };
@@ -1313,13 +1451,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
       return next;
     });
+
+    // Trước đây chỉ ghi localStorage -> bật Supabase là mất trạng thái sau khi refresh
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('onsite_dispatches').update({ status }).eq('id', id),
+        'Cập nhật trạng thái cứu hộ'
+      );
+    }
   };
 
   // Shift logs (Admin only)
   const addShiftLog = async (shiftData: Omit<ShiftLog, 'id' | 'created_at'>): Promise<ShiftLog> => {
     const newShift: ShiftLog = {
       ...shiftData,
-      id: `shift-${Date.now()}`,
+      id: createId(),
       created_at: new Date().toISOString(),
     };
 
@@ -1383,7 +1530,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Add or Update Customer with Customer Code and Birth Date
     const newCustomer: Customer = {
-      id: `c-${Date.now()}`,
+      id: createId(),
       customer_code: customerCode,
       full_name: params.customerName.trim(),
       birth_date: params.birthDate,
@@ -1402,7 +1549,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     // 3. Create a Service Ticket record for warranty lookup
     const warrantyTicket: ServiceTicket = {
-      id: `tck-${Date.now()}`,
+      id: createId(),
       ticket_code: `#HD-${customerCode}-${item.service_tag.slice(-4)}`,
       customer_name: params.customerName.trim(),
       customer_phone: params.customerPhone.trim(),
@@ -1443,7 +1590,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     const newCustomer: Customer = {
       ...customerData,
-      id: `cus-${Date.now()}`,
+      id: createId(),
       customer_code: customerCode,
       created_at: new Date().toISOString(),
     };
@@ -1580,9 +1727,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         users,
         isLoggedIn,
-        setCurrentUserRole,
-        setCurrentUserById,
-        login,
         loginWithCredentials,
         logout,
         canEditStock,
@@ -1621,7 +1765,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         addBatchLicenseKeys,
         deleteLicenseKey,
         updateLicenseKey,
-        createKeyReleaseRequest,
+        takeKeyForCustomer,
         approveKeyReleaseRequest,
         confirmKeyActive,
         reportKeyFaulty,

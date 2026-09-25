@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useViTinhAnTamStore, SystemSettings, ZaloContactItem } from '@/lib/store';
+import React, { useState } from 'react';
+import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { UserAccount } from '@/lib/supabase';
 import Link from 'next/link';
@@ -31,7 +31,6 @@ import {
   HelpCircle,
   MessageSquareQuote,
   Save,
-  CheckCircle2,
 } from 'lucide-react';
 
 const { TextArea } = Input;
@@ -84,19 +83,17 @@ export default function CaiDatPage() {
     deleteReview,
   } = useViTinhAnTamStore();
 
-  const [formData, setFormData] = useState<SystemSettings>({
-    ...systemSettings,
-  });
+  // Form cấu hình hệ thống — suy ra từ store, state chỉ ghi đè khi user sửa form
+  // (thay cho useEffect setState vốn gây cascading render)
+  const [formDataOverride, setFormDataOverride] = useState<SystemSettings | null>(null);
+  const formData = formDataOverride ?? systemSettings;
+  const setFormData = (
+    next: SystemSettings | ((prev: SystemSettings) => SystemSettings)
+  ) =>
+    setFormDataOverride((prev) =>
+      typeof next === 'function' ? next(prev ?? systemSettings) : next
+    );
   const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (systemSettings) {
-      setFormData((prev) => ({
-        ...prev,
-        ...systemSettings,
-      }));
-    }
-  }, [systemSettings]);
 
   // FAQ Modal states
   const [isFaqModalOpen, setIsFaqModalOpen] = useState(false);

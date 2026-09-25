@@ -20,7 +20,7 @@ export function DeadlineTrackingWidget() {
   const [isDismissed, setIsDismissed] = useState(false);
 
   // Lọc các máy đang tiếp nhận/sửa chữa/bảo hành
-  const { urgentTickets, overdueCount, upcomingCount, repairCount, warrantyCount } = useMemo(() => {
+  const { urgentTickets, overdueCount, upcomingCount } = useMemo(() => {
     const now = new Date();
 
     const activeTickets = tickets.filter(
@@ -92,15 +92,11 @@ export function DeadlineTrackingWidget() {
     const sorted = list.sort((a, b) => a.diffHours - b.diffHours);
     const overdue = sorted.filter((item) => item.isOverdue).length;
     const upcoming = sorted.filter((item) => !item.isOverdue).length;
-    const warranty = sorted.filter((item) => item.ticket.service_category === 'bao_hanh').length;
-    const repair = sorted.length - warranty;
 
     return {
       urgentTickets: sorted,
       overdueCount: overdue,
       upcomingCount: upcoming,
-      warrantyCount: warranty,
-      repairCount: repair,
     };
   }, [tickets]);
 

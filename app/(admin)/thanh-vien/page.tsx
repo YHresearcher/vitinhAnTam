@@ -15,7 +15,6 @@ export default function MemberManagementPage() {
     changeUserPassword,
     addUser,
     deleteUser,
-    setCurrentUserById,
     canManageUsers,
   } = useViTinhAnTamStore();
 
@@ -453,19 +452,8 @@ export default function MemberManagementPage() {
                   </button>
                 </div>
 
-                {/* Switch Session to this User */}
-                {!isMe && (
-                  <button
-                    onClick={() => {
-                      setCurrentUserById(member.id);
-                      showToast(`Đã chuyển ca làm việc sang: ${member.name} (${member.roleTitle})!`);
-                    }}
-                    className="px-2 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 text-xs font-medium rounded transition-colors"
-                    title="Đăng nhập với tài khoản này để kiểm tra quyền"
-                  >
-                    Chuyển ca
-                  </button>
-                )}
+                {/* Đã gỡ nút "Chuyển ca": chuyển phiên sang tài khoản khác mà không cần mật khẩu
+                    là lỗ hổng leo thang quyền (escalation). Muốn đổi vai trò -> đăng xuất, đăng nhập lại. */}
 
                 {/* Delete button (cannot delete self) */}
                 {!isMe && (

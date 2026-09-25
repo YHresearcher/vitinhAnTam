@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { ShiftLog, formatDateVN } from '@/lib/supabase';
 // Lucide icons removed for minimalist text design
@@ -8,9 +9,7 @@ import { ShiftLog, formatDateVN } from '@/lib/supabase';
 
 export default function TienCongPage() {
   const {
-    currentUser,
     canAccessPayroll,
-    setCurrentUserRole,
     shiftLogs,
     addShiftLog,
   } = useStore();
@@ -48,12 +47,12 @@ export default function TienCongPage() {
           </div>
 
           <div className="pt-2">
-            <button
-              onClick={() => setCurrentUserRole('admin')}
+            <Link
+              href="/login"
               className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all active:scale-95"
             >
-              Chuyển Sang Vai Trò Admin (Demo Phân Quyền)
-            </button>
+              Đăng nhập lại bằng tài khoản Admin
+            </Link>
           </div>
         </div>
       </div>

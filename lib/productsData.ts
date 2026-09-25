@@ -2,6 +2,7 @@
 // Dữ liệu sản phẩm tập trung dùng chung cho Trang Chủ và Trang Danh Mục Sản Phẩm (/danh-muc-san-pham)
 
 import { ENGLISH_PRODUCT_DETAILS } from './translations';
+import type { InventoryItem } from './supabase';
 
 export interface ShowcaseItem {
   id: string;
@@ -338,7 +339,7 @@ export const RAW_PRODUCTS: RawProduct[] = [
   },
 ];
 
-export function getShowcaseProducts(isEn: boolean, inventory: any[] = []): ShowcaseItem[] {
+export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = []): ShowcaseItem[] {
   return RAW_PRODUCTS.map((p) => {
     const en = ENGLISH_PRODUCT_DETAILS[p.id];
     const liveInv = inventory.find((i) => i.service_tag === p.serviceTag);

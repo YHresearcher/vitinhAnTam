@@ -11,48 +11,39 @@ import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { users, loginWithCredentials, setCurrentUserById, currentLang } = useViTinhAnTamStore();
+  const { users, loginWithCredentials, currentLang } = useViTinhAnTamStore();
   const t = TRANSLATIONS[currentLang || 'vi'].login;
 
   const [selectedUserId, setSelectedUserId] = useState<string>(users[0]?.id || 'u-admin-1');
   const [emailInput, setEmailInput] = useState(users[0]?.username || 'thanhphan');
-  const [passwordInput, setPasswordInput] = useState('123456');
+  const [passwordInput, setPasswordInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Chọn tài khoản CHỈ điền tên đăng nhập — không bao giờ tự điền mật khẩu
   const handleSelectMember = (user: UserAccount) => {
     setSelectedUserId(user.id);
     setEmailInput(user.username || user.email);
-    setPasswordInput(user.password || '123456');
+    setPasswordInput('');
     setErrorMessage('');
   };
 
-  const handleFormLogin = (e: React.FormEvent) => {
+  const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const res = loginWithCredentials(emailInput, passwordInput);
-      setIsSubmitting(false);
-      if (res.success && res.user) {
-        setSuccessMessage(res.message);
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 500);
-      } else {
-        setErrorMessage(res.message);
-      }
-    }, 300);
-  };
-
-  const handleQuickLoginUser = (user: UserAccount) => {
-    setCurrentUserById(user.id);
-    setSuccessMessage(currentLang === 'en' ? `Quick sign-in successful: ${user.roleTitle} (${user.name})!` : `Đăng nhập nhanh thành công: ${user.roleTitle} (${user.name})!`);
-    setTimeout(() => {
-      router.push('/dashboard');
-    }, 450);
+    const res = await loginWithCredentials(emailInput, passwordInput);
+    setIsSubmitting(false);
+    if (res.success && res.user) {
+      setSuccessMessage(res.message);
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 400);
+    } else {
+      setErrorMessage(res.message);
+    }
   };
 
   // Find sample representative for each role from dynamic users
@@ -183,16 +174,12 @@ export default function LoginPage() {
                       </p>
                       <p className="text-[10px] text-[#735A4D]/80 mt-1 leading-snug">{qr.desc}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleQuickLoginUser(qr.user);
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-[11px] font-bold text-white shrink-0 shadow-xs transition-colors self-center"
+                    <span
+                      className="px-3 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9] text-[11px] font-bold text-[#735A4D] shrink-0 self-center"
+                      aria-hidden="true"
                     >
-                      {t.btnQuickLogin}
-                    </button>
+                      {t.btnSelectAccount}
+                    </span>
                   </div>
                 );
               })}

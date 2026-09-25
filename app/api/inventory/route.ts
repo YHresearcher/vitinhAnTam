@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initialInventory } from '@/lib/mockData';
 
-// Protected API - Only Admin can access
-export async function GET(request: NextRequest) {
-  const userRole = request.headers.get('x-user-role');
+// Protected API.
+// `x-user-role` do proxy.ts đặt TỪ SESSION ĐÃ KÝ và đè lên mọi giá trị client gửi lên.
+function isAuthorized(request: NextRequest): boolean {
+  return request.headers.get('x-user-role') === 'admin';
+}
 
-  if (userRole !== 'admin') {
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
     return NextResponse.json(
       {
         error: 'Forbidden',
@@ -23,9 +26,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userRole = request.headers.get('x-user-role');
-
-  if (userRole !== 'admin') {
+  if (!isAuthorized(request)) {
     return NextResponse.json(
       {
         error: 'Forbidden',
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message: 'Đã nhận yêu cầu thêm thiết bị mới',
-        item: { ...body, id: `inv-${Date.now()}` },
+        item: { ...body, id: crypto.randomUUID() },
       },
       { status: 201 }
     );

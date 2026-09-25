@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { KeyCategory, KeyReleaseRequest } from '@/lib/supabase';
+import { PricePreview } from '@/components/PricePreview';
 
 export default function QuanLyKeyPage() {
   const {
@@ -16,7 +17,7 @@ export default function QuanLyKeyPage() {
     addLicenseKey,
     addBatchLicenseKeys,
     deleteLicenseKey,
-    createKeyReleaseRequest,
+    takeKeyForCustomer,
     approveKeyReleaseRequest,
     confirmKeyActive,
     reportKeyFaulty,
@@ -34,7 +35,7 @@ export default function QuanLyKeyPage() {
   const [requestSearch, setRequestSearch] = useState('');
 
   // Modals
-  const [isCreateRequestModalOpen, setIsCreateRequestModalOpen] = useState(false);
+  const [isTakeKeyModalOpen, setIsTakeKeyModalOpen] = useState(false);
   const [isAddKeyModalOpen, setIsAddKeyModalOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [faultyModalReq, setFaultyModalReq] = useState<KeyReleaseRequest | null>(null);
@@ -45,12 +46,12 @@ export default function QuanLyKeyPage() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
 
-  // Form states: Create Release Request
+  // Form states: Lấy key trực tiếp cho khách
   const [reqCustomerName, setReqCustomerName] = useState('');
   const [reqCustomerPhone, setReqCustomerPhone] = useState('');
   const [reqCustomerEmail, setReqCustomerEmail] = useState('');
   const [reqCategoryId, setReqCategoryId] = useState(keyCategories[0]?.id || '');
-  const [isSubmittingReq, setIsSubmittingReq] = useState(false);
+  const [isTakingKey, setIsTakingKey] = useState(false);
 
   // Form states: Add Key
   const [keyInputType, setKeyInputType] = useState<'single' | 'batch'>('batch');
@@ -58,6 +59,7 @@ export default function QuanLyKeyPage() {
   const [singleKeyCode, setSingleKeyCode] = useState('');
   const [batchKeysText, setBatchKeysText] = useState('');
   const [keyUnitPrice, setKeyUnitPrice] = useState<number>(350000);
+  const [keyImportPrice, setKeyImportPrice] = useState<number>(0);
 
   // Form states: Category management
   const [catCategoryType, setCatCategoryType] = useState<'windows' | 'office' | 'others'>('windows');
@@ -87,13 +89,24 @@ export default function QuanLyKeyPage() {
     }
   };
 
+  // ===== Nhóm trạng thái (store đang dùng 'approved_waiting_test' / 'active_confirmed') =====
+  // Chờ xác nhận active sau khi đã LẤY key
+  const isWaitingTest = (r: KeyReleaseRequest) =>
+    r.status === 'approved' || r.status === 'approved_waiting_test';
+  // Key đã kích hoạt thành công
+  const isActive = (r: KeyReleaseRequest) =>
+    r.status === 'activated' || r.status === 'active_confirmed';
+  // Key lỗi -> cần LẤY key thay thế
+  const needsReplacement = (r: KeyReleaseRequest) =>
+    r.status === 'auto_re_requested' || r.status === 'faulty_re_requesting';
+
   // Filtered Requests
   const filteredRequests = useMemo(() => {
     return keyReleaseRequests.filter((r) => {
-      if (requestFilter === 'pending' && r.status !== 'pending' && r.status !== 'faulty_re_requesting') return false;
-      if (requestFilter === 'approved' && r.status !== 'approved') return false;
-      if (requestFilter === 'activated' && r.status !== 'activated') return false;
-      if (requestFilter === 'faulty' && r.status !== 'faulty_re_requesting' && (!r.faulty_history || r.faulty_history.length === 0)) return false;
+      if (requestFilter === 'pending' && r.status !== 'pending' && !needsReplacement(r)) return false;
+      if (requestFilter === 'approved' && !isWaitingTest(r)) return false;
+      if (requestFilter === 'activated' && !isActive(r)) return false;
+      if (requestFilter === 'faulty' && !needsReplacement(r) && (!r.faulty_history || r.faulty_history.length === 0)) return false;
 
       if (requestSearch.trim()) {
         const q = requestSearch.trim().toLowerCase();
@@ -105,6 +118,7 @@ export default function QuanLyKeyPage() {
       }
       return true;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyReleaseRequests, requestFilter, requestSearch]);
 
   // Filtered License Keys
@@ -133,28 +147,29 @@ export default function QuanLyKeyPage() {
     return { total, available, reserved, activated, faulty };
   }, [licenseKeys]);
 
-  // Submit Handler: Create Request
-  const handleCreateRequestSubmit = async (e: React.FormEvent) => {
+  // Submit Handler: LẤY KEY trực tiếp cho khách (bỏ qua bước tạo yêu cầu + duyệt)
+  const handleTakeKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reqCustomerEmail.trim()) {
-      alert('Bắt buộc phải có email khách hàng để hệ thống gửi key sau khi xác nhận hoạt động!');
+      alert('Bắt buộc phải có email khách hàng để hệ thống gửi key cho khách!');
       return;
     }
-    setIsSubmittingReq(true);
-    const res = await createKeyReleaseRequest({
+    setIsTakingKey(true);
+    const res = await takeKeyForCustomer({
       customer_name: reqCustomerName,
       customer_phone: reqCustomerPhone,
       customer_email: reqCustomerEmail,
       category_id: reqCategoryId,
     });
-    setIsSubmittingReq(false);
+    setIsTakingKey(false);
 
     if (res.success) {
       triggerFeedback(res.message);
-      setIsCreateRequestModalOpen(false);
+      setIsTakeKeyModalOpen(false);
       setReqCustomerName('');
       setReqCustomerPhone('');
       setReqCustomerEmail('');
+      setActiveTab('requests');
     } else {
       alert(res.message);
     }
@@ -215,6 +230,7 @@ export default function QuanLyKeyPage() {
         category_name: cat.name,
         license_code: singleKeyCode.trim(),
         status: 'available',
+        import_price: keyImportPrice,
         unit_price: keyUnitPrice,
       });
       triggerFeedback(`Đã thêm key ${singleKeyCode.trim()} vào kho.`);
@@ -224,7 +240,13 @@ export default function QuanLyKeyPage() {
         alert('Vui lòng nhập ít nhất 1 mã key!');
         return;
       }
-      const res = await addBatchLicenseKeys(cat.id, cat.name, batchKeysText, keyUnitPrice);
+      const res = await addBatchLicenseKeys(
+        cat.id,
+        cat.name,
+        batchKeysText,
+        keyUnitPrice,
+        keyImportPrice
+      );
       triggerFeedback(`Đã thêm thành công ${res.addedCount} key vào kho!`);
       setBatchKeysText('');
     }
@@ -270,24 +292,24 @@ export default function QuanLyKeyPage() {
       <div className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#E8E2D9] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#C0392B] mb-1">
-            HỆ THỐNG PHÊ DUYỆT &amp; CẤP BẢN QUYỀN
+            LẤY KEY TRỰC TIẾP TỪ KHO &amp; BÀN GIAO CHO KHÁCH
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
             QUẢN LÝ KHO KEY BẢN QUYỀN WINDOWS &amp; OFFICE
           </h1>
           <p className="text-xs text-[#6E5D53] mt-1 max-w-2xl">
-            Tự động release key bản quyền chính hãng qua hệ thống và email khách hàng, tích hợp xác nhận hoạt động 2 chiều và đổi key lỗi tức thì.
+            Chọn &quot;LẤY KEY&quot; để bốc ngay 1 key còn sẵn trong kho cho khách hàng — không cần tạo yêu cầu rồi chờ duyệt. Sau đó xác nhận hoạt động và gửi key qua email.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Create Request button for all staff */}
+          {/* Lấy key trực tiếp cho khách — không còn bước tạo yêu cầu + chờ duyệt */}
           <button
             type="button"
-            onClick={() => setIsCreateRequestModalOpen(true)}
+            onClick={() => setIsTakeKeyModalOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs"
           >
-            + YÊU CẦU CẤP KEY MỚI
+            LẤY KEY
           </button>
 
           {/* Admin shortcuts */}
@@ -374,7 +396,7 @@ export default function QuanLyKeyPage() {
               : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
           }`}
         >
-          YÊU CẦU CẤP &amp; DUYỆT KEY ({keyReleaseRequests.length})
+          LỊCH SỬ LẤY KEY &amp; TRẠNG THÁI ({keyReleaseRequests.length})
         </button>
 
         <button
@@ -432,10 +454,10 @@ export default function QuanLyKeyPage() {
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#C0392B]'
                 }`}
               >
-                CHỜ ADMIN DUYỆT (
+                CẦN XỬ LÝ / KEY LỖI (
                 {
                   keyReleaseRequests.filter(
-                    (r) => r.status === 'pending' || r.status === 'faulty_re_requesting'
+                    (r) => r.status === 'pending' || needsReplacement(r)
                   ).length
                 }
                 )
@@ -449,8 +471,8 @@ export default function QuanLyKeyPage() {
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-amber-700'
                 }`}
               >
-                ĐÃ DUYỆT • CHỜ ACTIVE (
-                {keyReleaseRequests.filter((r) => r.status === 'approved').length})
+                ĐÃ LẤY KEY • CHỜ ACTIVE (
+                {keyReleaseRequests.filter((r) => isWaitingTest(r)).length})
               </button>
               <button
                 type="button"
@@ -462,7 +484,7 @@ export default function QuanLyKeyPage() {
                 }`}
               >
                 ĐÃ KÍCH HOẠT (
-                {keyReleaseRequests.filter((r) => r.status === 'activated').length})
+                {keyReleaseRequests.filter((r) => isActive(r)).length})
               </button>
             </div>
 
@@ -519,17 +541,17 @@ export default function QuanLyKeyPage() {
                             CHỜ ADMIN DUYỆT
                           </span>
                         )}
-                        {req.status === 'faulty_re_requesting' && (
+                        {needsReplacement(req) && (
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-900 border border-rose-300 animate-pulse">
-                            KEY LỖI • TỰ ĐỘNG XIN CẤP LẠI
+                            KEY LỖI • CẦN LẤY KEY THAY THẾ
                           </span>
                         )}
-                        {req.status === 'approved' && (
+                        {isWaitingTest(req) && (
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300">
-                            ĐÃ CẤP KEY • CHỜ XÁC NHẬN ACTIVE
+                            ĐÃ LẤY KEY • CHỜ XÁC NHẬN ACTIVE
                           </span>
                         )}
-                        {req.status === 'activated' && (
+                        {isActive(req) && (
                           <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
                             HOẠT ĐỘNG TỐT • ĐÃ GỬI EMAIL
                           </span>
@@ -597,7 +619,7 @@ export default function QuanLyKeyPage() {
                     )}
 
                     {/* KEY BOX & CONFIRMATION ACTIONS */}
-                    {req.status === 'approved' && assignedKey && (
+                    {isWaitingTest(req) && assignedKey && (
                       <div className="mt-4 p-4 rounded-xl bg-amber-50/70 border border-amber-300 space-y-3">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                           <div>
@@ -665,8 +687,8 @@ export default function QuanLyKeyPage() {
                       </div>
                     )}
 
-                    {/* Admin Actions for Pending / Faulty Re-request */}
-                    {(req.status === 'pending' || req.status === 'faulty_re_requesting') && isAdmin && (
+                    {/* Hành động cho phiếu chờ duyệt (dữ liệu cũ) hoặc key lỗi cần lấy lại */}
+                    {(req.status === 'pending' || needsReplacement(req)) && isAdmin && (
                       <div className="mt-3 flex items-center gap-2 pt-2">
                         <button
                           type="button"
@@ -680,7 +702,7 @@ export default function QuanLyKeyPage() {
                           }}
                           className="px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs"
                         >
-                          CHẤP THUẬN &amp; CẤP KEY TỰ ĐỘNG
+                          LẤY KEY THAY THẾ / CẤP NGAY
                         </button>
                         <button
                           type="button"
@@ -1147,27 +1169,28 @@ export default function QuanLyKeyPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL 1: TẠO YÊU CẦU CẤP KEY (CHO SALES / KỸ THUẬT) */}
+      {/* MODAL: LẤY KEY TRỰC TIẾP TỪ KHO CHO KHÁCH HÀNG (KHÔNG CẦN DUYỆT) */}
       {/* ========================================================================= */}
-      {isCreateRequestModalOpen && (
+      {isTakeKeyModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
-            <div className="p-4 bg-[#2B1810] text-white flex items-center justify-between">
+            <div className="p-4 bg-[#C0392B] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
-                TẠO YÊU CẦU CẤP KEY BẢN QUYỀN
+                LẤY KEY TỪ KHO BẢN QUYỀN
               </h3>
               <button
                 type="button"
-                onClick={() => setIsCreateRequestModalOpen(false)}
+                onClick={() => setIsTakeKeyModalOpen(false)}
                 className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-white/10"
               >
                 Đóng
               </button>
             </div>
 
-            <form onSubmit={handleCreateRequestSubmit} className="p-5 space-y-4 text-xs">
+            <form onSubmit={handleTakeKeySubmit} className="p-5 space-y-4 text-xs">
               <p className="text-[#6E5D53]">
-                Vui lòng nhập đầy đủ thông tin khách hàng. Hệ thống bắt buộc phải có email để bàn giao key sau khi kỹ thuật xác nhận hoạt động thành công.
+                Hệ thống sẽ bốc ngay 1 key đang <strong>còn sẵn trong kho</strong> và gán cho khách hàng.
+                Không cần tạo yêu cầu rồi chờ Admin duyệt.
               </p>
 
               <div>
@@ -1240,17 +1263,17 @@ export default function QuanLyKeyPage() {
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsCreateRequestModalOpen(false)}
+                  onClick={() => setIsTakeKeyModalOpen(false)}
                   className="px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
                 >
                   HỦY
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingReq}
+                  disabled={isTakingKey}
                   className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold transition-all shadow-xs"
                 >
-                  {isSubmittingReq ? 'Đang gửi...' : 'GỬI YÊU CẦU CẤP KEY'}
+                  {isTakingKey ? 'Đang bốc key...' : 'LẤY KEY NGAY'}
                 </button>
               </div>
             </form>
@@ -1353,16 +1376,36 @@ export default function QuanLyKeyPage() {
                 </div>
               )}
 
-              <div>
-                <label className="block font-bold text-[#2B1810] mb-1">
-                  GIÁ BÁN THAM CHIẾU (VNĐ)
-                </label>
-                <input
-                  type="number"
-                  value={keyUnitPrice}
-                  onChange={(e) => setKeyUnitPrice(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-[#2B1810] mb-1">
+                    GIÁ ĐẦU VÀO / KEY (VNĐ)
+                  </label>
+                  <PricePreview value={keyImportPrice} label="Giá đầu vào" tone="rose" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={10000}
+                    value={keyImportPrice}
+                    onChange={(e) => setKeyImportPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#2B1810] mb-1">
+                    GIÁ BÁN THAM CHIẾU (VNĐ)
+                  </label>
+                  <PricePreview value={keyUnitPrice} label="Giá bán" tone="emerald" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={10000}
+                    value={keyUnitPrice}
+                    onChange={(e) => setKeyUnitPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                  />
+                </div>
               </div>
 
               <div className="pt-2 flex justify-end gap-2">

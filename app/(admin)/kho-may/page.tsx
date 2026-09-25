@@ -1,18 +1,17 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import {
   InventoryItem,
-  SparePart,
   SoftwareLicense,
   SoftwareKeyItem,
   generateCustomerCode,
   KeyCategory,
-  LicenseKeyItem,
   KeyEmailTemplateConfig,
 } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
+import { PricePreview } from '@/components/PricePreview';
 import Link from 'next/link';
 
 
@@ -25,8 +24,6 @@ export default function KhoMayPage() {
     deleteSparePart,
     softwareLicenses,
     addSoftwareLicense,
-    updateSoftwareLicense,
-    deleteSoftwareLicense,
     addSoftwareKeys,
     assignSoftwareKey,
     updateSoftwareKeyStatus,
@@ -41,7 +38,6 @@ export default function KhoMayPage() {
     canSellAndEditWarranty,
     sellInventoryItem,
     customers,
-    tickets,
     // Windows & Office Key Management (Requirements I & II)
     keyCategories,
     licenseKeys,
@@ -51,7 +47,6 @@ export default function KhoMayPage() {
     addLicenseKey,
     addBatchLicenseKeys,
     deleteLicenseKey,
-    updateLicenseKey,
     updateKeyEmailTemplate,
   } = useStore();
 
@@ -84,12 +79,7 @@ export default function KhoMayPage() {
   });
 
   // Filter & Search states - Software (Phần mềm)
-  const [softwareSearchQuery, setSoftwareSearchQuery] = useState('');
-  const [softwareTypeFilter, setSoftwareTypeFilter] = useState<string>('all');
-  const [softwareLicenseFilter, setSoftwareLicenseFilter] = useState<string>('all');
   const [isAddSoftwareModalOpen, setIsAddSoftwareModalOpen] = useState(false);
-  const [editingSoftwareStockId, setEditingSoftwareStockId] = useState<string | null>(null);
-  const [tempSoftwareStockValue, setTempSoftwareStockValue] = useState<number>(5);
   const [newSoftware, setNewSoftware] = useState({
     software_name: '',
     software_type: 'os',
@@ -132,6 +122,7 @@ export default function KhoMayPage() {
   const [keySingleInput, setKeySingleInput] = useState<string>('');
   const [keyBatchInput, setKeyBatchInput] = useState<string>('');
   const [keyUnitPriceInput, setKeyUnitPriceInput] = useState<number>(350000);
+  const [keyImportPriceInput, setKeyImportPriceInput] = useState<number>(0);
   const [copiedKeyCode, setCopiedKeyCode] = useState<string | null>(null);
 
   // Filter states
@@ -140,15 +131,11 @@ export default function KhoMayPage() {
   const [keySearchFilter, setKeySearchFilter] = useState<string>('');
   const [hideZeroStockKeys, setHideZeroStockKeys] = useState<boolean>(true); // Dữ liệu nếu = 0 thì không hiển thị
 
-  // Email template config state
-  const [emailFormConfig, setEmailFormConfig] = useState<KeyEmailTemplateConfig>(keyEmailTemplate);
+  // Email template config state — suy ra từ store, state chỉ ghi đè khi user sửa form
+  const [emailFormOverride, setEmailFormOverride] = useState<KeyEmailTemplateConfig | null>(null);
+  const emailFormConfig = emailFormOverride ?? keyEmailTemplate;
+  const setEmailFormConfig = (next: KeyEmailTemplateConfig) => setEmailFormOverride(next);
   const [isSavingEmailConfig, setIsSavingEmailConfig] = useState(false);
-
-  useEffect(() => {
-    if (keyEmailTemplate) {
-      setEmailFormConfig(keyEmailTemplate);
-    }
-  }, [keyEmailTemplate]);
 
   // Kiểm tra trùng khớp CSDL khi Admin chọn hoặc gõ mục "Others"
   const matchedExistingCat = useMemo(() => {
@@ -180,6 +167,9 @@ export default function KhoMayPage() {
         const existingKey = (licenseKeys || []).find((k) => k.category_id === found.id);
         if (existingKey?.unit_price) {
           setKeyUnitPriceInput(existingKey.unit_price);
+        }
+        if (typeof existingKey?.import_price === 'number') {
+          setKeyImportPriceInput(existingKey.import_price);
         }
       }
     }
@@ -237,6 +227,7 @@ export default function KhoMayPage() {
         category_name: targetCat.name,
         license_code: keySingleInput.trim(),
         status: 'available',
+        import_price: keyImportPriceInput,
         unit_price: keyUnitPriceInput,
       });
       setActionNotice(`Đã thêm 1 key cho phân loại [${targetCat.name}] vào kho!`);
@@ -250,7 +241,8 @@ export default function KhoMayPage() {
         targetCat.id,
         targetCat.name,
         keyBatchInput,
-        keyUnitPriceInput
+        keyUnitPriceInput,
+        keyImportPriceInput
       );
       setActionNotice(`Đã thêm ${res.addedCount} key cho phân loại [${targetCat.name}] vào kho!`);
       setKeyBatchInput('');
@@ -288,6 +280,8 @@ export default function KhoMayPage() {
     e.preventDefault();
     setIsSavingEmailConfig(true);
     await updateKeyEmailTemplate(emailFormConfig);
+    // Gỡ bản ghi đè để form quay về làm việc trên dữ liệu của store
+    setEmailFormOverride(null);
     setIsSavingEmailConfig(false);
     setIsEmailTemplateModalOpen(false);
     setActionNotice('Đã cập nhật mẫu email gửi key cho khách hàng thành công!');
@@ -437,24 +431,6 @@ export default function KhoMayPage() {
       return matchesSearch && matchesCondition && matchesType;
     });
   }, [spareParts, partSearchQuery, partConditionFilter, partTypeFilter]);
-
-  // Filtered Software Licenses - Phần mềm
-  const filteredSoftwareLicenses = useMemo(() => {
-    return softwareLicenses.filter((sw) => {
-      const matchesSearch =
-        sw.software_name.toLowerCase().includes(softwareSearchQuery.toLowerCase()) ||
-        (sw.distributor || '').toLowerCase().includes(softwareSearchQuery.toLowerCase()) ||
-        (sw.notes || '').toLowerCase().includes(softwareSearchQuery.toLowerCase());
-
-      const matchesType =
-        softwareTypeFilter === 'all' ? true : sw.software_type === softwareTypeFilter;
-
-      const matchesLicense =
-        softwareLicenseFilter === 'all' ? true : sw.license_type === softwareLicenseFilter;
-
-      return matchesSearch && matchesType && matchesLicense;
-    });
-  }, [softwareLicenses, softwareSearchQuery, softwareTypeFilter, softwareLicenseFilter]);
 
   // Statistics (Updated: "SSD Chuẩn Cao" đổi thành "Linh Kiện" mới/cũ, bổ sung Phần Mềm)
   const stats = useMemo(() => {
@@ -666,17 +642,6 @@ export default function KhoMayPage() {
   };
 
   // Handlers for Software (Phần mềm & Bản quyền số)
-  const handleStockEditSoftware = async (id: string) => {
-    if (!canEditStock()) {
-      alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền điều chỉnh số lượng tồn kho!');
-      return;
-    }
-    await updateSoftwareLicense(id, { quantity_in_stock: tempSoftwareStockValue });
-    setEditingSoftwareStockId(null);
-    setActionNotice('Đã cập nhật số lượng key bản quyền thành công!');
-    setTimeout(() => setActionNotice(null), 3000);
-  };
-
   const handleCreateNewSoftware = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSoftware.software_name.trim()) {
@@ -737,15 +702,6 @@ export default function KhoMayPage() {
       });
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm phần mềm'));
-    }
-  };
-
-  const handleDeleteSoftware = async (id: string, name: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa phần mềm [${name}] khỏi hệ thống?`)) return;
-    const ok = await deleteSoftwareLicense(id);
-    if (ok) {
-      setActionNotice(`Đã xóa phần mềm ${name}`);
-      setTimeout(() => setActionNotice(null), 3000);
     }
   };
 
@@ -1648,7 +1604,7 @@ export default function KhoMayPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {visibleKeyCategories.length === 0 ? (
               <div className="col-span-full bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-400 text-sm">
-                Không có phân loại nào còn key trong kho (Số lượng = 0 đã tự động ẩn). Vui lòng nhấn "+ Nhập key bản quyền" để bổ sung key vào kho!
+                Không có phân loại nào còn key trong kho (Số lượng = 0 đã tự động ẩn). Vui lòng nhấn &ldquo;+ Nhập key bản quyền&rdquo; để bổ sung key vào kho!
               </div>
             ) : (
               visibleKeyCategories.map((cat) => {
@@ -2025,6 +1981,25 @@ export default function KhoMayPage() {
                   />
                 </div>
 
+                {/* Giá đầu vào (vốn nhập kho) */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Giá Đầu Vào (VNĐ)
+                  </label>
+                  <PricePreview value={newItem.import_price} label="Giá đầu vào" tone="rose" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={50000}
+                    value={newItem.import_price === 0 ? '' : newItem.import_price}
+                    placeholder="Nhập giá mua vào..."
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, import_price: e.target.value === '' ? 0 : Number(e.target.value) })
+                    }
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                  />
+                </div>
+
                 {/* Price */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -2043,8 +2018,15 @@ export default function KhoMayPage() {
                       {newItem.price === 0 ? '✓ Giá Liên Hệ' : 'Đặt "Liên Hệ"'}
                     </button>
                   </div>
+                  <PricePreview
+                    value={newItem.price}
+                    label="Giá bán"
+                    tone="emerald"
+                    emptyText="Giá liên hệ"
+                  />
                   <input
                     type="number"
+                    min={0}
                     step={50000}
                     value={newItem.price === 0 ? '' : newItem.price}
                     placeholder={newItem.price === 0 ? 'Liên Hệ (0 đ)' : 'Nhập giá bán...'}
@@ -2234,8 +2216,11 @@ export default function KhoMayPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Giá Bán Thực Tế (VNĐ)</label>
+                  <PricePreview value={sellPrice} label="Giá bán" tone="emerald" />
                   <input
                     type="number"
+                    min={0}
+                    step={50000}
                     value={sellPrice}
                     onChange={(e) => setSellPrice(Number(e.target.value))}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
@@ -2419,8 +2404,11 @@ export default function KhoMayPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Giá Nhập (VNĐ)
                   </label>
+                  <PricePreview value={newPart.unit_cost} label="Giá đầu vào" tone="rose" />
                   <input
                     type="number"
+                    min={0}
+                    step={10000}
                     value={newPart.unit_cost}
                     onChange={(e) => setNewPart({ ...newPart, unit_cost: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium font-mono"
@@ -2432,8 +2420,11 @@ export default function KhoMayPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Giá Bán (VNĐ)
                   </label>
+                  <PricePreview value={newPart.unit_price} label="Giá bán" tone="emerald" />
                   <input
                     type="number"
+                    min={0}
+                    step={10000}
                     value={newPart.unit_price}
                     onChange={(e) => setNewPart({ ...newPart, unit_price: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-700 font-mono"
@@ -2598,8 +2589,11 @@ export default function KhoMayPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Giá Nhập (VNĐ)
                   </label>
+                  <PricePreview value={newSoftware.unit_cost} label="Giá đầu vào" tone="rose" />
                   <input
                     type="number"
+                    min={0}
+                    step={10000}
                     value={newSoftware.unit_cost}
                     onChange={(e) => setNewSoftware({ ...newSoftware, unit_cost: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium font-mono"
@@ -2611,8 +2605,11 @@ export default function KhoMayPage() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Giá Bán (VNĐ)
                   </label>
+                  <PricePreview value={newSoftware.unit_price} label="Giá bán" tone="emerald" />
                   <input
                     type="number"
+                    min={0}
+                    step={10000}
                     value={newSoftware.unit_price}
                     onChange={(e) => setNewSoftware({ ...newSoftware, unit_price: Number(e.target.value) })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold text-purple-700 font-mono"
@@ -3051,15 +3048,17 @@ export default function KhoMayPage() {
                   </div>
 
                   <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-stretch sm:self-auto overflow-x-auto">
-                    {[
-                      { id: 'all', label: `Tất cả (${allKeys.length})` },
-                      { id: 'available', label: `Khả dụng (${availableCount})` },
-                      { id: 'used', label: `Đã gán (${usedCount})` },
-                      { id: 'revoked', label: `Lỗi/Khóa (${revokedCount})` },
-                    ].map((tab) => (
+                    {(
+                      [
+                        { id: 'all' as const, label: `Tất cả (${allKeys.length})` },
+                        { id: 'available' as const, label: `Khả dụng (${availableCount})` },
+                        { id: 'used' as const, label: `Đã gán (${usedCount})` },
+                        { id: 'revoked' as const, label: `Lỗi/Khóa (${revokedCount})` },
+                      ] as const
+                    ).map((tab) => (
                       <button
                         key={tab.id}
-                        onClick={() => setKeyStatusFilter(tab.id as any)}
+                        onClick={() => setKeyStatusFilter(tab.id)}
                         className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
                           keyStatusFilter === tab.id
                             ? 'bg-white text-purple-800 shadow-xs font-bold'
@@ -3503,10 +3502,27 @@ export default function KhoMayPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Đơn Giá Bán Khuyến Nghị (VNĐ)
+                    Giá Đầu Vào / Key (VNĐ)
                   </label>
+                  <PricePreview value={keyImportPriceInput} label="Giá đầu vào" tone="rose" />
                   <input
                     type="number"
+                    min={0}
+                    step={10000}
+                    value={keyImportPriceInput}
+                    onChange={(e) => setKeyImportPriceInput(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold font-mono focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Đơn Giá Bán Khuyến Nghị (VNĐ)
+                  </label>
+                  <PricePreview value={keyUnitPriceInput} label="Giá bán" tone="emerald" />
+                  <input
+                    type="number"
+                    min={0}
                     step={10000}
                     value={keyUnitPriceInput}
                     onChange={(e) => setKeyUnitPriceInput(Number(e.target.value))}

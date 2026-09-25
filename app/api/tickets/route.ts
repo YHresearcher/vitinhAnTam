@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initialTickets } from '@/lib/mockData';
 
-// Protected API - Only Admin can access
-export async function GET(request: NextRequest) {
-  const userRole = request.headers.get('x-user-role');
+// Protected API.
+// `x-user-role` do proxy.ts đặt TỪ SESSION ĐÃ KÝ và đè lên mọi giá trị client gửi lên.
+function isAuthorized(request: NextRequest): boolean {
+  return request.headers.get('x-user-role') === 'admin';
+}
 
-  if (userRole !== 'admin') {
+export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
     return NextResponse.json(
       {
         error: 'Forbidden',

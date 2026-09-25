@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local scripts
 *.command
+
+# server-side data (session secret & user store)
+/.data/
+

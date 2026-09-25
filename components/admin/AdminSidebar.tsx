@@ -14,7 +14,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, customers, onsiteDispatches, keyReleaseRequests, logout } = useViTinhAnTamStore();
+  const { tickets, customers, onsiteDispatches, keyReleaseRequests, logout } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received').length;
   const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed' && d.status !== 'cancelled').length;
