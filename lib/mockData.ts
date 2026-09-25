@@ -7,6 +7,10 @@ import {
   OnsiteDispatch,
   ShiftLog,
   UserAccount,
+  KeyCategory,
+  LicenseKeyItem,
+  KeyReleaseRequest,
+  KeyEmailTemplateConfig,
 } from './supabase';
 
 export const initialCustomers: Customer[] = [
@@ -770,3 +774,114 @@ export const initialCustomerReviews: CustomerReview[] = [
     rating: 5,
   },
 ];
+
+// ==========================================
+// INITIAL KEY MANAGEMENT & RELEASE SYSTEM
+// ==========================================
+export const initialKeyCategories: KeyCategory[] = [
+  {
+    id: 'cat-win11-pro',
+    name: 'WINDOWS 11 PROFESSIONAL',
+    type: 'windows',
+    description: 'Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác',
+    is_default: true,
+  },
+  {
+    id: 'cat-win11-home',
+    name: 'WINDOWS 11 HOME',
+    type: 'windows',
+    description: 'Bản quyền trọn đời cho máy tính cá nhân gia đình, hỗ trợ nâng cấp',
+    is_default: true,
+  },
+  {
+    id: 'cat-office-2021',
+    name: 'OFFICE PRO PLUS 2021',
+    type: 'office',
+    description: 'Trọn bộ Word, Excel, PowerPoint, Outlook dùng vĩnh viễn không gia hạn hàng tháng',
+    is_default: true,
+  },
+];
+
+export const initialLicenseKeys: LicenseKeyItem[] = [
+  {
+    id: 'key-w11p-01',
+    category_id: 'cat-win11-pro',
+    category_name: 'WINDOWS 11 PROFESSIONAL',
+    license_code: 'VK7JG-NPHTM-C97JM-9MPGT-3V66T',
+    status: 'available',
+    unit_price: 350000,
+    created_at: '2025-05-10T08:00:00Z',
+  },
+  {
+    id: 'key-w11p-02',
+    category_id: 'cat-win11-pro',
+    category_name: 'WINDOWS 11 PROFESSIONAL',
+    license_code: 'W269N-WFGWX-YVC9B-4J6C9-T83GX',
+    status: 'available',
+    unit_price: 350000,
+    created_at: '2025-05-10T08:00:00Z',
+  },
+  {
+    id: 'key-w11p-03',
+    category_id: 'cat-win11-pro',
+    category_name: 'WINDOWS 11 PROFESSIONAL',
+    license_code: 'MH37W-N47XK-V7XM9-C7227-GCQG9',
+    status: 'available',
+    unit_price: 350000,
+    created_at: '2025-05-11T09:00:00Z',
+  },
+  {
+    id: 'key-w11h-01',
+    category_id: 'cat-win11-home',
+    category_name: 'WINDOWS 11 HOME',
+    license_code: 'YTMG3-N6DKC-DKB77-7M9GH-8HVX7',
+    status: 'available',
+    unit_price: 290000,
+    created_at: '2025-05-12T08:30:00Z',
+  },
+  {
+    id: 'key-off21-01',
+    category_id: 'cat-office-2021',
+    category_name: 'OFFICE PRO PLUS 2021',
+    license_code: 'FXYTK-NJ28C-KDF3X-2482V-MTD88',
+    status: 'available',
+    unit_price: 490000,
+    created_at: '2025-05-12T10:00:00Z',
+  },
+  {
+    id: 'key-off21-02',
+    category_id: 'cat-office-2021',
+    category_name: 'OFFICE PRO PLUS 2021',
+    license_code: 'NMMKJ-6RK4F-KMJVX-8D9MJ-6MWKP',
+    status: 'available',
+    unit_price: 490000,
+    created_at: '2025-05-13T11:00:00Z',
+  },
+];
+
+export const initialKeyEmailTemplate: KeyEmailTemplateConfig = {
+  sender_name: 'Vi Tính An Tâm Support',
+  sender_email: 'hotro@vitinhantham.vn',
+  subject: 'BÀN GIAO KEY BẢN QUYỀN CHÍNH HÃNG - VI TÍNH AN TÂM',
+  support_phone: '0909.053.058',
+  support_zalo: '0909053058',
+  content_template: `Kính gửi Quý khách {TEN_KHACH_HANG},
+
+Vi Tính An Tâm xin trân trọng bàn giao thông tin bản quyền phần mềm chính hãng của Quý khách như sau:
+
+- Sản phẩm bản quyền: {TEN_SAN_PHAM}
+- Mã License Key: {MA_KEY}
+- Trạng thái kiểm tra: Đã xác thực hoạt động ổn định 100%
+
+HƯỚNG DẪN KÍCH HOẠT:
+{HUONG_DAN_KICH_HOAT}
+
+CHÍNH SÁCH BẢO HÀNH & HỖ TRỢ:
+- Bản quyền được bảo hành trọn đời theo chính sách của Vi Tính An Tâm.
+- Mọi thắc mắc kỹ thuật xin vui lòng liên hệ Hotline: {HOTLINE_HO_TRO} hoặc Zalo CSKH: {ZALO_HO_TRO}.
+
+Trân trọng cảm ơn Quý khách đã tin tưởng và đồng hành cùng Vi Tính An Tâm!`,
+};
+
+export const initialKeyReleaseRequests: KeyReleaseRequest[] = [];
+

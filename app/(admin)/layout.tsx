@@ -13,16 +13,92 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { currentUser, isLoggedIn, isLoading, logout } = useViTinhAnTamStore();
-  const [searchQuery, setSearchQuery] = useState('');
+  const {
+    currentUser,
+    isLoggedIn,
+    isLoading,
+    logout,
+    keyReleaseRequests,
+    approveKeyReleaseRequest,
+    rejectKeyReleaseRequest,
+  } = useViTinhAnTamStore();
+
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  // Admin Key Request Popup states
+  const [dismissedReqIds, setDismissedReqIds] = useState<string[]>([]);
+  const [isApproving, setIsApproving] = useState(false);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
+  const [rejectingRequestId, setRejectingRequestId] = useState<string | null>(null);
+  const [rejectReasonInput, setRejectReasonInput] = useState('');
+
+  // Find active pending request for Admin popup
+  const activePendingRequest =
+    currentUser.role === 'admin'
+      ? keyReleaseRequests.find(
+          (r) =>
+            (r.status === 'pending' || r.status === 'faulty_re_requesting') &&
+            !dismissedReqIds.includes(r.id)
+        ) || null
+      : null;
+
+  const totalPendingKeyRequests = keyReleaseRequests.filter(
+    (r) => r.status === 'pending' || r.status === 'faulty_re_requesting'
+  ).length;
+
+  // Sound chime when a new request arrives for Admin
+  useEffect(() => {
+    if (activePendingRequest && typeof window !== 'undefined') {
+      try {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.45);
+        }
+      } catch (e) {
+        // Audio playback error or autoplay policy
+      }
+    }
+  }, [activePendingRequest]);
+
+  const handleQuickApprove = async (reqId: string) => {
+    setIsApproving(true);
+    const res = await approveKeyReleaseRequest(reqId);
+    setIsApproving(false);
+    if (res.success) {
+      setActionFeedback(res.message);
+      setTimeout(() => setActionFeedback(null), 4000);
+      setDismissedReqIds((prev) => [...prev, reqId]);
+    } else {
+      alert(res.message);
+    }
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectingRequestId) return;
+    await rejectKeyReleaseRequest(rejectingRequestId, rejectReasonInput.trim() || 'Admin từ chối cấp key');
+    setDismissedReqIds((prev) => [...prev, rejectingRequestId]);
+    setRejectingRequestId(null);
+    setRejectReasonInput('');
+  };
+
   // Command palette navigation items
   const navItems = [
     { title: 'Tổng Quan Bảng Điều Khiển', path: '/dashboard', category: 'Trang Chính' },
+    { title: 'Quản Lý Kho Key Bản Quyền Windows & Office', path: '/quan-ly-key', category: 'Bản Quyền' },
     { title: 'Danh Sách Phiếu Sửa Chữa', path: '/phieu-sua-chua', category: 'Nghiệp Vụ' },
     { title: 'Lập Phiếu Tiếp Nhận Máy Mới', path: '/phieu-sua-chua/tao-moi', category: 'Nghiệp Vụ' },
     { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa' },
@@ -54,10 +130,6 @@ export default function AdminLayout({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [paletteQuery]);
-
   const handleSelectNav = (path: string) => {
     setIsCommandPaletteOpen(false);
     setPaletteQuery('');
@@ -73,12 +145,6 @@ export default function AdminLayout({
       router.push(`/kho-may?search=${encodeURIComponent(paletteQuery.trim())}`);
       setPaletteQuery('');
     }
-  };
-
-  const handleQuickSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    router.push(`/kho-may?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
   const handleLogout = () => {
@@ -139,6 +205,23 @@ export default function AdminLayout({
               <span className="font-bold text-slate-800">{currentUser.roleTitle}</span>
             </div>
 
+            {/* Quick Key Release Navigation with live count */}
+            <Link
+              href="/quan-ly-key"
+              className={`flex items-center gap-1.5 h-9 px-3 rounded-lg border transition-all text-xs font-bold ${
+                totalPendingKeyRequests > 0
+                  ? 'bg-[#C0392B] text-white border-[#C0392B] shadow-xs animate-pulse'
+                  : 'bg-[#FFFDF9] text-[#2B1810] border-[#E8E2D9] hover:border-[#C0392B]'
+              }`}
+            >
+              <span>KHO KEY</span>
+              {totalPendingKeyRequests > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-white text-[#C0392B] font-mono text-[10px] font-extrabold leading-none">
+                  {totalPendingKeyRequests}
+                </span>
+              )}
+            </Link>
+
             {/* Create Ticket Button */}
             <Link
               href="/phieu-sua-chua/tao-moi"
@@ -186,7 +269,10 @@ export default function AdminLayout({
                 type="text"
                 autoFocus
                 value={paletteQuery}
-                onChange={(e) => setPaletteQuery(e.target.value)}
+                onChange={(e) => {
+                  setPaletteQuery(e.target.value);
+                  setSelectedIndex(0);
+                }}
                 placeholder="Tìm trang, tra cứu S/N hoặc SĐT..."
                 className="flex-1 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none bg-transparent"
               />
@@ -231,6 +317,156 @@ export default function AdminLayout({
 
       {/* DEADLINE TRACKING WIDGET (Hạn chót sửa chữa / bảo hành < 3 ngày) */}
       <DeadlineTrackingWidget />
+
+      {/* FEEDBACK TOAST */}
+      {actionFeedback && (
+        <div className="fixed bottom-6 right-6 z-50 bg-[#2B1810] text-white px-5 py-3 rounded-xl shadow-xl border border-[#E8E2D9] text-xs font-bold animate-bounce">
+          {actionFeedback}
+        </div>
+      )}
+
+      {/* ADMIN POPUP NOTIFICATION MODAL CHO YÊU CẦU CẤP KEY */}
+      {activePendingRequest && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border-2 border-[#C0392B] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
+            {/* Header */}
+            <div className="p-4 bg-[#C0392B] text-white flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded font-mono">
+                  {activePendingRequest.request_code}
+                </span>
+                <h3 className="text-sm sm:text-base font-black tracking-tight text-white mt-1">
+                  {activePendingRequest.status === 'faulty_re_requesting'
+                    ? 'YÊU CẦU ĐỔI KEY THAY THẾ DO LỖI KÍCH HOẠT'
+                    : 'THÔNG BÁO YÊU CẦU CẤP KEY BẢN QUYỀN'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDismissedReqIds((prev) => [...prev, activePendingRequest.id])}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-black/20 hover:bg-black/30"
+              >
+                Đóng
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-[#6E5D53]">
+                {activePendingRequest.status === 'faulty_re_requesting'
+                  ? 'Key cấp trước đó không kích hoạt được trên máy khách. Hệ thống tự động ghi nhận key lỗi và phát sinh yêu cầu cấp lại key mới.'
+                  : 'Kỹ thuật hoặc sales vừa gửi yêu cầu cấp license key cho khách hàng, vui lòng kiểm tra và duyệt cấp key.'}
+              </p>
+
+              {/* Request Details Card */}
+              <div className="bg-[#FAF7F2] p-4 rounded-xl border border-[#E8E2D9] space-y-2 text-xs">
+                <div className="flex justify-between items-center py-1 border-b border-[#E8E2D9]">
+                  <span className="text-[#6E5D53]">Người yêu cầu:</span>
+                  <span className="font-bold text-[#2B1810]">
+                    {activePendingRequest.requester_name} ({activePendingRequest.requester_role === 'technician' ? 'Kỹ thuật viên' : activePendingRequest.requester_role === 'sales' ? 'Kinh doanh (Sales)' : 'Quản trị'})
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-[#E8E2D9]">
+                  <span className="text-[#6E5D53]">Phân loại key cần cấp:</span>
+                  <span className="font-black text-[#C0392B] uppercase">
+                    {activePendingRequest.category_name}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-[#E8E2D9]">
+                  <span className="text-[#6E5D53]">Khách hàng:</span>
+                  <span className="font-bold text-[#2B1810]">
+                    {activePendingRequest.customer_name} ({activePendingRequest.customer_phone})
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-[#6E5D53]">Email nhận key:</span>
+                  <span className="font-bold text-[#0F4C5C] font-mono underline">
+                    {activePendingRequest.customer_email}
+                  </span>
+                </div>
+              </div>
+
+              {/* Faulty History Alert if any */}
+              {activePendingRequest.faulty_history && activePendingRequest.faulty_history.length > 0 && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs space-y-1">
+                  <div className="font-bold text-rose-800">
+                    LỊCH SỬ KEY LỖI TRƯỚC ĐÓ:
+                  </div>
+                  {activePendingRequest.faulty_history.map((fh, idx) => (
+                    <div key={idx} className="text-rose-700">
+                      Mã key <span className="font-mono font-bold">{fh.key_code}</span>: {fh.reason}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+                <button
+                  type="button"
+                  disabled={isApproving}
+                  onClick={() => handleQuickApprove(activePendingRequest.id)}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-sm text-center"
+                >
+                  {isApproving ? 'Đang bốc key từ kho...' : 'CHẤP THUẬN & CẤP KEY TỰ ĐỘNG'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRejectingRequestId(activePendingRequest.id)}
+                  className="py-2.5 px-4 rounded-xl bg-white border border-[#E8E2D9] text-[#6E5D53] hover:text-[#C0392B] hover:border-[#C0392B] text-xs font-bold transition-colors"
+                >
+                  TỪ CHỐI
+                </button>
+                <Link
+                  href="/quan-ly-key"
+                  onClick={() => setDismissedReqIds((prev) => [...prev, activePendingRequest.id])}
+                  className="py-2.5 px-4 rounded-xl bg-[#2B1810] text-white hover:bg-black text-xs font-bold text-center"
+                >
+                  XEM TẠI KHO KEY
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REJECT MODAL */}
+      {rejectingRequestId && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-md p-5 space-y-4 font-sans">
+            <h3 className="text-sm font-black text-[#2B1810]">
+              TỪ CHỐI YÊU CẦU CẤP KEY
+            </h3>
+            <p className="text-xs text-[#6E5D53]">
+              Vui lòng nhập lý do từ chối để nhân viên nắm rõ thông tin.
+            </p>
+            <input
+              type="text"
+              autoFocus
+              placeholder="VD: Kho tạm hết key phiên bản này, chờ nhập bổ sung..."
+              value={rejectReasonInput}
+              onChange={(e) => setRejectReasonInput(e.target.value)}
+              className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg text-xs bg-white text-[#2B1810] focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
+            />
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setRejectingRequestId(null)}
+                className="px-4 py-2 rounded-lg text-xs font-bold text-[#6E5D53] hover:bg-slate-100"
+              >
+                HỦY
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReject}
+                className="px-4 py-2 rounded-lg bg-[#C0392B] text-white text-xs font-bold hover:bg-[#A93226]"
+              >
+                XÁC NHẬN TỪ CHỐI
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,6 +14,10 @@ import {
   OnsiteDispatch,
   ShiftLog,
   generateCustomerCode,
+  KeyCategory,
+  LicenseKeyItem,
+  KeyReleaseRequest,
+  KeyEmailTemplateConfig,
 } from './supabase';
 import {
   initialCustomers,
@@ -28,6 +32,10 @@ import {
   CustomerReview,
   initialFaqs,
   initialCustomerReviews,
+  initialKeyCategories,
+  initialLicenseKeys,
+  initialKeyReleaseRequests,
+  initialKeyEmailTemplate,
 } from './mockData';
 
 
@@ -178,6 +186,24 @@ interface StoreContextType {
   addReview: (review: Omit<CustomerReview, 'id'>) => Promise<CustomerReview>;
   deleteReview: (id: string) => Promise<boolean>;
 
+  // Windows / Office Key Management & Release System
+  keyCategories: KeyCategory[];
+  licenseKeys: LicenseKeyItem[];
+  keyReleaseRequests: KeyReleaseRequest[];
+  keyEmailTemplate: KeyEmailTemplateConfig;
+  addKeyCategory: (category: { name: string; type: 'windows' | 'office' | 'others'; description: string }) => Promise<KeyCategory>;
+  deleteKeyCategory: (id: string) => Promise<{ success: boolean; message: string }>;
+  addLicenseKey: (item: Omit<LicenseKeyItem, 'id' | 'created_at'>) => Promise<LicenseKeyItem>;
+  addBatchLicenseKeys: (categoryId: string, categoryName: string, rawKeysText: string, unitPrice?: number) => Promise<{ success: boolean; addedCount: number }>;
+  deleteLicenseKey: (id: string) => Promise<boolean>;
+  updateLicenseKey: (id: string, updates: Partial<LicenseKeyItem>) => Promise<boolean>;
+  createKeyReleaseRequest: (data: { customer_name: string; customer_phone: string; customer_email: string; category_id: string }) => Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }>;
+  approveKeyReleaseRequest: (requestId: string, adminNote?: string) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem }>;
+  confirmKeyActive: (requestId: string) => Promise<{ success: boolean; message: string }>;
+  reportKeyFaulty: (requestId: string, reason: string) => Promise<{ success: boolean; message: string }>;
+  rejectKeyReleaseRequest: (requestId: string, reason: string) => Promise<boolean>;
+  updateKeyEmailTemplate: (updates: Partial<KeyEmailTemplateConfig>) => Promise<boolean>;
+
   // Reset
   resetToDefault: () => void;
 }
@@ -198,6 +224,10 @@ const STORAGE_KEYS = {
   shiftLogs: 'vtat_shift_logs_v2',
   faqs: 'vtat_faqs_v2',
   reviews: 'vtat_reviews_v2',
+  keyCategories: 'vtat_key_categories_v1',
+  licenseKeys: 'vtat_license_keys_v1',
+  keyReleaseRequests: 'vtat_key_release_requests_v1',
+  keyEmailTemplate: 'vtat_key_email_template_v1',
 };
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -218,6 +248,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(initialSystemSettings);
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
+
+  // Windows & Office Keys Pool, Categories, Requests & Email Template
+  const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
+  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>(initialLicenseKeys);
+  const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>(initialKeyReleaseRequests);
+  const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
 
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
@@ -492,6 +528,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const savedShf = localStorage.getItem(STORAGE_KEYS.shiftLogs);
         const savedFaqs = localStorage.getItem(STORAGE_KEYS.faqs);
         const savedRevs = localStorage.getItem(STORAGE_KEYS.reviews);
+        const savedKeyCats = localStorage.getItem(STORAGE_KEYS.keyCategories);
+        const savedKeys = localStorage.getItem(STORAGE_KEYS.licenseKeys);
+        const savedReqs = localStorage.getItem(STORAGE_KEYS.keyReleaseRequests);
+        const savedTpl = localStorage.getItem(STORAGE_KEYS.keyEmailTemplate);
 
         if (savedInv) setInventory(JSON.parse(savedInv));
         if (savedCus) setCustomers(JSON.parse(savedCus));
@@ -502,6 +542,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedShf) setShiftLogs(JSON.parse(savedShf));
         if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
         if (savedRevs) setReviews(JSON.parse(savedRevs));
+        if (savedKeyCats) setKeyCategories(JSON.parse(savedKeyCats));
+        if (savedKeys) setLicenseKeys(JSON.parse(savedKeys));
+        if (savedReqs) setKeyReleaseRequests(JSON.parse(savedReqs));
+        if (savedTpl) setKeyEmailTemplate(JSON.parse(savedTpl));
 
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
@@ -722,6 +766,348 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
     return true;
   };
+
+  // ==========================================
+  // WINDOWS & OFFICE KEY MANAGEMENT & RELEASE
+  // ==========================================
+  const addKeyCategory = async (catData: { name: string; type: 'windows' | 'office' | 'others'; description: string }): Promise<KeyCategory> => {
+    const trimmedName = catData.name.trim();
+    // Check if existing category matches (case-insensitive, trimmed)
+    const existing = keyCategories.find((c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase());
+    if (existing) {
+      // Merge / update description if provided
+      const updated: KeyCategory = {
+        ...existing,
+        description: catData.description || existing.description,
+      };
+      setKeyCategories((prev) => {
+        const next = prev.map((c) => (c.id === existing.id ? updated : c));
+        saveToLocal(STORAGE_KEYS.keyCategories, next);
+        return next;
+      });
+      return updated;
+    }
+
+    const newCat: KeyCategory = {
+      id: `cat-${Date.now()}`,
+      name: trimmedName.toUpperCase(),
+      type: catData.type,
+      description: catData.description,
+      is_default: false,
+      created_at: new Date().toISOString(),
+    };
+
+    setKeyCategories((prev) => {
+      const next = [...prev, newCat];
+      saveToLocal(STORAGE_KEYS.keyCategories, next);
+      return next;
+    });
+    return newCat;
+  };
+
+  const deleteKeyCategory = async (id: string): Promise<{ success: boolean; message: string }> => {
+    const cat = keyCategories.find((c) => c.id === id);
+    if (!cat) return { success: false, message: 'Không tìm thấy phân loại key cần xóa!' };
+    if (cat.is_default) {
+      return { success: false, message: 'Không thể xóa các phân loại mặc định của hệ thống!' };
+    }
+    setKeyCategories((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      saveToLocal(STORAGE_KEYS.keyCategories, next);
+      return next;
+    });
+    return { success: true, message: 'Đã xóa phân loại thành công!' };
+  };
+
+  const addLicenseKey = async (item: Omit<LicenseKeyItem, 'id' | 'created_at'>): Promise<LicenseKeyItem> => {
+    const newKey: LicenseKeyItem = {
+      ...item,
+      id: `key-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      license_code: item.license_code.trim().toUpperCase(),
+      status: item.status || 'available',
+      created_at: new Date().toISOString(),
+    };
+    setLicenseKeys((prev) => {
+      const next = [newKey, ...prev];
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+    return newKey;
+  };
+
+  const addBatchLicenseKeys = async (
+    categoryId: string,
+    categoryName: string,
+    rawKeysText: string,
+    unitPrice?: number
+  ): Promise<{ success: boolean; addedCount: number }> => {
+    const lines = rawKeysText.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return { success: false, addedCount: 0 };
+    const newKeys: LicenseKeyItem[] = lines.map((code, idx) => ({
+      id: `key-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+      category_id: categoryId,
+      category_name: categoryName,
+      license_code: code.toUpperCase(),
+      status: 'available',
+      unit_price: unitPrice || 350000,
+      created_at: new Date().toISOString(),
+    }));
+    setLicenseKeys((prev) => {
+      const next = [...newKeys, ...prev];
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+    return { success: true, addedCount: newKeys.length };
+  };
+
+  const deleteLicenseKey = async (id: string): Promise<boolean> => {
+    setLicenseKeys((prev) => {
+      const next = prev.filter((k) => k.id !== id);
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+    return true;
+  };
+
+  const updateLicenseKey = async (id: string, updates: Partial<LicenseKeyItem>): Promise<boolean> => {
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) => (k.id === id ? { ...k, ...updates } : k));
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+    return true;
+  };
+
+  const createKeyReleaseRequest = async (data: {
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string;
+    category_id: string;
+  }): Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }> => {
+    const email = data.customer_email?.trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return {
+        success: false,
+        message: 'Bắt buộc phải có email khách hàng hợp lệ để hệ thống gửi key sau khi xác nhận hoạt động!',
+      };
+    }
+    const cat = keyCategories.find((c) => c.id === data.category_id);
+    if (!cat) {
+      return { success: false, message: 'Không tìm thấy phân loại key được chọn!' };
+    }
+
+    const reqCode = `REQ-KEY-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newReq: KeyReleaseRequest = {
+      id: `req-${Date.now()}`,
+      request_code: reqCode,
+      requester_id: currentUser.id,
+      requester_name: currentUser.name,
+      requester_role: currentUser.role,
+      customer_name: data.customer_name.trim(),
+      customer_phone: data.customer_phone.trim(),
+      customer_email: email,
+      category_id: cat.id,
+      category_name: cat.name,
+      status: 'pending',
+      faulty_history: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setKeyReleaseRequests((prev) => {
+      const next = [newReq, ...prev];
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return { success: true, message: `Đã gửi yêu cầu cấp key ${reqCode} đến Admin thành công!`, request: newReq };
+  };
+
+  const approveKeyReleaseRequest = async (
+    requestId: string,
+    adminNote?: string
+  ): Promise<{ success: boolean; message: string; key?: LicenseKeyItem }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+
+    // Find available key in inventory
+    const availableKey = licenseKeys.find(
+      (k) => k.category_id === req.category_id && k.status === 'available'
+    );
+
+    if (!availableKey) {
+      return {
+        success: false,
+        message: `Kho hiện không còn key khả dụng cho ${req.category_name}. Vui lòng nhập thêm key vào kho!`,
+      };
+    }
+
+    // Mark key as reserved
+    const updatedKey: LicenseKeyItem = {
+      ...availableKey,
+      status: 'reserved',
+      release_request_id: req.id,
+      customer_name: req.customer_name,
+      customer_phone: req.customer_phone,
+      customer_email: req.customer_email,
+    };
+
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) => (k.id === availableKey.id ? updatedKey : k));
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    // Update request status to approved
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'approved' as const,
+              assigned_key_id: availableKey.id,
+              assigned_key_code: availableKey.license_code,
+              admin_note: adminNote || r.admin_note,
+              updated_at: new Date().toISOString(),
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Admin đã duyệt yêu cầu. Key ${availableKey.license_code} đã được cấp cho ${req.requester_name}!`,
+      key: updatedKey,
+    };
+  };
+
+  const confirmKeyActive = async (requestId: string): Promise<{ success: boolean; message: string }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+    if (!req.assigned_key_id) return { success: false, message: 'Yêu cầu chưa được gán key!' };
+
+    const nowIso = new Date().toISOString();
+
+    // 1. Mark key as activated
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) =>
+        k.id === req.assigned_key_id
+          ? {
+              ...k,
+              status: 'activated' as const,
+              activated_at: nowIso,
+            }
+          : k
+      );
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    // 2. Mark request as activated and trigger email sending
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'activated' as const,
+              email_sent: true,
+              email_sent_at: nowIso,
+              updated_at: nowIso,
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Đã xác nhận key hoạt động thành công! Hệ thống đã gửi email bàn giao key đến ${req.customer_email}.`,
+    };
+  };
+
+  const reportKeyFaulty = async (requestId: string, reason: string): Promise<{ success: boolean; message: string }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+    if (!req.assigned_key_id) return { success: false, message: 'Yêu cầu chưa có key được gán!' };
+
+    const nowIso = new Date().toISOString();
+    const failedKeyCode = req.assigned_key_code || 'N/A';
+
+    // 1. Mark current key as faulty
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) =>
+        k.id === req.assigned_key_id
+          ? {
+              ...k,
+              status: 'faulty' as const,
+              faulty_reason: reason,
+            }
+          : k
+      );
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    // 2. Append to faulty history and reset assigned key, set status to 'faulty_re_requesting'
+    const newFaultyItem = {
+      key_code: failedKeyCode,
+      reason: reason.trim() || 'Key không kích hoạt được',
+      timestamp: nowIso,
+    };
+
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'faulty_re_requesting' as const,
+              assigned_key_id: undefined,
+              assigned_key_code: undefined,
+              faulty_history: [...(r.faulty_history || []), newFaultyItem],
+              updated_at: nowIso,
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: 'Đã ghi nhận key lỗi vào lịch sử. Hệ thống đã tự động gửi yêu cầu cấp key mới đến Admin!',
+    };
+  };
+
+  const rejectKeyReleaseRequest = async (requestId: string, reason: string): Promise<boolean> => {
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'rejected' as const,
+              admin_note: reason,
+              updated_at: new Date().toISOString(),
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+    return true;
+  };
+
+  const updateKeyEmailTemplate = async (updates: Partial<KeyEmailTemplateConfig>): Promise<boolean> => {
+    setKeyEmailTemplate((prev) => {
+      const next = { ...prev, ...updates };
+      saveToLocal(STORAGE_KEYS.keyEmailTemplate, next);
+      return next;
+    });
+    return true;
+  };
+
 
   // Ticket actions
   const addServiceTicket = async (ticketData: Omit<ServiceTicket, 'id' | 'created_at'>): Promise<ServiceTicket> => {
@@ -1072,6 +1458,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         addSoftwareLicense,
         updateSoftwareLicense,
         deleteSoftwareLicense,
+        keyCategories,
+        licenseKeys,
+        keyReleaseRequests,
+        keyEmailTemplate,
+        addKeyCategory,
+        deleteKeyCategory,
+        addLicenseKey,
+        addBatchLicenseKeys,
+        deleteLicenseKey,
+        updateLicenseKey,
+        createKeyReleaseRequest,
+        approveKeyReleaseRequest,
+        confirmKeyActive,
+        reportKeyFaulty,
+        rejectKeyReleaseRequest,
+        updateKeyEmailTemplate,
         onsiteDispatches,
         shiftLogs,
         faqs,
@@ -1097,6 +1499,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         updateDispatchStatus,
         addShiftLog,
         resetToDefault,
+
       }}
     >
       {children}

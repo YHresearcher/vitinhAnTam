@@ -14,10 +14,11 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, currentUser, customers, onsiteDispatches, logout } = useViTinhAnTamStore();
+  const { tickets, currentUser, customers, onsiteDispatches, keyReleaseRequests, logout } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received').length;
   const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed' && d.status !== 'cancelled').length;
+  const pendingKeyRequestsCount = keyReleaseRequests.filter((r) => r.status === 'pending' || r.status === 'faulty_re_requesting').length;
 
   const navItems = [
     {
@@ -41,6 +42,12 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       label: 'Kho hàng',
       href: '/kho-may',
       badge: null,
+    },
+    {
+      label: 'Kho key bản quyền',
+      href: '/quan-ly-key',
+      badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
+      badgeColor: 'bg-[#C0392B] text-white font-mono',
     },
     {
       label: 'Cứu hộ tận nơi',

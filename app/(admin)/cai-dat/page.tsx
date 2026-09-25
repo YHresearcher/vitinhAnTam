@@ -853,6 +853,37 @@ export default function CaiDatPage() {
               </Card>
             ),
           },
+          {
+            key: 'key-email',
+            label: (
+              <span className="font-bold text-xs sm:text-sm">
+                Mẫu Email Gửi Key
+              </span>
+            ),
+            children: (
+              <Card className="rounded-xl border-[#E8E2D9] shadow-xs bg-[#FFFDF9]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[#E8E2D9]">
+                  <div>
+                    <h3 className="text-sm font-black text-[#2B1810] uppercase">
+                      CẤU HÌNH MẪU EMAIL BÀN GIAO KEY CHO KHÁCH
+                    </h3>
+                    <p className="text-xs text-[#6E5D53] mt-0.5">
+                      Chỉnh sửa nội dung thư, thông tin liên hệ và xem trước giao diện thư thực tế gửi đến email khách hàng.
+                    </p>
+                  </div>
+                  <Link
+                    href="/quan-ly-key"
+                    className="inline-flex items-center px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs w-fit uppercase"
+                  >
+                    ĐẾN TRANG QUẢN LÝ KHO KEY &amp; MẪU EMAIL →
+                  </Link>
+                </div>
+                <div className="p-4 bg-[#FAF7F2] rounded-xl border border-[#E8E2D9] text-xs text-[#6E5D53] leading-relaxed">
+                  Hệ thống quản lý kho key và mẫu email đã được tích hợp đồng bộ tại mục <strong>Kho Key Bản Quyền</strong>. Bạn có thể chỉnh sửa nội dung mẫu, thiết lập người gửi và xem trước trực tiếp tại đó.
+                </div>
+              </Card>
+            ),
+          },
         ]}
       />
 

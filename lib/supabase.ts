@@ -171,6 +171,67 @@ export interface SoftwareLicense {
   notes?: string;
 }
 
+export interface KeyCategory {
+  id: string;
+  name: string; // Tên phân loại (ví dụ: WINDOWS 11 PROFESSIONAL, WINDOWS 11 HOME, OFFICE PRO PLUS 2021)
+  type: 'windows' | 'office' | 'others';
+  description: string; // Mô tả đặc tính key
+  is_default: boolean; // true nếu là phân loại mặc định (không cho phép xóa)
+  created_at?: string;
+}
+
+export interface LicenseKeyItem {
+  id: string;
+  category_id: string;
+  category_name: string;
+  license_code: string; // XXXXX-XXXXX-XXXXX-XXXXX-XXXXX
+  status: 'available' | 'reserved' | 'activated' | 'faulty';
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  faulty_reason?: string;
+  release_request_id?: string;
+  unit_price?: number;
+  created_at: string;
+  activated_at?: string;
+}
+
+export interface KeyReleaseRequest {
+  id: string;
+  request_code: string; // VD: REQ-KEY-001
+  requester_id: string;
+  requester_name: string;
+  requester_role: 'admin' | 'technician' | 'sales';
+  customer_name: string;
+  customer_phone: string;
+  customer_email: string; // Bắt buộc
+  category_id: string;
+  category_name: string;
+  status: 'pending' | 'approved' | 'activated' | 'faulty_re_requesting' | 'rejected';
+  assigned_key_id?: string;
+  assigned_key_code?: string;
+  faulty_history?: Array<{
+    key_code: string;
+    reason: string;
+    timestamp: string;
+  }>;
+  admin_note?: string;
+  email_sent?: boolean;
+  email_sent_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KeyEmailTemplateConfig {
+  sender_name: string;
+  sender_email: string;
+  subject: string;
+  content_template: string;
+  support_phone: string;
+  support_zalo: string;
+}
+
+
 export interface MultiTierWarranty {
   chassis_months: number; // Tầng 1: Thân máy (VD: 12 tháng)
   ssd_months: number;     // Tầng 2: SSD chính hãng (VD: 36 tháng)

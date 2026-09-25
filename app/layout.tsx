@@ -4,14 +4,14 @@ import './globals.css';
 import { ClientProvider } from '@/components/ClientProvider';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 
-export const beVietnamPro = Be_Vietnam_Pro({
+const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['vietnamese', 'latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-be-vietnam-pro',
   display: 'swap',
 });
 
-export const inter = Inter({
+const inter = Inter({
   subsets: ['vietnamese', 'latin'],
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-inter',

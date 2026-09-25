@@ -10,7 +10,6 @@ import {
   Cpu,
   HardDrive,
   ShieldCheck,
-  Zap,
   ArrowRight,
   ArrowUp,
   PhoneCall,
@@ -25,14 +24,13 @@ import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
 import {
   TRANSLATIONS,
-  ENGLISH_PRODUCT_DETAILS,
   ENGLISH_FAQS,
 } from '@/lib/translations';
 import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentLang, inventory, systemSettings } = useViTinhAnTamStore();
+  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
@@ -46,6 +44,26 @@ export default function HomePage() {
 
   // Modal for QC & S/N inspection
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
+
+  // Modal for Buying License Keys
+  const [isBuyKeyModalOpen, setIsBuyKeyModalOpen] = useState(false);
+  const [selectedKeyType, setSelectedKeyType] = useState<'windows' | 'office'>('windows');
+
+  const inStockKeyCategories = (keyCategories || [])
+    .filter((cat) => {
+      if (selectedKeyType === 'windows') {
+        return cat.type === 'windows' || cat.name.toLowerCase().includes('windows');
+      } else {
+        return cat.type === 'office' || cat.name.toLowerCase().includes('office');
+      }
+    })
+    .filter((cat) => {
+      // Rule: Dữ liệu nếu = 0 thì không hiển thị
+      const count = (licenseKeys || []).filter(
+        (k) => k.category_id === cat.id && k.status === 'available'
+      ).length;
+      return count > 0;
+    });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -270,10 +288,21 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Informational Sub-badge */}
-            <div className="text-xs text-emerald-800 font-medium flex items-center gap-1.5 px-1">
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-              <span>{isEn ? '100% In-Stock • 2h Fast Delivery in Tan An' : '100% Máy sẵn kho • Giao hỏa tốc 2 giờ TP. Tân An'}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Informational Sub-badge */}
+              <div className="text-xs text-emerald-800 font-medium flex items-center gap-1.5 px-1">
+                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{isEn ? '100% In-Stock • 2h Fast Delivery in Tan An' : '100% Máy sẵn kho • Giao hỏa tốc 2 giờ TP. Tân An'}</span>
+              </div>
+
+              {/* Nút mua key bản quyền Windows & Office */}
+              <button
+                type="button"
+                onClick={() => setIsBuyKeyModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 uppercase"
+              >
+                <span>MUA KEY BẢN QUYỀN</span>
+              </button>
             </div>
           </div>
 
@@ -861,6 +890,140 @@ export default function HomePage() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* MODAL MUA KEY BẢN QUYỀN WINDOWS & OFFICE */}
+      <Modal
+        open={isBuyKeyModalOpen}
+        onCancel={() => setIsBuyKeyModalOpen(false)}
+        footer={null}
+        width={720}
+        centered
+        className="custom-ant-modal"
+      >
+        <div className="p-2 sm:p-5 space-y-5 font-sans bg-[#FFFDF9]">
+          {/* Header */}
+          <div className="border-b border-[#E8E2D9] pb-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#C0392B]">
+              BẢN QUYỀN CHÍNH HÃNG 100% • BẢO HÀNH TRỌN ĐỜI
+            </span>
+            <h2 className="text-lg sm:text-xl font-black text-[#2B1810] tracking-tight mt-0.5 uppercase">
+              MUA KEY BẢN QUYỀN WINDOWS &amp; OFFICE
+            </h2>
+            <p className="text-xs text-[#6E5D53] mt-1">
+              Bản quyền vĩnh viễn, bảo hành kích hoạt 1 đổi 1 và hỗ trợ cài đặt từ xa qua UltraViewer hoặc AnyDesk.
+            </p>
+          </div>
+
+          {/* Chọn loại: Windows vs Office */}
+          <div>
+            <label className="block text-xs font-black text-[#2B1810] mb-2 uppercase">
+              BƯỚC 1: CHỌN LOẠI BẢN QUYỀN CẦN MUA
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedKeyType('windows')}
+                className={`py-3.5 px-4 rounded-xl border-2 text-left transition-all ${
+                  selectedKeyType === 'windows'
+                    ? 'border-[#C0392B] bg-[#C0392B]/5 text-[#C0392B]'
+                    : 'border-[#E8E2D9] bg-white text-[#6E5D53] hover:border-[#2B1810]'
+                }`}
+              >
+                <div className="text-xs sm:text-sm font-black uppercase">
+                  HỆ ĐIỀU HÀNH WINDOWS
+                </div>
+                <div className="text-[11px] text-[#6E5D53] mt-0.5">
+                  Windows 11 Pro, Home, Windows 10...
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedKeyType('office')}
+                className={`py-3.5 px-4 rounded-xl border-2 text-left transition-all ${
+                  selectedKeyType === 'office'
+                    ? 'border-[#C0392B] bg-[#C0392B]/5 text-[#C0392B]'
+                    : 'border-[#E8E2D9] bg-white text-[#6E5D53] hover:border-[#2B1810]'
+                }`}
+              >
+                <div className="text-xs sm:text-sm font-black uppercase">
+                  ỨNG DỤNG VĂN PHÒNG OFFICE
+                </div>
+                <div className="text-[11px] text-[#6E5D53] mt-0.5">
+                  Office 2021 Pro Plus, 2019, 365...
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Danh sách các phiên bản kết nối database - nếu = 0 thì không hiển thị */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-black text-[#2B1810] uppercase">
+                BƯỚC 2: CHỌN PHIÊN BẢN PHÙ HỢP (DỮ LIỆU KHO THỰC TẾ)
+              </label>
+              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                Kết nối thời gian thực
+              </span>
+            </div>
+
+            {inStockKeyCategories.length === 0 ? (
+              <div className="p-8 text-center rounded-xl bg-[#FAF7F2] border border-[#E8E2D9] text-xs text-[#6E5D53] space-y-1">
+                <div className="font-bold text-[#2B1810]">Hiện tại phiên bản này đang tạm hết key sẵn có trong kho.</div>
+                <div>Quý khách vui lòng liên hệ trực tiếp với nhân viên để được hỗ trợ nhập thêm key nhanh chóng.</div>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                {inStockKeyCategories.map((cat) => {
+                  const stock = (licenseKeys || []).filter(
+                    (k) => k.category_id === cat.id && k.status === 'available'
+                  ).length;
+
+                  return (
+                    <div
+                      key={cat.id}
+                      className="p-4 rounded-xl border border-[#E8E2D9] bg-white hover:border-[#C0392B] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    >
+                      <div className="space-y-1 max-w-sm">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xs sm:text-sm font-black text-[#2B1810] uppercase">
+                            {cat.name}
+                          </h3>
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 font-mono">
+                            Còn {stock} key sẵn sàng
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#6E5D53]">
+                          {cat.description}
+                        </p>
+                      </div>
+
+                      <a
+                        href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi quan tâm mua key bản quyền: ' + cat.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-2.5 px-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all text-center shrink-0 shadow-xs uppercase tracking-wider"
+                      >
+                        LIÊN HỆ NHÂN VIÊN ĐỂ NHẬN GIÁ TỐT NHẤT
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer note */}
+          <div className="pt-3 border-t border-[#E8E2D9] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#6E5D53]">
+            <span>
+              Hotline tư vấn kỹ thuật &amp; giá sỉ: <strong className="text-[#2B1810] font-mono">{systemSettings.hotline}</strong>
+            </span>
+            <span className="font-bold text-[#C0392B]">
+              VI TÍNH AN TÂM - BÁN BẰNG TÂM ĐỂ BẠN AN TÂM
+            </span>
+          </div>
+        </div>
       </Modal>
     </div>
   );
