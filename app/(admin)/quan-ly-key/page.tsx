@@ -118,8 +118,7 @@ export default function QuanLyKeyPage() {
       }
       return true;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keyReleaseRequests, requestFilter, requestSearch]);
+  }, [keyReleaseRequests, requestFilter, requestSearch, isWaitingTest, isActive, needsReplacement]);
 
   // Filtered License Keys
   const filteredKeys = useMemo(() => {

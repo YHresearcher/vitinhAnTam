@@ -265,37 +265,52 @@ export default function DashboardPage() {
 
       {/* 4 Chỉ Số Tài Chính & Vận Hành Cốt Lõi (Compact KPI Badges) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        {/* KPI 1: Dòng tiền ròng */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-300 transition-colors">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-            <span>Dòng Tiền Ròng ({cashflowTimeframe.toUpperCase()})</span>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-              LÃI RÒNG
-            </span>
-          </div>
-          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tracking-tight">
-            +{netCashflow.toLocaleString('vi-VN')}₫
-          </div>
-          <div className="text-[11px] text-emerald-600 mt-1 font-medium">
-            Biên lợi nhuận gộp: {profitMargin}%
-          </div>
-        </div>
+        {/* KPI 1 & 2: DOANH THU / DÒNG TIỀN — CHỈ ADMIN THEO DÕI */}
+        {isAdmin ? (
+          <>
+            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-300 transition-colors">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                <span>Dòng Tiền Ròng ({cashflowTimeframe.toUpperCase()})</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                  LÃI RÒNG
+                </span>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tracking-tight">
+                {netCashflow >= 0 ? '+' : ''}
+                {netCashflow.toLocaleString('vi-VN')}₫
+              </div>
+              <div className="text-[11px] text-emerald-600 mt-1 font-medium">
+                Biên lợi nhuận gộp: {profitMargin}%
+              </div>
+            </div>
 
-        {/* KPI 2: Tổng thu */}
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors">
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-            <span>Doanh Thu ({cashflowTimeframe.toUpperCase()})</span>
-            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
-              TỔNG THU
-            </span>
-          </div>
-          <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
-            {totalIncome.toLocaleString('vi-VN')}₫
-          </div>
-          <div className="text-[11px] text-slate-500 mt-1">
-            Chi vật tư: {totalExpense.toLocaleString('vi-VN')}₫
-          </div>
-        </div>
+            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors">
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                <span>Doanh Thu ({cashflowTimeframe.toUpperCase()})</span>
+                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                  TỔNG THU
+                </span>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                {totalIncome.toLocaleString('vi-VN')}₫
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1">
+                Vốn nhập kho: {totalExpense.toLocaleString('vi-VN')}₫
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-white rounded-xl border border-dashed border-slate-300 p-4 shadow-2xs flex flex-col justify-center">
+              <div className="text-xs font-bold text-slate-500 mb-1">Lãi ròng</div>
+              <div className="text-sm font-semibold text-slate-400">🔒 Chỉ Admin theo dõi</div>
+            </div>
+            <div className="bg-white rounded-xl border border-dashed border-slate-300 p-4 shadow-2xs flex flex-col justify-center">
+              <div className="text-xs font-bold text-slate-500 mb-1">Doanh thu</div>
+              <div className="text-sm font-semibold text-slate-400">🔒 Chỉ Admin theo dõi</div>
+            </div>
+          </>
+        )}
 
         {/* KPI 3: Thiết bị kho */}
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-indigo-300 transition-colors">
@@ -342,7 +357,8 @@ export default function DashboardPage() {
       {/* 2 BIỂU ĐỒ TRỌNG TÂM: DÒNG TIỀN & PHÂN BỔ THIẾT BỊ       */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* CHART 1: BIỂU ĐỒ DÒNG TIỀN (7 Cột) */}
+        {/* CHART 1: BIỂU ĐỒ DÒNG TIỀN & DOANH THU — CHỈ ADMIN */}
+        {isAdmin && (
         <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -553,7 +569,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Hover Tooltip Info if active */}
-            {hoveredDataPoint !== null && (
+            {hoveredDataPoint !== null && cashflowData[hoveredDataPoint] && (
               <div className="bg-slate-900 text-white rounded-lg p-2.5 text-xs flex items-center justify-between gap-4 mt-1">
                 <span className="font-semibold text-slate-300">
                   {cashflowData[hoveredDataPoint].label} ({cashflowData[hoveredDataPoint].date}):
@@ -595,6 +611,18 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        )}
+
+        {/* Non-admin: doanh thu bị khóa */}
+        {!isAdmin && (
+          <div className="lg:col-span-7 bg-white rounded-xl border border-dashed border-slate-300 p-8 shadow-2xs flex flex-col items-center justify-center text-center gap-2">
+            <div className="text-2xl">🔒</div>
+            <div className="text-sm font-bold text-slate-600">Quản lý doanh thu</div>
+            <div className="text-xs text-slate-400 max-w-sm">
+              Chỉ Quản trị viên (Admin) mới theo dõi được doanh thu, vốn nhập kho và lãi gộp.
+            </div>
+          </div>
+        )}
 
         {/* CHART 2: BIỂU ĐỒ QUẢN LÝ THIẾT BỊ (5 Cột) */}
         <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between">
