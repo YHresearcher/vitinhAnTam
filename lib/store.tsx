@@ -954,8 +954,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const deleteKeyCategory = async (id: string): Promise<{ success: boolean; message: string }> => {
     const cat = keyCategories.find((c) => c.id === id);
     if (!cat) return { success: false, message: 'Không tìm thấy phân loại key cần xóa!' };
-    if (cat.is_default) {
-      return { success: false, message: 'Không thể xóa các phân loại mặc định của hệ thống!' };
+    if (cat.is_default || cat.type !== 'others') {
+      return { success: false, message: 'Chỉ được phép xóa các phân loại thuộc nhóm "Others" (Không thể xóa các phân loại mặc định của hệ thống)!' };
     }
     setKeyCategories((prev) => {
       const next = prev.filter((c) => c.id !== id);

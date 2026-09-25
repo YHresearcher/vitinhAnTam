@@ -343,9 +343,9 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setIsBuyKeyModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 uppercase"
+                className="px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 uppercase tracking-wider"
               >
-                <span>MUA KEY BẢN QUYỀN</span>
+                <span>🔑 MUA KEY</span>
               </button>
               <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full font-semibold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -1297,6 +1297,46 @@ export default function HomePage() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Danh sách 3 chuyên viên tư vấn trực tiếp */}
+          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-800 uppercase">
+              <span>ĐỘI NGŨ KỸ THUẬT &amp; TƯ VẤN SẴN SÀNG HỖ TRỢ TRỰC TIẾP:</span>
+              <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Online Zalo 24/7
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {(systemSettings.zaloContacts && systemSettings.zaloContacts.length > 0
+                ? systemSettings.zaloContacts
+                : [
+                    { id: '1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng' },
+                    { id: '2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng' },
+                    { id: '3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ & key bản quyền' },
+                  ]
+              ).map((contact) => (
+                <a
+                  key={contact.id}
+                  href={`https://zalo.me/${contact.phone}?text=${encodeURIComponent('Chào ' + contact.name + ' - Vi Tính An Tâm, tôi muốn mua key bản quyền')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-lg bg-white border border-slate-200 hover:border-[#C0392B] hover:bg-slate-50 transition-all flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="font-bold text-xs text-slate-900 group-hover:text-[#C0392B]">
+                      {contact.name}
+                    </div>
+                    <div className="text-[11px] font-mono text-slate-500 font-semibold">
+                      Zalo: {contact.phone}
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                    Nhắn tin →
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Footer note */}
