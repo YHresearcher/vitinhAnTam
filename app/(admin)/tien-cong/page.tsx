@@ -43,19 +43,8 @@ export default function TienCongPage() {
               Quyền Truy Cập Bị Giới Hạn (Chỉ Admin)
             </h2>
             <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-              Bạn đang đăng nhập với vai trò{' '}
-              <strong className="text-blue-600">{currentUser.name}</strong> (
-              <span className="capitalize">{currentUser.role === 'technician' ? 'Kỹ thuật viên' : 'Kinh doanh'}</span>
-              ). Theo chính sách bảo mật nội bộ của Vi Tính An Tâm, dữ liệu bảng lương, tính tiền công theo ca và hoa hồng kỹ thuật viên chỉ được phép hiển thị cho Quản Trị Viên (Admin).
+              Tính năng tính tiền công và bảng lương chỉ dành riêng cho Quản Trị Viên (Admin).
             </p>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 text-left space-y-1">
-            <div className="font-bold text-amber-800">
-              Quy tắc ma trận RBAC đã áp dụng:
-            </div>
-            <div>• Kỹ thuật viên & Kinh doanh: Chỉ được xem kho máy, nhập thiết bị mới vào kho.</div>
-            <div>• Bảng lương, tiền công, sửa số lượng tồn kho & cấu hình hệ thống: Thuộc đặc quyền Admin.</div>
           </div>
 
           <div className="pt-2">
@@ -137,9 +126,6 @@ export default function TienCongPage() {
               Đặc quyền Admin
             </span>
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Hạch toán tiền công thợ, tiền hoa hồng cứu hộ 10km và trích thưởng doanh số khu vực Long An - Tây Ninh.
-          </p>
         </div>
 
         <div className="flex items-center gap-2">

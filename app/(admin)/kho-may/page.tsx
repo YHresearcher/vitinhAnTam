@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
-import { InventoryItem, SparePart, SoftwareLicense, generateCustomerCode } from '@/lib/supabase';
+import { InventoryItem, SparePart, SoftwareLicense, SoftwareKeyItem, generateCustomerCode } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 // Lucide icons removed for minimalist text design
 
@@ -18,6 +18,10 @@ export default function KhoMayPage() {
     addSoftwareLicense,
     updateSoftwareLicense,
     deleteSoftwareLicense,
+    addSoftwareKeys,
+    assignSoftwareKey,
+    updateSoftwareKeyStatus,
+    deleteSoftwareKey,
     currentUser,
     canEditStock,
     canUpdateRepairStatus,
@@ -28,6 +32,7 @@ export default function KhoMayPage() {
     canSellAndEditWarranty,
     sellInventoryItem,
     customers,
+    tickets,
   } = useStore();
 
   // Navigation tab state: Máy tính, Linh kiện (mới/cũ), Phần mềm bản quyền
@@ -75,7 +80,20 @@ export default function KhoMayPage() {
     duration_months: 0,
     distributor: 'Microsoft Partner / Phân phối chính hãng',
     notes: 'Key kích hoạt kỹ thuật số chính hãng',
+    initial_keys_raw: '',
   });
+
+  // Key Pool Management States
+  const [selectedSoftwareForKeys, setSelectedSoftwareForKeys] = useState<SoftwareLicense | null>(null);
+  const [keySearchQuery, setKeySearchQuery] = useState('');
+  const [keyStatusFilter, setKeyStatusFilter] = useState<'all' | 'available' | 'used' | 'revoked'>('all');
+  const [batchKeysInput, setBatchKeysInput] = useState('');
+  const [batchKeysNotes, setBatchKeysNotes] = useState('');
+  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
+  const [assigningKeyTarget, setAssigningKeyTarget] = useState<{ softwareId: string; key: SoftwareKeyItem } | null>(null);
+  const [assignCustomerName, setAssignCustomerName] = useState('');
+  const [assignTicketCode, setAssignTicketCode] = useState('');
+  const [assignNotes, setAssignNotes] = useState('');
 
   // Modal states - Machines
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -422,20 +440,41 @@ export default function KhoMayPage() {
     }
 
     try {
+      const rawKeys = newSoftware.initial_keys_raw
+        ? newSoftware.initial_keys_raw
+            .split('\n')
+            .map((k) => k.trim())
+            .filter((k) => k.length > 0)
+        : [];
+
+      const initialKeyItems: SoftwareKeyItem[] = rawKeys.map((k, idx) => ({
+        id: `key-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+        key_code: k,
+        status: 'available',
+        notes: newSoftware.notes || undefined,
+      }));
+
+      const finalQuantity = initialKeyItems.length > 0 ? initialKeyItems.length : Number(newSoftware.quantity_in_stock);
+
       await addSoftwareLicense({
         software_name: newSoftware.software_name.trim(),
         software_type: newSoftware.software_type,
         license_type: newSoftware.license_type,
-        quantity_in_stock: Number(newSoftware.quantity_in_stock),
+        quantity_in_stock: finalQuantity,
         unit_cost: Number(newSoftware.unit_cost),
         unit_price: Number(newSoftware.unit_price),
         duration_months: Number(newSoftware.duration_months),
         distributor: newSoftware.distributor,
         notes: newSoftware.notes,
+        license_keys: initialKeyItems.length > 0 ? initialKeyItems : undefined,
       });
 
       setIsAddSoftwareModalOpen(false);
-      setActionNotice(`Đã thêm phần mềm [${newSoftware.software_name}] vào kho!`);
+      setActionNotice(
+        `Đã thêm phần mềm [${newSoftware.software_name}] với ${
+          initialKeyItems.length > 0 ? `${initialKeyItems.length} key` : 'số lượng'
+        } vào kho!`
+      );
       setTimeout(() => setActionNotice(null), 3000);
 
       // Reset form
@@ -449,6 +488,7 @@ export default function KhoMayPage() {
         duration_months: 0,
         distributor: 'Microsoft Partner / Phân phối chính hãng',
         notes: 'Key kích hoạt kỹ thuật số chính hãng',
+        initial_keys_raw: '',
       });
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm phần mềm'));
@@ -1384,7 +1424,7 @@ export default function KhoMayPage() {
                             )}
                           </td>
 
-                          {/* Quantity In Stock */}
+                          {/* Quantity In Stock & Key Pool Count */}
                           <td className="py-3.5 px-4">
                             {editingSoftwareStockId === sw.id ? (
                               <div className="flex items-center gap-1.5">
@@ -1410,21 +1450,32 @@ export default function KhoMayPage() {
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-2">
-                                <span className={`font-bold font-mono ${sw.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
-                                  {sw.quantity_in_stock} key
-                                </span>
-                                {canEditStock() && (
-                                  <button
-                                    onClick={() => {
-                                      setEditingSoftwareStockId(sw.id);
-                                      setTempSoftwareStockValue(sw.quantity_in_stock);
-                                    }}
-                                    title="Sửa số lượng tồn"
-                                    className="px-2 py-0.5 text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
-                                  >
-                                    Sửa
-                                  </button>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`font-bold font-mono ${sw.quantity_in_stock <= 2 ? 'text-rose-600' : 'text-slate-900'}`}>
+                                    {sw.quantity_in_stock} key
+                                  </span>
+                                  {(!sw.license_keys || sw.license_keys.length === 0) && canEditStock() && (
+                                    <button
+                                      onClick={() => {
+                                        setEditingSoftwareStockId(sw.id);
+                                        setTempSoftwareStockValue(sw.quantity_in_stock);
+                                      }}
+                                      title="Sửa số lượng tồn"
+                                      className="px-2 py-0.5 text-xs text-purple-700 bg-purple-50 hover:bg-purple-100 rounded border border-purple-200"
+                                    >
+                                      Sửa
+                                    </button>
+                                  )}
+                                </div>
+                                {sw.license_keys && sw.license_keys.length > 0 && (
+                                  <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <span className="text-emerald-700 font-semibold">
+                                      {sw.license_keys.filter((k) => k.status === 'available').length}
+                                    </span>
+                                    <span>/ {sw.license_keys.length} key trong kho</span>
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -1452,15 +1503,32 @@ export default function KhoMayPage() {
 
                           {/* Actions */}
                           <td className="py-3.5 px-4 text-center">
-                            {canEditStock() && (
+                            <div className="flex items-center justify-center gap-2">
                               <button
-                                onClick={() => handleDeleteSoftware(sw.id, sw.software_name)}
-                                title="Xóa bản quyền"
-                                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
+                                onClick={() => {
+                                  setSelectedSoftwareForKeys(sw);
+                                  setKeySearchQuery('');
+                                  setKeyStatusFilter('all');
+                                  setBatchKeysInput('');
+                                  setBatchKeysNotes('');
+                                }}
+                                className="px-2.5 py-1 text-xs font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-md border border-purple-200 flex items-center gap-1 transition-colors"
+                                title="Mở danh sách và quản lý Key"
                               >
-                                Xóa
+                                <span>🔑</span>
+                                <span>Quản Lý Key ({sw.license_keys?.length || 0})</span>
                               </button>
-                            )}
+
+                              {canEditStock() && (
+                                <button
+                                  onClick={() => handleDeleteSoftware(sw.id, sw.software_name)}
+                                  title="Xóa bản quyền"
+                                  className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
+                                >
+                                  Xóa
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1480,9 +1548,6 @@ export default function KhoMayPage() {
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Nhập Máy Mới</h3>
-                <p className="text-xs text-slate-500">
-                  Người thực hiện: <span className="font-semibold text-blue-600">{currentUser.name}</span> ({currentUser.role})
-                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -1709,7 +1774,6 @@ export default function KhoMayPage() {
                 <h2 className="text-base font-bold text-slate-900">
                   Bán Máy &amp; Bàn Giao
                 </h2>
-                <p className="text-xs text-slate-500">Ghi nhận thông tin khách và kích hoạt bảo hành</p>
               </div>
               <button
                 onClick={() => setSellingItem(null)}
@@ -2226,6 +2290,36 @@ export default function KhoMayPage() {
                   />
                 </div>
 
+                {/* Batch Keys Input */}
+                <div className="md:col-span-2 bg-purple-50/50 p-3 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                      <span>🔑</span> Nhập Danh Sách Key Bản Quyền (Tùy chọn)
+                    </label>
+                    <span className="text-[11px] text-purple-600 font-medium">
+                      {newSoftware.initial_keys_raw.split('\n').filter((k) => k.trim().length > 0).length} key đã nhập
+                    </span>
+                  </div>
+                  <textarea
+                    rows={3}
+                    placeholder="Dán danh sách key bản quyền tại đây, mỗi dòng 1 key...&#10;VD: VK7JG-NPHTM-C97JM-9MPGT-3V66T&#10;Nếu nhập key tại đây, số lượng tồn kho sẽ tự động tính theo số key hợp lệ."
+                    value={newSoftware.initial_keys_raw}
+                    onChange={(e) => {
+                      const text = e.target.value;
+                      const validCount = text.split('\n').filter((k) => k.trim().length > 0).length;
+                      setNewSoftware({
+                        ...newSoftware,
+                        initial_keys_raw: text,
+                        quantity_in_stock: validCount > 0 ? validCount : newSoftware.quantity_in_stock,
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-purple-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                  />
+                  <div className="text-[11px] text-slate-500 mt-1">
+                    Mỗi dòng là 1 license key. Hệ thống sẽ lưu trữ và quản lý trạng thái từng key riêng biệt.
+                  </div>
+                </div>
+
                 {/* Notes */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -2463,6 +2557,465 @@ export default function KhoMayPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL QUẢN LÝ KEY BẢN QUYỀN */}
+      {/* ========================================================================= */}
+      {selectedSoftwareForKeys && (() => {
+        // Always get the freshest copy of the software license from store state
+        const currentSw = softwareLicenses.find((s) => s.id === selectedSoftwareForKeys.id) || selectedSoftwareForKeys;
+        const allKeys = currentSw.license_keys || [];
+        const availableCount = allKeys.filter((k) => k.status === 'available').length;
+        const usedCount = allKeys.filter((k) => k.status === 'used').length;
+        const revokedCount = allKeys.filter((k) => k.status === 'revoked').length;
+
+        // Filter keys
+        const filteredKeys = allKeys.filter((k) => {
+          const matchStatus = keyStatusFilter === 'all' ? true : k.status === keyStatusFilter;
+          const q = keySearchQuery.toLowerCase().trim();
+          const matchQuery = !q
+            ? true
+            : k.key_code.toLowerCase().includes(q) ||
+              (k.assigned_customer || '').toLowerCase().includes(q) ||
+              (k.assigned_ticket_code || '').toLowerCase().includes(q) ||
+              (k.notes || '').toLowerCase().includes(q);
+          return matchStatus && matchQuery;
+        });
+
+        const handleCopyKey = (keyItem: SoftwareKeyItem) => {
+          navigator.clipboard.writeText(keyItem.key_code);
+          setCopiedKeyId(keyItem.id);
+          setTimeout(() => setCopiedKeyId(null), 2000);
+        };
+
+        const handleAddBatchKeys = async (e: React.FormEvent) => {
+          e.preventDefault();
+          const rawLines = batchKeysInput.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
+          if (rawLines.length === 0) {
+            alert('Vui lòng nhập ít nhất 1 mã key bản quyền!');
+            return;
+          }
+          await addSoftwareKeys(currentSw.id, rawLines, batchKeysNotes);
+          setBatchKeysInput('');
+          setBatchKeysNotes('');
+          setActionNotice(`Đã thêm thành công ${rawLines.length} key vào kho!`);
+          setTimeout(() => setActionNotice(null), 3000);
+        };
+
+        return (
+          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="px-6 py-4 bg-purple-900 text-white flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🔑</span>
+                    <h3 className="text-base font-bold text-white">
+                      Kho Key Bản Quyền: {currentSw.software_name}
+                    </h3>
+                  </div>
+                  <div className="text-xs text-purple-200 mt-0.5 flex items-center gap-2">
+                    <span className="font-semibold text-white uppercase">{currentSw.license_type}</span>
+                    <span>•</span>
+                    <span>{currentSw.distributor || 'Chính hãng'}</span>
+                    <span>•</span>
+                    <span>{currentSw.duration_months === 0 ? 'Vĩnh viễn' : `${currentSw.duration_months} tháng`}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedSoftwareForKeys(null)}
+                  className="text-purple-200 hover:text-white p-1.5 rounded-lg hover:bg-purple-800 text-base font-bold transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                {/* 4 Stats Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
+                    <div className="text-[11px] font-semibold text-emerald-700">Khả Dụng (Sẵn sàng)</div>
+                    <div className="text-2xl font-black text-emerald-900 font-mono mt-0.5">{availableCount}</div>
+                    <div className="text-[10px] text-emerald-600">Sẵn sàng xuất / cài máy</div>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
+                    <div className="text-[11px] font-semibold text-amber-700">Đã Cấp / Đã Bán</div>
+                    <div className="text-2xl font-black text-amber-900 font-mono mt-0.5">{usedCount}</div>
+                    <div className="text-[10px] text-amber-600">Đã gán cho khách / máy</div>
+                  </div>
+                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl">
+                    <div className="text-[11px] font-semibold text-rose-700">Thu Hồi / Báo Lỗi</div>
+                    <div className="text-2xl font-black text-rose-900 font-mono mt-0.5">{revokedCount}</div>
+                    <div className="text-[10px] text-rose-600">Tạm khóa hoặc đổi trả</div>
+                  </div>
+                  <div className="bg-slate-100 border border-slate-200 p-3 rounded-xl">
+                    <div className="text-[11px] font-semibold text-slate-700">Tổng Số Key</div>
+                    <div className="text-2xl font-black text-slate-900 font-mono mt-0.5">{allKeys.length}</div>
+                    <div className="text-[10px] text-slate-500">Toàn bộ kho lưu trữ</div>
+                  </div>
+                </div>
+
+                {/* Batch Add Keys Section */}
+                {canEditStock() && (
+                  <form onSubmit={handleAddBatchKeys} className="bg-purple-50/60 p-4 rounded-xl border border-purple-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                        <span>➕</span> Nhập Thêm Danh Sách Key Mới Vào Kho
+                      </span>
+                      <span className="text-[11px] text-purple-700 font-medium">
+                        {batchKeysInput.split('\n').filter((l) => l.trim().length > 0).length} key sắp thêm
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="md:col-span-2">
+                        <textarea
+                          rows={2}
+                          placeholder="Dán mã key tại đây (mỗi dòng 1 key, ví dụ: VK7JG-NPHTM-C97JM-9MPGT-3V66T)..."
+                          value={batchKeysInput}
+                          onChange={(e) => setBatchKeysInput(e.target.value)}
+                          className="w-full px-3 py-2 border border-purple-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-2 flex flex-col justify-between">
+                        <input
+                          type="text"
+                          placeholder="Ghi chú lô key (VD: Lô FPT 24/09)..."
+                          value={batchKeysNotes}
+                          onChange={(e) => setBatchKeysNotes(e.target.value)}
+                          className="w-full px-3 py-1.5 border border-purple-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!batchKeysInput.trim()}
+                          className="w-full py-2 bg-purple-700 hover:bg-purple-800 disabled:bg-slate-300 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer disabled:cursor-not-allowed"
+                        >
+                          Lưu Vào Kho
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                )}
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
+                  <div className="relative w-full sm:w-72">
+                    <input
+                      type="text"
+                      placeholder="Tìm mã key, khách hàng, phiếu..."
+                      value={keySearchQuery}
+                      onChange={(e) => setKeySearchQuery(e.target.value)}
+                      className="w-full px-3 py-1.5 pr-7 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
+                    />
+                    {keySearchQuery && (
+                      <button
+                        onClick={() => setKeySearchQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-stretch sm:self-auto overflow-x-auto">
+                    {[
+                      { id: 'all', label: `Tất cả (${allKeys.length})` },
+                      { id: 'available', label: `Khả dụng (${availableCount})` },
+                      { id: 'used', label: `Đã gán (${usedCount})` },
+                      { id: 'revoked', label: `Lỗi/Khóa (${revokedCount})` },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setKeyStatusFilter(tab.id as any)}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                          keyStatusFilter === tab.id
+                            ? 'bg-white text-purple-800 shadow-xs font-bold'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Keys Table */}
+                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                          <th className="py-2.5 px-3">STT</th>
+                          <th className="py-2.5 px-3">Mã Key Bản Quyền</th>
+                          <th className="py-2.5 px-3">Trạng Thái</th>
+                          <th className="py-2.5 px-3">Thông Tin Sử Dụng</th>
+                          <th className="py-2.5 px-3">Ghi Chú</th>
+                          <th className="py-2.5 px-3 text-right">Thao Tác</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredKeys.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-8 text-center text-slate-400">
+                              Chưa có key bản quyền nào phù hợp. Hãy dán thêm key ở trên.
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredKeys.map((k, index) => {
+                            const isCopied = copiedKeyId === k.id;
+                            return (
+                              <tr key={k.id} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="py-2.5 px-3 text-slate-400 font-mono">{index + 1}</td>
+                                
+                                {/* Key Code with Copy Button */}
+                                <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
+                                  <div className="flex items-center gap-2">
+                                    <span className="tracking-wide select-all">{k.key_code}</span>
+                                    <button
+                                      onClick={() => handleCopyKey(k)}
+                                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
+                                        isCopied
+                                          ? 'bg-emerald-600 text-white'
+                                          : 'bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-purple-700 border border-slate-200 cursor-pointer'
+                                      }`}
+                                      title="Copy mã key"
+                                    >
+                                      {isCopied ? '✓ Đã copy' : 'Copy'}
+                                    </button>
+                                  </div>
+                                </td>
+
+                                {/* Status */}
+                                <td className="py-2.5 px-3">
+                                  {k.status === 'available' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                      Khả dụng
+                                    </span>
+                                  )}
+                                  {k.status === 'used' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                      Đã xuất cho khách
+                                    </span>
+                                  )}
+                                  {k.status === 'revoked' && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                                      Lỗi / Thu hồi
+                                    </span>
+                                  )}
+                                </td>
+
+                                {/* Assignment Info */}
+                                <td className="py-2.5 px-3 text-slate-700">
+                                  {k.assigned_customer ? (
+                                    <div>
+                                      <div className="font-semibold text-slate-900">{k.assigned_customer}</div>
+                                      <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
+                                        {k.assigned_ticket_code && (
+                                          <span className="font-mono text-purple-700 bg-purple-50 px-1 rounded">
+                                            {k.assigned_ticket_code}
+                                          </span>
+                                        )}
+                                        {k.assigned_at && (
+                                          <span>{new Date(k.assigned_at).toLocaleDateString('vi-VN')}</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 italic">Chưa gán</span>
+                                  )}
+                                </td>
+
+                                {/* Notes */}
+                                <td className="py-2.5 px-3 text-slate-500 text-[11px] max-w-[150px] truncate" title={k.notes}>
+                                  {k.notes || '—'}
+                                </td>
+
+                                {/* Actions */}
+                                <td className="py-2.5 px-3 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    {k.status === 'available' ? (
+                                      <button
+                                        onClick={() => {
+                                          setAssigningKeyTarget({ softwareId: currentSw.id, key: k });
+                                          setAssignCustomerName('');
+                                          setAssignTicketCode('');
+                                          setAssignNotes('');
+                                        }}
+                                        className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded border border-purple-200 font-semibold text-[11px] cursor-pointer"
+                                      >
+                                        Gán khách
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'available')}
+                                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium cursor-pointer"
+                                        title="Hoàn lại key vào kho khả dụng"
+                                      >
+                                        Trả về kho
+                                      </button>
+                                    )}
+
+                                    {k.status !== 'revoked' ? (
+                                      <button
+                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'revoked')}
+                                        className="px-2 py-1 text-amber-700 hover:bg-amber-50 rounded border border-amber-200 text-[11px] cursor-pointer"
+                                        title="Báo lỗi / Khóa key này"
+                                      >
+                                        Khóa
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'available')}
+                                        className="px-2 py-1 text-emerald-700 hover:bg-emerald-50 rounded border border-emerald-200 text-[11px] cursor-pointer"
+                                        title="Mở khóa key này"
+                                      >
+                                        Mở lại
+                                      </button>
+                                    )}
+
+                                    {canEditStock() && (
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Xóa key [${k.key_code}] khỏi kho?`)) {
+                                            deleteSoftwareKey(currentSw.id, k.id);
+                                          }
+                                        }}
+                                        className="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded border border-rose-200 text-[11px] cursor-pointer"
+                                        title="Xóa vĩnh viễn"
+                                      >
+                                        ✕
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                <span>
+                  💡 Tự động cập nhật số lượng tồn kho theo số key khả dụng. Key có thể sao chép nhanh 1 chạm khi kỹ thuật cài máy.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSoftwareForKeys(null)}
+                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-colors cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ========================================================================= */}
+      {/* MODAL GÁN KEY BẢN QUYỀN CHO KHÁCH HÀNG / PHIẾU DỊCH VỤ */}
+      {/* ========================================================================= */}
+      {assigningKeyTarget && (
+        <div className="fixed inset-0 z-60 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+            <div className="px-5 py-3.5 bg-purple-700 text-white flex items-center justify-between">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>🔑</span> Xuất &amp; Gán Key Cho Khách Hàng
+              </h4>
+              <button
+                onClick={() => setAssigningKeyTarget(null)}
+                className="text-purple-200 hover:text-white text-sm font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!assignCustomerName.trim()) {
+                  alert('Vui lòng nhập tên khách hàng!');
+                  return;
+                }
+                await assignSoftwareKey(assigningKeyTarget.softwareId, assigningKeyTarget.key.id, {
+                  customerName: assignCustomerName.trim(),
+                  ticketCode: assignTicketCode.trim() || undefined,
+                  notes: assignNotes.trim() || undefined,
+                });
+                setActionNotice(`Đã xuất key [${assigningKeyTarget.key.key_code}] cho khách [${assignCustomerName}]!`);
+                setTimeout(() => setActionNotice(null), 3000);
+                setAssigningKeyTarget(null);
+              }}
+              className="p-5 space-y-3.5 text-xs"
+            >
+              <div className="bg-purple-50 p-2.5 rounded-lg border border-purple-200 font-mono text-purple-900 font-bold select-all">
+                {assigningKeyTarget.key.key_code}
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tên Khách Hàng / Công Ty *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="VD: Anh Minh - Cty Xây Dựng Long An"
+                  value={assignCustomerName}
+                  onChange={(e) => setAssignCustomerName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Mã Phiếu Dịch Vụ / Sửa Chữa (Nếu có)
+                </label>
+                <input
+                  type="text"
+                  placeholder="VD: #TK-2025-0590 hoặc Đơn Hàng #012"
+                  value={assignTicketCode}
+                  onChange={(e) => setAssignTicketCode(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Ghi Chú Kích Hoạt / Thiết Bị Cài Đặt
+                </label>
+                <input
+                  type="text"
+                  placeholder="VD: Kích hoạt trên laptop Dell Latitude 5420..."
+                  value={assignNotes}
+                  onChange={(e) => setAssignNotes(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setAssigningKeyTarget(null)}
+                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800 font-medium cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg transition-colors cursor-pointer"
+                >
+                  Xác Nhận Xuất Key
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

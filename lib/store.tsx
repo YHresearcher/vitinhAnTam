@@ -10,6 +10,7 @@ import {
   InventoryItem,
   SparePart,
   SoftwareLicense,
+  SoftwareKeyItem,
   ServiceTicket,
   OnsiteDispatch,
   ShiftLog,
@@ -40,6 +41,10 @@ import {
 
 
 export interface SystemSettings {
+  logoUrl?: string;
+  logoDisplayMode?: 'icon_with_text' | 'image_only';
+  faviconUrl?: string;
+  brandSlogan?: string;
   hotline: string;
   zaloNumber: string;
   zaloLink: string;
@@ -60,21 +65,25 @@ export interface SystemSettings {
 }
 
 export const initialSystemSettings: SystemSettings = {
+  logoUrl: '',
+  logoDisplayMode: 'icon_with_text',
+  faviconUrl: '',
+  brandSlogan: 'Bán bằng tâm để bạn an tâm',
   hotline: '0909.053.058',
   zaloNumber: '0909053058',
   zaloLink: 'https://zalo.me/0909053058',
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
   email: 'lienhe@vitinhantham.vn',
-  address: '45 Nguyễn Huệ, Phường 1, Tân An, Long An',
-  streetAddress: '45 Nguyễn Huệ, Phường 1',
-  district: 'Tân An',
-  city: 'Long An',
-  serviceAreas: 'Tân An, Thủ Thừa, Châu Thành, Tân Trụ',
-  workingHoursWeekday: '08h00 - 17h30 (Cứu hộ ưu tiên: 17h30 - 21h00)',
+  address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
+  streetAddress: '52 Nguyễn Cửu Vân',
+  district: 'P. Long An',
+  city: 'Tây Ninh',
+  serviceAreas: 'Khu vực địa phương & các vùng lân cận',
+  workingHoursWeekday: '08h00 - 17h30 (Hỗ trợ linh hoạt: 17h30 - 21h00)',
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',
-  footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn nồi đồng cối đá Dell, HP, ThinkPad & dịch vụ cứu hộ, bảo hành hỏa tốc trong 2 giờ (<5km Tân An).',
+  footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 };
@@ -166,6 +175,10 @@ interface StoreContextType {
   addSoftwareLicense: (item: Omit<SoftwareLicense, 'id'>) => Promise<SoftwareLicense>;
   updateSoftwareLicense: (id: string, data: Partial<SoftwareLicense>) => Promise<boolean>;
   deleteSoftwareLicense: (id: string) => Promise<boolean>;
+  addSoftwareKeys: (softwareId: string, keys: string[], notes?: string) => Promise<boolean>;
+  assignSoftwareKey: (softwareId: string, keyId: string, info: { customerName: string; ticketCode?: string; notes?: string }) => Promise<boolean>;
+  updateSoftwareKeyStatus: (softwareId: string, keyId: string, status: SoftwareKeyItem['status'], notes?: string) => Promise<boolean>;
+  deleteSoftwareKey: (softwareId: string, keyId: string) => Promise<boolean>;
 
   // Ticket actions
   addServiceTicket: (ticket: Omit<ServiceTicket, 'id' | 'created_at'>) => Promise<ServiceTicket>;
@@ -547,6 +560,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (savedReqs) setKeyReleaseRequests(JSON.parse(savedReqs));
         if (savedTpl) setKeyEmailTemplate(JSON.parse(savedTpl));
 
+        const savedSettings = localStorage.getItem('vtat_system_settings_v2');
+        if (savedSettings) {
+          try {
+            const parsed = JSON.parse(savedSettings);
+            setSystemSettings((prev) => ({ ...prev, ...parsed }));
+          } catch (e) {
+            console.warn('Failed to parse saved system settings', e);
+          }
+        }
+
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
           setCurrentLang(savedLang);
@@ -767,6 +790,116 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  // Remote: Software Keys Management
+  const addSoftwareKeys = async (softwareId: string, keys: string[], notes?: string): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    const cleanKeys = keys.map((k) => k.trim()).filter((k) => k.length > 0);
+    if (cleanKeys.length === 0) return false;
+
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const existingKeys = item.license_keys || [];
+        const newKeyItems: SoftwareKeyItem[] = cleanKeys.map((k, idx) => ({
+          id: `key-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+          key_code: k,
+          status: 'available' as const,
+          notes: notes || undefined,
+        }));
+        const updatedKeys = [...existingKeys, ...newKeyItems];
+        return {
+          ...item,
+          license_keys: updatedKeys,
+          quantity_in_stock: updatedKeys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const assignSoftwareKey = async (
+    softwareId: string,
+    keyId: string,
+    info: { customerName: string; ticketCode?: string; notes?: string }
+  ): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).map((k) => {
+          if (k.id !== keyId) return k;
+          return {
+            ...k,
+            status: 'used' as const,
+            assigned_customer: info.customerName,
+            assigned_ticket_code: info.ticketCode || undefined,
+            assigned_at: new Date().toISOString(),
+            notes: info.notes ? (k.notes ? `${k.notes} | ${info.notes}` : info.notes) : k.notes,
+          };
+        });
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const updateSoftwareKeyStatus = async (
+    softwareId: string,
+    keyId: string,
+    status: SoftwareKeyItem['status'],
+    notes?: string
+  ): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).map((k) => {
+          if (k.id !== keyId) return k;
+          return {
+            ...k,
+            status,
+            notes: notes ? (k.notes ? `${k.notes} | ${notes}` : notes) : k.notes,
+            ...(status === 'available' ? { assigned_customer: undefined, assigned_ticket_code: undefined, assigned_at: undefined } : {}),
+          };
+        });
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
+  const deleteSoftwareKey = async (softwareId: string, keyId: string): Promise<boolean> => {
+    if (!canEditStock()) return false;
+    setSoftwareLicenses((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== softwareId) return item;
+        const keys = (item.license_keys || []).filter((k) => k.id !== keyId);
+        return {
+          ...item,
+          license_keys: keys,
+          quantity_in_stock: keys.filter((k) => k.status === 'available').length,
+        };
+      });
+      saveToLocal(STORAGE_KEYS.softwareLicenses, next);
+      return next;
+    });
+    return true;
+  };
+
   // ==========================================
   // WINDOWS & OFFICE KEY MANAGEMENT & RELEASE
   // ==========================================
@@ -893,23 +1026,30 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
     const cat = keyCategories.find((c) => c.id === data.category_id);
     if (!cat) {
-      return { success: false, message: 'Không tìm thấy phân loại key được chọn!' };
+      return { success: false, message: 'Phân loại key không tồn tại!' };
     }
 
-    const reqCode = `REQ-KEY-${Math.floor(1000 + Math.random() * 9000)}`;
+    const availableKey = licenseKeys.find(
+      (k) => k.category_id === data.category_id && k.status === 'available'
+    );
+    if (!availableKey) {
+      return {
+        success: false,
+        message: `Hết key trong kho cho danh mục "${cat.name}". Vui lòng báo Admin nhập thêm key!`,
+      };
+    }
+
     const newReq: KeyReleaseRequest = {
       id: `req-${Date.now()}`,
-      request_code: reqCode,
-      requester_id: currentUser.id,
-      requester_name: currentUser.name,
-      requester_role: currentUser.role,
+      request_code: `REL-${Math.floor(1000 + Math.random() * 9000)}`,
       customer_name: data.customer_name.trim(),
       customer_phone: data.customer_phone.trim(),
       customer_email: email,
-      category_id: cat.id,
+      category_id: data.category_id,
       category_name: cat.name,
+      requester_name: currentUser.name,
+      requester_role: currentUser.role,
       status: 'pending',
-      faulty_history: [],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -920,7 +1060,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
 
-    return { success: true, message: `Đã gửi yêu cầu cấp key ${reqCode} đến Admin thành công!`, request: newReq };
+    return {
+      success: true,
+      message: `Đã tạo yêu cầu cấp key [${newReq.request_code}]. Đang chờ Admin phê duyệt qua popup!`,
+      request: newReq,
+    };
   };
 
   const approveKeyReleaseRequest = async (
@@ -929,45 +1073,141 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   ): Promise<{ success: boolean; message: string; key?: LicenseKeyItem }> => {
     const req = keyReleaseRequests.find((r) => r.id === requestId);
     if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+    if (req.status !== 'pending' && req.status !== 'auto_re_requested') {
+      return { success: false, message: `Yêu cầu này đã ở trạng thái [${req.status}], không thể duyệt lại!` };
+    }
 
-    // Find available key in inventory
     const availableKey = licenseKeys.find(
       (k) => k.category_id === req.category_id && k.status === 'available'
     );
-
     if (!availableKey) {
       return {
         success: false,
-        message: `Kho hiện không còn key khả dụng cho ${req.category_name}. Vui lòng nhập thêm key vào kho!`,
+        message: `Trong kho đã hết key sẵn sàng cho danh mục "${req.category_name}". Vui lòng nhập thêm key vào kho!`,
       };
     }
 
-    // Mark key as reserved
-    const updatedKey: LicenseKeyItem = {
+    // Mark key as assigned
+    const assignedKey: LicenseKeyItem = {
       ...availableKey,
-      status: 'reserved',
-      release_request_id: req.id,
-      customer_name: req.customer_name,
-      customer_phone: req.customer_phone,
-      customer_email: req.customer_email,
+      status: 'assigned',
+      assigned_to_customer: req.customer_name,
+      assigned_to_phone: req.customer_phone,
+      assigned_at: new Date().toISOString(),
+      request_id: req.id,
     };
 
     setLicenseKeys((prev) => {
-      const next = prev.map((k) => (k.id === availableKey.id ? updatedKey : k));
+      const next = prev.map((k) => (k.id === availableKey.id ? assignedKey : k));
       saveToLocal(STORAGE_KEYS.licenseKeys, next);
       return next;
     });
 
-    // Update request status to approved
+    // Update request
+    const approvedReq: KeyReleaseRequest = {
+      ...req,
+      status: 'approved_waiting_test',
+      released_key_id: assignedKey.id,
+      released_key_code: assignedKey.license_code,
+      approved_by_admin: currentUser.name,
+      approved_at: new Date().toISOString(),
+      admin_note: adminNote || req.admin_note,
+      updated_at: new Date().toISOString(),
+    };
+
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) => (r.id === req.id ? approvedReq : r));
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Đã duyệt cấp key thành công! Key đã hiển thị cho kỹ thuật/sales kiểm tra kích hoạt.`,
+      key: assignedKey,
+    };
+  };
+
+  const confirmKeyActive = async (requestId: string): Promise<{ success: boolean; message: string }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+    if (!req.released_key_id) return { success: false, message: 'Yêu cầu chưa có key được cấp!' };
+
+    // 1. Mark key as used
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) =>
+        k.id === req.released_key_id
+          ? {
+              ...k,
+              status: 'used' as const,
+            }
+          : k
+      );
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    // 2. Simulate sending email to customer
+    const emailSentTime = new Date().toISOString();
+
+    // 3. Mark request as active_confirmed
     setKeyReleaseRequests((prev) => {
       const next = prev.map((r) =>
         r.id === requestId
           ? {
               ...r,
-              status: 'approved' as const,
-              assigned_key_id: availableKey.id,
-              assigned_key_code: availableKey.license_code,
-              admin_note: adminNote || r.admin_note,
+              status: 'active_confirmed' as const,
+              email_sent: true,
+              email_sent_at: emailSentTime,
+              updated_at: emailSentTime,
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Key đã được xác nhận HOẠT ĐỘNG! Hệ thống đã gửi email bàn giao key bản quyền đến [${req.customer_email}].`,
+    };
+  };
+
+  const reportKeyFaulty = async (
+    requestId: string,
+    reason: string
+  ): Promise<{ success: boolean; message: string }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+    if (!req.released_key_id) return { success: false, message: 'Yêu cầu chưa có key được cấp!' };
+
+    // 1. Mark faulty key
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) =>
+        k.id === req.released_key_id
+          ? {
+              ...k,
+              status: 'faulty' as const,
+              notes: `Key lỗi: ${reason} (Báo cáo bởi ${currentUser.name})`,
+            }
+          : k
+      );
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    // 2. Update request and trigger auto re-request to Admin
+    const prevKey = req.released_key_code;
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'auto_re_requested' as const,
+              faulty_reason: reason,
+              admin_note: `Key trước (${prevKey}) không hoạt động: "${reason}". Hệ thống tự động yêu cầu cấp key mới.`,
+              released_key_id: undefined,
+              released_key_code: undefined,
               updated_at: new Date().toISOString(),
             }
           : r
@@ -978,106 +1218,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     return {
       success: true,
-      message: `Admin đã duyệt yêu cầu. Key ${availableKey.license_code} đã được cấp cho ${req.requester_name}!`,
-      key: updatedKey,
-    };
-  };
-
-  const confirmKeyActive = async (requestId: string): Promise<{ success: boolean; message: string }> => {
-    const req = keyReleaseRequests.find((r) => r.id === requestId);
-    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
-    if (!req.assigned_key_id) return { success: false, message: 'Yêu cầu chưa được gán key!' };
-
-    const nowIso = new Date().toISOString();
-
-    // 1. Mark key as activated
-    setLicenseKeys((prev) => {
-      const next = prev.map((k) =>
-        k.id === req.assigned_key_id
-          ? {
-              ...k,
-              status: 'activated' as const,
-              activated_at: nowIso,
-            }
-          : k
-      );
-      saveToLocal(STORAGE_KEYS.licenseKeys, next);
-      return next;
-    });
-
-    // 2. Mark request as activated and trigger email sending
-    setKeyReleaseRequests((prev) => {
-      const next = prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: 'activated' as const,
-              email_sent: true,
-              email_sent_at: nowIso,
-              updated_at: nowIso,
-            }
-          : r
-      );
-      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
-      return next;
-    });
-
-    return {
-      success: true,
-      message: `Đã xác nhận key hoạt động thành công! Hệ thống đã gửi email bàn giao key đến ${req.customer_email}.`,
-    };
-  };
-
-  const reportKeyFaulty = async (requestId: string, reason: string): Promise<{ success: boolean; message: string }> => {
-    const req = keyReleaseRequests.find((r) => r.id === requestId);
-    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
-    if (!req.assigned_key_id) return { success: false, message: 'Yêu cầu chưa có key được gán!' };
-
-    const nowIso = new Date().toISOString();
-    const failedKeyCode = req.assigned_key_code || 'N/A';
-
-    // 1. Mark current key as faulty
-    setLicenseKeys((prev) => {
-      const next = prev.map((k) =>
-        k.id === req.assigned_key_id
-          ? {
-              ...k,
-              status: 'faulty' as const,
-              faulty_reason: reason,
-            }
-          : k
-      );
-      saveToLocal(STORAGE_KEYS.licenseKeys, next);
-      return next;
-    });
-
-    // 2. Append to faulty history and reset assigned key, set status to 'faulty_re_requesting'
-    const newFaultyItem = {
-      key_code: failedKeyCode,
-      reason: reason.trim() || 'Key không kích hoạt được',
-      timestamp: nowIso,
-    };
-
-    setKeyReleaseRequests((prev) => {
-      const next = prev.map((r) =>
-        r.id === requestId
-          ? {
-              ...r,
-              status: 'faulty_re_requesting' as const,
-              assigned_key_id: undefined,
-              assigned_key_code: undefined,
-              faulty_history: [...(r.faulty_history || []), newFaultyItem],
-              updated_at: nowIso,
-            }
-          : r
-      );
-      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
-      return next;
-    });
-
-    return {
-      success: true,
-      message: 'Đã ghi nhận key lỗi vào lịch sử. Hệ thống đã tự động gửi yêu cầu cấp key mới đến Admin!',
+      message: `Key lỗi đã được ghi nhận vào kho. Hệ thống đã tự động gửi yêu cầu cấp key mới đến Admin!`,
     };
   };
 
@@ -1107,7 +1248,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
     return true;
   };
-
 
   // Ticket actions
   const addServiceTicket = async (ticketData: Omit<ServiceTicket, 'id' | 'created_at'>): Promise<ServiceTicket> => {
@@ -1474,6 +1614,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         reportKeyFaulty,
         rejectKeyReleaseRequest,
         updateKeyEmailTemplate,
+        addSoftwareKeys,
+        assignSoftwareKey,
+        updateSoftwareKeyStatus,
+        deleteSoftwareKey,
         onsiteDispatches,
         shiftLogs,
         faqs,

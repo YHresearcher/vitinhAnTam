@@ -16,7 +16,7 @@ export default function DashboardPage() {
   } = useViTinhAnTamStore();
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
-  const [cashflowTimeframe, setCashflowTimeframe] = useState<'7d' | '30d' | '6m'>('7d');
+  const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('week');
   const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
   const [activeListTab, setActiveListTab] = useState<'tickets' | 'onsite' | 'qc'>('tickets');
 
@@ -61,32 +61,51 @@ export default function DashboardPage() {
   // THỐNG KÊ DÒNG TIỀN (CASH FLOW DATA)
   // ==========================================
   const cashflowData = useMemo(() => {
-    if (cashflowTimeframe === '7d') {
-      return [
-        { label: 'T2', income: 4200000, expense: 1800000, date: '17/09' },
-        { label: 'T3', income: 6800000, expense: 2500000, date: '18/09' },
-        { label: 'T4', income: 5100000, expense: 1200000, date: '19/09' },
-        { label: 'T5', income: 9400000, expense: 3800000, date: '20/09' },
-        { label: 'T6', income: 7300000, expense: 2100000, date: '21/09' },
-        { label: 'T7', income: 11200000, expense: 4500000, date: '22/09' },
-        { label: 'CN', income: 8900000, expense: 2300000, date: '23/09' },
-      ];
-    } else if (cashflowTimeframe === '30d') {
-      return [
-        { label: 'Tuần 1', income: 28500000, expense: 11200000, date: '01-07' },
-        { label: 'Tuần 2', income: 34200000, expense: 14500000, date: '08-14' },
-        { label: 'Tuần 3', income: 39800000, expense: 16100000, date: '15-21' },
-        { label: 'Tuần 4', income: 32600000, expense: 12800000, date: '22-28' },
-      ];
-    } else {
-      return [
-        { label: 'Thg 4', income: 88000000, expense: 38000000, date: 'T04' },
-        { label: 'Thg 5', income: 96500000, expense: 42000000, date: 'T05' },
-        { label: 'Thg 6', income: 104000000, expense: 45000000, date: 'T06' },
-        { label: 'Thg 7', income: 118000000, expense: 51000000, date: 'T07' },
-        { label: 'Thg 8', income: 125000000, expense: 53000000, date: 'T08' },
-        { label: 'Thg 9', income: 135100000, expense: 58200000, date: 'T09' },
-      ];
+    switch (cashflowTimeframe) {
+      case 'day':
+        return [
+          { label: '08:00', income: 1200000, expense: 450000, date: '08:00' },
+          { label: '10:00', income: 3800000, expense: 1200000, date: '10:00' },
+          { label: '12:00', income: 2400000, expense: 800000, date: '12:00' },
+          { label: '14:00', income: 5900000, expense: 2100000, date: '14:00' },
+          { label: '16:00', income: 8400000, expense: 3200000, date: '16:00' },
+          { label: '18:00', income: 6700000, expense: 1900000, date: '18:00' },
+          { label: '20:00', income: 3500000, expense: 950000, date: '20:00' },
+        ];
+      case 'week':
+        return [
+          { label: 'T2', income: 4200000, expense: 1800000, date: 'T2' },
+          { label: 'T3', income: 6800000, expense: 2500000, date: 'T3' },
+          { label: 'T4', income: 5100000, expense: 1200000, date: 'T4' },
+          { label: 'T5', income: 9400000, expense: 3800000, date: 'T5' },
+          { label: 'T6', income: 7300000, expense: 2100000, date: 'T6' },
+          { label: 'T7', income: 11200000, expense: 4500000, date: 'T7' },
+          { label: 'CN', income: 8900000, expense: 2300000, date: 'CN' },
+        ];
+      case 'month':
+        return [
+          { label: 'Tuần 1', income: 28500000, expense: 11200000, date: '01-07' },
+          { label: 'Tuần 2', income: 34200000, expense: 14500000, date: '08-14' },
+          { label: 'Tuần 3', income: 39800000, expense: 16100000, date: '15-21' },
+          { label: 'Tuần 4', income: 32600000, expense: 12800000, date: '22-28' },
+        ];
+      case 'quarter':
+        return [
+          { label: 'Quý 1', income: 268000000, expense: 115000000, date: 'Q1' },
+          { label: 'Quý 2', income: 312000000, expense: 138000000, date: 'Q2' },
+          { label: 'Quý 3', income: 385000000, expense: 162000000, date: 'Q3' },
+          { label: 'Quý 4', income: 420000000, expense: 179000000, date: 'Q4' },
+        ];
+      case 'year':
+        return [
+          { label: '2022', income: 820000000, expense: 390000000, date: '2022' },
+          { label: '2023', income: 1050000000, expense: 480000000, date: '2023' },
+          { label: '2024', income: 1320000000, expense: 590000000, date: '2024' },
+          { label: '2025', income: 1580000000, expense: 690000000, date: '2025' },
+          { label: '2026', income: 1890000000, expense: 780000000, date: '2026' },
+        ];
+      default:
+        return [];
     }
   }, [cashflowTimeframe]);
 
@@ -140,9 +159,6 @@ export default function DashboardPage() {
               Admin
             </span>
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Theo dõi dòng tiền thu chi, phân bổ thiết bị kho và tiến độ vận hành.
-          </p>
         </div>
 
         {/* Quick action buttons */}
@@ -255,26 +271,33 @@ export default function DashboardPage() {
                 <h2 className="text-sm font-bold text-slate-900">
                   Biểu Đồ Dòng Tiền &amp; Doanh Thu
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  So sánh dòng tiền thu vào (doanh số, sửa chữa) và dòng tiền chi ra (nhập linh kiện, máy).
-                </p>
               </div>
 
-              {/* Timeframe switch */}
-              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg self-start sm:self-auto">
-                {(['7d', '30d', '6m'] as const).map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setCashflowTimeframe(t)}
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
-                      cashflowTimeframe === t
-                        ? 'bg-white text-blue-700 shadow-2xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {t === '7d' ? '7 Ngày' : t === '30d' ? '30 Ngày' : '6 Tháng'}
-                  </button>
-                ))}
+              {/* Timeframe switch - Stock trading button style */}
+              <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-lg border border-slate-200/80 shadow-2xs self-start sm:self-auto">
+                {[
+                  { key: 'day', label: 'Ngày' },
+                  { key: 'week', label: 'Tuần' },
+                  { key: 'month', label: 'Tháng' },
+                  { key: 'quarter', label: 'Quý' },
+                  { key: 'year', label: 'Năm' },
+                ].map(({ key, label }) => {
+                  const isActive = cashflowTimeframe === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setCashflowTimeframe(key as typeof cashflowTimeframe)}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-2xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -340,7 +363,12 @@ export default function DashboardPage() {
                     {/* Horizontal Grid lines */}
                     {[0, 0.33, 0.66, 1].map((ratio, idx) => {
                       const y = padTop + plotH - ratio * plotH;
-                      const val = (ratio * maxVal) / 1000000;
+                      const rawVal = ratio * maxVal;
+                      const labelText =
+                        rawVal >= 1000000000
+                          ? `${(rawVal / 1000000000).toFixed(1)}Tỷ`
+                          : `${(rawVal / 1000000).toFixed(0)}Tr`;
+
                       return (
                         <g key={idx}>
                           <line
@@ -360,7 +388,7 @@ export default function DashboardPage() {
                             fill="#94a3b8"
                             fontFamily="sans-serif"
                           >
-                            {val.toFixed(0)}Tr
+                            {labelText}
                           </text>
                         </g>
                       );
@@ -497,9 +525,6 @@ export default function DashboardPage() {
                 <h2 className="text-sm font-bold text-slate-900">
                   Cơ Cấu Thiết Bị Kho
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Phân bổ trạng thái kiểm định và chủng loại máy trong hệ thống.
-                </p>
               </div>
               <span className="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
                 Tổng: {deviceStats.total}

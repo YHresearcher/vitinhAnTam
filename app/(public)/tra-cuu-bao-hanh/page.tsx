@@ -4,14 +4,14 @@ import WarrantyLookupPage from './TraCuuClient';
 export const metadata: Metadata = {
   title: 'Tra Cứu Bảo Hành Theo Service Tag',
   description:
-    'Nhập mã Service Tag hoặc số điện thoại để tra cứu tình trạng bảo hành máy tính tại Vi Tính An Tâm. Bảo hành 1 đổi 1 hỏa tốc trong 2 giờ tại Tân An, Long An.',
+    'Nhập mã Service Tag hoặc số điện thoại để tra cứu tình trạng bảo hành máy tính tại Vi Tính An Tâm. Thông tin rõ ràng, hỗ trợ chu đáo.',
   alternates: {
     canonical: '/tra-cuu-bao-hanh',
   },
   openGraph: {
     title: 'Tra Cứu Bảo Hành — Vi Tính An Tâm',
     description:
-      'Tra cứu nhanh tình trạng bảo hành máy tính bằng Service Tag hoặc số điện thoại. Bảo hành 1 đổi 1 hỏa tốc.',
+      'Tra cứu nhanh tình trạng bảo hành máy tính bằng Service Tag hoặc số điện thoại. Hỗ trợ kỹ thuật nhanh chóng.',
     url: 'https://vitinhantham.vn/tra-cuu-bao-hanh',
     images: [
       {

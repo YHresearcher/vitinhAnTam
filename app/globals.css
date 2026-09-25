@@ -38,6 +38,10 @@
   --color-footer-ember: #1C130E;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #FAF7F2;
   color: #2B1810;

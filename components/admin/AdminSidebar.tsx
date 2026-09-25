@@ -76,7 +76,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     <div className="flex flex-col justify-between h-full bg-white font-sans">
       <div className="flex flex-col">
         {/* Header Branding */}
-        <div className="h-16 px-6 flex items-center justify-between border-b border-slate-100">
+        <div className="min-h-[72px] py-2 px-4 flex items-center justify-between border-b border-slate-100">
           <Link href="/dashboard" onClick={onCloseMobile}>
             <Logo />
           </Link>

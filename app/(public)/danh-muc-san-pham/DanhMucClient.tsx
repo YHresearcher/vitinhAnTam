@@ -238,10 +238,10 @@ function ProductsCatalogContent() {
                 <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
                   {t.products.tabInStock}
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">({filteredInStock.length} máy)</span>
+                <span className="text-xs text-slate-500 font-medium">({filteredInStock.length} {isEn ? 'units' : 'máy'})</span>
               </div>
               <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full font-medium">
-                {isEn ? 'Immediate dispatch in Tan An' : 'Sẵn sàng giao hỏa tốc < 2h'}
+                {isEn ? 'Ready for fast handover' : 'Sẵn sàng bàn giao nhanh'}
               </span>
             </div>
 
@@ -331,7 +331,7 @@ function ProductsCatalogContent() {
                           <span>{t.products.btnInspect}</span>
                         </button>
                         <Link
-                          href={`/dat-lich?device=${encodeURIComponent(prod.name)}&service=${encodeURIComponent(isEn ? 'Order In-Stock Computer' : 'Đặt mua máy có sẵn')}`}
+                          href={`/mua-hang?device=${encodeURIComponent(prod.name)}&price=${prod.price}&tag=${encodeURIComponent(prod.serviceTag)}`}
                           className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
                         >
                           <span>{t.products.btnOrder}</span>
@@ -355,7 +355,7 @@ function ProductsCatalogContent() {
                 <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
                   {t.products.tabSold}
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">({filteredSold.length} thiết bị lưu trữ)</span>
+                <span className="text-xs text-slate-500 font-medium">({filteredSold.length} {isEn ? 'records' : 'thiết bị lưu trữ'})</span>
               </div>
               <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-full font-medium">
                 {isEn ? 'Transparency warranty archives' : 'Minh bạch hồ sơ bàn giao & bảo hành'}
@@ -453,7 +453,7 @@ function ProductsCatalogContent() {
                         <Link
                           href={`/tra-cuu-bao-hanh?tag=${encodeURIComponent(prod.serviceTag)}`}
                           className="flex-1 py-2.5 rounded-lg border border-slate-300 hover:bg-white text-slate-800 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 font-mono"
-                          title="Xem lịch sử bảo hành thiết bị này"
+                          title={isEn ? "View warranty history of this device" : "Xem lịch sử bảo hành thiết bị này"}
                         >
                           <Search className="w-3.5 h-3.5 text-slate-600" />
                           <span>{t.products.btnLookupWarranty}</span>
@@ -609,7 +609,7 @@ function ProductsCatalogContent() {
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link
-                  href={`/dat-lich?device=${encodeURIComponent(selectedProduct.name)}&service=${encodeURIComponent(isEn ? 'Order In-Stock Computer' : 'Đặt mua máy có sẵn')}`}
+                  href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}&tag=${encodeURIComponent(selectedProduct.serviceTag)}`}
                   onClick={() => setSelectedProduct(null)}
                   className="flex-1 py-3 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
                 >
@@ -636,7 +636,7 @@ function ProductsCatalogContent() {
 
 export default function ProductsCatalogPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center text-xs text-slate-500">Đang tải danh mục...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center text-xs text-slate-500">Loading catalog...</div>}>
       <ProductsCatalogContent />
     </Suspense>
   );

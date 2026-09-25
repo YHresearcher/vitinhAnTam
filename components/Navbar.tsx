@@ -16,10 +16,28 @@ export function Navbar() {
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'].navbar;
 
+  const handleScrollToAnchor = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      const element = document.getElementById(targetId);
+      if (element) {
+        const headerOffset = 70;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        });
+        window.history.pushState(null, '', `/#${targetId}`);
+      }
+    }
+  };
+
   return (
     <header className="sticky top-0 w-full z-50 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E8E2D9] shadow-xs">
       {/* Main Header */}
-      <div className="h-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+      <div className="min-h-[64px] sm:min-h-[72px] py-1.5 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* Logo with Slogan */}
         <div className="flex items-center gap-2.5">
           <Link href="/" className="shrink-0">
@@ -27,15 +45,15 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1" aria-label="Menu chính">
+        {/* Desktop Navigation - Tăng kích thước chữ từng hạng mục */}
+        <nav className="hidden md:flex items-center gap-1.5" aria-label="Menu chính">
           <Link
             href="/"
             aria-current={pathname === '/' ? 'page' : undefined}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
               pathname === '/'
-                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
-                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
+                ? 'bg-[#FBE8DE] text-[#C0392B]'
+                : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.home}
@@ -43,10 +61,10 @@ export function Navbar() {
           <Link
             href="/vi-sao-chon-an-tam"
             aria-current={pathname === '/vi-sao-chon-an-tam' ? 'page' : undefined}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
               pathname === '/vi-sao-chon-an-tam'
-                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
-                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
+                ? 'bg-[#FBE8DE] text-[#C0392B]'
+                : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.whyUs}
@@ -54,23 +72,25 @@ export function Navbar() {
           <Link
             href="/danh-muc-san-pham"
             aria-current={pathname === '/danh-muc-san-pham' ? 'page' : undefined}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
               pathname === '/danh-muc-san-pham'
-                ? 'bg-[#FBE8DE] text-[#C0392B] font-bold'
-                : 'text-[#6E5D53] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
+                ? 'bg-[#FBE8DE] text-[#C0392B]'
+                : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
             }`}
           >
             {t.products}
           </Link>
           <Link
             href="/#dich-vu-spa"
-            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            onClick={(e) => handleScrollToAnchor(e, 'dich-vu-spa')}
+            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.services}
           </Link>
           <Link
             href="/#chinh-sach"
-            className="text-xs font-medium text-[#6E5D53] hover:text-[#C0392B] px-3 py-1.5 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            onClick={(e) => handleScrollToAnchor(e, 'chinh-sach')}
+            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.contact}
           </Link>
@@ -79,11 +99,11 @@ export function Navbar() {
         {/* Right CTAs */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Language Switcher Vi / En */}
-          <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-0.5 text-[11px] font-bold">
+          <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-0.5 text-xs font-bold">
             <button
               type="button"
               onClick={() => setLang('vi')}
-              className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${
                 !isEn
                   ? 'bg-[#C0392B] text-white shadow-xs'
                   : 'text-[#6E5D53] hover:text-[#C0392B]'
@@ -96,7 +116,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setLang('en')}
-              className={`px-2 py-0.5 rounded-md transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-md transition-all flex items-center gap-1 ${
                 isEn
                   ? 'bg-[#C0392B] text-white shadow-xs'
                   : 'text-[#6E5D53] hover:text-[#C0392B]'
@@ -159,7 +179,7 @@ export function Navbar() {
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+            className={`block px-3.5 py-2.5 text-base font-bold rounded-lg ${
               pathname === '/' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
             }`}
           >
@@ -168,7 +188,7 @@ export function Navbar() {
           <Link
             href="/vi-sao-chon-an-tam"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+            className={`block px-3.5 py-2.5 text-base font-bold rounded-lg ${
               pathname === '/vi-sao-chon-an-tam' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
             }`}
           >
@@ -177,7 +197,7 @@ export function Navbar() {
           <Link
             href="/danh-muc-san-pham"
             onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3 py-2 text-sm font-semibold rounded-lg ${
+            className={`block px-3.5 py-2.5 text-base font-bold rounded-lg ${
               pathname === '/danh-muc-san-pham' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
             }`}
           >
@@ -185,15 +205,21 @@ export function Navbar() {
           </Link>
           <Link
             href="/#dich-vu-spa"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
+            onClick={(e) => {
+              handleScrollToAnchor(e, 'dich-vu-spa');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block px-3.5 py-2.5 text-base font-bold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.services}
           </Link>
           <Link
             href="/#chinh-sach"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block px-3 py-2 text-sm font-semibold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
+            onClick={(e) => {
+              handleScrollToAnchor(e, 'chinh-sach');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block px-3.5 py-2.5 text-base font-bold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.contact}
           </Link>

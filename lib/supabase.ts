@@ -158,6 +158,16 @@ export interface SparePart {
   notes?: string;
 }
 
+export interface SoftwareKeyItem {
+  id: string;
+  key_code: string;                          // Chuỗi mã key (VD: W269N-WFGWX-YVC9B-4J6C9-T83GX)
+  status: 'available' | 'used' | 'revoked'; // Sẵn sàng | Đã kích hoạt/bàn giao | Đã thu hồi/lỗi
+  assigned_customer?: string;                // Khách hàng nhận key
+  assigned_ticket_code?: string;             // Phiếu sửa chữa / đơn hàng liên kết
+  assigned_at?: string;                      // Ngày giờ xuất key
+  notes?: string;                            // Ghi chú riêng
+}
+
 export interface SoftwareLicense {
   id: string;
   software_name: string;
@@ -169,6 +179,7 @@ export interface SoftwareLicense {
   duration_months?: number;  // 0 = Vĩnh viễn (Lifetime), 12, 24, 36 tháng
   distributor?: string;
   notes?: string;
+  license_keys?: SoftwareKeyItem[]; // Bể chứa key (Key Pool) chi tiết
 }
 
 export interface KeyCategory {
@@ -185,13 +196,18 @@ export interface LicenseKeyItem {
   category_id: string;
   category_name: string;
   license_code: string; // XXXXX-XXXXX-XXXXX-XXXXX-XXXXX
-  status: 'available' | 'reserved' | 'activated' | 'faulty';
+  status: 'available' | 'reserved' | 'assigned' | 'activated' | 'used' | 'faulty';
   customer_name?: string;
   customer_phone?: string;
   customer_email?: string;
+  assigned_to_customer?: string;
+  assigned_to_phone?: string;
+  assigned_at?: string;
+  request_id?: string;
   faulty_reason?: string;
   release_request_id?: string;
   unit_price?: number;
+  notes?: string;
   created_at: string;
   activated_at?: string;
 }
@@ -199,7 +215,7 @@ export interface LicenseKeyItem {
 export interface KeyReleaseRequest {
   id: string;
   request_code: string; // VD: REQ-KEY-001
-  requester_id: string;
+  requester_id?: string;
   requester_name: string;
   requester_role: 'admin' | 'technician' | 'sales';
   customer_name: string;
@@ -207,14 +223,19 @@ export interface KeyReleaseRequest {
   customer_email: string; // Bắt buộc
   category_id: string;
   category_name: string;
-  status: 'pending' | 'approved' | 'activated' | 'faulty_re_requesting' | 'rejected';
+  status: 'pending' | 'approved' | 'approved_waiting_test' | 'activated' | 'active_confirmed' | 'faulty_re_requesting' | 'auto_re_requested' | 'rejected';
   assigned_key_id?: string;
   assigned_key_code?: string;
+  released_key_id?: string;
+  released_key_code?: string;
+  approved_by_admin?: string;
+  approved_at?: string;
   faulty_history?: Array<{
     key_code: string;
     reason: string;
     timestamp: string;
   }>;
+  faulty_reason?: string;
   admin_note?: string;
   email_sent?: boolean;
   email_sent_at?: string;
