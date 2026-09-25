@@ -280,19 +280,6 @@ function ProductsCatalogContent() {
                 {cat.label}
               </button>
             ))}
-
-            <button
-              type="button"
-              onClick={() => setIsBuyKeyModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-amber-50 text-[#C0392B] hover:bg-[#C0392B] hover:text-white border border-[#C0392B]/30 flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
-            >
-              <span>🔑 Key Win &amp; Office</span>
-              {totalInStockKeys > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#C0392B] text-white font-mono font-bold">
-                  {totalInStockKeys}
-                </span>
-              )}
-            </button>
           </div>
         </div>
 
@@ -698,177 +685,116 @@ function ProductsCatalogContent() {
         )}
       </Modal>
 
-      {/* MODAL MUA KEY BẢN QUYỀN WINDOWS & OFFICE */}
+      {/* MODAL MUA KEY BẢN QUYỀN WINDOWS & OFFICE (ĐƠN GIẢN HÓA) */}
       <Modal
         open={isBuyKeyModalOpen}
         onCancel={() => setIsBuyKeyModalOpen(false)}
         footer={null}
-        width={720}
+        width={560}
         centered
         className="custom-ant-modal"
       >
-        <div className="p-2 sm:p-5 space-y-5 font-sans bg-[#FFFDF9]">
-          {/* Header */}
-          <div className="border-b border-[#E8E2D9] pb-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#C0392B]">
-              BẢN QUYỀN CHÍNH HÃNG 100% • BẢO HÀNH TRỌN ĐỜI
-            </span>
-            <h2 className="text-lg sm:text-xl font-black text-[#2B1810] tracking-tight mt-0.5 uppercase">
-              MUA KEY BẢN QUYỀN WINDOWS &amp; OFFICE
-            </h2>
-            <p className="text-xs text-[#6E5D53] mt-1">
-              Bản quyền vĩnh viễn, bảo hành kích hoạt 1 đổi 1 và hỗ trợ cài đặt từ xa qua UltraViewer hoặc AnyDesk.
-            </p>
-          </div>
+        <div className="p-4 sm:p-5 space-y-4 font-sans bg-white">
+          {/* Header & Bộ chọn Windows / Office */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D9]">
+            <div>
+              <h2 className="text-base font-black text-[#2B1810] uppercase tracking-tight">
+                MUA KEY BẢN QUYỀN
+              </h2>
+              <p className="text-xs text-[#6E5D53]">
+                Kích hoạt theo máy, bảo hành 1 đổi 1.
+              </p>
+            </div>
 
-          {/* Chọn loại: Windows vs Office */}
-          <div>
-            <label className="block text-xs font-black text-[#2B1810] mb-2 uppercase">
-              BƯỚC 1: CHỌN LOẠI BẢN QUYỀN CẦN MUA
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="inline-flex p-1 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9] self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => setSelectedKeyType('windows')}
-                className={`py-3.5 px-4 rounded-xl border-2 text-left transition-all ${
+                className={`px-3 py-1.5 rounded-md font-bold text-xs transition-all ${
                   selectedKeyType === 'windows'
-                    ? 'border-[#C0392B] bg-[#C0392B]/5 text-[#C0392B]'
-                    : 'border-[#E8E2D9] bg-white text-[#6E5D53] hover:border-[#2B1810]'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'text-[#6E5D53] hover:text-[#2B1810]'
                 }`}
               >
-                <div className="text-xs sm:text-sm font-black uppercase">
-                  HỆ ĐIỀU HÀNH WINDOWS
-                </div>
-                <div className="text-[11px] text-[#6E5D53] mt-0.5">
-                  Windows 11 Pro, Home, Windows 10...
-                </div>
+                WINDOWS
               </button>
-
               <button
                 type="button"
                 onClick={() => setSelectedKeyType('office')}
-                className={`py-3.5 px-4 rounded-xl border-2 text-left transition-all ${
+                className={`px-3 py-1.5 rounded-md font-bold text-xs transition-all ${
                   selectedKeyType === 'office'
-                    ? 'border-[#C0392B] bg-[#C0392B]/5 text-[#C0392B]'
-                    : 'border-[#E8E2D9] bg-white text-[#6E5D53] hover:border-[#2B1810]'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'text-[#6E5D53] hover:text-[#2B1810]'
                 }`}
               >
-                <div className="text-xs sm:text-sm font-black uppercase">
-                  ỨNG DỤNG VĂN PHÒNG OFFICE
-                </div>
-                <div className="text-[11px] text-[#6E5D53] mt-0.5">
-                  Office 2021 Pro Plus, 2019, 365...
-                </div>
+                OFFICE
               </button>
             </div>
           </div>
 
-          {/* Danh sách các phiên bản kết nối database - nếu = 0 thì không hiển thị */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-black text-[#2B1810] uppercase">
-                BƯỚC 2: CHỌN PHIÊN BẢN PHÙ HỢP (DỮ LIỆU KHO THỰC TẾ)
-              </label>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                Kết nối thời gian thực
-              </span>
+          {/* Danh sách phiên bản trong kho (chỉ hiển thị khi stock > 0) */}
+          {inStockKeyCategories.length === 0 ? (
+            <div className="py-8 text-center text-xs text-[#6E5D53] bg-[#FAF7F2] rounded-xl border border-[#E8E2D9]">
+              Hiện tại danh mục này đang tạm hết key sẵn kho. Quý khách vui lòng liên hệ trực tiếp nhân viên để đặt trước.
             </div>
+          ) : (
+            <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+              {inStockKeyCategories.map((cat) => {
+                const stock = (licenseKeys || []).filter(
+                  (k) => k.category_id === cat.id && k.status === 'available'
+                ).length;
 
-            {inStockKeyCategories.length === 0 ? (
-              <div className="p-8 text-center rounded-xl bg-[#FAF7F2] border border-[#E8E2D9] text-xs text-[#6E5D53] space-y-1">
-                <div className="font-bold text-[#2B1810]">Hiện tại phiên bản này đang tạm hết key sẵn có trong kho.</div>
-                <div>Quý khách vui lòng liên hệ trực tiếp với nhân viên để được hỗ trợ nhập thêm key nhanh chóng.</div>
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                {inStockKeyCategories.map((cat) => {
-                  const stock = (licenseKeys || []).filter(
-                    (k) => k.category_id === cat.id && k.status === 'available'
-                  ).length;
+                return (
+                  <div
+                    key={cat.id}
+                    className="p-3.5 rounded-xl border border-[#E8E2D9] bg-[#FAF7F2]/40 hover:bg-white hover:border-[#C0392B] transition-all space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-black text-xs sm:text-sm text-[#2B1810] uppercase">
+                        {cat.name}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 font-mono">
+                        Còn {stock} key
+                      </span>
+                    </div>
 
-                  return (
-                    <div
-                      key={cat.id}
-                      className="p-4 rounded-xl border border-[#E8E2D9] bg-white hover:border-[#C0392B] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
-                    >
-                      <div className="space-y-1 max-w-sm">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-xs sm:text-sm font-black text-[#2B1810] uppercase">
-                            {cat.name}
-                          </h3>
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 font-mono">
-                            Còn {stock} key sẵn sàng
-                          </span>
-                        </div>
-                        <p className="text-xs text-[#6E5D53]">
-                          {cat.description}
-                        </p>
+                    <div className="pt-2 border-t border-[#E8E2D9]">
+                      <div className="text-[11px] text-[#6E5D53] font-medium mb-1.5">
+                        Liên hệ nhân viên để nhận giá tốt nhất:
                       </div>
-
-                      <a
-                        href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi quan tâm mua key bản quyền: ' + cat.name)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="py-2.5 px-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all text-center shrink-0 shadow-xs uppercase tracking-wider"
-                      >
-                        LIÊN HỆ NHÂN VIÊN ĐỂ NHẬN GIÁ TỐT NHẤT
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Danh sách 3 chuyên viên tư vấn trực tiếp */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-800 uppercase">
-              <span>ĐỘI NGŨ KỸ THUẬT &amp; TƯ VẤN SẴN SÀNG HỖ TRỢ TRỰC TIẾP:</span>
-              <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Online Zalo 24/7
-              </span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {(systemSettings.zaloContacts && systemSettings.zaloContacts.length > 0
-                ? systemSettings.zaloContacts
-                : [
-                    { id: '1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng' },
-                    { id: '2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng' },
-                    { id: '3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ & key bản quyền' },
-                  ]
-              ).map((contact) => (
-                <a
-                  key={contact.id}
-                  href={`https://zalo.me/${contact.phone}?text=${encodeURIComponent('Chào ' + contact.name + ' - Vi Tính An Tâm, tôi muốn mua key bản quyền')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2.5 rounded-lg bg-white border border-slate-200 hover:border-[#C0392B] hover:bg-slate-50 transition-all flex items-center justify-between group"
-                >
-                  <div>
-                    <div className="font-bold text-xs text-slate-900 group-hover:text-[#C0392B]">
-                      {contact.name}
-                    </div>
-                    <div className="text-[11px] font-mono text-slate-500 font-semibold">
-                      Zalo: {contact.phone}
+                      <div className="grid grid-cols-3 gap-2">
+                        {(systemSettings.zaloContacts && systemSettings.zaloContacts.length > 0
+                          ? systemSettings.zaloContacts
+                          : [
+                              { id: '1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn' },
+                              { id: '2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Kỹ thuật' },
+                              { id: '3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Kỹ thuật' },
+                            ]
+                        ).map((contact) => (
+                          <a
+                            key={contact.id}
+                            href={`https://zalo.me/${contact.phone}?text=${encodeURIComponent(
+                              `Chào ${contact.name}, tôi muốn mua key: ${cat.name}`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="py-1.5 px-2 rounded-lg bg-white border border-[#E8E2D9] hover:border-[#C0392B] hover:bg-red-50/20 text-center transition-all group"
+                          >
+                            <div className="text-[11px] font-bold text-[#2B1810] group-hover:text-[#C0392B] truncate">
+                              {contact.name}
+                            </div>
+                            <div className="text-[10px] text-blue-600 font-mono font-semibold">
+                              Zalo: {contact.phone}
+                            </div>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-                    Nhắn tin →
-                  </span>
-                </a>
-              ))}
+                );
+              })}
             </div>
-          </div>
-
-          {/* Footer note */}
-          <div className="pt-3 border-t border-[#E8E2D9] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#6E5D53]">
-            <span>
-              Hotline tư vấn kỹ thuật &amp; giá sỉ: <strong className="text-[#2B1810] font-mono">{systemSettings.hotline}</strong>
-            </span>
-            <span className="font-bold text-[#C0392B]">
-              VI TÍNH AN TÂM - BÁN BẰNG TÂM ĐỂ BẠN AN TÂM
-            </span>
-          </div>
+          )}
         </div>
       </Modal>
     </div>
