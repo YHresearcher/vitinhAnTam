@@ -98,12 +98,12 @@ export function Navbar() {
 
         {/* Right CTAs */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Language Switcher - Flags Only */}
+          {/* Language Switcher - SVG Flags */}
           <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
             <button
               type="button"
               onClick={() => setLang('vi')}
-              className={`w-7 h-7 rounded-md transition-all flex items-center justify-center text-sm ${
+              className={`w-8 h-7 rounded-md transition-all flex items-center justify-center ${
                 !isEn
                   ? 'bg-white shadow-xs border border-[#D5CCC1] scale-105'
                   : 'opacity-40 hover:opacity-100 hover:bg-white/60'
@@ -111,12 +111,18 @@ export function Navbar() {
               title="Tiếng Việt"
               aria-label="Tiếng Việt"
             >
-              <span className="leading-none select-none">🇻🇳</span>
+              <svg className="w-5 h-3.5 rounded-[2px] shadow-2xs" viewBox="0 0 30 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="30" height="20" rx="1.5" fill="#DA251D" />
+                <polygon
+                  points="15,4 16.9,9.8 23,9.8 18.1,13.4 19.9,19.2 15,15.6 10.1,19.2 11.9,13.4 7,9.8 13.1,9.8"
+                  fill="#FFFF00"
+                />
+              </svg>
             </button>
             <button
               type="button"
               onClick={() => setLang('en')}
-              className={`w-7 h-7 rounded-md transition-all flex items-center justify-center text-sm ${
+              className={`w-8 h-7 rounded-md transition-all flex items-center justify-center ${
                 isEn
                   ? 'bg-white shadow-xs border border-[#D5CCC1] scale-105'
                   : 'opacity-40 hover:opacity-100 hover:bg-white/60'
@@ -124,7 +130,19 @@ export function Navbar() {
               title="English"
               aria-label="English"
             >
-              <span className="leading-none select-none">🇬🇧</span>
+              <svg className="w-5 h-3.5 rounded-[2px] shadow-2xs overflow-hidden" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <clipPath id="uk-flag-clip">
+                  <rect width="60" height="36" rx="3" />
+                </clipPath>
+                <g clipPath="url(#uk-flag-clip)">
+                  <rect width="60" height="36" fill="#012169" />
+                  <path d="M0,0 L60,36 M60,0 L0,36" stroke="#FFFFFF" strokeWidth="6" />
+                  <path d="M0,0 L60,36" stroke="#C8102E" strokeWidth="2" />
+                  <path d="M60,0 L0,36" stroke="#C8102E" strokeWidth="2" />
+                  <path d="M30,0 V36 M0,18 H60" stroke="#FFFFFF" strokeWidth="10" />
+                  <path d="M30,0 V36 M0,18 H60" stroke="#C8102E" strokeWidth="6" />
+                </g>
+              </svg>
             </button>
           </div>
 
