@@ -240,7 +240,7 @@ export const RAW_PRODUCTS: RawProduct[] = [
       name: 'Dell OptiPlex 7060 SFF Đồng Bộ',
       badge: 'ĐÃ BÀN GIAO TẬN NƠI',
       subBadge: 'Bảo hành chu đáo, đổi nhanh',
-      desc: 'Đã hoàn tất bàn giao và lắp đặt mạng LAN cho bộ phận kế toán.',
+      desc: 'Đã hoàn tất bàn giao và lắp đặt mạng LAN cho bộ phận văn phòng.',
       specs: {
         cpu: 'Core i5-8500 (6 nhân 6 luồng 4.10GHz)',
         ram: 'RAM 16GB DDR4 Bus 2666',

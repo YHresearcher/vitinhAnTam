@@ -13,46 +13,72 @@ import {
   KeyEmailTemplateConfig,
 } from './supabase';
 
+// Dynamic date helpers to keep mock metrics fresh and accurate across aging and CRM alerts
+const getMockDaysAgo = (days: number): string => {
+  const d = new Date(Date.now() - days * 86400000);
+  return d.toISOString().slice(0, 10);
+};
+
+const getMockIsoAgo = (days: number): string => {
+  const d = new Date(Date.now() - days * 86400000);
+  return d.toISOString();
+};
+
+const getMockBirthday = (daysFromNow: number, birthYear = 1990): string => {
+  const target = new Date(Date.now() + daysFromNow * 86400000);
+  const mm = String(target.getMonth() + 1).padStart(2, '0');
+  const dd = String(target.getDate()).padStart(2, '0');
+  return `${birthYear}-${mm}-${dd}`;
+};
+
 export const initialCustomers: Customer[] = [
   {
     id: 'c1',
+    customer_code: '26094891',
     full_name: 'Cty TNHH Vận Tải Long An - Tây Ninh (Anh Tuấn)',
+    birth_date: getMockBirthday(2, 1985), // Sinh nhật trong 2 ngày tới
     phone: '0918234891',
     address: 'KCN Lợi Bình Nhơn, Long An - Tây Ninh',
     area_zone: 'Long An - Tây Ninh',
     customer_tier: 'VIP',
-    notes: 'Hợp đồng bảo trì 10 máy OptiPlex đồng bộ',
-    created_at: '2025-02-15T09:30:00Z',
+    notes: 'Hợp đồng bảo trì 10 máy OptiPlex đồng bộ. Đã mua máy cách đây 6 tháng.',
+    created_at: getMockIsoAgo(190),
   },
   {
     id: 'c2',
+    customer_code: '15054567',
     full_name: 'Nguyễn Văn Bảy (Chú Bảy Tân An)',
+    birth_date: getMockBirthday(1, 1968), // Sinh nhật ngày mai (trong 1 ngày)
     phone: '0918234567',
     address: 'Số 15 Huỳnh Văn Nhất, P.3, Long An - Tây Ninh',
     area_zone: 'Long An - Tây Ninh',
     customer_tier: 'Thân thiết',
-    notes: 'Khách quen • Cài Win & bảo dưỡng máy định kỳ',
-    created_at: '2025-01-10T08:00:00Z',
+    notes: 'Khách quen • Cài Win & bảo dưỡng máy định kỳ. Mua dàn PC Gaming hơn 6 tháng.',
+    created_at: getMockIsoAgo(185),
   },
   {
     id: 'c3',
+    customer_code: '20112233',
     full_name: 'Cty Thiết Kế Hoàng Quân (Anh Quân)',
+    birth_date: '1988-11-20',
     phone: '0909112233',
     address: 'Số 88 Hùng Vương, P.2, Long An - Tây Ninh',
     area_zone: 'Long An - Tây Ninh',
     customer_tier: 'Standard',
     notes: 'Dàn máy đồ họa Dell Vostro i7',
-    created_at: '2025-05-01T14:00:00Z',
+    created_at: getMockIsoAgo(45),
   },
   {
     id: 'c4',
+    customer_code: '28099977',
     full_name: 'Chị Lan - Tạp hoá Tân Tây',
+    birth_date: getMockBirthday(3, 1993), // Sinh nhật trong 3 ngày tới
     phone: '0908889977',
     address: 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa, Long An - Tây Ninh',
     area_zone: 'Huyện Thủ Thừa',
     customer_tier: 'Standard',
     notes: 'Máy tính tiền Mini PC POS',
-    created_at: '2025-05-18T10:00:00Z',
+    created_at: getMockIsoAgo(60),
   },
 ];
 
@@ -74,15 +100,18 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'sold',
     burn_in_duration: 45,
     cost_price: 3800000,
+    import_price: 3800000,
+    import_date: getMockDaysAgo(195),
     retail_price: 4950000,
+    price: 4950000,
     deposit_amount: 0,
     warranty_months: 12,
     quantity: 1,
     shelf_location: 'Kệ Bàn Giao',
     customer_name: 'Cty TNHH Vận Tải Long An - Tây Ninh (Anh Tuấn)',
     customer_phone: '0918234891',
-    handover_date: '2025-05-15',
-    created_at: '2025-05-10T08:00:00Z',
+    handover_date: getMockDaysAgo(185), // Đã mua 185 ngày (~6 tháng) -> Cần nhắc CSKH
+    created_at: getMockIsoAgo(195),
   },
   {
     id: 'inv-2',
@@ -101,12 +130,15 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'ready_to_sell',
     burn_in_duration: 45,
     cost_price: 2600000,
+    import_price: 2600000,
+    import_date: getMockDaysAgo(12), // 12 ngày tồn (Bình thường)
     retail_price: 3400000,
+    price: 3400000,
     deposit_amount: 0,
     warranty_months: 12,
     quantity: 5,
     shelf_location: 'Kệ A1 - Tầng 2',
-    created_at: '2025-05-12T09:00:00Z',
+    created_at: getMockIsoAgo(12),
   },
   {
     id: 'inv-3',
@@ -126,12 +158,15 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'ready_to_sell',
     burn_in_duration: 45,
     cost_price: 4900000,
+    import_price: 4900000,
+    import_date: getMockDaysAgo(25), // 25 ngày tồn (Bình thường)
     retail_price: 6200000,
+    price: 6200000,
     deposit_amount: 0,
     warranty_months: 12,
     quantity: 3,
     shelf_location: 'Kệ Laptop L1',
-    created_at: '2025-05-14T10:00:00Z',
+    created_at: getMockIsoAgo(25),
   },
   {
     id: 'inv-4',
@@ -151,15 +186,18 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'sold',
     burn_in_duration: 60,
     cost_price: 13500000,
+    import_price: 13500000,
+    import_date: getMockDaysAgo(200),
     retail_price: 16800000,
+    price: 16800000,
     deposit_amount: 0,
     warranty_months: 24,
     quantity: 1,
     shelf_location: 'Kệ Bàn Giao',
     customer_name: 'Nguyễn Văn Bảy (Chú Bảy Tân An)',
     customer_phone: '0918234567',
-    handover_date: '2025-04-20',
-    created_at: '2025-04-15T11:00:00Z',
+    handover_date: getMockDaysAgo(190), // Đã mua 190 ngày (~6 tháng) -> Cần nhắc CSKH
+    created_at: getMockIsoAgo(200),
   },
   {
     id: 'inv-5',
@@ -179,12 +217,15 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'testing',
     burn_in_duration: 30,
     cost_price: 5800000,
+    import_price: 5800000,
+    import_date: getMockDaysAgo(8), // 8 ngày tồn
     retail_price: 7500000,
+    price: 7500000,
     deposit_amount: 0,
     warranty_months: 12,
     quantity: 2,
     shelf_location: 'Kệ Kiểm Thử C1',
-    created_at: '2025-05-18T14:00:00Z',
+    created_at: getMockIsoAgo(8),
   },
   {
     id: 'inv-6',
@@ -203,12 +244,99 @@ export const initialInventory: InventoryItem[] = [
     qc_status: 'ready_to_sell',
     burn_in_duration: 45,
     cost_price: 11000000,
+    import_price: 11000000,
+    import_date: getMockDaysAgo(15), // 15 ngày tồn
     retail_price: 13500000,
+    price: 13500000,
     deposit_amount: 0,
     warranty_months: 12,
     quantity: 1,
     shelf_location: 'Kệ Laptop L2',
-    created_at: '2025-05-19T15:00:00Z',
+    created_at: getMockIsoAgo(15),
+  },
+  // 🟡 CẢNH BÁO VÀNG: Tồn kho 50-55 ngày (Cần lên phương án giảm giá/xả kho)
+  {
+    id: 'inv-7',
+    service_tag: 'DELL-3070-SFF-YEL',
+    device_model: 'Dell OptiPlex 3070 SFF (Core i5-9500)',
+    brand: 'Dell',
+    form_factor: 'SFF',
+    specs: {
+      cpu: 'Core i5-9500 (6C/6T Turbo 4.4GHz)',
+      ram: '16GB DDR4 Bus 2666',
+      ssd: 'NVMe 256GB SK Hynix',
+      ssd_health: 100,
+      ssd_status: 'Good',
+      power: 'Dell 200W 80 Plus Bronze',
+    },
+    qc_status: 'ready_to_sell',
+    burn_in_duration: 45,
+    cost_price: 4200000,
+    import_price: 4200000,
+    import_date: getMockDaysAgo(52), // 52 ngày tồn -> ⚠️ CẢNH BÁO VÀNG (50-55 ngày)
+    retail_price: 5350000,
+    price: 5350000,
+    deposit_amount: 0,
+    warranty_months: 12,
+    quantity: 2,
+    shelf_location: 'Kệ A2 - Tầng 1',
+    created_at: getMockIsoAgo(52),
+  },
+  // 🔴 CẢNH BÁO ĐỎ: Tồn kho 56-60 ngày (Bắt buộc thanh lý gấp / xả hàng)
+  {
+    id: 'inv-8',
+    service_tag: 'HP-600G4-RED',
+    device_model: 'HP ProDesk 600 G4 MT (Core i5-8400)',
+    brand: 'HP',
+    form_factor: 'MT',
+    specs: {
+      cpu: 'Core i5-8400 (6C/6T 4.0GHz)',
+      ram: '8GB DDR4 Bus 2666',
+      ssd: 'SSD 256GB SATA 3 2.5"',
+      ssd_health: 98,
+      ssd_status: 'Good',
+      power: 'HP 250W Platinum 80 Plus',
+    },
+    qc_status: 'ready_to_sell',
+    burn_in_duration: 45,
+    cost_price: 3300000,
+    import_price: 3300000,
+    import_date: getMockDaysAgo(58), // 58 ngày tồn -> 🚨 CẢNH BÁO ĐỎ (56-60 ngày)
+    retail_price: 4200000,
+    price: 4200000,
+    deposit_amount: 0,
+    warranty_months: 12,
+    quantity: 1,
+    shelf_location: 'Kệ B1 - Tầng 3',
+    created_at: getMockIsoAgo(58),
+  },
+  // 🔴 CẢNH BÁO ĐỎ: Tồn kho > 60 ngày (Quá hạn thanh lý nghiêm trọng)
+  {
+    id: 'inv-9',
+    service_tag: 'LENOVO-M720Q-RED',
+    device_model: 'Lenovo ThinkCentre M720q Tiny (i5-8500T)',
+    brand: 'Lenovo',
+    form_factor: 'Mini',
+    specs: {
+      cpu: 'Core i5-8500T (6C/6T 35W)',
+      ram: '8GB DDR4 SO-DIMM',
+      ssd: 'NVMe 256GB Intel',
+      ssd_health: 97,
+      ssd_status: 'Good',
+      power: 'Adapter Lenovo 65W Zin',
+    },
+    qc_status: 'ready_to_sell',
+    burn_in_duration: 45,
+    cost_price: 3900000,
+    import_price: 3900000,
+    import_date: getMockDaysAgo(68), // 68 ngày tồn -> 🚨 CẢNH BÁO ĐỎ (> 60 ngày)
+    retail_price: 4900000,
+    price: 4900000,
+    deposit_amount: 0,
+    warranty_months: 12,
+    quantity: 1,
+    shelf_location: 'Kệ Mini M1',
+    created_at: getMockIsoAgo(68),
   },
 ];
 
@@ -366,7 +494,7 @@ export const initialSoftwareLicenses: SoftwareLicense[] = [
         id: 'k-w10-4',
         key_code: 'MH37W-N47XK-V7XM9-C7227-GCQG9',
         status: 'used',
-        assigned_customer: 'Chị Thảo - Kế toán',
+        assigned_customer: 'Chị Thảo - Văn phòng',
         assigned_ticket_code: '#TK-2025-0582',
         assigned_at: '2026-09-15T10:15:00Z',
         notes: 'Kích hoạt máy HP EliteDesk 800 G3',
@@ -448,18 +576,18 @@ export const initialSoftwareLicenses: SoftwareLicense[] = [
   },
   {
     id: 'sw-6',
-    software_name: 'Phần Mềm Kế Toán MISA SME Bản Quyền Doanh Nghiệp',
-    software_type: 'accounting',
+    software_name: 'Phần Mềm Quản Trị Bán Hàng & Hóa Đơn Điện Tử Doanh Nghiệp',
+    software_type: 'business',
     license_type: 'retail',
     quantity_in_stock: 2,
     unit_cost: 3200000,
     unit_price: 4500000,
     duration_months: 0,
-    distributor: 'MISA Long An Partner',
-    notes: 'Hỗ trợ kỹ thuật cấu hình SQL Server và cài đặt máy chủ MISA kế toán',
+    distributor: 'Đối tác phần mềm Long An',
+    notes: 'Hỗ trợ kỹ thuật cấu hình SQL Server và cài đặt máy chủ quản trị',
     license_keys: [
-      { id: 'k-misa-1', key_code: 'MISA-SME-2026-88192-KTOAN', status: 'available' },
-      { id: 'k-misa-2', key_code: 'MISA-SME-2026-77123-DNMEK', status: 'available' },
+      { id: 'k-misa-1', key_code: 'SOFT-SME-2026-88192-PRO', status: 'available' },
+      { id: 'k-misa-2', key_code: 'SOFT-SME-2026-77123-DNMEK', status: 'available' },
     ],
   },
   {
@@ -638,7 +766,7 @@ export const initialOnsiteDispatches: OnsiteDispatch[] = [
     scheduled_time: '14:30',
     urgency: 'urgent',
     status: 'preparing',
-    issue_description: 'Dàn PC kế toán tắt đột ngột liên tục, cần bộ test công suất nguồn CST & PSU dự phòng 550W',
+    issue_description: 'Dàn PC văn phòng tắt đột ngột liên tục, cần bộ test công suất nguồn CST & PSU dự phòng 550W',
     technician_name: 'Huỳnh Minh Trí',
     created_at: '2025-05-20T13:00:00Z',
   },
@@ -777,8 +905,8 @@ export const initialFaqs: FaqItem[] = [
   {
     id: 'faq-3',
     icon: 'ShieldCheck',
-    question: 'Nâng cấp SSD và cài lại máy có bị mất dữ liệu hóa đơn thuế & MISA không?',
-    answer: 'Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình sao lưu và Clone nguyên bản từ ổ cứng cũ sang SSD mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm kế toán MISA, file ngoài màn hình Desktop và tài khoản Zalo / trình duyệt đều được giữ nguyên 100%, không cần cài đặt lại từ đầu.',
+    question: 'Nâng cấp SSD và cài lại máy có bị mất dữ liệu công việc & hóa đơn không?',
+    answer: 'Hoàn toàn an tâm! Kỹ thuật viên áp dụng quy trình sao lưu và Clone nguyên bản từ ổ cứng cũ sang SSD mới. Toàn bộ chữ ký số, hóa đơn điện tử, dữ liệu phần mềm công việc, file ngoài màn hình Desktop và tài khoản Zalo / trình duyệt đều được giữ nguyên 100%, không cần cài đặt lại từ đầu.',
   },
   {
     id: 'faq-4',
@@ -802,8 +930,8 @@ export const initialCustomerReviews: CustomerReview[] = [
   {
     id: 'rev-1',
     name: 'Anh Minh Tuấn',
-    role: 'Kế toán trưởng - Cty Vận Tải',
-    comment: 'Trang bị 6 bộ máy Dell OptiPlex cho phòng kế toán dùng phần mềm MISA và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
+    role: 'Quản lý vận hành - Cty Vận Tải',
+    comment: 'Trang bị 6 bộ máy Dell OptiPlex cho văn phòng dùng phần mềm quản lý và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.',
     service: 'Dell OptiPlex 7060 SFF',
     location: 'Tân An (Long An - Tây Ninh)',
     rating: 5,

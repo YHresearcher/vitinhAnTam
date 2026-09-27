@@ -50,13 +50,13 @@ export default function WhyUsPage() {
               <span>{isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-            <a
-              href={`tel:${cleanHotline}`}
+            <Link
+              href="/dat-lich"
               className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors flex items-center gap-1.5 shadow-2xs"
             >
-              <Phone className="w-3.5 h-3.5 text-[#C0392B]" />
-              <span>{isEn ? `Direct Hotline: ${hotline}` : `Tư Vấn Nhanh: ${hotline}`}</span>
-            </a>
+              <Calendar className="w-3.5 h-3.5 text-[#C0392B]" />
+              <span>{isEn ? 'Schedule Inspection' : 'Đặt Lịch Kiểm Tra Máy'}</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -91,7 +91,7 @@ export default function WhyUsPage() {
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {isEn
                     ? 'All enterprise desktops and laptops undergo thorough technician inspections before entering our inventory. We strictly prioritize clean, original hardware that has never undergone reballing, soldering repairs, or makeshift board patching.'
-                    : 'Do máy thuộc phân khúc tuyển chọn cao cấp nguyên bản chuẩn A, kỹ thuật viên của An Tâm không tháo dỡ kiểm tra chi tiết trên bo mạch chủ (mainboard) nhằm giữ nguyên trạng zin của nhà sản xuất. Thay vào đó, toàn bộ quy trình kiểm định chất lượng được thực hiện thực tế 100% qua các phần mềm đo kiểm chuyên dụng (stress test nhiệt độ, xung nhịp và sức khỏe linh kiện).'}
+                    : 'Vi Tính An Tâm cam kết chỉ cung cấp máy có bo mạch chủ nguyên bản 100%, chưa từng qua sửa chữa hay hàn vá. Tất cả thiết bị đều được kiểm định kỹ càng qua phần mềm đo kiểm chuyên sâu (stress test tải nặng, kiểm tra nhiệt độ, xung nhịp và sức khỏe phần cứng) trước khi tới tay khách hàng.'}
                 </p>
               </div>
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-blue-700">
@@ -261,8 +261,8 @@ export default function WhyUsPage() {
               </h4>
               <p className="text-xs text-slate-600 leading-relaxed">
                 {isEn
-                  ? 'Understanding your exact tasks (office, point-of-sale, study, accounting) to suggest a balanced, cost-effective setup.'
-                  : 'Tìm hiểu công việc cụ thể của bạn (văn phòng, bán hàng, học tập, kế toán...) để gợi ý cấu hình vừa đủ, tiết kiệm ngân sách.'}
+                  ? 'Understanding your exact tasks (office, point-of-sale, study, graphics) to suggest a balanced, cost-effective setup.'
+                  : 'Tìm hiểu công việc cụ thể của bạn (văn phòng, bán hàng, học tập, đồ họa...) để gợi ý cấu hình vừa đủ, tiết kiệm ngân sách.'}
               </p>
             </div>
 
@@ -358,13 +358,6 @@ export default function WhyUsPage() {
             >
               {isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}
             </Link>
-            <a
-              href={`tel:${cleanHotline}`}
-              className="px-5 py-2.5 rounded-xl bg-[#D9531E] hover:bg-[#C0392B] text-white font-bold text-xs shadow-md shadow-[#D9531E]/20 transition-all flex items-center gap-1.5"
-            >
-              <Phone className="w-4 h-4" />
-              <span>{isEn ? `Call Hotline: ${hotline}` : `Gọi Trực Tiếp: ${hotline}`}</span>
-            </a>
             <Link
               href="/dat-lich"
               className="px-5 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center gap-1.5"

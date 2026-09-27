@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -44,8 +44,42 @@ export default function HomePage() {
 
   // Modal for QC & S/N inspection
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
-  const [isZaloModalOpen, setIsZaloModalOpen] = useState(false);
   const [homeProductTab, setHomeProductTab] = useState<'all' | 'hardware' | 'software'>('all');
+
+  // Handle smooth scroll on initial anchor load or hash change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const hash = window.location.hash.replace('#', '');
+      const element = document.getElementById(hash);
+      if (element) {
+        const timer = setTimeout(() => {
+          const headerOffset = 75;
+          const elementPosition = element.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, []);
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      const headerOffset = 75;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
+      window.history.pushState(null, '', `/#${targetId}`);
+    }
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -88,17 +122,17 @@ export default function HomePage() {
     {
       question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
       answer:
-        'Toàn bộ máy tại Vi Tính An Tâm đều thuộc dòng tuyển chọn cao cấp nguyên bản. Kỹ thuật viên không can thiệp hay kiểm tra chi tiết trên bo mạch chủ (mainboard) nhằm giữ nguyên trạng zin tuyệt đối của máy. Mọi quy trình kiểm định chất lượng được thực hiện thực tế 100% qua các phần mềm đo kiểm chuyên dụng: chạy thử tải nặng (stress test) FurMark / AIDA64, đo xung nhịp, nhiệt độ và kiểm tra sức khỏe ổ cứng trước khi bàn giao.',
+        'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
     },
     {
       question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
       answer:
-        'An Tâm áp dụng chính sách bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi trong bán kính < 5km từ cửa hàng. Với các khách hàng ngoài bán kính 5km, chúng tôi tiếp nhận xử lý nhanh tại cửa hàng hoặc hỗ trợ kỹ thuật trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của quý khách không bị gián đoạn.',
+        'An Tâm áp dụng chính sách bảo hành chu đáo, đổi mới linh kiện nhanh chóng. Cửa hàng hỗ trợ xử lý kỹ thuật tận nơi hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của bạn luôn được thông suốt.',
     },
     {
-      question: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và kế toán?',
+      question: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và doanh nghiệp?',
       answer:
-        'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu kế toán, hóa đơn điện tử và giao dịch ngân hàng.',
+        'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu công việc, hóa đơn điện tử và giao dịch ngân hàng.',
     },
     {
       question: 'Tôi có thể nâng cấp linh kiện RAM hoặc ổ cứng SSD theo nhu cầu được không?',
@@ -128,15 +162,10 @@ export default function HomePage() {
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#FBE8DE] text-[#C0392B] text-[10px] font-extrabold uppercase tracking-wider border border-[#F2C4B2]">
                   {t.hero.brandTag || 'TIỆM VI TÍNH TỬ TẾ • TÂY NINH'}
                 </span>
-                <span className="hidden sm:inline text-slate-300">|</span>
-                <span className="text-slate-600 font-medium hidden sm:inline">
-                  {isEn ? 'Specializing in Enterprise Dell • HP • Lenovo ThinkPad' : 'Chuyên Dell • HP • Lenovo ThinkPad Doanh Nghiệp'}
-                </span>
+                
+              
               </div>
-              <div className="flex items-center gap-1.5 text-slate-500 font-medium">
-                <MapPin className="w-3.5 h-3.5 text-[#C0392B] shrink-0" />
-                <span>{isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh'}</span>
-              </div>
+              
             </div>
 
             {/* Main Hero: 2-column with content left & image showcase right */}
@@ -156,7 +185,8 @@ export default function HomePage() {
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <a
                     href="#danh-muc-san-pham"
-                    className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group"
+                    onClick={(e) => scrollToSection(e, 'danh-muc-san-pham')}
+                    className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group cursor-pointer"
                   >
                     <span>{t.hero.btnBrowseStock || 'Xem Máy Nổi Bật'}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -233,7 +263,7 @@ export default function HomePage() {
                   <div className="absolute bottom-3.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between gap-2">
                     <div className="px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md text-[#1A0F0A] text-xs font-bold shadow-lg border border-white flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{isEn ? 'Prompt warranty • On-site <5km' : 'Bảo hành nhanh • Tận nơi <5km'}</span>
+                      <span>{isEn ? 'Prompt warranty • Fast support' : 'Bảo hành nhanh • Hỗ trợ tận nơi'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-[#C0392B] text-white text-xs font-bold shadow-lg">
                       {isEn ? '⚡ 0% Installment via ID' : '⚡ Trả góp 0% qua CCCD'}
@@ -258,20 +288,8 @@ export default function HomePage() {
 
             </div>
 
-            {/* Bottom 3 Stats Strip */}
-            <div className="border-t border-slate-200/80 py-6 grid grid-cols-3 divide-x divide-slate-200/80">
-              <div className="px-2 sm:px-6 text-center sm:text-left">
-                <div className="text-2xl sm:text-3xl font-black text-[#1A0F0A] font-mono tabular-nums">
-                  {totalReadyStock}
-                </div>
-                <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
-                  {isEn ? 'Units in stock' : 'Máy có sẵn trong kho'}
-                </div>
-                <div className="text-[11px] text-slate-500 hidden sm:block">
-                  {isEn ? 'Ready for immediate testing & handover' : 'Sẵn sàng bàn giao & kiểm tra máy'}
-                </div>
-              </div>
-
+            {/* Bottom 2 Stats Strip */}
+            <div className="border-t border-slate-200/80 py-6 grid grid-cols-2 divide-x divide-slate-200/80">
               <div className="px-2 sm:px-6 text-center sm:text-left">
                 <div className="text-2xl sm:text-3xl font-black text-[#C0392B] font-mono">
                   100%
@@ -314,20 +332,13 @@ export default function HomePage() {
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl">
                 {isEn
-                  ? 'Showcasing 3 featured enterprise computers in stock. Tested with deep hardware stress-tests and covered by on-site warranty.'
-                  : 'Trưng bày 3 mẫu máy tiêu biểu đang sẵn sàng tại cửa hàng. Kiểm định 100% qua phần mềm chuyên dụng, bảo hành nhanh chóng tận nơi <5km.'}
+                  ? 'Showcasing featured enterprise computers in stock. Tested with deep hardware stress-tests and covered by attentive warranty.'
+                  : 'Danh mục máy tính và laptop tuyển chọn có sẵn tại cửa hàng. Kiểm định thực tế bằng phần mềm chuyên dụng, bảo hành chu đáo.'}
               </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full font-semibold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>{isEn ? `${totalReadyStock} units in stock` : `${totalReadyStock} máy đang sẵn kho`}</span>
-              </span>
             </div>
           </div>
 
-                    {/* Category Filter Tabs: Tất Cả, Máy Tính & Laptop, Phần Mềm & Key */}
+          {/* Category Filter Tabs: Tất Cả, Máy Tính & Laptop, Phần Mềm & Key */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -367,13 +378,6 @@ export default function HomePage() {
                 </span>
               </button>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="text-xs text-emerald-800 font-semibold flex items-center gap-1.5 px-1">
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>{isEn ? 'Live Inventory • Prompt Warranty (<5km On-site)' : 'Sẵn Hàng Thực Tế • Bảo Hành Nhanh Tận Nơi <5km'}</span>
-              </div>
-            </div>
           </div>
 
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
@@ -381,10 +385,10 @@ export default function HomePage() {
             <div className="space-y-4 mb-10">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#6E5D53]">
-                  {isEn ? 'FEATURED COMPUTERS READY FOR DELIVERY' : 'MÁY TÍNH & LAPTOP TIÊU BIỂU SẴN SÀNG BÀN GIAO'}
+                  {isEn ? 'FEATURED COMPUTERS & LAPTOPS' : 'MÁY TÍNH & LAPTOP NỔI BẬT'}
                 </h3>
                 <span className="text-[11px] font-semibold text-slate-500">
-                  {isEn ? '3 featured models' : '3 mẫu tiêu biểu'}
+                  {isEn ? 'Featured models' : 'Mẫu máy chọn lọc'}
                 </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -587,12 +591,6 @@ export default function HomePage() {
               <span>{isEn ? `View All ${allProducts.length} Computers in Stock` : `Xem Toàn Bộ Kho Máy Tính Có Sẵn (${totalReadyStock} máy)`}</span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
             </Link>
-            <Link
-              href="/danh-muc-san-pham?tab=sold"
-              className="w-full sm:w-auto px-6 py-4 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 font-semibold text-sm transition-all shadow-2xs flex items-center justify-center gap-2 text-center"
-            >
-              <span>{isEn ? 'View Actual Delivery Records' : 'Xem Hồ Sơ Bàn Giao Thực Tế'}</span>
-            </Link>
           </div>
         </section>
 
@@ -634,8 +632,8 @@ export default function HomePage() {
                   </h2>
                   <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed">
                     {isEn
-                      ? 'Every device serviced or delivered undergoes thermal and clock testing under realistic workloads with open hardware tracking. Zero component swapping, zero hidden fees.'
-                      : 'Do máy thuộc dòng tuyển chọn cao cấp nguyên bản, kỹ thuật viên không can thiệp hay kiểm tra chi tiết trên bo mạch chủ (mainboard) để giữ nguyên trạng zin của máy. Toàn bộ quy trình kiểm định chất lượng được kiểm tra thực tế 100% qua các phần mềm đo kiểm chuyên dụng (stress test full-load nhiệt độ, xung nhịp vi xử lý, sức khỏe ổ cứng).'}
+                      ? 'Every device serviced or delivered undergoes thorough inspection under realistic workloads. Original hardware, transparent pricing, zero hidden fees.'
+                      : 'An Tâm cam kết bo mạch chủ nguyên bản 100%, chưa từng qua sửa chữa. Toàn bộ quy trình kiểm định chất lượng được thực hiện thực tế qua các phần mềm đo kiểm chuyên dụng (stress test nhiệt độ, xung nhịp vi xử lý, sức khỏe ổ cứng) trước khi bàn giao.'}
                   </p>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -645,7 +643,7 @@ export default function HomePage() {
                     </div>
                     <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
                       <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Digital OEM License' : 'Bản Quyền Số OEM'}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for accounting.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho kế toán.'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for business data.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho dữ liệu công việc.'}</div>
                     </div>
                   </div>
                 </div>
@@ -889,154 +887,6 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-
-      {/* YÊU CẦU 2: FLOATING ACTION BUTTONS HÌNH TRÒN (ROUNDED-FULL) */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        {/* 1. Kiểm tra bảo hành theo S/N — Hình tròn */}
-        <Link
-          href="/tra-cuu-bao-hanh"
-          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-[#FAF7F2] text-[#C0392B] border-2 border-[#C0392B] shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title={t.floating.warrantyTooltip}
-          aria-label={t.floating.warrantyTooltip}
-        >
-          <ShieldCheck className="w-5 h-5 text-[#C0392B]" strokeWidth={1.5} />
-          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span>{t.floating.warrantyTooltip}</span>
-          </span>
-        </Link>
-
-        {/* 2. Gọi điện Hotline 0909.053.058 — Hình tròn */}
-        <a
-          href={`tel:${(systemSettings.hotline || '0909053058').replace(/\./g, '')}`}
-          className="pointer-events-auto w-12 h-12 rounded-full bg-[#D9531E] hover:bg-[#C0392B] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title={`Hotline: ${systemSettings.hotline || '0909.053.058'}`}
-          aria-label={`Gọi hotline ${systemSettings.hotline || '0909.053.058'}`}
-        >
-          <PhoneCall className="w-5 h-5" strokeWidth={1.5} />
-          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span className="text-[#E8A87C] font-bold">Hotline:</span>
-            <span>{systemSettings.hotline || '0909.053.058'} (24/7)</span>
-          </span>
-        </a>
-
-        {/* 3. Nhắn Zalo Kỹ Thuật — Mở danh sách 3 số Zalo */}
-        <div className="relative pointer-events-auto">
-          <button
-            type="button"
-            onClick={() => setIsZaloModalOpen(!isZaloModalOpen)}
-            className="w-12 h-12 rounded-full bg-[#0068FF] hover:bg-[#0054d1] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative cursor-pointer"
-            title="Nhắn Zalo: Chọn kỹ thuật viên trực ca"
-            aria-label="Mở danh sách 3 số Zalo kỹ thuật"
-          >
-            <MessageSquare className="w-5 h-5" strokeWidth={1.5} />
-            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#C0392B] text-white text-[10px] font-mono font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-              3
-            </span>
-            <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-              <span className="font-bold text-sky-300">Zalo:</span>
-              <span>{isEn ? '3 Tech Hotlines' : '3 Số Zalo Kỹ Thuật'}</span>
-            </span>
-          </button>
-
-          {/* Popover danh sách 3 số Zalo trực ca */}
-          {isZaloModalOpen && (
-            <div className="absolute right-0 bottom-14 w-72 sm:w-80 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xl p-4 z-50 animate-fade-in font-sans">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#0068FF] text-white flex items-center justify-center text-xs font-black">
-                    Z
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black text-[#2B1810] uppercase tracking-wide">
-                      CHỌN KỸ THUẬT VIÊN ZALO
-                    </h4>
-                    <p className="text-[10px] text-[#6E5D53]">
-                      Kết nối nhanh • Phục vụ trực tiếp
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsZaloModalOpen(false)}
-                  className="w-6 h-6 rounded-md hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center text-sm font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="py-2.5 space-y-2">
-                {(systemSettings.zaloContacts || [
-                  { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
-                  { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
-                  { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
-                ]).map((contact, idx) => {
-                  const cleanPhone = (contact.phone || '').replace(/\D/g, '');
-                  return (
-                    <a
-                      key={contact.id || idx}
-                      href={`https://zalo.me/${cleanPhone}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2.5 rounded-xl border border-slate-100 hover:border-[#0068FF] bg-[#FAF7F2]/60 hover:bg-blue-50/40 transition-all flex items-center justify-between gap-2.5 group/item"
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-[#2B1810] group-hover/item:text-[#0068FF] transition-colors">
-                            {contact.name || `Kỹ Thuật ${idx + 1}`}
-                          </span>
-                          <span className="px-1.5 py-0.2 rounded text-[10px] font-mono font-bold bg-white text-[#0068FF] border border-blue-200">
-                            {contact.phone}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-[#6E5D53] line-clamp-1">
-                          {contact.role || 'Hỗ trợ kỹ thuật'}
-                        </p>
-                      </div>
-
-                      <div className="px-2.5 py-1 rounded-lg bg-[#0068FF] text-white text-[11px] font-bold shrink-0 shadow-2xs group-hover/item:bg-[#0054d1] transition-colors">
-                        Nhắn tin
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-[#6E5D53]">
-                <span>Tất cả số đều được Admin xác thực</span>
-                <span className="font-semibold text-emerald-700">● Đang trực tuyến</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 4. Widget Nút WhatsApp — Hình tròn */}
-        <a
-          href={systemSettings.whatsappLink || 'https://wa.me/84909053058'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="pointer-events-auto w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title="WhatsApp: Tư vấn máy & hỗ trợ kỹ thuật"
-        >
-          <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-            <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.97.531 1.939.814 2.796.814 3.181 0 5.767-2.586 5.768-5.766 0-3.18-2.586-5.767-5.768-5.767zm7.551 5.766c0 4.164-3.388 7.551-7.551 7.551-1.31 0-2.573-.342-3.682-.992l-4.349 1.141 1.161-4.241c-.72-1.156-1.101-2.493-1.101-3.859 0-4.164 3.388-7.551 7.551-7.551s7.551 3.387 7.551 7.551zm-5.834 2.052c-.179.497-.886.917-1.258.97-.373.053-.836.082-2.392-.562-1.865-.772-3.064-2.673-3.158-2.798-.093-.125-.762-1.015-.762-1.936 0-.92.483-1.372.655-1.558.172-.186.376-.232.502-.232.125 0 .252.002.361.008.115.006.269-.044.421.32.158.379.542 1.322.589 1.418.047.096.079.208.016.333-.063.125-.094.204-.188.314-.094.11-.198.246-.282.33-.094.094-.192.197-.082.386.11.189.489.808 1.05 1.308.723.644 1.332.844 1.521.938.189.094.3-.079.41-.205.11-.126.471-.548.597-.736.126-.188.252-.157.422-.094.17.063 1.082.51 1.27.604.188.094.314.141.36.22.046.078.046.452-.133.949z" />
-          </svg>
-          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl flex items-center gap-1.5">
-            <span className="font-bold text-emerald-400">WhatsApp:</span>
-            <span>{isEn ? 'Direct WhatsApp Chat' : 'Chat WhatsApp tư vấn máy'}</span>
-          </span>
-        </a>
-
-        {/* 5. Scroll to Top — Hình tròn */}
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="pointer-events-auto w-10 h-10 rounded-full bg-white hover:bg-[#FAF7F2] text-[#6E5D53] hover:text-[#2B1810] border border-[#E8E2D9] shadow-md hover:shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group relative"
-          title={t.floating.backToTop}
-          aria-label={t.floating.backToTop}
-        >
-          <ArrowUp className="w-4 h-4 text-[#2B1810]" strokeWidth={1.5} />
-        </button>
-      </div>
 
       {/* QC & S/N INSPECTION MODAL */}
       <Modal

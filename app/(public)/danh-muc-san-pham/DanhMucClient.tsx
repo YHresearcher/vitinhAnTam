@@ -120,16 +120,6 @@ function ProductsCatalogContent() {
                 {isEn ? 'PRODUCTS' : 'SẢN PHẨM'}
               </h1>
             </div>
-
-            {/* Quick stock status pill */}
-            <div className="text-xs text-[#6E5D53] font-medium bg-[#FAF7F2] px-4 py-2.5 rounded-xl border border-[#E8E2D9] inline-flex items-center gap-2.5 self-start md:self-auto shadow-2xs">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-              <span>
-                {t.products.readyCount}{' '}
-                <strong className="text-[#C0392B] font-bold font-mono text-sm">{totalReadyStock}</strong>{' '}
-                {t.products.readyCountSuffix}
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -153,10 +143,10 @@ function ProductsCatalogContent() {
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'in_stock' ? 'bg-white' : 'bg-emerald-500'}`}></span>
                 <span>{isEn ? 'In Stock' : 'Sẵn hàng'}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                   statusTab === 'in_stock' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-800'
                 }`}>
-                  {inStockProducts.length}
+                  {inStockProducts.length} dòng ({totalReadyStock} máy)
                 </span>
               </button>
 
@@ -184,11 +174,11 @@ function ProductsCatalogContent() {
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'sold' ? 'bg-white' : 'bg-slate-400'}`}></span>
-                <span>{isEn ? 'Sold' : 'Đã bán'}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                <span>{isEn ? 'Delivered' : 'Đã bàn giao'}</span>
+                <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                   statusTab === 'sold' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
                 }`}>
-                  {soldProducts.length}
+                  {soldProducts.length} máy
                 </span>
               </button>
             </div>
@@ -225,7 +215,9 @@ function ProductsCatalogContent() {
                 <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
                   {isEn ? 'In Stock' : 'Sẵn hàng'}
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">({filteredInStock.length} {isEn ? 'units' : 'máy'})</span>
+                <span className="text-xs text-slate-500 font-medium">
+                  ({filteredInStock.length} {isEn ? 'models' : 'dòng máy'} • {totalReadyStock} {isEn ? 'units available' : 'chiếc sẵn có'})
+                </span>
               </div>
             </div>
 

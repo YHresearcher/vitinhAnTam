@@ -146,6 +146,33 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`}>
       <head>
+        {/* Synchronous LocalStorage Initializer to prevent logo & favicon flash on refresh */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var raw = localStorage.getItem('vtat_system_settings_v2');
+                  if (raw) {
+                    var parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') {
+                      window.__INITIAL_SYSTEM_SETTINGS__ = parsed;
+                      if (parsed.faviconUrl && parsed.faviconUrl.trim()) {
+                        var link = document.querySelector("link[rel*='icon']");
+                        if (!link) {
+                          link = document.createElement('link');
+                          link.rel = 'icon';
+                          document.head.appendChild(link);
+                        }
+                        link.href = parsed.faviconUrl.trim();
+                      }
+                    }
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
         {/* Schema.org Structured Data for Local SEO */}
         <script
           type="application/ld+json"

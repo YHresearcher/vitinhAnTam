@@ -154,6 +154,7 @@ export interface InventoryItem {
   burn_in_duration?: number;
   cost_price?: number;
   import_price?: number;
+  import_date?: string; // YYYY-MM-DD - Ngày nhập hàng vào kho
   retail_price?: number;
   price?: number;
   stock_quantity?: number;

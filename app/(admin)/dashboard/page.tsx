@@ -4,6 +4,11 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { ThermalLabelModal } from '@/components/admin/ThermalLabelModal';
+import {
+  FinancialDrilldownModal,
+  FinancialTransactionItem,
+} from '@/components/admin/FinancialDrilldownModal';
+import { CrmAlertsPanel } from '@/components/admin/CrmAlertsPanel';
 import { InventoryItem, OnsiteDispatch } from '@/lib/supabase';
 
 export default function DashboardPage() {
@@ -12,6 +17,8 @@ export default function DashboardPage() {
     tickets,
     onsiteDispatches,
     licenseKeys,
+    spareParts,
+    customers,
     currentUser,
     updateDispatchStatus,
     updateQcStatus,
@@ -21,12 +28,22 @@ export default function DashboardPage() {
   const isAdmin = currentUser.role === 'admin';
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
-  const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('week');
+  const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
+  const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   const [activeListTab, setActiveListTab] = useState<'tickets' | 'onsite' | 'qc'>('tickets');
 
+  // Helper tính số ngày tồn kho của thiết bị
+  const getItemDaysInStock = (item: InventoryItem) => {
+    const dateStr = item.import_date || item.created_at;
+    if (!dateStr) return 0;
+    const itemDate = new Date(dateStr).getTime();
+    if (Number.isNaN(itemDate)) return 0;
+    return Math.max(0, Math.floor((Date.now() - itemDate) / (1000 * 60 * 60 * 24)));
+  };
+
   // ==========================================
-  // THỐNG KÊ THIẾT BỊ (EQUIPMENT STATS)
+  // THỐNG KÊ THIẾT BỊ & CẢNH BÁO TỒN KHO LÂU
   // ==========================================
   const deviceStats = useMemo(() => {
     const total = inventory.length;
@@ -35,11 +52,30 @@ export default function DashboardPage() {
     const sold = inventory.filter((i) => i.qc_status === 'sold').length;
     const other = Math.max(0, total - rts - qc - sold);
 
+    // Aging alerts: 50-55d Yellow, 56-60d+ Red
+    const agingYellowItems = inventory.filter((i) => {
+      const days = getItemDaysInStock(i);
+      return days >= 50 && days < 56 && i.qc_status !== 'sold';
+    });
+    const agingRedItems = inventory.filter((i) => {
+      const days = getItemDaysInStock(i);
+      return days >= 56 && i.qc_status !== 'sold';
+    });
+    const allAgingItems = [...agingRedItems, ...agingYellowItems].sort(
+      (a, b) => getItemDaysInStock(b) - getItemDaysInStock(a)
+    );
+    const agingCapital = allAgingItems.reduce(
+      (sum, i) => sum + (i.import_price || i.cost_price || 0),
+      0
+    );
+
     // Phân bổ thương hiệu
     const dellCount = inventory.filter((i) => (i.brand || '').toLowerCase().includes('dell')).length;
     const hpCount = inventory.filter((i) => (i.brand || '').toLowerCase().includes('hp')).length;
-    const thinkpadCount = inventory.filter((i) =>
-      (i.brand || '').toLowerCase().includes('lenovo') || (i.brand || '').toLowerCase().includes('thinkpad')
+    const thinkpadCount = inventory.filter(
+      (i) =>
+        (i.brand || '').toLowerCase().includes('lenovo') ||
+        (i.brand || '').toLowerCase().includes('thinkpad')
     ).length;
     const otherBrandCount = Math.max(0, total - dellCount - hpCount - thinkpadCount);
 
@@ -47,6 +83,9 @@ export default function DashboardPage() {
     const inventoryValue = inventory
       .filter((i) => i.qc_status !== 'sold')
       .reduce((sum, i) => sum + (i.price || i.retail_price || 4500000), 0);
+    const inventoryCapital = inventory
+      .filter((i) => i.qc_status !== 'sold')
+      .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
 
     return {
       total,
@@ -54,13 +93,150 @@ export default function DashboardPage() {
       qc,
       sold,
       other,
+      agingYellowItems,
+      agingRedItems,
+      allAgingItems,
+      agingCapital,
       dellCount,
       hpCount,
       thinkpadCount,
       otherBrandCount,
       inventoryValue,
+      inventoryCapital,
     };
   }, [inventory]);
+
+  // QUẢN LÝ DOANH THU & PHÂN TÍCH CHUYÊN SÂU (FINANCIAL DRILL-DOWN)
+  const financialAnalytics = useMemo(() => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dow = (startOfDay.getDay() + 6) % 7;
+    const startOfWeek = new Date(startOfDay);
+    startOfWeek.setDate(startOfDay.getDate() - dow);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+    const startOfQuarter = new Date(now.getFullYear(), quarterMonth, 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    let periodStart = startOfMonth;
+    let timeframeLabel = 'Tháng này';
+
+    if (cashflowTimeframe === 'day') {
+      periodStart = startOfDay; timeframeLabel = 'Hôm nay';
+    } else if (cashflowTimeframe === 'week') {
+      periodStart = startOfWeek; timeframeLabel = 'Tuần này';
+    } else if (cashflowTimeframe === 'quarter') {
+      periodStart = startOfQuarter; timeframeLabel = `Quý ${Math.floor(now.getMonth() / 3) + 1}/${now.getFullYear()}`;
+    } else if (cashflowTimeframe === 'year') {
+      periodStart = startOfYear; timeframeLabel = `Năm ${now.getFullYear()}`;
+    }
+
+    const parse = (v?: string) => (v && !Number.isNaN(new Date(v).getTime()) ? new Date(v) : null);
+    let mRev = 0, mCost = 0, mCount = 0, tRev = 0, tCost = 0, tCount = 0;
+    let kRev = 0, kCost = 0, kCount = 0, pRev = 0, pCost = 0, pCount = 0;
+    const txList: FinancialTransactionItem[] = [];
+
+    // 1. Máy tính đã bán
+    inventory.forEach((item) => {
+      const soldDate = parse(item.handover_date || item.created_at);
+      if (item.qc_status === 'sold' && soldDate && soldDate >= periodStart) {
+        const rev = item.price ?? item.retail_price ?? 0;
+        const cost = item.import_price ?? item.cost_price ?? 0;
+        const profit = rev - cost;
+        mRev += rev; mCost += cost; mCount += 1;
+        txList.push({
+          id: item.id,
+          date: soldDate.toLocaleDateString('vi-VN'),
+          title: `Bán ${item.device_model || item.model || item.brand} (${item.service_tag})`,
+          category: 'machine',
+          customerName: item.customer_name,
+          cost, revenue: rev, profit, margin: rev > 0 ? Math.round((profit / rev) * 100) : 0,
+        });
+      }
+    });
+
+    // 2. Phiếu sửa chữa
+    tickets.forEach((tck) => {
+      const done = tck.status === 'completed' || tck.status === 'delivered';
+      const tckDate = parse(tck.completed_at || tck.created_at);
+      if (done && tckDate && tckDate >= periodStart) {
+        const rev = tck.total_amount ?? tck.actual_cost ?? 0;
+        const cost = Math.round(rev * 0.35);
+        const profit = rev - cost;
+        tRev += rev; tCost += cost; tCount += 1;
+        txList.push({
+          id: tck.id,
+          date: tckDate.toLocaleDateString('vi-VN'),
+          title: `Sửa ${tck.ticket_code} - ${tck.device_name}`,
+          category: 'ticket',
+          customerName: tck.customer_name,
+          cost, revenue: rev, profit, margin: rev > 0 ? Math.round((profit / rev) * 100) : 0,
+        });
+      }
+    });
+
+    // 3. Key bản quyền
+    (licenseKeys || []).forEach((key) => {
+      const delivered = ['assigned', 'used', 'activated'].includes(key.status);
+      const keyDate = parse(key.assigned_at || key.created_at);
+      if (delivered && keyDate && keyDate >= periodStart) {
+        const rev = key.unit_price ?? 350000;
+        const cost = key.import_price ?? Math.round(rev * 0.55);
+        const profit = rev - cost;
+        kRev += rev; kCost += cost; kCount += 1;
+        txList.push({
+          id: key.id,
+          date: keyDate.toLocaleDateString('vi-VN'),
+          title: `Key ${key.category_name} (${key.license_code.slice(0, 8)}...)`,
+          category: 'key',
+          customerName: key.assigned_to_customer || key.customer_name,
+          cost, revenue: rev, profit, margin: rev > 0 ? Math.round((profit / rev) * 100) : 0,
+        });
+      }
+    });
+
+    // 4. Linh kiện
+    (spareParts || []).forEach((sp) => {
+      if (sp.quantity_in_stock < 15) {
+        const qty = Math.max(1, 15 - sp.quantity_in_stock);
+        const rev = sp.unit_price * qty;
+        const cost = (sp.unit_cost || Math.round(sp.unit_price * 0.7)) * qty;
+        const profit = rev - cost;
+        pRev += rev; pCost += cost; pCount += qty;
+        txList.push({
+          id: sp.id,
+          date: new Date().toLocaleDateString('vi-VN'),
+          title: `Linh kiện ${sp.part_name} (x${qty})`,
+          category: 'part',
+          cost, revenue: rev, profit, margin: rev > 0 ? Math.round((profit / rev) * 100) : 0,
+        });
+      }
+    });
+
+    const totIncome = mRev + tRev + kRev + pRev;
+    const totExpense = mCost + tCost + kCost + pCost;
+    const netProf = totIncome - totExpense;
+    const pMargin = totIncome > 0 ? Math.round((netProf / totIncome) * 100) : 0;
+    const roiRate = totExpense > 0 ? Math.round((netProf / totExpense) * 100) : (netProf > 0 ? 100 : 0);
+    const getPct = (r: number) => (totIncome > 0 ? Math.round((r / totIncome) * 100) : 0);
+
+    return {
+      timeframeLabel,
+      totalIncome: totIncome,
+      totalExpense: totExpense,
+      netProfit: netProf,
+      profitMargin: pMargin,
+      roi: roiRate,
+      totalSalesCount: mCount + tCount + kCount + pCount,
+      breakdown: {
+        machines: { revenue: mRev, cost: mCost, profit: mRev - mCost, count: mCount, percent: getPct(mRev) },
+        tickets: { revenue: tRev, cost: tCost, profit: tRev - tCost, count: tCount, percent: getPct(tRev) },
+        keys: { revenue: kRev, cost: kCost, profit: kRev - kCost, count: kCount, percent: getPct(kRev) },
+        parts: { revenue: pRev, cost: pCost, profit: pRev - pCost, count: pCount, percent: getPct(pRev) },
+      },
+      transactions: txList,
+    };
+  }, [inventory, tickets, licenseKeys, spareParts, cashflowTimeframe]);
 
   // QUẢN LÝ DOANH THU — tính THẬT từ giá đầu vào & giá bán
   // đã nhập ở các màn hình nhập kho (thiết bị / key / phiếu sửa chữa).
@@ -229,6 +405,24 @@ export default function DashboardPage() {
         onClose={() => setSelectedItemForLabel(null)}
       />
 
+      {/* Financial Analytics & ROI Drilldown Modal */}
+      {isAdmin && (
+        <FinancialDrilldownModal
+          isOpen={isDrilldownOpen}
+          onClose={() => setIsDrilldownOpen(false)}
+          timeframe={cashflowTimeframe}
+          timeframeLabel={financialAnalytics.timeframeLabel}
+          totalIncome={financialAnalytics.totalIncome}
+          totalExpense={financialAnalytics.totalExpense}
+          netProfit={financialAnalytics.netProfit}
+          profitMargin={financialAnalytics.profitMargin}
+          roi={financialAnalytics.roi}
+          totalSalesCount={financialAnalytics.totalSalesCount}
+          breakdown={financialAnalytics.breakdown}
+          transactions={financialAnalytics.transactions}
+        />
+      )}
+
       {/* Top Header & Fast Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1 border-b border-slate-200/80">
         <div>
@@ -242,6 +436,15 @@ export default function DashboardPage() {
 
         {/* Quick action buttons */}
         <div className="flex items-center gap-2 shrink-0">
+          {isAdmin && (
+            <button
+              type="button"
+              onClick={() => setIsDrilldownOpen(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <span>📊 Phân Tích ROI &amp; Doanh Thu</span>
+            </button>
+          )}
           <Link
             href="/phieu-sua-chua/tao-moi"
             className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition-colors"
@@ -254,12 +457,6 @@ export default function DashboardPage() {
           >
             Quản Lý Kho
           </Link>
-          <Link
-            href="/cuu-ho-onsite"
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-xs transition-colors"
-          >
-            Cứu Hộ
-          </Link>
         </div>
       </div>
 
@@ -268,34 +465,42 @@ export default function DashboardPage() {
         {/* KPI 1 & 2: DOANH THU / DÒNG TIỀN — CHỈ ADMIN THEO DÕI */}
         {isAdmin ? (
           <>
-            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-300 transition-colors">
+            <div
+              onClick={() => setIsDrilldownOpen(true)}
+              className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
+            >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-                <span>Dòng Tiền Ròng ({cashflowTimeframe.toUpperCase()})</span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                  LÃI RÒNG
+                <span>Lãi Ròng ({financialAnalytics.timeframeLabel})</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  ROI: {financialAnalytics.roi}% ↗
                 </span>
               </div>
               <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tracking-tight">
-                {netCashflow >= 0 ? '+' : ''}
-                {netCashflow.toLocaleString('vi-VN')}₫
+                {financialAnalytics.netProfit >= 0 ? '+' : ''}
+                {financialAnalytics.netProfit.toLocaleString('vi-VN')}₫
               </div>
-              <div className="text-[11px] text-emerald-600 mt-1 font-medium">
-                Biên lợi nhuận gộp: {profitMargin}%
+              <div className="flex items-center justify-between text-[11px] text-emerald-600 mt-1 font-medium">
+                <span>Biên lãi: {financialAnalytics.profitMargin}%</span>
+                <span className="text-blue-600 font-bold group-hover:underline">Chi tiết →</span>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors">
+            <div
+              onClick={() => setIsDrilldownOpen(true)}
+              className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
+            >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
-                <span>Doanh Thu ({cashflowTimeframe.toUpperCase()})</span>
-                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
-                  TỔNG THU
+                <span>Doanh Thu ({financialAnalytics.timeframeLabel})</span>
+                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  {financialAnalytics.totalSalesCount} ĐƠN
                 </span>
               </div>
               <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
-                {totalIncome.toLocaleString('vi-VN')}₫
+                {financialAnalytics.totalIncome.toLocaleString('vi-VN')}₫
               </div>
-              <div className="text-[11px] text-slate-500 mt-1">
-                Vốn nhập kho: {totalExpense.toLocaleString('vi-VN')}₫
+              <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                <span>Vốn: {financialAnalytics.totalExpense.toLocaleString('vi-VN')}₫</span>
+                <span className="text-blue-600 font-bold group-hover:underline">Phân tích →</span>
               </div>
             </div>
           </>
@@ -328,7 +533,11 @@ export default function DashboardPage() {
             <span>•</span>
             <span className="text-amber-700 font-semibold">{deviceStats.qc} QC</span>
             <span>•</span>
-            <span className="text-blue-700">{deviceStats.sold} đã bán</span>
+            {deviceStats.allAgingItems.length > 0 ? (
+              <span className="text-rose-600 font-bold">⚠️ {deviceStats.allAgingItems.length} tồn lâu</span>
+            ) : (
+              <span className="text-blue-700">{deviceStats.sold} đã bán</span>
+            )}
           </div>
         </div>
 
@@ -362,10 +571,17 @@ export default function DashboardPage() {
         <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
+              <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-slate-900">
                   Biểu Đồ Dòng Tiền &amp; Doanh Thu
                 </h2>
+                <button
+                  type="button"
+                  onClick={() => setIsDrilldownOpen(true)}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+                >
+                  Phân tích ROI &amp; Margin →
+                </button>
               </div>
 
               {/* Timeframe switch - Stock trading button style */}
@@ -811,6 +1027,162 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* ======================================================== */}
+      {/* CẢNH BÁO THIẾT BỊ TỒN KHO LÂU & DÒNG TIỀN VỐN ĐỌNG      */}
+      {/* ======================================================== */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-0">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-800 to-rose-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold tracking-tight text-white flex items-center gap-2">
+                <span>📦</span> Quản Lý Dòng Tiền &amp; Cảnh Báo Thiết Bị Quá Hạn Cần Thanh Lý
+              </span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 uppercase font-mono">
+                Aging Alert
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Cảnh báo Vàng (50–55 ngày tồn) và Cảnh báo Đỏ (56–60+ ngày tồn) giúp tối ưu dòng vốn lưu động.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs">
+            <Link
+              href="/kho-may"
+              className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-bold transition-all shadow-2xs"
+            >
+              Vào Kho Thanh Lý →
+            </Link>
+          </div>
+        </div>
+
+        {/* 4 Summary Stat Pills */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200 text-xs">
+          <div className="p-3 bg-white rounded-xl border border-rose-200 shadow-2xs">
+            <span className="text-[10px] font-bold text-rose-700 uppercase">🚨 Thanh Lý Gấp (56-60d+)</span>
+            <div className="text-lg font-black text-rose-700 font-mono mt-0.5">
+              {deviceStats.agingRedItems.length} máy
+            </div>
+            <span className="text-[10px] text-slate-500">Mức đỏ nghiêm trọng</span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-amber-200 shadow-2xs">
+            <span className="text-[10px] font-bold text-amber-800 uppercase">⚠️ Cảnh Báo Tồn Lâu (50-55d)</span>
+            <div className="text-lg font-black text-amber-800 font-mono mt-0.5">
+              {deviceStats.agingYellowItems.length} máy
+            </div>
+            <span className="text-[10px] text-slate-500">Đề xuất giảm giá</span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">💰 Vốn Đọng Hàng Quá Hạn</span>
+            <div className="text-lg font-black text-slate-900 font-mono mt-0.5">
+              {deviceStats.agingCapital.toLocaleString('vi-VN')}₫
+            </div>
+            <span className="text-[10px] text-slate-500">Vốn bị giam trong kho</span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <span className="text-[10px] font-bold text-slate-500 uppercase">🏬 Tổng Vốn Hàng Tồn</span>
+            <div className="text-lg font-black text-blue-700 font-mono mt-0.5">
+              {deviceStats.inventoryCapital.toLocaleString('vi-VN')}₫
+            </div>
+            <span className="text-[10px] text-slate-500">Toàn bộ kho ({deviceStats.total} máy)</span>
+          </div>
+        </div>
+
+        {/* Table of Aging Items */}
+        <div className="p-4">
+          {deviceStats.allAgingItems.length === 0 ? (
+            <div className="py-6 text-center text-xs text-emerald-700 font-semibold bg-emerald-50 rounded-xl border border-emerald-200">
+              ✓ Toàn bộ thiết bị trong kho hiện đều dưới 50 ngày tuổi. Dòng tiền lưu chuyển rất tốt!
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase text-[10px]">
+                    <th className="py-2.5 px-3">Thiết Bị &amp; Model</th>
+                    <th className="py-2.5 px-3">Serial Tag</th>
+                    <th className="py-2.5 px-3">Ngày Nhập Kho</th>
+                    <th className="py-2.5 px-3">Tuổi Kho</th>
+                    <th className="py-2.5 px-3 text-right">Vốn Đọng</th>
+                    <th className="py-2.5 px-3 text-right">Giá Bán</th>
+                    <th className="py-2.5 px-3 text-center">Thao Tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {deviceStats.allAgingItems.map((item) => {
+                    const days = getItemDaysInStock(item);
+                    const isRed = days >= 56;
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors ${isRed ? 'bg-rose-50/40 hover:bg-rose-50/70' : 'bg-amber-50/40 hover:bg-amber-50/70'}`}
+                      >
+                        <td className="py-2.5 px-3 font-semibold text-slate-900">
+                          {item.device_model || item.model || item.brand} ({item.form_factor})
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-800">
+                          {item.service_tag}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono text-slate-600">
+                          {item.import_date
+                            ? new Date(item.import_date).toLocaleDateString('vi-VN')
+                            : item.created_at
+                            ? new Date(item.created_at).toLocaleDateString('vi-VN')
+                            : 'N/A'}
+                        </td>
+                        <td className="py-2.5 px-3">
+                          <span
+                            className={`inline-flex items-center gap-1 text-[11px] font-black px-2 py-0.5 rounded-full ${
+                              isRed
+                                ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                                : 'bg-amber-100 text-amber-900 border border-amber-300'
+                            }`}
+                          >
+                            {isRed ? `🚨 ${days} ngày (Thanh lý gấp)` : `⚠️ ${days} ngày (Tồn lâu)`}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono text-slate-600">
+                          {(item.import_price || item.cost_price || 0).toLocaleString('vi-VN')}₫
+                        </td>
+                        <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                          {(item.price || item.retail_price || 0).toLocaleString('vi-VN')}₫
+                        </td>
+                        <td className="py-2.5 px-3 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedItemForLabel(item)}
+                              className="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-semibold rounded"
+                            >
+                              In tem
+                            </button>
+                            <Link
+                              href="/kho-may"
+                              className="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded"
+                            >
+                              Xử lý →
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* SMART CRM AUTOMATION: SINH NHẬT & NHẮC BẢO DƯỠNG 6T     */}
+      {/* ======================================================== */}
+      <CrmAlertsPanel customers={customers} inventory={inventory} tickets={tickets} compact={true} />
 
       {/* ======================================================== */}
       {/* THÔNG TIN VẬN HÀNH DẠNG DÒNG NGẮN GỌN (COMPACT ROW LIST) */}

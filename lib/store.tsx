@@ -279,7 +279,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>(initialSoftwareLicenses);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
-  const [systemSettings, setSystemSettings] = useState<SystemSettings>(initialSystemSettings);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const init = (window as unknown as { __INITIAL_SYSTEM_SETTINGS__?: Partial<SystemSettings> }).__INITIAL_SYSTEM_SETTINGS__;
+        if (init && typeof init === 'object') {
+          return { ...initialSystemSettings, ...init };
+        }
+        const raw = localStorage.getItem('vtat_system_settings_v2');
+        if (raw) {
+          return { ...initialSystemSettings, ...JSON.parse(raw) };
+        }
+      } catch (e) {}
+    }
+    return initialSystemSettings;
+  });
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template

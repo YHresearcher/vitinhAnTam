@@ -117,7 +117,7 @@ export default function CaiDatPage() {
     }));
   };
 
-  const handleFileUpload = (
+  const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     field: 'logoUrl' | 'faviconUrl'
   ) => {
@@ -129,23 +129,57 @@ export default function CaiDatPage() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      message.error('Kích thước ảnh vượt quá 2MB. Vui lòng chọn ảnh dung lượng nhẹ hơn!');
+    if (file.size > 4 * 1024 * 1024) {
+      message.error('Kích thước ảnh vượt quá 4MB. Vui lòng chọn ảnh dung lượng nhẹ hơn!');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('folder', 'header');
+
+    const hide = message.loading(`Đang tải lên file ${field === 'logoUrl' ? 'Logo' : 'Favicon'}...`, 0);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData,
+      });
+
+      const data = await res.json();
+      hide();
+
+      if (res.ok && data.success && data.url) {
         setFormData((prev) => ({
           ...prev,
-          [field]: result,
+          [field]: data.url,
         }));
-        message.success(`Đã tải ảnh ${field === 'logoUrl' ? 'Logo' : 'Favicon'}! Nhấn "Lưu cấu hình" để áp dụng.`);
+        message.success(`Đã lưu ảnh vào thư mục hình ảnh (${data.url})! Nhấn "Lưu cấu hình" để áp dụng.`);
+      } else {
+        // Fallback sang FileReader nếu API có trục trặc
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const result = event.target?.result as string;
+          if (result) {
+            setFormData((prev) => ({ ...prev, [field]: result }));
+            message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
+          }
+        };
+        reader.readAsDataURL(file);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch {
+      hide();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        if (result) {
+          setFormData((prev) => ({ ...prev, [field]: result }));
+          message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
     e.target.value = '';
   };
 
@@ -1268,7 +1302,7 @@ export default function CaiDatPage() {
               label="Nghề nghiệp / Đơn vị"
               rules={[{ required: true, message: 'Vui lòng nhập chức danh' }]}
             >
-              <Input placeholder="VD: Kế toán trưởng" />
+              <Input placeholder="VD: Quản lý văn phòng" />
             </Form.Item>
           </div>
 

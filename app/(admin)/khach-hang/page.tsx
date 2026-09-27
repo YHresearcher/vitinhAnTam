@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { Customer, InventoryItem, ServiceTicket, generateCustomerCode } from '@/lib/supabase';
+import { CrmAlertsPanel } from '@/components/admin/CrmAlertsPanel';
 // Lucide icons removed for minimalist text design
 
 
@@ -43,10 +44,144 @@ export default function KhachHangCrmPage() {
 
   // Notification Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [copiedZaloId, setCopiedZaloId] = useState<string | null>(null);
+  const [activeAlertTab, setActiveAlertTab] = useState<'birthday' | 'maintenance'>('birthday');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Helper: Tính số ngày còn lại đến sinh nhật (Trong vòng 3 ngày)
+  const getBirthdayInfo = (birthDateStr?: string) => {
+    if (!birthDateStr) return null;
+    let bMonth = 0;
+    let bDay = 0;
+
+    if (birthDateStr.includes('-')) {
+      const parts = birthDateStr.split('-');
+      if (parts.length >= 3) {
+        bMonth = parseInt(parts[1], 10);
+        bDay = parseInt(parts[2], 10);
+      }
+    } else if (birthDateStr.includes('/')) {
+      const parts = birthDateStr.split('/');
+      if (parts.length >= 2) {
+        bDay = parseInt(parts[0], 10);
+        bMonth = parseInt(parts[1], 10);
+      }
+    }
+
+    if (!bMonth || !bDay || Number.isNaN(bMonth) || Number.isNaN(bDay)) return null;
+
+    const now = new Date();
+    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let target = new Date(now.getFullYear(), bMonth - 1, bDay);
+
+    const diffDays = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) {
+      target = new Date(now.getFullYear() + 1, bMonth - 1, bDay);
+    }
+    const daysRemaining = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
+
+    return {
+      daysRemaining,
+      dayFormatted: `${String(bDay).padStart(2, '0')}/${String(bMonth).padStart(2, '0')}`,
+      isUpcoming: daysRemaining >= 0 && daysRemaining <= 3,
+    };
+  };
+
+  // Danh sách sinh nhật sắp tới trong 3 ngày
+  const upcomingBirthdayCustomers = useMemo(() => {
+    return customers
+      .map((cust) => {
+        const info = getBirthdayInfo(cust.birth_date);
+        if (info && info.isUpcoming) {
+          return {
+            customer: cust,
+            daysRemaining: info.daysRemaining,
+            dayFormatted: info.dayFormatted,
+          };
+        }
+        return null;
+      })
+      .filter((item): item is { customer: Customer; daysRemaining: number; dayFormatted: string } => item !== null)
+      .sort((a, b) => a.daysRemaining - b.daysRemaining);
+  }, [customers]);
+
+  // Danh sách nhắc bảo dưỡng định kỳ 6 tháng (180 ngày)
+  const maintenanceDueList = useMemo(() => {
+    return customers
+      .map((cust) => {
+        const cleanPhone = cust.phone.replace(/\D/g, '');
+        const custDevices = inventory.filter((item) => {
+          if (item.customer_phone && item.customer_phone.replace(/\D/g, '') === cleanPhone) return true;
+          if (item.customer_name && cust.full_name && item.customer_name.toLowerCase().includes(cust.full_name.toLowerCase())) return true;
+          return false;
+        });
+
+        const custTickets = tickets.filter((t) => {
+          if (t.customer_phone && t.customer_phone.replace(/\D/g, '') === cleanPhone) return true;
+          if (t.customer_name && cust.full_name && t.customer_name.toLowerCase().includes(cust.full_name.toLowerCase())) return true;
+          return false;
+        });
+
+        let latestDate: Date | null = null;
+        let latestDeviceName = '';
+        let latestServiceTag = '';
+
+        custDevices.forEach((d) => {
+          const dateStr = d.handover_date || d.created_at;
+          if (dateStr) {
+            const dt = new Date(dateStr);
+            if (!Number.isNaN(dt.getTime()) && (!latestDate || dt > latestDate)) {
+              latestDate = dt;
+              latestDeviceName = d.device_model || d.model || `${d.brand} ${d.form_factor}`;
+              latestServiceTag = d.service_tag;
+            }
+          }
+        });
+
+        custTickets.forEach((t) => {
+          const dateStr = t.completed_at || t.created_at;
+          if (dateStr) {
+            const dt = new Date(dateStr);
+            if (!Number.isNaN(dt.getTime()) && (!latestDate || dt > latestDate)) {
+              latestDate = dt;
+              latestDeviceName = t.device_name || `Phiếu ${t.ticket_code}`;
+              latestServiceTag = t.device_service_tag || '';
+            }
+          }
+        });
+
+        if (!latestDate) return null;
+
+        const daysSince = Math.floor((Date.now() - (latestDate as Date).getTime()) / (1000 * 60 * 60 * 24));
+        const monthsSince = Math.floor(daysSince / 30);
+
+        if (daysSince >= 180) {
+          return {
+            customer: cust,
+            latestDate: latestDate as Date,
+            daysSince,
+            monthsSince,
+            deviceName: latestDeviceName || 'Máy tính đồng bộ',
+            serviceTag: latestServiceTag,
+          };
+        }
+        return null;
+      })
+      .filter((item): item is { customer: Customer; latestDate: Date; daysSince: number; monthsSince: number; deviceName: string; serviceTag: string } => item !== null)
+      .sort((a, b) => b.daysSince - a.daysSince);
+  }, [customers, inventory, tickets]);
+
+  const handleCopyZalo = (text: string, id: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedZaloId(id);
+      showToast('Đã sao chép mẫu tin nhắn Zalo CSKH!');
+      setTimeout(() => setCopiedZaloId(null), 2500);
+    }
   };
 
   // KPI Calculations
@@ -296,6 +431,9 @@ export default function KhachHangCrmPage() {
           <div className="text-xl font-bold text-emerald-700 mt-1">Long An - Tây Ninh</div>
         </div>
       </div>
+
+      {/* Smart CRM Automation Alerts: 3-Day Birthday & 6-Month Maintenance */}
+      <CrmAlertsPanel customers={customers} inventory={inventory} tickets={tickets} />
 
       {/* Search & Filter Toolbar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -881,7 +1019,7 @@ export default function KhachHangCrmPage() {
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Ví dụ: Thích cài Win 10, máy văn phòng kế toán, bảo dưỡng định kỳ 6 tháng..."
+                  placeholder="Ví dụ: Thích cài Win 10, máy văn phòng, bảo dưỡng định kỳ 6 tháng..."
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"

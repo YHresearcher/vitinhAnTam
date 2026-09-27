@@ -49,10 +49,10 @@ const faqJsonLd = {
     },
     {
       '@type': 'Question',
-      name: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và kế toán?',
+      name: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và doanh nghiệp?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu kế toán, hóa đơn điện tử và giao dịch ngân hàng.',
+        text: 'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu công việc, hóa đơn điện tử và giao dịch ngân hàng.',
       },
     },
     {

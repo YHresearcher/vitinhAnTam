@@ -56,7 +56,7 @@ export default function KhoMayPage() {
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'ready_to_sell' | 'testing' | 'sold'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'ready_to_sell' | 'testing' | 'sold' | 'aging_warning'>('all');
 
   // Filter & Search states - Components (Linh kiện)
   const [partSearchQuery, setPartSearchQuery] = useState('');
@@ -382,12 +382,22 @@ export default function KhoMayPage() {
     ssd_capacity: '256GB NVMe',
     ssd_health: 98,
     import_price: 3500000,
+    import_date: new Date().toISOString().slice(0, 10),
     price: 4850000,
     stock_quantity: 1,
     shelf_location: 'Kệ A1-01',
     qc_status: 'testing' as InventoryItem['qc_status'],
     warranty_months: 12,
   });
+
+  // Helper tính số ngày tồn kho
+  const getItemDaysInStock = (item: InventoryItem) => {
+    const dateStr = item.import_date || item.created_at;
+    if (!dateStr) return 0;
+    const itemDate = new Date(dateStr).getTime();
+    if (Number.isNaN(itemDate)) return 0;
+    return Math.max(0, Math.floor((Date.now() - itemDate) / (1000 * 60 * 60 * 24)));
+  };
 
   // Filtered inventory - Machines
   const filteredInventory = useMemo(() => {
@@ -406,8 +416,13 @@ export default function KhoMayPage() {
           ? !['Dell', 'HP', 'Lenovo'].includes(item.brand)
           : item.brand === selectedBrand;
 
-      const matchesStatus =
-        selectedStatus === 'all' ? true : item.qc_status === selectedStatus;
+      let matchesStatus = true;
+      if (selectedStatus === 'aging_warning') {
+        const days = getItemDaysInStock(item);
+        matchesStatus = days >= 50 && item.qc_status !== 'sold';
+      } else if (selectedStatus !== 'all') {
+        matchesStatus = item.qc_status === selectedStatus;
+      }
 
       return matchesSearch && matchesBrand && matchesStatus;
     });
@@ -455,10 +470,24 @@ export default function KhoMayPage() {
     const keysFaulty = (licenseKeys || []).filter((k) => k.status === 'faulty').length;
     const keysTotal = (licenseKeys || []).length;
 
+    // Thiết bị cảnh báo tồn kho lâu (Aging Warning: 50-55d Yellow, 56-60d+ Red)
+    const agingYellow = inventory.filter((i) => {
+      const days = getItemDaysInStock(i);
+      return days >= 50 && days < 56 && i.qc_status !== 'sold';
+    }).length;
+    const agingRed = inventory.filter((i) => {
+      const days = getItemDaysInStock(i);
+      return days >= 56 && i.qc_status !== 'sold';
+    }).length;
+    const agingTotal = agingYellow + agingRed;
+
     return {
       total,
       ready,
       testing,
+      agingYellow,
+      agingRed,
+      agingTotal,
       componentsTotal,
       componentsNew,
       componentsUsed,
@@ -534,6 +563,7 @@ export default function KhoMayPage() {
         ssd_capacity: newItem.ssd_capacity,
         ssd_health: Number(newItem.ssd_health),
         import_price: Number(newItem.import_price),
+        import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
         price: Number(newItem.price),
         stock_quantity: Number(newItem.stock_quantity),
         shelf_location: newItem.shelf_location,
@@ -557,6 +587,7 @@ export default function KhoMayPage() {
         ssd_capacity: '256GB NVMe',
         ssd_health: 98,
         import_price: 3500000,
+        import_date: new Date().toISOString().slice(0, 10),
         price: 4850000,
         stock_quantity: 1,
         shelf_location: 'Kệ A1-01',
@@ -1005,7 +1036,7 @@ export default function KhoMayPage() {
         </div>
 
         {/* Status Filter Pill Row */}
-        <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
           <span className="text-slate-400 font-medium">Hàng hóa:</span>
           {(
             [
@@ -1027,6 +1058,27 @@ export default function KhoMayPage() {
               {s.label}
             </button>
           ))}
+
+          {/* Aging Liquidation Alert Filter Pill */}
+          <button
+            onClick={() => setSelectedStatus('aging_warning')}
+            className={`px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 transition-all ${
+              selectedStatus === 'aging_warning'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : stats.agingTotal > 0
+                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
+          >
+            <span>⚠️ Cảnh báo thanh lý (50-60+ ngày)</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                selectedStatus === 'aging_warning' ? 'bg-white text-rose-700' : 'bg-rose-600 text-white'
+              }`}
+            >
+              {stats.agingTotal}
+            </span>
+          </button>
         </div>
       </div>
 
@@ -1038,6 +1090,7 @@ export default function KhoMayPage() {
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4">Model</th>
                 <th className="py-3 px-4">Serial Number</th>
+                <th className="py-3 px-4">Ngày Nhập &amp; Tuổi Kho</th>
                 <th className="py-3 px-4">Trạng Thái</th>
                 <th className="py-3 px-4">Tồn Kho</th>
                 <th className="py-3 px-4 text-right">Giá Bán</th>
@@ -1047,7 +1100,7 @@ export default function KhoMayPage() {
             <tbody className="divide-y divide-slate-200 text-sm">
               {filteredInventory.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-slate-400">
                     Không tìm thấy thiết bị nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -1055,9 +1108,21 @@ export default function KhoMayPage() {
                 filteredInventory.map((item) => {
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
+                  const daysInStock = getItemDaysInStock(item);
+                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold';
+                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold';
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr
+                      key={item.id}
+                      className={`transition-colors ${
+                        isRedAging
+                          ? 'bg-rose-50/40 hover:bg-rose-50/70'
+                          : isYellowAging
+                          ? 'bg-amber-50/40 hover:bg-amber-50/70'
+                          : 'hover:bg-slate-50/70'
+                      }`}
+                    >
                       {/* Model & Form Factor */}
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-900">{item.model}</div>
@@ -1085,6 +1150,36 @@ export default function KhoMayPage() {
                             Xem cấu hình chi tiết →
                           </span>
                         </button>
+                      </td>
+
+                      {/* Ngày nhập & Tuổi kho (Aging Alerts) */}
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs font-mono text-slate-700 font-semibold">
+                            {item.import_date
+                              ? new Date(item.import_date).toLocaleDateString('vi-VN')
+                              : item.created_at
+                              ? new Date(item.created_at).toLocaleDateString('vi-VN')
+                              : 'Chưa ghi nhận'}
+                          </span>
+                          {item.qc_status === 'sold' ? (
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              Đã xuất bán
+                            </span>
+                          ) : isRedAging ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 w-fit">
+                              🚨 {daysInStock} ngày (Thanh lý gấp)
+                            </span>
+                          ) : isYellowAging ? (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 w-fit">
+                              ⚠️ {daysInStock} ngày (Tồn lâu)
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-500 font-mono">
+                              Tồn: {daysInStock} ngày
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* QC Status */}
@@ -2000,6 +2095,20 @@ export default function KhoMayPage() {
                   />
                 </div>
 
+                {/* Ngày Nhập Hàng */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Ngày Nhập Hàng *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={newItem.import_date}
+                    onChange={(e) => setNewItem({ ...newItem, import_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono font-medium text-slate-800"
+                  />
+                </div>
+
                 {/* Price */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -2515,7 +2624,7 @@ export default function KhoMayPage() {
                     <option value="os">Windows (Hệ điều hành)</option>
                     <option value="office">Office (Văn phòng)</option>
                     <option value="antivirus">Diệt virus</option>
-                    <option value="accounting">Kế toán (MISA...)</option>
+                    <option value="accounting">Quản trị doanh nghiệp</option>
                     <option value="pos">Bán hàng (KiotViet...)</option>
                     <option value="utility">Tiện ích</option>
                   </select>
@@ -2809,7 +2918,7 @@ export default function KhoMayPage() {
               {/* QC & Inventory Details */}
               <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
                 <div className="text-xs font-bold text-blue-900">Tình Trạng Kho &amp; Tiêu Chuẩn Xuất Xưởng</div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1">
                   <div>
                     <span className="text-[10px] text-slate-500">Trạng thái:</span>
                     <div className="font-bold text-slate-800 mt-0.5">
@@ -2830,6 +2939,42 @@ export default function KhoMayPage() {
                     <span className="text-[10px] text-slate-500">Tồn kho hiện tại:</span>
                     <div className="font-bold text-slate-800 mt-0.5 font-mono">
                       {viewingSpecsItem.stock_quantity ?? viewingSpecsItem.quantity ?? 1} bộ máy
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Ngày nhập hàng:</span>
+                    <div className="font-bold text-slate-800 mt-0.5 font-mono">
+                      {viewingSpecsItem.import_date
+                        ? new Date(viewingSpecsItem.import_date).toLocaleDateString('vi-VN')
+                        : viewingSpecsItem.created_at
+                        ? new Date(viewingSpecsItem.created_at).toLocaleDateString('vi-VN')
+                        : 'Chưa cập nhật'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Tuổi kho &amp; Cảnh báo:</span>
+                    <div className="mt-0.5">
+                      {(() => {
+                        const days = getItemDaysInStock(viewingSpecsItem);
+                        if (viewingSpecsItem.qc_status === 'sold') {
+                          return <span className="text-slate-400 font-mono">Đã bán</span>;
+                        }
+                        if (days >= 56) {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">
+                              🚨 {days} ngày (Cần thanh lý gấp)
+                            </span>
+                          );
+                        }
+                        if (days >= 50) {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                              ⚠️ {days} ngày (Cảnh báo tồn lâu)
+                            </span>
+                          );
+                        }
+                        return <span className="font-bold text-slate-800 font-mono">{days} ngày</span>;
+                      })()}
                     </div>
                   </div>
                   <div>

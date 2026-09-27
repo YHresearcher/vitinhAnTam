@@ -29,7 +29,7 @@ export default function AdminLayout({
     { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa' },
     { title: 'Quản Lý Khách Hàng (CRM)', path: '/khach-hang', category: 'Khách Hàng' },
     { title: 'Điều Phối Cứu Hộ Tận Nơi (Onsite)', path: '/cuu-ho-onsite', category: 'Điều Phối' },
-    { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Kế Toán' },
+    { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Tài Chính' },
     { title: 'Quản Lý Thành Viên & Phân Quyền', path: '/thanh-vien', category: 'Hệ Thống' },
     { title: 'Cấu Hình Doanh Nghiệp & Nội Dung Web', path: '/cai-dat', category: 'Hệ Thống' },
   ];

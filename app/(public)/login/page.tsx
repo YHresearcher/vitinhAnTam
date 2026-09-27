@@ -39,8 +39,8 @@ export default function LoginPage() {
     if (res.success && res.user) {
       setSuccessMessage(res.message);
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 400);
+        window.location.href = '/dashboard';
+      }, 300);
     } else {
       setErrorMessage(res.message);
     }

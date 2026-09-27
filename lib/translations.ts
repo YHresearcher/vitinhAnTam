@@ -33,7 +33,7 @@ export const TRANSLATIONS = {
       weekendTitle: 'Thứ 7 & Chủ Nhật:',
       weekendHours: 'Phục vụ trọn ngày: 08h00 - 21h00',
       policiesTitle: 'CHÍNH SÁCH & ĐIỀU LỆ',
-      swapPolicy: 'Bảo hành nhanh chóng, hỗ trợ tận nơi trong bán kính <5km từ cửa hàng',
+      swapPolicy: 'Bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi chu đáo',
       privacyPolicy: 'Cam kết tuyệt đối bảo mật dữ liệu khách hàng',
       copyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.`,
       warrantyTerms: 'Quy định bảo hành',
@@ -59,7 +59,7 @@ export const TRANSLATIONS = {
       quickSearchPlaceholder: 'Nhập Serial Number hoặc Số điện thoại...',
       quickSearchBtn: 'Tìm kiếm',
       btnBrowseStock: 'XEM DANH MỤC MÁY SẴN HÀNG',
-      btnScheduleService: 'ĐẶT LỊCH NÂNG CẤP / SPA TẬN NƠI',
+      btnScheduleService: 'ĐẶT LỊCH KIỂM TRA/NÂNG CẤP',
     },
     products: {
       tag: 'SẢN PHẨM',
@@ -105,7 +105,7 @@ export const TRANSLATIONS = {
       osLicense: 'Bản quyền:',
       osLicenseVal: 'Windows Pro Bản Quyền Số',
       policy: 'Chính sách:',
-      policyVal: 'Bảo hành nhanh chóng, hỗ trợ tận nơi trong bán kính <5km',
+      policyVal: 'Bảo hành 12 tháng, hỗ trợ kỹ thuật và xử lý nhanh chóng',
       btnReserve: 'Mua Ngay',
       btnZaloPhotos: 'Chat Zalo Xem Ảnh Thật Máy',
     },
@@ -151,7 +151,7 @@ export const TRANSLATIONS = {
     qcProcess: {
       title: 'QUY TRÌNH KIỂM TRA CẨN THẬN TRƯỚC KHI GIAO',
       subtitle:
-        'Máy tuyển chọn cao cấp nguyên bản, kỹ thuật viên không can thiệp kiểm tra thủ công trên mainboard để giữ zin tuyệt đối. 100% linh kiện được kiểm tra thực tế qua phần mềm chuyên dụng (FurMark, AIDA64, CrystalDiskInfo).',
+        'Bo mạch chủ nguyên bản 100%, chưa qua sửa chữa chắp vá. Toàn bộ linh kiện được kiểm định kỹ lưỡng bằng phần mềm chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) trước khi giao máy.',
       s1Title: 'NGUỒN ĐIỆN ỔN ĐỊNH',
       s1Desc:
         'Kiểm tra điện áp thực tế, đảm bảo máy hoạt động ổn định trong giờ làm việc cao điểm.',
@@ -325,7 +325,7 @@ export const TRANSLATIONS = {
           id: 2,
           tag: 'WIN BẢN QUYỀN SẠCH',
           riskTitle: 'Win lậu gây đơ máy, dính virus tống tiền',
-          riskDesc: 'Bản Ghost lậu dính mã độc tống tiền Ransomware, bị ngắt giữa chừng khi xuất hóa đơn hay khai thuế kế toán MISA.',
+          riskDesc: 'Bản Ghost lậu dính mã độc tống tiền Ransomware, bị ngắt giữa chừng khi xuất hóa đơn hay xử lý chứng từ quan trọng.',
           resultTitle: 'WINDOWS SẠCH THEO MÁY • AN TOÀN DỮ LIỆU',
           resultDesc: 'Kích hoạt bản quyền gốc theo máy, tuyệt đối không dùng tool crack lậu. Hệ điều hành sạch giúp máy chạy siêu mượt và an toàn dữ liệu.',
         },
@@ -350,7 +350,7 @@ export const TRANSLATIONS = {
       solutionsDesc: 'Chọn nhóm đối tượng bên dưới để xem cấu hình và giải pháp tối ưu nhất cho bạn:',
       segments: {
         all: 'Tất cả giải pháp',
-        business: 'Hộ Kinh Doanh & Kế Toán',
+        business: 'Hộ Kinh Doanh & Doanh Nghiệp',
         student: 'Học Sinh & Phụ Huynh',
         officer: 'Cán Bộ & Nhân Viên Văn Phòng',
       },
@@ -435,7 +435,7 @@ export const TRANSLATIONS = {
       weekendTitle: 'Saturday & Sunday:',
       weekendHours: 'Full weekend service: 08:00 - 21:00',
       policiesTitle: 'POLICIES & COMMITMENTS',
-      swapPolicy: 'Prompt warranty with on-site support within <5km radius from store',
+      swapPolicy: 'Prompt warranty with attentive on-site technical support',
       privacyPolicy: '100% strict corporate data confidentiality',
       copyright:
         `© ${new Date().getFullYear()} Vi Tinh An Tam (vitinhantham.vn) - Dedicated to Premium Quality.`,
@@ -454,7 +454,7 @@ export const TRANSLATIONS = {
         'Factory-original motherboards, stable hardware condition, thoroughly cleaned and never patched.',
       pillar2Title: 'CLEAN WINDOWS LICENSE',
       pillar2Desc:
-        'Clean, stable operating system setup, completely safe for bookkeeping and office work.',
+        'Clean, stable operating system setup, completely safe for business documents and office work.',
       pillar3Title: 'RAPID RESPONSE & DEDICATED CARE',
       pillar3Desc:
         'Prompt technical assistance remotely or on-site to minimize any disruption to your workflow.',
@@ -462,7 +462,7 @@ export const TRANSLATIONS = {
       quickSearchPlaceholder: 'Enter Service Tag or phone number...',
       quickSearchBtn: 'Search Warranty',
       btnBrowseStock: 'BROWSE READY INVENTORY',
-      btnScheduleService: 'BOOK ON-SITE SPA / UPGRADE',
+      btnScheduleService: 'SCHEDULE INSPECTION / UPGRADE',
     },
     products: {
       tag: 'PRODUCTS',
@@ -470,7 +470,7 @@ export const TRANSLATIONS = {
       readyCount: 'Currently',
       readyCountSuffix: 'units in stock ready for delivery',
       catAll: 'All Form Factors',
-      catOffice: 'Office & Accounting PCs',
+      catOffice: 'Office & Business PCs',
       catLaptop: 'Business Laptops',
       catWorkstation: 'Workstations & Gaming',
       inStock: 'In Stock:',
