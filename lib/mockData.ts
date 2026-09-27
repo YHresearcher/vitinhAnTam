@@ -880,6 +880,25 @@ export const initialUsers: UserAccount[] = [
       can_manage_users: false,
     },
   },
+  {
+    id: 'u-outsourced-1',
+    username: 'ktv_ngoai01',
+    name: 'Trần Văn Cường (KTV Thuê Ngoài)',
+    email: 'cuong.ktvngoai@vitinhantham.vn',
+    phone: '0988.765.432',
+    role: 'outsourced',
+    roleTitle: 'Kỹ thuật viên đối tác / Thuê ngoài',
+    avatarBg: 'bg-amber-600',
+    status: 'active',
+    created_at: '2024-06-10T08:00:00Z',
+    last_login: '2026-09-22T08:00:00Z',
+    permissions: {
+      can_edit_stock: false,
+      can_update_repair_status: true,
+      can_access_payroll: false,
+      can_manage_users: false,
+    },
+  },
 ];
 
 export interface FaqItem {

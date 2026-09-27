@@ -20,9 +20,12 @@ const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string
 export default function PhieuSuaChuaPage() {
   const {
     tickets,
+    users,
     currentUser,
     canUpdateRepairStatus,
+    canAssignTasks,
     updateTicketStatus,
+    assignTicketTechnician,
   } = useStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,18 +33,24 @@ export default function PhieuSuaChuaPage() {
   const [selectedType, setSelectedType] = useState<'all' | 'counter' | 'onsite'>('all');
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
+  const availableTechnicians = useMemo(() => {
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+  }, [users]);
+
   // Filtered tickets
   const filteredTickets = useMemo(() => {
     return tickets.filter((t) => {
       const q = searchQuery.toLowerCase();
       const model = (t.device_model || t.device_name || '').toLowerCase();
       const tag = (t.service_tag || t.device_service_tag || '').toLowerCase();
+      const tech = (t.technician_name || '').toLowerCase();
       const matchesSearch =
         t.ticket_code.toLowerCase().includes(q) ||
         t.customer_name.toLowerCase().includes(q) ||
         t.customer_phone.includes(q) ||
         model.includes(q) ||
-        tag.includes(q);
+        tag.includes(q) ||
+        tech.includes(q);
 
       const matchesStatus = selectedStatus === 'all' ? true : t.status === selectedStatus;
       const type = t.ticket_type || (t.reception_mode === 'mobile' ? 'onsite' : 'counter');
@@ -380,7 +389,56 @@ export default function PhieuSuaChuaPage() {
 
                       {/* Tech in charge */}
                       <td className="py-3.5 px-4 text-slate-600">
-                        <span>{ticket.technician_name}</span>
+                        {canAssignTasks() ? (
+                          <div className="flex flex-col gap-1">
+                            <select
+                              value={ticket.technician_name}
+                              onChange={async (e) => {
+                                const techName = e.target.value;
+                                const ok = await assignTicketTechnician(ticket.id, techName);
+                                if (ok) {
+                                  setActionNotice(`Đã phân bổ phiếu ${ticket.ticket_code} cho ${techName}!`);
+                                  setTimeout(() => setActionNotice(null), 3000);
+                                }
+                              }}
+                              className="text-xs font-semibold bg-white border border-slate-200 text-slate-800 rounded-lg px-2 py-1 focus:ring-1 focus:ring-blue-500 outline-none w-full max-w-[180px]"
+                            >
+                              <optgroup label="KTV Nội Bộ">
+                                {availableTechnicians
+                                  .filter((u) => u.role !== 'outsourced')
+                                  .map((u) => (
+                                    <option key={u.id} value={u.name}>
+                                      {u.name} {u.role === 'admin' ? '(Admin)' : ''}
+                                    </option>
+                                  ))}
+                              </optgroup>
+                              <optgroup label="KTV Thuê Ngoài / Đối Tác">
+                                {availableTechnicians
+                                  .filter((u) => u.role === 'outsourced')
+                                  .map((u) => (
+                                    <option key={u.id} value={u.name}>
+                                      {u.name} (Thuê Ngoài)
+                                    </option>
+                                  ))}
+                              </optgroup>
+                            </select>
+                            {availableTechnicians.find((u) => u.name === ticket.technician_name)?.role === 'outsourced' && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 font-semibold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded w-fit">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                Thuê ngoài
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-slate-800 font-medium">{ticket.technician_name}</span>
+                            {availableTechnicians.find((u) => u.name === ticket.technician_name)?.role === 'outsourced' && (
+                              <span className="text-[10px] text-amber-700 bg-amber-50 px-1 rounded border border-amber-200">
+                                Thuê ngoài
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Cost */}

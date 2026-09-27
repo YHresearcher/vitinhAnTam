@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
+import { SystemBrandIcon } from '@/components/Logo';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { UserAccount } from '@/lib/supabase';
 import Link from 'next/link';
@@ -500,12 +501,12 @@ export default function CaiDatPage() {
                           type="button"
                           onClick={() => {
                             handleChange('logoUrl', '');
-                            message.info('Đã chuyển về biểu tượng Khiên An Tâm gốc.');
+                            message.info('Đã chuyển về Logo Hệ Thống Mới.');
                           }}
                           className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Dùng khiên gốc</span>
+                          <span>Dùng Logo Hệ Thống Mới</span>
                         </button>
                       )}
                     </div>
@@ -528,30 +529,7 @@ export default function CaiDatPage() {
                               className="h-14 sm:h-18 w-auto max-h-20 max-w-[120px] sm:max-w-[160px] object-contain"
                             />
                           ) : (
-                            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#C0392B] to-[#D9531E] flex items-center justify-center shadow-lg shadow-[#C0392B]/25 shrink-0">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                className="w-8 h-8 sm:w-9 sm:h-9 text-white"
-                              >
-                                <path
-                                  d="M12 2l7 3.5v5.5c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V5.5L12 2z"
-                                  fill="currentColor"
-                                  fillOpacity="0.15"
-                                  stroke="currentColor"
-                                  strokeWidth="1.75"
-                                  strokeLinejoin="round"
-                                />
-                                <path
-                                  d="M9 12l2 2 4-4"
-                                  stroke="currentColor"
-                                  strokeWidth="2.25"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </div>
+                            <SystemBrandIcon className="w-14 h-14 sm:w-16 sm:h-16" />
                           )}
                           <div className="flex flex-col leading-none">
                             <div className="flex items-center gap-1.5">
@@ -1163,9 +1141,11 @@ export default function CaiDatPage() {
                             <Tag
                               color={
                                 u.role === 'admin'
-                                    ? 'blue'
+                                  ? 'blue'
                                   : u.role === 'technician'
                                   ? 'green'
+                                  : u.role === 'outsourced'
+                                  ? 'orange'
                                   : 'purple'
                               }
                               className="text-[10px] m-0 font-bold"
@@ -1174,6 +1154,8 @@ export default function CaiDatPage() {
                                 ? 'ADMIN'
                                 : u.role === 'technician'
                                 ? 'KỸ THUẬT'
+                                : u.role === 'outsourced'
+                                ? 'THUÊ NGOÀI'
                                 : 'KINH DOANH'}
                             </Tag>
                           </div>

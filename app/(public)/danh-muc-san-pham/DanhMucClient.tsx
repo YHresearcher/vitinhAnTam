@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -57,48 +57,66 @@ function ProductsCatalogContent() {
   const selectedKeyType = keyTypeOverride ?? keyTypeFromUrl;
   const setSelectedKeyType = (type: 'windows' | 'office') => setKeyTypeOverride(type);
 
-  const inStockKeyCategories = (keyCategories || [])
-    .filter((cat) => {
-      if (selectedKeyType === 'windows') {
-        return cat.type === 'windows' || cat.name.toLowerCase().includes('windows');
-      } else {
-        return cat.type === 'office' || cat.name.toLowerCase().includes('office');
-      }
-    })
-    .filter((cat) => {
-      // Rule: Dữ liệu nếu = 0 thì không hiển thị
+  const inStockKeyCategories = useMemo(() => {
+    return (keyCategories || [])
+      .filter((cat) => {
+        if (selectedKeyType === 'windows') {
+          return cat.type === 'windows' || cat.name.toLowerCase().includes('windows');
+        } else {
+          return cat.type === 'office' || cat.name.toLowerCase().includes('office');
+        }
+      })
+      .filter((cat) => {
+        const count = (licenseKeys || []).filter(
+          (k) => k.category_id === cat.id && k.status === 'available'
+        ).length;
+        return count > 0;
+      });
+  }, [keyCategories, licenseKeys, selectedKeyType]);
+
+  const totalInStockKeys = useMemo(() => {
+    return (keyCategories || []).reduce((sum, cat) => {
       const count = (licenseKeys || []).filter(
         (k) => k.category_id === cat.id && k.status === 'available'
       ).length;
-      return count > 0;
+      return sum + count;
+    }, 0);
+  }, [keyCategories, licenseKeys]);
+
+  const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
+  const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
+  const soldProducts = useMemo(() => allProducts.filter((p) => p.isSold), [allProducts]);
+
+  const filteredInStock = useMemo(() => {
+    const q = searchKeyword.trim().toLowerCase();
+    if (!q) return inStockProducts;
+    return inStockProducts.filter((item) => {
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.serviceTag.toLowerCase().includes(q) ||
+        item.specs.cpu.toLowerCase().includes(q) ||
+        (item.customerName && item.customerName.toLowerCase().includes(q))
+      );
     });
+  }, [inStockProducts, searchKeyword]);
 
-  const totalInStockKeys = (keyCategories || []).reduce((sum, cat) => {
-    const count = (licenseKeys || []).filter(
-      (k) => k.category_id === cat.id && k.status === 'available'
-    ).length;
-    return sum + count;
-  }, 0);
-
-  const allProducts = getShowcaseProducts(isEn, inventory);
-  const inStockProducts = allProducts.filter((p) => !p.isSold);
-  const soldProducts = allProducts.filter((p) => p.isSold);
-
-  const filterByKeyword = (list: ShowcaseItem[]) => {
-    return list.filter((item) => {
-      const matchKw =
-        !searchKeyword.trim() ||
-        item.name.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        item.serviceTag.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        item.specs.cpu.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        (item.customerName && item.customerName.toLowerCase().includes(searchKeyword.toLowerCase()));
-      return matchKw;
+  const filteredSold = useMemo(() => {
+    const q = searchKeyword.trim().toLowerCase();
+    if (!q) return soldProducts;
+    return soldProducts.filter((item) => {
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.serviceTag.toLowerCase().includes(q) ||
+        item.specs.cpu.toLowerCase().includes(q) ||
+        (item.customerName && item.customerName.toLowerCase().includes(q))
+      );
     });
-  };
+  }, [soldProducts, searchKeyword]);
 
-  const filteredInStock = filterByKeyword(inStockProducts);
-  const filteredSold = filterByKeyword(soldProducts);
-  const totalReadyStock = inStockProducts.reduce((sum, item) => sum + item.stockCount, 0);
+  const totalReadyStock = useMemo(
+    () => inStockProducts.reduce((sum, item) => sum + item.stockCount, 0),
+    [inStockProducts]
+  );
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-inter text-[#2B1810]">

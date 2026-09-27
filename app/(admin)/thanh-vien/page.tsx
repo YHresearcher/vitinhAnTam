@@ -88,6 +88,9 @@ export default function MemberManagementPage() {
     } else if (editingUser.role === 'technician') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên';
       avatarBg = 'bg-emerald-600';
+    } else if (editingUser.role === 'outsourced') {
+      defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
+      avatarBg = 'bg-amber-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -139,6 +142,9 @@ export default function MemberManagementPage() {
     } else if (newUserForm.role === 'technician') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên phần cứng';
       avatarBg = 'bg-emerald-600';
+    } else if (newUserForm.role === 'outsourced') {
+      defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
+      avatarBg = 'bg-amber-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -156,7 +162,10 @@ export default function MemberManagementPage() {
       status: 'active',
       permissions: {
         can_edit_stock: newUserForm.role === 'admin',
-        can_update_repair_status: newUserForm.role === 'admin' || newUserForm.role === 'technician',
+        can_update_repair_status:
+          newUserForm.role === 'admin' ||
+          newUserForm.role === 'technician' ||
+          newUserForm.role === 'outsourced',
         can_access_payroll: newUserForm.role === 'admin',
         can_manage_users: newUserForm.role === 'admin',
       },
@@ -198,6 +207,7 @@ export default function MemberManagementPage() {
 
   const adminCount = users.filter((u) => u.role === 'admin').length;
   const techCount = users.filter((u) => u.role === 'technician').length;
+  const outsourcedCount = users.filter((u) => u.role === 'outsourced').length;
   const salesCount = users.filter((u) => u.role === 'sales').length;
 
   // Access check
@@ -254,8 +264,8 @@ export default function MemberManagementPage() {
         </div>
       </div>
 
-      {/* Summary KPI Cards - Clean Typography, No Empty Icon Boxes */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Tổng Nhân Sự</span>
           <p className="text-2xl font-bold text-slate-900 mt-1 font-mono">{users.length}</p>
@@ -267,8 +277,13 @@ export default function MemberManagementPage() {
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">Kỹ Thuật Viên</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">KTV Nội Bộ</span>
           <p className="text-2xl font-bold text-emerald-700 mt-1 font-mono">{techCount}</p>
+        </div>
+
+        <div className="p-4 rounded-xl bg-white border border-amber-200 bg-amber-50/30 shadow-2xs">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-700">KTV Thuê Ngoài</span>
+          <p className="text-2xl font-bold text-amber-700 mt-1 font-mono">{outsourcedCount}</p>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
@@ -290,8 +305,8 @@ export default function MemberManagementPage() {
         </div>
 
         {/* Role Tabs */}
-        <div className="flex items-center gap-1.5 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          {(['all', 'admin', 'technician', 'sales'] as const).map((tab) => (
+        <div className="flex items-center gap-1 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
+          {(['all', 'admin', 'technician', 'outsourced', 'sales'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setRoleFilter(tab)}
@@ -306,7 +321,9 @@ export default function MemberManagementPage() {
                 : tab === 'admin'
                 ? 'Admin'
                 : tab === 'technician'
-                ? 'Kỹ thuật'
+                ? 'KTV Nội bộ'
+                : tab === 'outsourced'
+                ? 'Thuê ngoài'
                 : 'Kinh doanh'}
             </button>
           ))}
@@ -353,6 +370,8 @@ export default function MemberManagementPage() {
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : member.role === 'technician'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                        : member.role === 'outsourced'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-200 font-semibold'
                         : 'bg-purple-50 text-purple-700 border border-purple-200'
                     }`}
                   >
@@ -360,6 +379,8 @@ export default function MemberManagementPage() {
                       ? 'Admin'
                       : member.role === 'technician'
                       ? 'Kỹ Thuật'
+                      : member.role === 'outsourced'
+                      ? 'Thuê Ngoài'
                       : 'Kinh Doanh'}
                   </span>
                 </div>
@@ -620,17 +641,18 @@ export default function MemberManagementPage() {
               {/* Role Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Vai Trò Phân Quyền</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { id: 'admin', label: 'Quản Trị Viên (Admin)', desc: 'Toàn quyền' },
-                    { id: 'technician', label: 'Kỹ Thuật Viên', desc: 'Chẩn đoán & QC' },
-                    { id: 'sales', label: 'Kinh Doanh & CSKH', desc: 'Bán hàng & Lập phiếu' },
+                    { id: 'admin', label: 'Admin', desc: 'Toàn quyền quản trị' },
+                    { id: 'technician', label: 'KTV Nội Bộ', desc: 'Chẩn đoán & QC' },
+                    { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV sửa chữa' },
+                    { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & Lập phiếu' },
                   ].map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => setEditingUser({ ...editingUser, role: r.id as UserRole })}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-left transition-all ${
                         editingUser.role === r.id
                           ? 'bg-blue-50 border-2 border-blue-600 text-blue-900 font-bold'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
@@ -810,17 +832,18 @@ export default function MemberManagementPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Vai Trò Khởi Tạo</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { id: 'admin', label: 'Admin', desc: 'Quản trị' },
-                    { id: 'technician', label: 'Kỹ Thuật', desc: 'Sửa chữa & QC' },
-                    { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng' },
+                    { id: 'admin', label: 'Admin', desc: 'Quản trị hệ thống' },
+                    { id: 'technician', label: 'KTV Nội Bộ', desc: 'Sửa chữa & QC' },
+                    { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV ngoài' },
+                    { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & CSKH' },
                   ].map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => setNewUserForm({ ...newUserForm, role: r.id as UserRole })}
-                      className={`p-3 rounded-xl border text-center transition-all ${
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
                         newUserForm.role === r.id
                           ? 'bg-blue-50 border-2 border-blue-600 text-blue-900 font-bold'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'

@@ -19,7 +19,7 @@ export const supabase = isSupabaseConfigured()
 // ==========================================
 // RBAC (ROLE-BASED ACCESS CONTROL)
 // ==========================================
-export type UserRole = 'admin' | 'technician' | 'sales';
+export type UserRole = 'admin' | 'technician' | 'sales' | 'outsourced';
 
 export interface UserPermissions {
   can_edit_stock: boolean;
@@ -94,6 +94,16 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     avatarBg: 'bg-emerald-600',
     email: 'tech01@vitinhantham.vn',
     phone: '0977.123.456',
+  },
+  outsourced: {
+    id: 'u-outsourced-1',
+    username: 'ktv_ngoai01',
+    name: 'Trần Văn Cường (KTV Thuê Ngoài)',
+    role: 'outsourced',
+    roleTitle: 'Kỹ thuật viên đối tác / Thuê ngoài',
+    avatarBg: 'bg-amber-600',
+    email: 'cuong.ktvngoai@vitinhantham.vn',
+    phone: '0988.765.432',
   },
   sales: {
     id: 'u-sales-1',
@@ -245,7 +255,7 @@ export interface KeyReleaseRequest {
   request_code: string; // VD: REQ-KEY-001
   requester_id?: string;
   requester_name: string;
-  requester_role: 'admin' | 'technician' | 'sales';
+  requester_role: UserRole;
   customer_name: string;
   customer_phone: string;
   customer_email: string; // Bắt buộc

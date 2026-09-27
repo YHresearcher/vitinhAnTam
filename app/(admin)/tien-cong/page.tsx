@@ -11,21 +11,26 @@ export default function TienCongPage() {
   const {
     canAccessPayroll,
     shiftLogs,
+    users,
     addShiftLog,
   } = useStore();
+
+  const availableTechnicians = React.useMemo(() => {
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+  }, [users]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   // New Shift form state
   const [newShift, setNewShift] = useState({
-    technician_name: 'Trần Văn Kỹ Thuật (KTV Trưởng)',
+    technician_name: 'Trịnh Minh Tuấn (KTV Trưởng)',
     shift_date: new Date().toISOString().split('T')[0],
     shift_type: 'full_day' as ShiftLog['shift_type'],
     base_wage: 350000,
     tickets_completed: 4,
     bonus: 100000,
-    notes: 'Hoàn thành 3 máy OptiPlex + 1 ca cứu hộ P.2',
+    notes: 'Hoàn thành 3 máy OptiPlex + 1 ca cứu hộ',
   });
 
   // RESTRICTED SCREEN IF NOT ADMIN
@@ -276,9 +281,24 @@ export default function TienCongPage() {
                   }
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 >
-                  <option value="Trần Văn Kỹ Thuật (KTV Trưởng)">Trần Văn Kỹ Thuật (KTV Trưởng)</option>
-                  <option value="Nguyễn Văn An (KTV Phần Cứng)">Nguyễn Văn An (KTV Phần Cứng)</option>
-                  <option value="Lê Hoàng Phát (KTV Onsite)">Lê Hoàng Phát (KTV Onsite)</option>
+                  <optgroup label="KTV Nội Bộ">
+                    {availableTechnicians
+                      .filter((u) => u.role !== 'outsourced')
+                      .map((u) => (
+                        <option key={u.id} value={u.name}>
+                          {u.name} {u.role === 'admin' ? '(Admin)' : ''}
+                        </option>
+                      ))}
+                  </optgroup>
+                  <optgroup label="KTV Thuê Ngoài / Đối Tác">
+                    {availableTechnicians
+                      .filter((u) => u.role === 'outsourced')
+                      .map((u) => (
+                        <option key={u.id} value={u.name}>
+                          {u.name} (Thuê Ngoài)
+                        </option>
+                      ))}
+                  </optgroup>
                 </select>
               </div>
 

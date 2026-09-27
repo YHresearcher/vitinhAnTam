@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   supabase,
   isSupabaseConfigured,
@@ -124,8 +124,13 @@ interface StoreContextType {
   canAccessPayroll: () => boolean;
   canAccessSettings: () => boolean;
   canManageUsers: () => boolean;
+  canAssignTasks: () => boolean; // Admin & Tech Lead (Technician) can assign/reassign tickets and dispatches
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
   canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
+
+  // Task / Ticket assignment actions
+  assignTicketTechnician: (id: string, technicianName: string) => Promise<boolean>;
+  assignDispatchTechnician: (id: string, technicianName: string) => Promise<boolean>;
 
   // CRM Customer actions
   addCustomer: (customer: Omit<Customer, 'id' | 'created_at'>) => Promise<Customer>;
@@ -263,7 +268,13 @@ const STORAGE_KEYS = {
   keyEmailTemplate: 'vtat_key_email_template_v1',
 };
 
-export function StoreProvider({ children }: { children: React.ReactNode }) {
+export function StoreProvider({
+  children,
+  initialSettings,
+}: {
+  children: React.ReactNode;
+  initialSettings?: SystemSettings;
+}) {
   // Members & RBAC State & Login status (Mặc định khi mở web là KHÁCH, CHƯA ĐĂNG NHẬP)
   const [users, setUsers] = useState<UserAccount[]>(initialUsers);
   const [currentUser, setCurrentUser] = useState<UserAccount>(initialUsers[0]);
@@ -280,6 +291,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
+    if (initialSettings && typeof initialSettings === 'object') {
+      return { ...initialSystemSettings, ...initialSettings };
+    }
     if (typeof window !== 'undefined') {
       try {
         const init = (window as unknown as { __INITIAL_SYSTEM_SETTINGS__?: Partial<SystemSettings> }).__INITIAL_SYSTEM_SETTINGS__;
@@ -313,10 +327,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const canUpdateRepairStatus = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'technician' ||
+    currentUser.role === 'outsourced' ||
     currentUser.permissions?.can_update_repair_status === true;
   const canAccessPayroll = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
+  const canAssignTasks = () => currentUser.role === 'admin' || currentUser.role === 'technician';
   const canSellAndEditWarranty = () => currentUser.role === 'admin' || currentUser.role === 'sales';
   const canAccessCRM = () => currentUser.role === 'admin' || currentUser.role === 'sales';
 
@@ -449,7 +465,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       created_at: new Date().toISOString(),
       permissions: rest.permissions || {
         can_edit_stock: rest.role === 'admin',
-        can_update_repair_status: rest.role === 'admin' || rest.role === 'technician',
+        can_update_repair_status:
+          rest.role === 'admin' || rest.role === 'technician' || rest.role === 'outsourced',
         can_access_payroll: rest.role === 'admin',
         can_manage_users: rest.role === 'admin',
       },
@@ -493,6 +510,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
       return next;
     });
+
+    // Đồng bộ cấu hình lên máy chủ (.data/settings.json)
+    try {
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).catch((err) => {
+        console.warn('Không thể đồng bộ settings lên server:', err);
+      });
+    } catch {}
+
+    // Đồng bộ Supabase nếu đã cấu hình
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        await supabase
+          .from('system_settings')
+          .upsert({ id: 1, ...data, updated_at: new Date().toISOString() });
+      } catch (err) {
+        console.warn('Lỗi lưu cấu hình lên Supabase:', err);
+      }
+    }
+
     return true;
   };
 
@@ -659,6 +699,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
           setSystemSettings((prev) => ({ ...prev, ...parsed }));
         });
+
+        // Tải cấu hình mới nhất từ máy chủ (.data/settings.json)
+        fetch('/api/settings')
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData?.success && resData?.data) {
+              setSystemSettings((prev) => ({ ...prev, ...resData.data }));
+              try {
+                localStorage.setItem('vtat_system_settings_v2', JSON.stringify(resData.data));
+              } catch {}
+            }
+          })
+          .catch(() => {});
 
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
@@ -1458,6 +1511,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const assignTicketTechnician = async (id: string, technicianName: string): Promise<boolean> => {
+    if (!canAssignTasks()) {
+      return false;
+    }
+    setTickets((prev) => {
+      const next = prev.map((t) => (t.id === id ? { ...t, technician_name: technicianName } : t));
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('service_tickets').update({ technician_name: technicianName }).eq('id', id),
+        'Phân bổ KTV xử lý phiếu'
+      );
+    }
+    return true;
+  };
+
   // Onsite dispatch actions
   const updateDispatchStatus = async (id: string, status: OnsiteDispatch['status']) => {
     setOnsiteDispatches((prev) => {
@@ -1474,6 +1547,26 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         'Cập nhật trạng thái cứu hộ'
       );
     }
+  };
+
+  const assignDispatchTechnician = async (id: string, technicianName: string): Promise<boolean> => {
+    if (!canAssignTasks()) {
+      return false;
+    }
+    setOnsiteDispatches((prev) => {
+      const next = prev.map((d) => (d.id === id ? { ...d, technician_name: technicianName } : d));
+      saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('onsite_dispatches').update({ technician_name: technicianName }).eq('id', id),
+        'Phân bổ KTV điều phối Onsite'
+      );
+    }
+    return true;
   };
 
   // Shift logs (Admin only)
@@ -1731,92 +1824,120 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return (
-    <StoreContext.Provider
-      value={{
-        systemSettings,
-        updateSystemSettings,
-        currentLang,
-        setLang,
-        currentUser,
-        users,
-        isLoggedIn,
-        loginWithCredentials,
-        logout,
-        canEditStock,
-        canUpdateRepairStatus,
-        canAccessPayroll,
-        canAccessSettings,
-        canManageUsers,
-        canSellAndEditWarranty,
-        canAccessCRM,
-        sellInventoryItem,
-        updateUser,
-        changeUserPassword,
-        addUser,
-        deleteUser,
-        addCustomer,
-        updateCustomer,
-        deleteCustomer,
-        inventory,
-        customers,
-        tickets,
-        spareParts,
-        addSparePart,
-        updateSparePart,
-        deleteSparePart,
-        softwareLicenses,
-        addSoftwareLicense,
-        updateSoftwareLicense,
-        deleteSoftwareLicense,
-        keyCategories,
-        licenseKeys,
-        keyReleaseRequests,
-        keyEmailTemplate,
-        addKeyCategory,
-        deleteKeyCategory,
-        addLicenseKey,
-        addBatchLicenseKeys,
-        deleteLicenseKey,
-        updateLicenseKey,
-        takeKeyForCustomer,
-        approveKeyReleaseRequest,
-        confirmKeyActive,
-        reportKeyFaulty,
-        rejectKeyReleaseRequest,
-        updateKeyEmailTemplate,
-        addSoftwareKeys,
-        assignSoftwareKey,
-        updateSoftwareKeyStatus,
-        deleteSoftwareKey,
-        onsiteDispatches,
-        shiftLogs,
-        faqs,
-        addFaq,
-        updateFaq,
-        deleteFaq,
-        reviews,
-        addReview,
-        deleteReview,
-        isUsingSupabase,
-        isLoading,
-        syncStatus,
-        lastSyncedAt,
-        syncWithSupabase,
-        findWarrantyByTagOrPhone,
-        addInventoryItem,
-        updateInventoryItem,
-        updateInventoryStock,
-        updateQcStatus,
-        deleteInventoryItem,
-        addServiceTicket,
-        updateTicketStatus,
-        updateDispatchStatus,
-        addShiftLog,
-        resetToDefault,
+  const contextValue = useMemo<StoreContextType>(
+    () => ({
+      systemSettings,
+      updateSystemSettings,
+      currentLang,
+      setLang,
+      currentUser,
+      users,
+      isLoggedIn,
+      loginWithCredentials,
+      logout,
+      canEditStock,
+      canUpdateRepairStatus,
+      canAccessPayroll,
+      canAccessSettings,
+      canManageUsers,
+      canAssignTasks,
+      canSellAndEditWarranty,
+      canAccessCRM,
+      sellInventoryItem,
+      updateUser,
+      changeUserPassword,
+      addUser,
+      deleteUser,
+      addCustomer,
+      updateCustomer,
+      deleteCustomer,
+      inventory,
+      customers,
+      tickets,
+      spareParts,
+      addSparePart,
+      updateSparePart,
+      deleteSparePart,
+      softwareLicenses,
+      addSoftwareLicense,
+      updateSoftwareLicense,
+      deleteSoftwareLicense,
+      keyCategories,
+      licenseKeys,
+      keyReleaseRequests,
+      keyEmailTemplate,
+      addKeyCategory,
+      deleteKeyCategory,
+      addLicenseKey,
+      addBatchLicenseKeys,
+      deleteLicenseKey,
+      updateLicenseKey,
+      takeKeyForCustomer,
+      approveKeyReleaseRequest,
+      confirmKeyActive,
+      reportKeyFaulty,
+      rejectKeyReleaseRequest,
+      updateKeyEmailTemplate,
+      addSoftwareKeys,
+      assignSoftwareKey,
+      updateSoftwareKeyStatus,
+      deleteSoftwareKey,
+      onsiteDispatches,
+      shiftLogs,
+      faqs,
+      addFaq,
+      updateFaq,
+      deleteFaq,
+      reviews,
+      addReview,
+      deleteReview,
+      isUsingSupabase,
+      isLoading,
+      syncStatus,
+      lastSyncedAt,
+      syncWithSupabase,
+      findWarrantyByTagOrPhone,
+      addInventoryItem,
+      updateInventoryItem,
+      updateInventoryStock,
+      updateQcStatus,
+      deleteInventoryItem,
+      addServiceTicket,
+      updateTicketStatus,
+      assignTicketTechnician,
+      updateDispatchStatus,
+      assignDispatchTechnician,
+      addShiftLog,
+      resetToDefault,
+    }),
+    [
+      systemSettings,
+      currentLang,
+      currentUser,
+      users,
+      isLoggedIn,
+      inventory,
+      customers,
+      tickets,
+      spareParts,
+      softwareLicenses,
+      keyCategories,
+      licenseKeys,
+      keyReleaseRequests,
+      keyEmailTemplate,
+      onsiteDispatches,
+      shiftLogs,
+      faqs,
+      reviews,
+      isUsingSupabase,
+      isLoading,
+      syncStatus,
+      lastSyncedAt,
+    ]
+  );
 
-      }}
-    >
+  return (
+    <StoreContext.Provider value={contextValue}>
       {children}
     </StoreContext.Provider>
   );

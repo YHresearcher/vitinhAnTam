@@ -50,6 +50,7 @@ export default function LoginPage() {
   const adminMember = users.find((u) => u.role === 'admin' || u.username === 'thanhphan') || users[0];
   const salesMember = users.find((u) => u.role === 'sales' || u.username === 'sales01') || users[1];
   const techMember = users.find((u) => u.role === 'technician' || u.username === 'tech01') || users[2];
+  const outsourcedMember = users.find((u) => u.role === 'outsourced' || u.username === 'ktv_ngoai01');
 
   const quickRoles = [
     {
@@ -66,6 +67,36 @@ export default function LoginPage() {
       desc: currentLang === 'en' ? '✓ Full authority to manage inventory, credentials, remove staff, view payroll & revenue.' : '✓ Toàn quyền quản trị: cấu hình, xem/sửa kho, quản lý tài khoản, doanh thu và lương.',
     },
     {
+      role: 'technician' as UserRole,
+      user: techMember,
+      label: currentLang === 'en' ? 'Technical Lead (Technician)' : 'Kỹ Thuật Viên Trưởng / Nội Bộ',
+      badge: 'Kỹ thuật = tech01',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200 font-mono',
+      activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
+      hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
+      btnBg: 'bg-emerald-600 hover:bg-emerald-700',
+      Icon: Wrench,
+      iconBg: 'bg-emerald-600',
+      desc: currentLang === 'en' ? '✓ Diagnostics, ticket status dispatch, warehouse receiving, assign tasks' : '✓ Tiếp nhận sửa chữa, xử lý phiếu cứu hộ tận nơi, phân bổ nhiệm vụ KTV thuê ngoài.',
+    },
+    ...(outsourcedMember
+      ? [
+          {
+            role: 'outsourced' as UserRole,
+            user: outsourcedMember,
+            label: currentLang === 'en' ? 'Outsourced Technician (Freelancer)' : 'KTV Thuê Ngoài / Đối Tác',
+            badge: 'Thuê ngoài = ktv_ngoai01',
+            badgeClass: 'bg-amber-100 text-amber-800 border-amber-200 font-mono',
+            activeClass: 'bg-amber-50/80 border-2 border-amber-600 ring-2 ring-amber-100 shadow-xs',
+            hoverClass: 'hover:border-amber-300 hover:bg-amber-50/30',
+            btnBg: 'bg-amber-600 hover:bg-amber-700',
+            Icon: Wrench,
+            iconBg: 'bg-amber-600',
+            desc: currentLang === 'en' ? '✓ Handle assigned repair tickets & onsite emergency dispatches.' : '✓ Xử lý các phiếu sửa chữa và ca cứu hộ tận nơi được phân bổ.',
+          },
+        ]
+      : []),
+    {
       role: 'sales' as UserRole,
       user: salesMember,
       label: currentLang === 'en' ? 'Sales Consultant (Sales)' : 'Nhân Viên Kinh Doanh (Sales)',
@@ -77,19 +108,6 @@ export default function LoginPage() {
       Icon: BadgeDollarSign,
       iconBg: 'bg-purple-600',
       desc: currentLang === 'en' ? '✓ Browse live stock, sell & issue warranty, CRM • 🔒 Technical dispatch locked' : '✓ Bán máy, xuất phiếu bảo hành, quản lý khách hàng (CRM), xem tồn kho.',
-    },
-    {
-      role: 'technician' as UserRole,
-      user: techMember,
-      label: currentLang === 'en' ? 'Technical Lead (Technician)' : 'Kỹ Thuật Viên (Kỹ thuật)',
-      badge: 'Kỹ thuật = tech01',
-      badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200 font-mono',
-      activeClass: 'bg-emerald-50/80 border-2 border-emerald-600 ring-2 ring-emerald-100 shadow-xs',
-      hoverClass: 'hover:border-emerald-300 hover:bg-emerald-50/30',
-      btnBg: 'bg-emerald-600 hover:bg-emerald-700',
-      Icon: Wrench,
-      iconBg: 'bg-emerald-600',
-      desc: currentLang === 'en' ? '✓ Diagnostics, ticket status dispatch, warehouse receiving • 🔒 Stock editing restricted' : '✓ Tiếp nhận sửa chữa, xử lý phiếu cứu hộ tận nơi, kiểm tra QC phần cứng.',
     },
   ];
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
@@ -58,10 +58,15 @@ function getCompletionPresetDate(hoursToAdd: number): string {
 
 export default function TaoPhieuSuaChuaPage() {
   const router = useRouter();
-  const { currentUser, customers, addServiceTicket } = useStore();
+  const { currentUser, users, customers, addServiceTicket } = useStore();
+
+  const availableTechnicians = useMemo(() => {
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+  }, [users]);
 
   const [ticketType, setTicketType] = useState<'counter' | 'onsite'>('counter');
   const [serviceCategory, setServiceCategory] = useState<'sua_chua' | 'bao_hanh'>('sua_chua');
+  const [assignedTechnician, setAssignedTechnician] = useState<string>(() => currentUser.name);
   const [estimatedCompletion, setEstimatedCompletion] = useState<string>(() => getCompletionPresetDate(48));
   const [warrantyMonths, setWarrantyMonths] = useState<number>(3);
   const [customerPhone, setCustomerPhone] = useState('');
@@ -129,7 +134,7 @@ export default function TaoPhieuSuaChuaPage() {
         customer_phone: customerPhone,
         device_model: deviceModel,
         service_tag: serviceTag.toUpperCase() || undefined,
-        technician_name: currentUser.name,
+        technician_name: assignedTechnician || currentUser.name,
         ticket_type: ticketType,
         service_category: serviceCategory,
         estimated_completion: estimatedCompletion,
@@ -478,6 +483,42 @@ export default function TaoPhieuSuaChuaPage() {
                   <span className="text-xs text-slate-500 ml-1">tháng</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Phân Bổ Kỹ Thuật Viên Xử Lý */}
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-1.5">
+            <label className="block text-xs font-bold text-slate-800">
+              Phân Bổ Kỹ Thuật Viên Phụ Trách &amp; Xử Lý Máy *
+            </label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <select
+                value={assignedTechnician}
+                onChange={(e) => setAssignedTechnician(e.target.value)}
+                className="w-full sm:w-80 px-3 py-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <optgroup label="Kỹ Thuật Viên Nội Bộ">
+                  {availableTechnicians
+                    .filter((u) => u.role !== 'outsourced')
+                    .map((u) => (
+                      <option key={u.id} value={u.name}>
+                        {u.name} {u.role === 'admin' ? '(Admin)' : ''}
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label="Kỹ Thuật Viên Thuê Ngoài / Đối Tác">
+                  {availableTechnicians
+                    .filter((u) => u.role === 'outsourced')
+                    .map((u) => (
+                      <option key={u.id} value={u.name}>
+                        {u.name} (Thuê Ngoài)
+                      </option>
+                    ))}
+                </optgroup>
+              </select>
+              <span className="text-[11px] text-slate-500">
+                Admin và KTV Trưởng có thể điều phối linh hoạt cho nhân viên nội bộ hoặc KTV thuê ngoài.
+              </span>
             </div>
           </div>
 

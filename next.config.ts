@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'antd', '@ant-design/icons'],
+  },
   images: {
     unoptimized: true,
   },

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -96,27 +96,33 @@ export default function HomePage() {
     router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
   };
 
-  // Lấy dữ liệu sản phẩm
-  const allProducts = getShowcaseProducts(isEn, inventory);
-  const inStockProducts = allProducts.filter((p) => !p.isSold);
+  // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
+  const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
+  const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
   
   // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
-  const featuredProducts = inStockProducts.slice(0, 3);
+  const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
+  
   // Software products available in stock
-  const availableSoftwareCategories = (keyCategories || [])
-    .map((cat) => {
-      const keys = (licenseKeys || []).filter(
-        (k) => k.category_id === cat.id && k.status === 'available'
-      );
-      return {
-        ...cat,
-        availableStock: keys.length,
-        price: keys[0]?.unit_price || (cat.type === 'office' ? 450000 : 350000),
-      };
-    })
-    .filter((cat) => cat.availableStock > 0);
+  const availableSoftwareCategories = useMemo(() => {
+    return (keyCategories || [])
+      .map((cat) => {
+        const keys = (licenseKeys || []).filter(
+          (k) => k.category_id === cat.id && k.status === 'available'
+        );
+        return {
+          ...cat,
+          availableStock: keys.length,
+          price: keys[0]?.unit_price || (cat.type === 'office' ? 450000 : 350000),
+        };
+      })
+      .filter((cat) => cat.availableStock > 0);
+  }, [keyCategories, licenseKeys]);
 
-  const totalReadyStock = inStockProducts.reduce((acc, curr) => acc + curr.stockCount, 0);
+  const totalReadyStock = useMemo(
+    () => inStockProducts.reduce((acc, curr) => acc + curr.stockCount, 0),
+    [inStockProducts]
+  );
 
   const activeFaqs = isEn && ENGLISH_FAQS ? ENGLISH_FAQS : [
     {

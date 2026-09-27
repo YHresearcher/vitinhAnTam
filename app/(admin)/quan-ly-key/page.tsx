@@ -581,7 +581,13 @@ export default function QuanLyKeyPage() {
                           {req.requester_name}
                         </div>
                         <div className="text-[#6E5D53] capitalize">
-                          {req.requester_role === 'technician' ? 'Kỹ thuật viên' : req.requester_role === 'sales' ? 'Kinh doanh (Sales)' : 'Quản trị viên'}
+                          {req.requester_role === 'technician'
+                            ? 'Kỹ thuật viên'
+                            : req.requester_role === 'outsourced'
+                            ? 'KTV Thuê Ngoài'
+                            : req.requester_role === 'sales'
+                            ? 'Kinh doanh (Sales)'
+                            : 'Quản trị viên'}
                         </div>
                       </div>
 

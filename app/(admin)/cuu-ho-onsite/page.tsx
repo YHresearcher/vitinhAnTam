@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '@/lib/store';
 import { OnsiteDispatch } from '@/lib/supabase';
 
@@ -19,9 +19,20 @@ const STATUS_CONFIG: Record<
 };
 
 export default function CuuHoOnsitePage() {
-  const { onsiteDispatches, updateDispatchStatus } = useStore();
+  const {
+    onsiteDispatches,
+    users,
+    canAssignTasks,
+    updateDispatchStatus,
+    assignDispatchTechnician,
+  } = useStore();
+
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [notice, setNotice] = useState<string | null>(null);
+
+  const availableTechnicians = useMemo(() => {
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+  }, [users]);
 
   const filteredDispatches = onsiteDispatches.filter((d) =>
     filterStatus === 'all' ? true : d.status === filterStatus
@@ -31,6 +42,14 @@ export default function CuuHoOnsitePage() {
     await updateDispatchStatus(id, newStatus);
     setNotice('Đã cập nhật trạng thái cứu hộ!');
     setTimeout(() => setNotice(null), 3000);
+  };
+
+  const handleAssignTechnician = async (dispatchId: string, technicianName: string) => {
+    const ok = await assignDispatchTechnician(dispatchId, technicianName);
+    if (ok) {
+      setNotice(`Đã điều động KTV ${technicianName} phụ trách ca cứu hộ!`);
+      setTimeout(() => setNotice(null), 3000);
+    }
   };
 
   const activeCount = onsiteDispatches.filter(
@@ -143,9 +162,43 @@ export default function CuuHoOnsitePage() {
                 </div>
 
                 {/* Technician assigned */}
-                <div className="text-xs text-slate-600 flex items-center justify-between">
-                  <span className="text-slate-500">KTV điều động:</span>
-                  <span className="font-semibold text-slate-800">{dispatch.technician_name}</span>
+                <div className="text-xs text-slate-600 space-y-1 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-medium">KTV điều động:</span>
+                    {availableTechnicians.find((u) => u.name === dispatch.technician_name)?.role === 'outsourced' && (
+                      <span className="text-[10px] text-amber-800 bg-amber-100 font-bold px-1.5 py-0.2 rounded border border-amber-200">
+                        Thuê Ngoài
+                      </span>
+                    )}
+                  </div>
+                  {canAssignTasks() ? (
+                    <select
+                      value={dispatch.technician_name}
+                      onChange={(e) => handleAssignTechnician(dispatch.id, e.target.value)}
+                      className="w-full text-xs font-semibold bg-white border border-slate-300 text-slate-800 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 outline-none"
+                    >
+                      <optgroup label="KTV Nội Bộ">
+                        {availableTechnicians
+                          .filter((u) => u.role !== 'outsourced')
+                          .map((u) => (
+                            <option key={u.id} value={u.name}>
+                              {u.name} {u.role === 'admin' ? '(Admin)' : ''}
+                            </option>
+                          ))}
+                      </optgroup>
+                      <optgroup label="KTV Thuê Ngoài / Đối Tác">
+                        {availableTechnicians
+                          .filter((u) => u.role === 'outsourced')
+                          .map((u) => (
+                            <option key={u.id} value={u.name}>
+                              {u.name} (Thuê Ngoài)
+                            </option>
+                          ))}
+                      </optgroup>
+                    </select>
+                  ) : (
+                    <span className="font-semibold text-slate-800 block">{dispatch.technician_name}</span>
+                  )}
                 </div>
               </div>
 

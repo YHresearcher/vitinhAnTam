@@ -10,6 +10,69 @@ interface LogoProps {
   slogan?: string;
 }
 
+/**
+ * Biểu tượng Logo Hệ Thống Mới - Vi Tính An Tâm (Sắc Lư Trung Hỏa)
+ * Tích hợp vi mạch công nghệ, lõi khiên bảo hộ tâm đức và ánh kim quang hiện đại
+ */
+export function SystemBrandIcon({ className = 'w-10 h-10' }: { className?: string }) {
+  return (
+    <div
+      className={`relative rounded-xl bg-gradient-to-br from-[#C0392B] via-[#D9531E] to-[#F39C12] p-[1.5px] shadow-md shadow-[#C0392B]/20 shrink-0 group transition-transform hover:scale-105 flex items-center justify-center ${className}`}
+    >
+      <div className="w-full h-full bg-gradient-to-br from-[#B03A2E] via-[#C0392B] to-[#D9531E] rounded-[10px] flex items-center justify-center p-1.5 overflow-hidden relative">
+        {/* Ánh sáng phản chiếu chéo nhẹ */}
+        <div className="absolute -top-4 -right-4 w-8 h-8 bg-white/15 rounded-full blur-xs pointer-events-none" />
+        
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 36 36"
+          fill="none"
+          className="w-full h-full text-white drop-shadow-xs"
+        >
+          {/* Vòng mạch công nghệ kết nối (Tech nodes) */}
+          <path
+            d="M6 13h4M26 13h4M6 23h4M26 23h4M18 4v4M18 28v4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeOpacity="0.4"
+          />
+          <circle cx="6" cy="13" r="1.2" fill="currentColor" fillOpacity="0.7" />
+          <circle cx="30" cy="13" r="1.2" fill="currentColor" fillOpacity="0.7" />
+          <circle cx="6" cy="23" r="1.2" fill="currentColor" fillOpacity="0.7" />
+          <circle cx="30" cy="23" r="1.2" fill="currentColor" fillOpacity="0.7" />
+          <circle cx="18" cy="4" r="1.2" fill="currentColor" fillOpacity="0.7" />
+
+          {/* Viền Khiên Công Nghệ An Tâm */}
+          <path
+            d="M18 7.5L27 11.5v7.5c0 6.5-4.5 11.5-9 13.5-4.5-2-9-7-9-13.5V11.5L18 7.5z"
+            fill="currentColor"
+            fillOpacity="0.2"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+
+          {/* Lõi Chữ [AT] & Dấu Chứng Nhận Tận Tâm */}
+          <path
+            d="M14 19l3 3 5.5-6"
+            stroke="#FFF"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M18 10v2"
+            stroke="#FFE082"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 export function Logo({ className = 'h-auto w-auto', variant = 'light', slogan }: LogoProps) {
   const { currentLang, systemSettings } = useViTinhAnTamStore();
   const currentSlogan =
@@ -35,7 +98,7 @@ export function Logo({ className = 'h-auto w-auto', variant = 'light', slogan }:
     );
   }
 
-  // Chế độ 2 (Mặc định): Biểu tượng Logo + Tên thương hiệu & Slogan
+  // Chế độ 2 (Mặc định): Biểu tượng Logo Hệ Thống Mới + Tên thương hiệu & Slogan
   return (
     <div className={`flex items-center gap-2.5 select-none ${className}`}>
       {customLogoUrl ? (
@@ -48,34 +111,10 @@ export function Logo({ className = 'h-auto w-auto', variant = 'light', slogan }:
           />
         </div>
       ) : (
-        /* Sắc Lư Trung Hỏa - Chiếc Khiên An Tâm Đỏ Gạch & Cam Cháy */
-        <div className="relative w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-[#C0392B] to-[#D9531E] flex items-center justify-center shadow-md shadow-[#C0392B]/20 shrink-0 group transition-transform hover:scale-105">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            className="w-7 h-7 sm:w-7.5 sm:h-7.5 text-white drop-shadow-xs"
-          >
-            <path
-              d="M12 2l7 3.5v5.5c0 5-3.5 9.5-7 11-3.5-1.5-7-6-7-11V5.5L12 2z"
-              fill="currentColor"
-              fillOpacity="0.15"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9 12l2 2 4-4"
-              stroke="currentColor"
-              strokeWidth="2.25"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+        <SystemBrandIcon className="w-11 h-11 sm:w-12 sm:h-12" />
       )}
 
-      {/* Typography: Tên thương hiệu & Slogan GIẢM X2 (tinh tế, nhỏ gọn, không lấn át logo) */}
+      {/* Typography: Tên thương hiệu & Slogan */}
       <div className="flex flex-col leading-tight justify-center">
         <div className="flex items-center gap-1">
           <span className={`font-black text-xs sm:text-sm tracking-tight ${variant === 'dark' ? 'text-white' : 'text-[#2B1810]'}`}>
@@ -92,3 +131,4 @@ export function Logo({ className = 'h-auto w-auto', variant = 'light', slogan }:
     </div>
   );
 }
+

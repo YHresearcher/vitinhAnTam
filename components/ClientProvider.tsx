@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { ConfigProvider } from 'antd';
 import viVN from 'antd/locale/vi_VN';
-import { StoreProvider, useViTinhAnTamStore } from '@/lib/store';
+import { StoreProvider, useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 
 const DEFAULT_TITLE = 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm';
 
@@ -30,26 +30,21 @@ function FaviconUpdater() {
   return null;
 }
 
-export function ClientProvider({ children }: { children: React.ReactNode }) {
+export function ClientProvider({
+  children,
+  initialSettings,
+}: {
+  children: React.ReactNode;
+  initialSettings?: SystemSettings;
+}) {
   useEffect(() => {
-    // Immediate lock
-    if (!document.title || document.title.includes('localhost')) {
-      document.title = DEFAULT_TITLE;
-    }
-
-    // Mutation observer ensures document.title is never empty during head updates/hydration
-    const observer = new MutationObserver(() => {
+    if (typeof document !== 'undefined') {
       if (!document.title || document.title.includes('localhost')) {
         document.title = DEFAULT_TITLE;
       }
-    });
-
-    if (typeof document !== 'undefined' && document.head) {
-      observer.observe(document.head, { childList: true, subtree: true });
     }
-
-    return () => observer.disconnect();
   }, []);
+
   return (
     <ConfigProvider
       locale={viVN}
@@ -63,10 +58,11 @@ export function ClientProvider({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <StoreProvider>
+      <StoreProvider initialSettings={initialSettings}>
         <FaviconUpdater />
         {children}
       </StoreProvider>
     </ConfigProvider>
   );
 }
+

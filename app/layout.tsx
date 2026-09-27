@@ -3,6 +3,7 @@ import { Be_Vietnam_Pro, Inter } from 'next/font/google';
 import './globals.css';
 import { ClientProvider } from '@/components/ClientProvider';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
+import { getStoredSettings } from '@/lib/server/settings';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['vietnamese', 'latin'],
@@ -143,6 +144,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialSettings = getStoredSettings();
+
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`}>
       <head>
@@ -181,7 +184,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-[#FAF7F2] text-[#2B1810] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
         <AntdRegistry>
-          <ClientProvider>{children}</ClientProvider>
+          <ClientProvider initialSettings={initialSettings}>{children}</ClientProvider>
         </AntdRegistry>
       </body>
     </html>
