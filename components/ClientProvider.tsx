@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { ConfigProvider } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import { StoreProvider, useViTinhAnTamStore, SystemSettings } from '@/lib/store';
+import { LogoutCountdownModal } from '@/components/LogoutCountdownModal';
 
 const DEFAULT_TITLE = 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm';
 
@@ -60,9 +61,11 @@ export function ClientProvider({
     >
       <StoreProvider initialSettings={initialSettings}>
         <FaviconUpdater />
+        <LogoutCountdownModal />
         {children}
       </StoreProvider>
     </ConfigProvider>
   );
 }
+
 

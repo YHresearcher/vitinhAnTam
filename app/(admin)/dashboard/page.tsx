@@ -437,13 +437,12 @@ export default function DashboardPage() {
         {/* Quick action buttons */}
         <div className="flex items-center gap-2 shrink-0">
           {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setIsDrilldownOpen(true)}
+            <Link
+              href="/tai-chinh"
               className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors flex items-center gap-1.5"
             >
-              <span>📊 Phân Tích ROI &amp; Doanh Thu</span>
-            </button>
+              <span>📊 Phân Hệ Tài Chính →</span>
+            </Link>
           )}
           <Link
             href="/phieu-sua-chua/tao-moi"
@@ -460,13 +459,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 4 Chỉ Số Tài Chính & Vận Hành Cốt Lõi (Compact KPI Badges) */}
+      {/* 4 Chỉ Số Cốt Lõi (Phân quyền Admin vs KTV/Sales) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* KPI 1 & 2: DOANH THU / DÒNG TIỀN — CHỈ ADMIN THEO DÕI */}
         {isAdmin ? (
           <>
-            <div
-              onClick={() => setIsDrilldownOpen(true)}
+            <Link
+              href="/tai-chinh"
               className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
@@ -483,10 +482,10 @@ export default function DashboardPage() {
                 <span>Biên lãi: {financialAnalytics.profitMargin}%</span>
                 <span className="text-blue-600 font-bold group-hover:underline">Chi tiết →</span>
               </div>
-            </div>
+            </Link>
 
-            <div
-              onClick={() => setIsDrilldownOpen(true)}
+            <Link
+              href="/tai-chinh"
               className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group"
             >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
@@ -502,18 +501,45 @@ export default function DashboardPage() {
                 <span>Vốn: {financialAnalytics.totalExpense.toLocaleString('vi-VN')}₫</span>
                 <span className="text-blue-600 font-bold group-hover:underline">Phân tích →</span>
               </div>
-            </div>
+            </Link>
           </>
         ) : (
           <>
-            <div className="bg-white rounded-xl border border-dashed border-slate-300 p-4 shadow-2xs flex flex-col justify-center">
-              <div className="text-xs font-bold text-slate-500 mb-1">Lãi ròng</div>
-              <div className="text-sm font-semibold text-slate-400">🔒 Chỉ Admin theo dõi</div>
-            </div>
-            <div className="bg-white rounded-xl border border-dashed border-slate-300 p-4 shadow-2xs flex flex-col justify-center">
-              <div className="text-xs font-bold text-slate-500 mb-1">Doanh thu</div>
-              <div className="text-sm font-semibold text-slate-400">🔒 Chỉ Admin theo dõi</div>
-            </div>
+            <Link
+              href="/phieu-sua-chua"
+              className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors"
+            >
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                <span>Phiếu Sửa Chữa</span>
+                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">
+                  TIẾP NHẬN
+                </span>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                {tickets.filter((t) => t.status !== 'completed').length} ca
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1">
+                {tickets.filter((t) => t.status === 'processing').length} đang sửa • {tickets.filter((t) => t.status === 'received').length} mới
+              </div>
+            </Link>
+
+            <Link
+              href="/cuu-ho-onsite"
+              className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-amber-300 transition-colors"
+            >
+              <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                <span>Cứu Hộ Tận Nơi</span>
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                  ONSITE
+                </span>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                {onsiteDispatches.filter((d) => d.status !== 'completed').length} ca
+              </div>
+              <div className="text-[11px] text-slate-500 mt-1">
+                Đang trực chiến &amp; điều phối
+              </div>
+            </Link>
           </>
         )}
 
@@ -829,13 +855,62 @@ export default function DashboardPage() {
         </div>
         )}
 
-        {/* Non-admin: doanh thu bị khóa */}
+        {/* Non-admin: Hàng đợi công việc vận hành trực tiếp thay vì khóa doanh thu */}
         {!isAdmin && (
-          <div className="lg:col-span-7 bg-white rounded-xl border border-dashed border-slate-300 p-8 shadow-2xs flex flex-col items-center justify-center text-center gap-2">
-            <div className="text-2xl">🔒</div>
-            <div className="text-sm font-bold text-slate-600">Quản lý doanh thu</div>
-            <div className="text-xs text-slate-400 max-w-sm">
-              Chỉ Quản trị viên (Admin) mới theo dõi được doanh thu, vốn nhập kho và lãi gộp.
+          <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-bold text-slate-900">Nhiệm Vụ Cần Xử Lý Ngay</h2>
+                <p className="text-xs text-slate-500 mt-0.5">Danh sách các phiếu tiếp nhận &amp; ca cứu hộ đang hoạt động</p>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 font-mono">
+                {tickets.filter((t) => t.status !== 'completed').length + onsiteDispatches.filter((d) => d.status !== 'completed').length} VIỆC
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              {tickets.filter((t) => t.status !== 'completed').slice(0, 3).map((t) => (
+                <Link
+                  key={t.id}
+                  href="/phieu-sua-chua"
+                  className="p-2.5 rounded-lg border border-slate-100 bg-slate-50/60 hover:bg-blue-50 hover:border-blue-200 transition-all flex items-center justify-between block"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs text-blue-700">{t.ticket_code}</span>
+                    <span className="text-xs text-slate-800 font-medium">{t.customer_name}</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[180px]">• {t.device_model || t.device_name || 'Máy tính'}</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                    {t.status === 'processing' ? 'Đang sửa' : 'Chờ xử lý'}
+                  </span>
+                </Link>
+              ))}
+
+              {onsiteDispatches.filter((d) => d.status !== 'completed').slice(0, 2).map((d) => (
+                <Link
+                  key={d.id}
+                  href="/cuu-ho-onsite"
+                  className="p-2.5 rounded-lg border border-amber-100 bg-amber-50/40 hover:bg-amber-100/60 transition-all flex items-center justify-between block"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs text-amber-800">{d.ticket_code || 'ONSITE'}</span>
+                    <span className="text-xs text-slate-800 font-medium">Cứu hộ: {d.customer_name}</span>
+                    <span className="text-xs text-slate-500 truncate max-w-[180px]">• {d.address}</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+                    Cần đi gấp
+                  </span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <Link href="/phieu-sua-chua" className="text-blue-600 font-bold hover:underline">
+                Xem toàn bộ phiếu sửa →
+              </Link>
+              <Link href="/cuu-ho-onsite" className="text-amber-700 font-bold hover:underline">
+                Lịch cứu hộ tận nơi →
+              </Link>
             </div>
           </div>
         )}
@@ -1057,8 +1132,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 4 Summary Stat Pills */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-slate-50 border-b border-slate-200 text-xs">
+        {/* Summary Stat Pills */}
+        <div className={`grid ${isAdmin ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2'} gap-3 p-4 bg-slate-50 border-b border-slate-200 text-xs`}>
           <div className="p-3 bg-white rounded-xl border border-rose-200 shadow-2xs">
             <span className="text-[10px] font-bold text-rose-700 uppercase">🚨 Thanh Lý Gấp (56-60d+)</span>
             <div className="text-lg font-black text-rose-700 font-mono mt-0.5">
@@ -1075,21 +1150,25 @@ export default function DashboardPage() {
             <span className="text-[10px] text-slate-500">Đề xuất giảm giá</span>
           </div>
 
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">💰 Vốn Đọng Hàng Quá Hạn</span>
-            <div className="text-lg font-black text-slate-900 font-mono mt-0.5">
-              {deviceStats.agingCapital.toLocaleString('vi-VN')}₫
-            </div>
-            <span className="text-[10px] text-slate-500">Vốn bị giam trong kho</span>
-          </div>
+          {isAdmin && (
+            <>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">💰 Vốn Đọng Hàng Quá Hạn</span>
+                <div className="text-lg font-black text-slate-900 font-mono mt-0.5">
+                  {deviceStats.agingCapital.toLocaleString('vi-VN')}₫
+                </div>
+                <span className="text-[10px] text-slate-500">Vốn bị giam trong kho</span>
+              </div>
 
-          <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[10px] font-bold text-slate-500 uppercase">🏬 Tổng Vốn Hàng Tồn</span>
-            <div className="text-lg font-black text-blue-700 font-mono mt-0.5">
-              {deviceStats.inventoryCapital.toLocaleString('vi-VN')}₫
-            </div>
-            <span className="text-[10px] text-slate-500">Toàn bộ kho ({deviceStats.total} máy)</span>
-          </div>
+              <div className="p-3 bg-white rounded-xl border border-slate-200 shadow-2xs">
+                <span className="text-[10px] font-bold text-slate-500 uppercase">🏬 Tổng Vốn Hàng Tồn</span>
+                <div className="text-lg font-black text-blue-700 font-mono mt-0.5">
+                  {deviceStats.inventoryCapital.toLocaleString('vi-VN')}₫
+                </div>
+                <span className="text-[10px] text-slate-500">Toàn bộ kho ({deviceStats.total} máy)</span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Table of Aging Items */}
@@ -1107,7 +1186,7 @@ export default function DashboardPage() {
                     <th className="py-2.5 px-3">Serial Tag</th>
                     <th className="py-2.5 px-3">Ngày Nhập Kho</th>
                     <th className="py-2.5 px-3">Tuổi Kho</th>
-                    <th className="py-2.5 px-3 text-right">Vốn Đọng</th>
+                    {isAdmin && <th className="py-2.5 px-3 text-right">Vốn Đọng</th>}
                     <th className="py-2.5 px-3 text-right">Giá Bán</th>
                     <th className="py-2.5 px-3 text-center">Thao Tác</th>
                   </tr>
@@ -1146,9 +1225,11 @@ export default function DashboardPage() {
                             {isRed ? `🚨 ${days} ngày (Thanh lý gấp)` : `⚠️ ${days} ngày (Tồn lâu)`}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 text-right font-mono text-slate-600">
-                          {(item.import_price || item.cost_price || 0).toLocaleString('vi-VN')}₫
-                        </td>
+                        {isAdmin && (
+                          <td className="py-2.5 px-3 text-right font-mono text-slate-600">
+                            {(item.import_price || item.cost_price || 0).toLocaleString('vi-VN')}₫
+                          </td>
+                        )}
                         <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
                           {(item.price || item.retail_price || 0).toLocaleString('vi-VN')}₫
                         </td>

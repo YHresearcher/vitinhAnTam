@@ -18,9 +18,11 @@ export default function QuanLyKeyPage() {
     addBatchLicenseKeys,
     deleteLicenseKey,
     takeKeyForCustomer,
+    createKeyReleaseRequest,
     approveKeyReleaseRequest,
     confirmKeyActive,
     reportKeyFaulty,
+    restoreFaultyKey,
     rejectKeyReleaseRequest,
     updateKeyEmailTemplate,
   } = useViTinhAnTamStore();
@@ -28,7 +30,7 @@ export default function QuanLyKeyPage() {
   const isAdmin = currentUser.role === 'admin';
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'requests' | 'inventory' | 'email'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'inventory' | 'reports' | 'email'>('requests');
 
   // Request Filter
   const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'activated' | 'faulty'>('all');
@@ -46,7 +48,13 @@ export default function QuanLyKeyPage() {
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
 
-  // Form states: Lấy key trực tiếp cho khách
+  // Test email states
+  const [testEmailAddress, setTestEmailAddress] = useState(currentUser?.email || 'vitinhantham@gmail.com');
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testEmailFeedback, setTestEmailFeedback] = useState<string | null>(null);
+
+  // Form states: Lấy key trực tiếp cho khách / Tạo yêu cầu
+  const [adminReleaseMode, setAdminReleaseMode] = useState<'direct' | 'request'>('direct');
   const [reqCustomerName, setReqCustomerName] = useState('');
   const [reqCustomerPhone, setReqCustomerPhone] = useState('');
   const [reqCustomerEmail, setReqCustomerEmail] = useState('');
@@ -146,7 +154,166 @@ export default function QuanLyKeyPage() {
     return { total, available, reserved, activated, faulty };
   }, [licenseKeys]);
 
-  // Submit Handler: LẤY KEY trực tiếp cho khách (bỏ qua bước tạo yêu cầu + duyệt)
+  // Financial & Inventory Reports Computation
+  const reportsData = useMemo(() => {
+    let totalRevenue = 0;
+    let totalImportCost = 0;
+    let soldKeysCount = 0;
+    let faultyKeysCount = 0;
+
+    licenseKeys.forEach((k) => {
+      totalImportCost += k.import_price || 0;
+      if (k.status === 'activated' || k.status === 'used' || k.status === 'assigned' || k.status === 'reserved') {
+        soldKeysCount++;
+        totalRevenue += k.unit_price || 0;
+      } else if (k.status === 'faulty') {
+        faultyKeysCount++;
+      }
+    });
+
+    const totalKeys = licenseKeys.length;
+    const availableKeysCount = licenseKeys.filter((k) => k.status === 'available').length;
+    const soldCost = soldKeysCount > 0 && totalKeys > 0 ? (totalImportCost / totalKeys) * soldKeysCount : 0;
+    const grossProfit = totalRevenue - soldCost;
+    const faultyRate = totalKeys > 0 ? ((faultyKeysCount / totalKeys) * 100).toFixed(1) : '0.0';
+
+    const categoryStats = keyCategories.map((cat) => {
+      const keysInCat = licenseKeys.filter((k) => k.category_id === cat.id);
+      const catAvailable = keysInCat.filter((k) => k.status === 'available').length;
+      const catSold = keysInCat.filter((k) => k.status === 'activated' || k.status === 'used' || k.status === 'assigned' || k.status === 'reserved').length;
+      const catFaulty = keysInCat.filter((k) => k.status === 'faulty').length;
+      const catImported = keysInCat.length;
+      const catRevenue = keysInCat
+        .filter((k) => k.status === 'activated' || k.status === 'used' || k.status === 'assigned' || k.status === 'reserved')
+        .reduce((sum, k) => sum + (k.unit_price || 0), 0);
+      const catCost = keysInCat.reduce((sum, k) => sum + (k.import_price || 0), 0);
+      const catProfit = catRevenue - (catImported > 0 ? (catCost / catImported) * catSold : 0);
+      const catFaultyRate = catImported > 0 ? ((catFaulty / catImported) * 100).toFixed(1) : '0.0';
+
+      return {
+        ...cat,
+        totalImported: catImported,
+        available: catAvailable,
+        sold: catSold,
+        faulty: catFaulty,
+        faultyRate: catFaultyRate,
+        revenue: catRevenue,
+        cost: catCost,
+        profit: catProfit,
+      };
+    });
+
+    return {
+      totalKeys,
+      availableKeysCount,
+      soldKeysCount,
+      faultyKeysCount,
+      totalRevenue,
+      totalImportCost,
+      grossProfit,
+      faultyRate,
+      categoryStats,
+    };
+  }, [licenseKeys, keyCategories]);
+
+  // Export CSV for Key Management & Finance
+  const handleExportKeyFinancialCSV = () => {
+    if (keyReleaseRequests.length === 0) {
+      alert('Chưa có dữ liệu yêu cầu key để xuất file!');
+      return;
+    }
+
+    const headers = [
+      'Mã Yêu Cầu',
+      'Tên Khách Hàng',
+      'Số Điện Thoại',
+      'Email',
+      'Phân Loại Key',
+      'Mã Key Cấp',
+      'Trạng Thái',
+      'KTV Yêu Cầu',
+      'Ngày Cấp',
+      'Giá Bán (VNĐ)',
+      'Ghi Chú',
+    ];
+
+    const rows = keyReleaseRequests.map((r) => {
+      const assignedKey = r.assigned_key_code || r.released_key_code || '---';
+      const keyObj = licenseKeys.find((k) => k.id === r.released_key_id || k.license_code === assignedKey);
+      const price = keyObj?.unit_price || 350000;
+      
+      let statusText = 'Chờ duyệt';
+      if (r.status === 'activated' || r.status === 'active_confirmed') statusText = 'Đã kích hoạt';
+      else if (r.status === 'approved' || r.status === 'approved_waiting_test') statusText = 'Chờ test';
+      else if (r.status === 'auto_re_requested' || r.status === 'faulty_re_requesting') statusText = 'Key lỗi - Đổi bù';
+      else if (r.status === 'rejected') statusText = 'Từ chối';
+
+      return [
+        `"${r.request_code}"`,
+        `"${(r.customer_name || '').replace(/"/g, '""')}"`,
+        `"${r.customer_phone || ''}"`,
+        `"${r.customer_email || ''}"`,
+        `"${(r.category_name || '').replace(/"/g, '""')}"`,
+        `"${assignedKey}"`,
+        `"${statusText}"`,
+        `"${(r.requester_name || '').replace(/"/g, '""')}"`,
+        `"${new Date(r.created_at).toLocaleDateString('vi-VN')}"`,
+        `"${price}"`,
+        `"${(r.admin_note || r.faulty_reason || '').replace(/"/g, '""')}"`,
+      ].join(',');
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Bao_Cao_Doanh_Thu_Key_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Dispatch Test Email
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailAddress || !testEmailAddress.includes('@')) {
+      alert('Vui lòng nhập địa chỉ email hợp lệ để nhận thử nghiệm!');
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    setTestEmailFeedback(null);
+    try {
+      const res = await fetch('/api/send-key-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_email: testEmailAddress.trim(),
+          customer_name: 'Khách Hàng Thử Nghiệm (Test)',
+          customer_phone: '0901.234.567',
+          category_name: 'WINDOWS 11 PROFESSIONAL (TEST EMAIL)',
+          license_code: 'W269N-WFGWX-YVC9B-4J6C9-T83GX',
+          template: emailForm,
+          is_test: true,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTestEmailFeedback(`✅ Đã gửi email thử nghiệm thành công đến: ${testEmailAddress}`);
+        triggerFeedback('Đã phát lệnh gửi email thử nghiệm nghiệm thu!');
+      } else {
+        setTestEmailFeedback(`⚠️ Gửi thử không thành công: ${data.message}`);
+      }
+    } catch (err: any) {
+      setTestEmailFeedback(`❌ Lỗi kết nối gửi email: ${err?.message || 'Không thể gửi'}`);
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
+  // Submit Handler: LẤY KEY (Admin) hoặc TẠO YÊU CẦU CẤP KEY (KTV / Sales)
   const handleTakeKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reqCustomerEmail.trim()) {
@@ -154,12 +321,22 @@ export default function QuanLyKeyPage() {
       return;
     }
     setIsTakingKey(true);
-    const res = await takeKeyForCustomer({
-      customer_name: reqCustomerName,
-      customer_phone: reqCustomerPhone,
-      customer_email: reqCustomerEmail,
-      category_id: reqCategoryId,
-    });
+    let res;
+    if (isAdmin && adminReleaseMode === 'direct') {
+      res = await takeKeyForCustomer({
+        customer_name: reqCustomerName,
+        customer_phone: reqCustomerPhone,
+        customer_email: reqCustomerEmail,
+        category_id: reqCategoryId,
+      });
+    } else {
+      res = await createKeyReleaseRequest({
+        customer_name: reqCustomerName,
+        customer_phone: reqCustomerPhone,
+        customer_email: reqCustomerEmail,
+        category_id: reqCategoryId,
+      });
+    }
     setIsTakingKey(false);
 
     if (res.success) {
@@ -291,24 +468,25 @@ export default function QuanLyKeyPage() {
       <div className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#E8E2D9] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#C0392B] mb-1">
-            LẤY KEY TRỰC TIẾP TỪ KHO &amp; BÀN GIAO CHO KHÁCH
+            {isAdmin ? 'QUẢN LÝ KHO KEY & PHÊ DUYỆT XUẤT KHO' : 'YÊU CẦU CẤP KEY BẢN QUYỀN GỬI ADMIN DUYỆT'}
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
             QUẢN LÝ KHO KEY BẢN QUYỀN WINDOWS &amp; OFFICE
           </h1>
           <p className="text-xs text-[#6E5D53] mt-1 max-w-2xl">
-            Chọn &quot;LẤY KEY&quot; để bốc ngay 1 key còn sẵn trong kho cho khách hàng — không cần tạo yêu cầu rồi chờ duyệt. Sau đó xác nhận hoạt động và gửi key qua email.
+            {isAdmin
+              ? 'Quản trị kho key bản quyền, phê duyệt cấp phát key thời gian thực, xử lý đổi key lỗi và cấu hình email bàn giao tự động.'
+              : 'Kỹ thuật viên & Sales gửi yêu cầu cấp key. Sau khi Admin phê duyệt, mã key sẽ tự động hiển thị popup để kiểm tra kích hoạt.'}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Lấy key trực tiếp cho khách — không còn bước tạo yêu cầu + chờ duyệt */}
           <button
             type="button"
             onClick={() => setIsTakeKeyModalOpen(true)}
             className="px-4 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs"
           >
-            LẤY KEY
+            {isAdmin ? 'XUẤT / CẤP KEY' : '+ YÊU CẦU CẤP KEY'}
           </button>
 
           {/* Admin shortcuts */}
@@ -395,20 +573,36 @@ export default function QuanLyKeyPage() {
               : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
           }`}
         >
-          LỊCH SỬ LẤY KEY &amp; TRẠNG THÁI ({keyReleaseRequests.length})
+          {isAdmin ? `YÊU CẦU & LỊCH SỬ XUẤT KEY (${keyReleaseRequests.length})` : `YÊU CẦU CỦA TÔI (${keyReleaseRequests.length})`}
         </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('inventory')}
-          className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
-            activeTab === 'inventory'
-              ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
-              : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
-          }`}
-        >
-          KHO KEY CHI TIẾT &amp; PHÂN LOẠI ({licenseKeys.length})
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('inventory')}
+            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+              activeTab === 'inventory'
+                ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
+                : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
+            }`}
+          >
+            KHO KEY CHI TIẾT &amp; PHÂN LOẠI ({licenseKeys.length})
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('reports')}
+            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+              activeTab === 'reports'
+                ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
+                : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
+            }`}
+          >
+            📊 BÁO CÁO &amp; DOANH THU KEY
+          </button>
+        )}
 
         {isAdmin && (
           <button
@@ -453,7 +647,7 @@ export default function QuanLyKeyPage() {
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#C0392B]'
                 }`}
               >
-                CẦN XỬ LÝ / KEY LỖI (
+                CHỜ ADMIN DUYỆT (
                 {
                   keyReleaseRequests.filter(
                     (r) => r.status === 'pending' || needsReplacement(r)
@@ -466,8 +660,8 @@ export default function QuanLyKeyPage() {
                 onClick={() => setRequestFilter('approved')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   requestFilter === 'approved'
-                    ? 'bg-amber-700 text-white'
-                    : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-amber-700'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-blue-700'
                 }`}
               >
                 ĐÃ LẤY KEY • CHỜ ACTIVE (
@@ -508,6 +702,9 @@ export default function QuanLyKeyPage() {
               {filteredRequests.map((req) => {
                 const isKeyRevealed = revealedKeys[req.id] || false;
                 const assignedKey = req.assigned_key_code || '';
+                const reqStock = licenseKeys.filter(
+                  (k) => k.category_id === req.category_id && k.status === 'available'
+                ).length;
 
                 return (
                   <div
@@ -524,13 +721,24 @@ export default function QuanLyKeyPage() {
                   >
                     {/* Top Row */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#E8E2D9]">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono text-xs font-black bg-[#FAF7F2] px-2.5 py-1 rounded-lg border border-[#E8E2D9] text-[#2B1810]">
                           {req.request_code}
                         </span>
                         <h3 className="text-sm font-black text-[#2B1810] uppercase">
                           {req.category_name}
                         </h3>
+                        {(req.status === 'pending' || needsReplacement(req)) && (
+                          reqStock === 0 ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                              ⚠️ KHO HẾT KEY (VOL: 0)
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">
+                              Kho: {reqStock}
+                            </span>
+                          )
+                        )}
                       </div>
 
                       {/* Status Badges */}
@@ -694,21 +902,35 @@ export default function QuanLyKeyPage() {
 
                     {/* Hành động cho phiếu chờ duyệt (dữ liệu cũ) hoặc key lỗi cần lấy lại */}
                     {(req.status === 'pending' || needsReplacement(req)) && isAdmin && (
-                      <div className="mt-3 flex items-center gap-2 pt-2">
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            const res = await approveKeyReleaseRequest(req.id);
-                            if (res.success) {
-                              triggerFeedback(res.message);
-                            } else {
-                              alert(res.message);
+                      <div className="mt-3 flex flex-wrap items-center gap-2 pt-2">
+                        {reqStock === 0 ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              alert(
+                                `Kho hiện tại có Volume = 0 cho danh mục "${req.category_name}". Vui lòng nạp thêm key vào kho trước khi cấp/duyệt!`
+                              )
                             }
-                          }}
-                          className="px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs"
-                        >
-                          LẤY KEY THAY THẾ / CẤP NGAY
-                        </button>
+                            className="px-4 py-2 rounded-xl bg-slate-500 hover:bg-slate-600 text-white text-xs font-bold shadow-xs cursor-pointer"
+                          >
+                            ⚠️ KHO HẾT KEY (VOL: 0) - CHƯA THỂ CẤP
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const res = await approveKeyReleaseRequest(req.id);
+                              if (res.success) {
+                                triggerFeedback(res.message);
+                              } else {
+                                alert(res.message);
+                              }
+                            }}
+                            className="px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                          >
+                            LẤY KEY THAY THẾ / CẤP NGAY
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={async () => {
@@ -919,12 +1141,12 @@ export default function QuanLyKeyPage() {
                               SẴN SÀNG
                             </span>
                           )}
-                          {k.status === 'reserved' && (
+                          {(k.status === 'reserved' || k.status === 'assigned') && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
                               ĐANG CHỜ ACTIVE
                             </span>
                           )}
-                          {k.status === 'activated' && (
+                          {(k.status === 'activated' || k.status === 'used') && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
                               ĐÃ KÍCH HOẠT
                             </span>
@@ -936,10 +1158,10 @@ export default function QuanLyKeyPage() {
                           )}
                         </td>
                         <td className="py-3 px-4 text-[#6E5D53]">
-                          {k.customer_name ? (
+                          {(k.customer_name || k.assigned_to_customer) ? (
                             <div>
-                              <div className="font-bold text-[#2B1810]">{k.customer_name}</div>
-                              <div className="text-[11px] font-mono text-[#0F4C5C]">{k.customer_email}</div>
+                              <div className="font-bold text-[#2B1810]">{k.customer_name || k.assigned_to_customer}</div>
+                              <div className="text-[11px] font-mono text-[#0F4C5C]">{k.customer_email || k.assigned_to_phone}</div>
                             </div>
                           ) : (
                             <span className="italic text-slate-400">Chưa cấp</span>
@@ -950,18 +1172,36 @@ export default function QuanLyKeyPage() {
                         </td>
                         {isAdmin && (
                           <td className="py-3 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (confirm(`Bạn có chắc muốn xóa mã key ${k.license_code}?`)) {
-                                  await deleteLicenseKey(k.id);
-                                  triggerFeedback('Đã xóa key khỏi kho.');
-                                }
-                              }}
-                              className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:underline"
-                            >
-                              Xóa
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              {k.status === 'faulty' && (
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const note = prompt('Nhập lý do khôi phục key về kho sẵn sàng (tùy chọn):', 'Đã kiểm tra lại: thiết bị khách lỗi, mã key vẫn hoạt động bình thường');
+                                    if (note !== null) {
+                                      const res = await restoreFaultyKey(k.id, note);
+                                      triggerFeedback(res.message);
+                                    }
+                                  }}
+                                  className="px-2 py-1 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded text-[11px] font-bold hover:bg-emerald-100 transition-colors shrink-0"
+                                  title="Khôi phục key về trạng thái SẴN SÀNG trong kho"
+                                >
+                                  🔄 Khôi phục
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (confirm(`Bạn có chắc muốn xóa mã key ${k.license_code}?`)) {
+                                    await deleteLicenseKey(k.id);
+                                    triggerFeedback('Đã xóa key khỏi kho.');
+                                  }
+                                }}
+                                className="text-xs font-bold text-rose-600 hover:text-rose-800 hover:underline"
+                              >
+                                Xóa
+                              </button>
+                            </div>
                           </td>
                         )}
                       </tr>
@@ -975,7 +1215,150 @@ export default function QuanLyKeyPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB 3: CẤU HÌNH MẪU EMAIL GỬI KEY (ADMIN ONLY) */}
+      {/* TAB 3: BÁO CÁO DOANH THU & XUẤT NHẬP TỒN KEY (ADMIN ONLY) */}
+      {/* ========================================================================= */}
+      {activeTab === 'reports' && isAdmin && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-emerald-300 shadow-xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
+                TỔNG DOANH THU BÁN KEY
+              </div>
+              <div className="text-2xl font-black text-emerald-700 font-mono mt-1">
+                {reportsData.totalRevenue.toLocaleString('vi-VN')} đ
+              </div>
+              <div className="text-[11px] text-[#6E5D53] mt-1">
+                Từ {reportsData.soldKeysCount} key đã xuất cho khách
+              </div>
+            </div>
+
+            <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-blue-300 shadow-xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
+                LỢI NHUẬN GỘP ƯỚC TÍNH
+              </div>
+              <div className="text-2xl font-black text-blue-700 font-mono mt-1">
+                {Math.max(0, Math.round(reportsData.grossProfit)).toLocaleString('vi-VN')} đ
+              </div>
+              <div className="text-[11px] text-[#6E5D53] mt-1">
+                Doanh thu trừ giá vốn xuất bán
+              </div>
+            </div>
+
+            <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-amber-300 shadow-xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-800">
+                TỔNG VỐN NHẬP KHO
+              </div>
+              <div className="text-2xl font-black text-amber-700 font-mono mt-1">
+                {reportsData.totalImportCost.toLocaleString('vi-VN')} đ
+              </div>
+              <div className="text-[11px] text-[#6E5D53] mt-1">
+                Tổng {reportsData.totalKeys} key đã nhập hệ thống
+              </div>
+            </div>
+
+            <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-rose-300 shadow-xs">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
+                TỶ LỆ KEY BÁO LỖI
+              </div>
+              <div className="text-2xl font-black text-rose-700 font-mono mt-1">
+                {reportsData.faultyRate}%
+              </div>
+              <div className="text-[11px] text-[#6E5D53] mt-1">
+                {reportsData.faultyKeysCount} key bị ghi nhận lỗi
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#E8E2D9] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8E2D9] pb-4">
+              <div>
+                <h3 className="text-sm font-black text-[#2B1810] uppercase">
+                  BÁO CÁO CHI TIẾT TỪNG PHÂN LOẠI KEY BẢN QUYỀN
+                </h3>
+                <p className="text-xs text-[#6E5D53] mt-0.5">
+                  Thống kê xuất nhập tồn, doanh thu, lợi nhuận và tỷ lệ lỗi chi tiết cho từng loại phần mềm.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleExportKeyFinancialCSV}
+                className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-xs shrink-0 cursor-pointer"
+              >
+                <span>📥 Xuất Excel (CSV) Báo Cáo</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-[#2B1810]">
+                <thead>
+                  <tr className="bg-[#FAF7F2] border-b border-[#E8E2D9] text-[11px] font-bold uppercase tracking-wider text-[#6E5D53]">
+                    <th className="py-3 px-4">TÊN PHÂN LOẠI</th>
+                    <th className="py-3 px-4">LOẠI</th>
+                    <th className="py-3 px-4 text-center">TỔNG NHẬP</th>
+                    <th className="py-3 px-4 text-center">TỒN SẴN SÀNG</th>
+                    <th className="py-3 px-4 text-center">ĐÃ XUẤT</th>
+                    <th className="py-3 px-4 text-center">KEY LỖI</th>
+                    <th className="py-3 px-4 text-right">DOANH THU</th>
+                    <th className="py-3 px-4 text-right">LỢI NHUẬN</th>
+                    <th className="py-3 px-4 text-center">TRẠNG THÁI KHO</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E8E2D9]">
+                  {reportsData.categoryStats.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                      <td className="py-3 px-4 font-black uppercase text-[#2B1810]">
+                        {item.name}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 font-bold uppercase text-[10px] text-slate-700">
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-bold">
+                        {item.totalImported}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-emerald-700">
+                        {item.available}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-blue-700">
+                        {item.sold}
+                      </td>
+                      <td className="py-3 px-4 text-center font-mono font-bold text-rose-700">
+                        {item.faulty} ({item.faultyRate}%)
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-emerald-800">
+                        {item.revenue.toLocaleString('vi-VN')} đ
+                      </td>
+                      <td className="py-3 px-4 text-right font-mono font-bold text-blue-800">
+                        {Math.max(0, Math.round(item.profit)).toLocaleString('vi-VN')} đ
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {item.available === 0 ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
+                            🔴 HẾT HÀNG (Vol: 0)
+                          </span>
+                        ) : item.available <= 2 ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300">
+                            ⚡ SẮP HẾT ({item.available})
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            🟢 ĐỦ HÀNG ({item.available})
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: CẤU HÌNH MẪU EMAIL GỬI KEY (ADMIN ONLY) */}
       {/* ========================================================================= */}
       {activeTab === 'email' && isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1169,19 +1552,56 @@ export default function QuanLyKeyPage() {
                 </div>
               </div>
             </div>
+
+            {/* Test Email Dispatch Box */}
+            <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-300 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase text-amber-900 tracking-wider">
+                  🚀 GỬI THỬ NGHIỆM EMAIL BÀN GIAO (LIVE TEST)
+                </span>
+                <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-2 py-0.5 rounded font-bold">
+                  TEST DISPATCH
+                </span>
+              </div>
+              <p className="text-xs text-[#6E5D53]">
+                Gửi một email mẫu thực tế vào hòm thư của bạn để kiểm tra hiển thị trên Gmail / Outlook trên điện thoại và máy tính.
+              </p>
+              <form onSubmit={handleSendTestEmail} className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                <input
+                  type="email"
+                  required
+                  placeholder="Nhập email nhận thử (VD: your.email@gmail.com)"
+                  value={testEmailAddress}
+                  onChange={(e) => setTestEmailAddress(e.target.value)}
+                  className="w-full sm:flex-1 px-3 py-2 border border-amber-300 rounded-lg text-xs bg-white text-[#2B1810] font-mono"
+                />
+                <button
+                  type="submit"
+                  disabled={isSendingTestEmail}
+                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
+                >
+                  {isSendingTestEmail ? 'Đang gửi test...' : 'GỬI EMAIL THỬ'}
+                </button>
+              </form>
+              {testEmailFeedback && (
+                <div className="text-xs font-bold text-[#2B1810] pt-1">
+                  {testEmailFeedback}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* MODAL: LẤY KEY TRỰC TIẾP TỪ KHO CHO KHÁCH HÀNG (KHÔNG CẦN DUYỆT) */}
+      {/* MODAL: LẤY KEY TRỰC TIẾP (ADMIN) HOẶC TẠO YÊU CẦU CẤP KEY (KTV / SALES) */}
       {/* ========================================================================= */}
       {isTakeKeyModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
             <div className="p-4 bg-[#C0392B] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
-                LẤY KEY TỪ KHO BẢN QUYỀN
+                {isAdmin ? 'XUẤT / CẤP KEY CHO KHÁCH HÀNG' : 'TẠO YÊU CẦU CẤP KEY (CHỜ ADMIN DUYỆT)'}
               </h3>
               <button
                 type="button"
@@ -1193,10 +1613,43 @@ export default function QuanLyKeyPage() {
             </div>
 
             <form onSubmit={handleTakeKeySubmit} className="p-5 space-y-4 text-xs">
-              <p className="text-[#6E5D53]">
-                Hệ thống sẽ bốc ngay 1 key đang <strong>còn sẵn trong kho</strong> và gán cho khách hàng.
-                Không cần tạo yêu cầu rồi chờ Admin duyệt.
-              </p>
+              {isAdmin ? (
+                <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl space-y-2">
+                  <div className="text-[11px] font-bold text-amber-950 uppercase tracking-wide">
+                    CHẾ ĐỘ XUẤT KEY (DÀNH CHO ADMIN):
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdminReleaseMode('direct')}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        adminReleaseMode === 'direct'
+                          ? 'bg-amber-100 border-amber-600 text-amber-950 font-bold shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="text-xs font-bold">⚡ Xuất key ngay</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Bốc key từ kho, trạng thái chờ active</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAdminReleaseMode('request')}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        adminReleaseMode === 'request'
+                          ? 'bg-amber-100 border-amber-600 text-amber-950 font-bold shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="text-xs font-bold">📝 Tạo yêu cầu chờ duyệt</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Thử nghiệm popup chuông &amp; luồng duyệt</div>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[#6E5D53]">
+                  Yêu cầu sẽ được gửi tới Admin kèm chuông thông báo thời gian thực. Sau khi Admin duyệt, mã key sẽ hiển thị trên popup kiểm tra của bạn.
+                </p>
+              )}
 
               <div>
                 <label className="block font-bold text-[#2B1810] mb-1">
@@ -1213,12 +1666,32 @@ export default function QuanLyKeyPage() {
                     ).length;
                     return (
                       <option key={c.id} value={c.id}>
-                        {c.name} (Kho còn {count} key)
+                        {count === 0
+                          ? `🔴 [HẾT KEY - Vol: 0] ${c.name}`
+                          : `🟢 ${c.name} (Kho còn ${count} key)`}
                       </option>
                     );
                   })}
                 </select>
               </div>
+
+              {licenseKeys.filter(
+                (k) => k.category_id === reqCategoryId && k.status === 'available'
+              ).length === 0 && (
+                <div className="p-3 bg-red-50 border-2 border-red-400 rounded-xl text-red-950 flex items-start gap-2 animate-pulse">
+                  <span className="text-base leading-none shrink-0 mt-0.5">⚠️</span>
+                  <div className="text-xs">
+                    <div className="font-black uppercase text-red-900">
+                      CẢNH BÁO KHO: VOLUME = 0 (HẾT KEY)
+                    </div>
+                    <div className="text-red-800 mt-0.5">
+                      {isAdmin && adminReleaseMode === 'direct'
+                        ? 'Kho hiện tại không còn key khả dụng cho phân loại này. Admin không thể xuất key ngay, vui lòng nhập thêm key vào kho!'
+                        : 'Phân loại này hiện có volume = 0 trong kho. Yêu cầu của bạn sẽ được gửi tới Admin kèm cảnh báo cần nạp thêm kho trước khi duyệt cấp.'}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-[#2B1810] mb-1">
@@ -1276,9 +1749,15 @@ export default function QuanLyKeyPage() {
                 <button
                   type="submit"
                   disabled={isTakingKey}
-                  className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold transition-all shadow-xs"
+                  className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold transition-all shadow-xs cursor-pointer"
                 >
-                  {isTakingKey ? 'Đang bốc key...' : 'LẤY KEY NGAY'}
+                  {isTakingKey
+                    ? 'Đang xử lý...'
+                    : isAdmin && adminReleaseMode === 'direct'
+                    ? '⚡ XUẤT KEY NGAY'
+                    : isAdmin && adminReleaseMode === 'request'
+                    ? '📝 GỬI YÊU CẦU ĐỂ ADMIN DUYỆT'
+                    : 'GỬI YÊU CẦU ĐẾN ADMIN'}
                 </button>
               </div>
             </form>
@@ -1601,6 +2080,22 @@ export default function QuanLyKeyPage() {
               <p className="text-[#6E5D53]">
                 Hệ thống sẽ ghi nhận mã key <strong className="font-mono text-[#2B1810]">{faultyModalReq.assigned_key_code}</strong> vào danh sách key lỗi và tự động yêu cầu Admin cấp key mới ngay lập tức.
               </p>
+
+              {licenseKeys.filter(
+                (k) => k.category_id === faultyModalReq.category_id && k.status === 'available'
+              ).length === 0 && (
+                <div className="p-3 bg-red-50 border-2 border-red-400 rounded-xl text-red-950 flex items-start gap-2 animate-pulse">
+                  <span className="text-base leading-none shrink-0 mt-0.5">⚠️</span>
+                  <div className="text-xs">
+                    <div className="font-black uppercase text-red-900">
+                      CẢNH BÁO KHO: VOLUME = 0 (HẾT KEY THAY THẾ)
+                    </div>
+                    <div className="text-red-800 mt-0.5">
+                      Kho hiện tại không còn key khả dụng cho <strong>{faultyModalReq.category_name}</strong>. Khi bạn gửi báo lỗi, Admin sẽ nhận được yêu cầu nạp thêm kho trước khi cấp bù cho bạn.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block font-bold text-[#2B1810] mb-1">

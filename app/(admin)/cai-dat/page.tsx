@@ -36,24 +36,6 @@ import {
 
 const { TextArea } = Input;
 
-const FAVICON_PRESETS = [
-  {
-    name: 'Mặc định (Khiên An Tâm)',
-    desc: 'Biểu tượng khiên bảo hành gốc của Vi Tính An Tâm',
-    url: '/favicon.ico',
-  },
-  {
-    name: 'Chữ [AT] Đỏ Gạch',
-    desc: 'Monogram tối giản, sắc nét trên thanh tab',
-    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="%23C0392B"/><text x="32" y="42" font-family="sans-serif" font-size="28" font-weight="900" fill="white" text-anchor="middle">AT</text></svg>',
-  },
-  {
-    name: 'Vi Mạch Công Nghệ',
-    desc: 'Chipset công nghệ với gam màu Cam Cháy & Đỏ Gạch',
-    url: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="%231C130E"/><rect x="16" y="16" width="32" height="32" rx="6" fill="%23D9531E"/><rect x="22" y="22" width="20" height="20" rx="3" fill="%23C0392B"/><circle cx="32" cy="32" r="5" fill="white"/></svg>',
-  },
-];
-
 interface FaqFormValues {
   question: string;
   answer: string;
@@ -681,48 +663,46 @@ export default function CaiDatPage() {
 
                       <div>
                         <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Chọn mẫu có sẵn:
+                          Đường dẫn Favicon trực tiếp (URL):
                         </label>
-                        <div className="space-y-1.5">
-                          {FAVICON_PRESETS.map((preset, idx) => (
+                        <input
+                          type="text"
+                          placeholder="https://... hoặc /favicon.ico"
+                          value={formData.faviconUrl || ''}
+                          onChange={(e) => handleChange('faviconUrl', e.target.value)}
+                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono mb-2.5"
+                        />
+
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                          <div className="flex items-center gap-2.5">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={formData.faviconUrl || '/favicon.ico'}
+                              alt="Favicon Preview"
+                              className="w-6 h-6 object-contain rounded-xs shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/favicon.ico';
+                              }}
+                            />
+                            <span className="text-xs font-medium text-slate-700">
+                              {formData.faviconUrl ? 'Favicon tùy chỉnh' : 'Favicon hệ thống'}
+                            </span>
+                          </div>
+
+                          {formData.faviconUrl && (
                             <button
-                              key={idx}
                               type="button"
                               onClick={() => {
-                                handleChange('faviconUrl', preset.url);
-                                message.success(`Đã áp dụng mẫu ${preset.name}!`);
+                                handleChange('faviconUrl', '');
+                                message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
                               }}
-                              className="w-full flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200 hover:border-[#C0392B] hover:bg-red-50/20 text-left transition-colors cursor-pointer"
+                              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                             >
-                              <div className="flex items-center gap-2.5">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={preset.url}
-                                  alt={preset.name}
-                                  className="w-5 h-5 object-contain rounded-xs shrink-0"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).src = '/favicon.ico';
-                                  }}
-                                />
-                                <div className="text-xs font-bold text-slate-800">{preset.name}</div>
-                              </div>
-                              <span className="text-xs text-[#C0392B] font-semibold">Chọn</span>
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              <span>Khôi phục mặc định</span>
                             </button>
-                          ))}
+                          )}
                         </div>
-                        {formData.faviconUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleChange('faviconUrl', '');
-                              message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
-                            }}
-                            className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-slate-800 font-medium mt-2 cursor-pointer"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            <span>Khôi phục Favicon mặc định</span>
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>

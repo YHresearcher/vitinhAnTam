@@ -839,7 +839,7 @@ export default function KhoMayPage() {
           >
             Xuất Excel (CSV)
           </button>
-          {activeTab === 'machines' && (
+          {activeTab === 'machines' && canEditStock() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
@@ -847,7 +847,7 @@ export default function KhoMayPage() {
               + Nhập máy
             </button>
           )}
-          {activeTab === 'components' && (
+          {activeTab === 'components' && canEditStock() && (
             <button
               onClick={() => setIsAddPartModalOpen(true)}
               className="inline-flex items-center justify-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
@@ -855,7 +855,7 @@ export default function KhoMayPage() {
               + Thêm linh kiện
             </button>
           )}
-          {activeTab === 'software' && (
+          {activeTab === 'software' && canEditStock() && (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsAddKeyModalOpen(true)}
@@ -1290,21 +1290,19 @@ export default function KhoMayPage() {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* Sale Handover Button (Admin & Sales) */}
-                          <button
-                            onClick={() => handleOpenSellModal(item)}
-                            title={
-                              canSellAndEditWarranty()
-                                ? 'Xuất bán máy, cấp mã KH & điều chỉnh bảo hành'
-                                : 'Chỉ Admin và Bán Hàng có quyền bán máy'
-                            }
-                            className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
-                              item.qc_status === 'sold'
-                                ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                                : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
-                            }`}
-                          >
-                            {item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}
-                          </button>
+                          {canSellAndEditWarranty() && (
+                            <button
+                              onClick={() => handleOpenSellModal(item)}
+                              title="Xuất bán máy, cấp mã KH & điều chỉnh bảo hành"
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                                item.qc_status === 'sold'
+                                  ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
+                              }`}
+                            >
+                              {item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}
+                            </button>
+                          )}
 
                           {/* Print 50x30mm Label */}
                           <button
@@ -1438,7 +1436,7 @@ export default function KhoMayPage() {
                     <th className="py-3 px-4">Loại</th>
                     <th className="py-3 px-4">Tình Trạng</th>
                     <th className="py-3 px-4">Tồn Kho</th>
-                    <th className="py-3 px-4">Giá Nhập</th>
+                    {canEditStock() && <th className="py-3 px-4">Giá Nhập</th>}
                     <th className="py-3 px-4 text-right">Giá Bán</th>
                     <th className="py-3 px-4 text-center">Bảo Hành</th>
                     <th className="py-3 px-4 text-center">Thao Tác</th>
@@ -1537,16 +1535,14 @@ export default function KhoMayPage() {
                             )}
                           </td>
 
-                          {/* Cost Price */}
-                          <td className="py-3.5 px-4 text-xs">
-                            {canEditStock() ? (
+                          {/* Cost Price - Only visible to authorized roles */}
+                          {canEditStock() && (
+                            <td className="py-3.5 px-4 text-xs">
                               <span className="font-medium text-slate-600 font-mono">
                                 {new Intl.NumberFormat('vi-VN').format(part.unit_cost || 0)} đ
                               </span>
-                            ) : (
-                              <span className="text-slate-400 italic">Bảo mật</span>
-                            )}
-                          </td>
+                            </td>
+                          )}
 
                           {/* Retail Price */}
                           <td className="py-3.5 px-4 text-right">

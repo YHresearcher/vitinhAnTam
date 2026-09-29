@@ -14,63 +14,90 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebarProps) {
   const pathname = usePathname();
-  const { tickets, customers, onsiteDispatches, keyReleaseRequests, logout } = useViTinhAnTamStore();
+  const {
+    tickets,
+    customers,
+    onsiteDispatches,
+    keyReleaseRequests,
+    canAccessPayroll,
+    canManageUsers,
+    canAccessSettings,
+    canAccessCRM,
+    logout,
+  } = useViTinhAnTamStore();
 
   const pendingTicketsCount = tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received').length;
   const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed' && d.status !== 'cancelled').length;
-  const pendingKeyRequestsCount = keyReleaseRequests.filter((r) => r.status === 'pending' || r.status === 'faulty_re_requesting').length;
+  const pendingKeyRequestsCount = keyReleaseRequests.filter((r) => r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested').length;
 
-  const navItems = [
+  const rawNavItems = [
     {
       label: 'Tổng quan',
       href: '/dashboard',
       badge: null,
+      visible: true,
+    },
+    {
+      label: 'Tài chính & Doanh thu',
+      href: '/tai-chinh',
+      badge: null,
+      visible: canAccessPayroll(),
     },
     {
       label: 'Khách hàng',
       href: '/khach-hang',
       badge: `${customers.length}`,
       badgeColor: 'bg-slate-100 text-slate-700 font-mono',
+      visible: canAccessCRM(),
     },
     {
       label: 'Phiếu sửa chữa',
       href: '/phieu-sua-chua',
       badge: pendingTicketsCount > 0 ? `${pendingTicketsCount}` : null,
       badgeColor: 'bg-blue-100 text-blue-700 font-mono',
+      visible: true,
     },
     {
       label: 'Kho hàng',
       href: '/kho-may',
       badge: null,
+      visible: true,
     },
     {
       label: 'Kho key bản quyền',
       href: '/quan-ly-key',
       badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
       badgeColor: 'bg-[#C0392B] text-white font-mono',
+      visible: true,
     },
     {
       label: 'Cứu hộ tận nơi',
       href: '/cuu-ho-onsite',
       badge: pendingDispatchesCount > 0 ? `${pendingDispatchesCount}` : null,
       badgeColor: 'bg-amber-100 text-amber-800 font-mono',
+      visible: true,
     },
     {
       label: 'Tiền công',
       href: '/tien-cong',
       badge: null,
+      visible: canAccessPayroll(),
     },
     {
       label: 'Nhân sự',
       href: '/thanh-vien',
       badge: null,
+      visible: canManageUsers(),
     },
     {
       label: 'Cài đặt',
       href: '/cai-dat',
       badge: null,
+      visible: canAccessSettings(),
     },
   ];
+
+  const navItems = rawNavItems.filter((item) => item.visible);
 
   const sidebarContent = (
     <div className="flex flex-col justify-between h-full bg-white font-sans">

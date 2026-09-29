@@ -9,6 +9,7 @@ import { SESSION_COOKIE, verifySession, type SessionPayload } from '@/lib/sessio
 
 const PROTECTED_PAGES = [
   '/dashboard',
+  '/tai-chinh',
   '/kho-may',
   '/phieu-sua-chua',
   '/khach-hang',
@@ -26,6 +27,7 @@ const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
  * (trùng khớp với check phía client: canAccessSettings / canManageUsers / canAccessPayroll).
  */
 const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayload>) => boolean }> = [
+  { path: '/tai-chinh', allow: (s) => s.role === 'admin' || s.canAccessPayroll === true },
   { path: '/cai-dat', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/thanh-vien', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/tien-cong', allow: (s) => s.role === 'admin' || s.canAccessPayroll === true },

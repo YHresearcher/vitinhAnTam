@@ -114,6 +114,9 @@ interface StoreContextType {
   currentUser: UserAccount;
   users: UserAccount[];
   isLoggedIn: boolean;
+  isLoggingOut: boolean;
+  logoutCountdown: number;
+  triggerImmediateRedirectToLogin: () => void;
   loginWithCredentials: (
     email: string,
     password: string
@@ -122,6 +125,7 @@ interface StoreContextType {
   canEditStock: () => boolean;
   canUpdateRepairStatus: () => boolean;
   canAccessPayroll: () => boolean;
+  canAccessFinancials: () => boolean;
   canAccessSettings: () => boolean;
   canManageUsers: () => boolean;
   canAssignTasks: () => boolean; // Admin & Tech Lead (Technician) can assign/reassign tickets and dispatches
@@ -236,9 +240,16 @@ interface StoreContextType {
     customer_email: string;
     category_id: string;
   }) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem; request?: KeyReleaseRequest }>;
+  createKeyReleaseRequest: (data: {
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string;
+    category_id: string;
+  }) => Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }>;
   approveKeyReleaseRequest: (requestId: string, adminNote?: string) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem }>;
   confirmKeyActive: (requestId: string) => Promise<{ success: boolean; message: string }>;
   reportKeyFaulty: (requestId: string, reason: string) => Promise<{ success: boolean; message: string }>;
+  restoreFaultyKey: (keyId: string, note?: string) => Promise<{ success: boolean; message: string }>;
   rejectKeyReleaseRequest: (requestId: string, reason: string) => Promise<boolean>;
   updateKeyEmailTemplate: (updates: Partial<KeyEmailTemplateConfig>) => Promise<boolean>;
 
@@ -322,6 +333,27 @@ export function StoreProvider({
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const isUsingSupabase = isSupabaseConfigured();
 
+  // Logout Countdown & Automatic 3s Redirection
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutCountdown, setLogoutCountdown] = useState(3);
+
+  const triggerImmediateRedirectToLogin = () => {
+    setIsLoggingOut(false);
+    window.location.href = '/login';
+  };
+
+  useEffect(() => {
+    if (!isLoggingOut) return;
+    if (logoutCountdown <= 0) {
+      window.location.href = '/login';
+      return;
+    }
+    const timer = setTimeout(() => {
+      setLogoutCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [isLoggingOut, logoutCountdown]);
+
   // Role permissions
   const canEditStock = () => currentUser.role === 'admin' || currentUser.permissions?.can_edit_stock === true;
   const canUpdateRepairStatus = () =>
@@ -330,6 +362,7 @@ export function StoreProvider({
     currentUser.role === 'outsourced' ||
     currentUser.permissions?.can_update_repair_status === true;
   const canAccessPayroll = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
+  const canAccessFinancials = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canAssignTasks = () => currentUser.role === 'admin' || currentUser.role === 'technician';
@@ -367,6 +400,7 @@ export function StoreProvider({
       const found = data.user;
       setCurrentUser(found);
       setIsLoggedIn(true);
+      setIsLoggingOut(false);
       if (typeof window !== 'undefined') {
         localStorage.setItem(STORAGE_KEYS.role, found.role);
         localStorage.setItem(STORAGE_KEYS.userId, found.id);
@@ -396,6 +430,8 @@ export function StoreProvider({
     fetch('/api/auth/logout', { method: 'POST' }).catch((err) => {
       console.warn('Không gọi được /api/auth/logout:', err);
     });
+    setLogoutCountdown(3);
+    setIsLoggingOut(true);
   };
 
   // ===== Member Management Actions =====
@@ -660,16 +696,17 @@ export function StoreProvider({
         return true;
       };
 
+      let supabasePulledOk = false;
       try {
         if (await pullFromSupabase()) {
           setSyncStatus('synced');
-          return;
+          supabasePulledOk = true;
         }
       } catch (err) {
         console.warn('Could not fetch from Supabase, fallback to local storage:', err);
       }
 
-      // Local storage fallback — bọc try/catch để localStorage hỏng không làm treo app
+      // Local storage fallback / persistence for remaining items (keys, settings, faqs, reviews)
       if (typeof window !== 'undefined') {
         const readJson = <T,>(key: string, apply: (value: T) => void) => {
           const raw = localStorage.getItem(key);
@@ -682,13 +719,16 @@ export function StoreProvider({
           }
         };
 
-        readJson<InventoryItem[]>(STORAGE_KEYS.inventory, setInventory);
-        readJson<Customer[]>(STORAGE_KEYS.customers, setCustomers);
-        readJson<ServiceTicket[]>(STORAGE_KEYS.tickets, setTickets);
-        readJson<SparePart[]>(STORAGE_KEYS.spareParts, setSpareParts);
+        if (!supabasePulledOk) {
+          readJson<InventoryItem[]>(STORAGE_KEYS.inventory, setInventory);
+          readJson<Customer[]>(STORAGE_KEYS.customers, setCustomers);
+          readJson<ServiceTicket[]>(STORAGE_KEYS.tickets, setTickets);
+          readJson<SparePart[]>(STORAGE_KEYS.spareParts, setSpareParts);
+          readJson<OnsiteDispatch[]>(STORAGE_KEYS.onsiteDispatches, setOnsiteDispatches);
+          readJson<ShiftLog[]>(STORAGE_KEYS.shiftLogs, setShiftLogs);
+        }
+
         readJson<SoftwareLicense[]>(STORAGE_KEYS.softwareLicenses, setSoftwareLicenses);
-        readJson<OnsiteDispatch[]>(STORAGE_KEYS.onsiteDispatches, setOnsiteDispatches);
-        readJson<ShiftLog[]>(STORAGE_KEYS.shiftLogs, setShiftLogs);
         readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
         readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
         readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, setKeyCategories);
@@ -719,7 +759,9 @@ export function StoreProvider({
         }
       }
 
-      setSyncStatus('local');
+      if (!supabasePulledOk) {
+        setSyncStatus('local');
+      }
     } finally {
       // Luôn tắt loading — kể cả khi JSON.parse/Supabase lỗi, nếu không app sẽ treo màn hình chờ.
       setIsLoading(false);
@@ -727,6 +769,32 @@ export function StoreProvider({
   }
 
   loadData();
+
+  // Cross-tab real-time storage listener
+  const handleStorageChange = (e: StorageEvent) => {
+    if (!e.newValue) return;
+    try {
+      if (e.key === STORAGE_KEYS.keyReleaseRequests) {
+        setKeyReleaseRequests(JSON.parse(e.newValue));
+      } else if (e.key === STORAGE_KEYS.licenseKeys) {
+        setLicenseKeys(JSON.parse(e.newValue));
+      } else if (e.key === STORAGE_KEYS.keyCategories) {
+        setKeyCategories(JSON.parse(e.newValue));
+      } else if (e.key === STORAGE_KEYS.tickets) {
+        setTickets(JSON.parse(e.newValue));
+      }
+    } catch {}
+  };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', handleStorageChange);
+  }
+
+  return () => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', handleStorageChange);
+    }
+  };
 }, [isUsingSupabase]);
 
   // Đồng bộ thủ công: kéo dữ liệu mới nhất từ Supabase về (ghi đã xảy ra inline ở từng hành động)
@@ -1231,7 +1299,7 @@ export function StoreProvider({
     if (!availableKey) {
       return {
         success: false,
-        message: `Hết key trong kho cho danh mục "${cat.name}". Vui lòng nhập thêm key!`,
+        message: `⚠️ KHO HẾT KEY (Volume = 0): Hiện tại không còn key khả dụng cho "${cat.name}". Vui lòng nhập thêm key vào kho trước khi xuất!`,
       };
     }
 
@@ -1285,6 +1353,74 @@ export function StoreProvider({
     };
   };
 
+  /**
+   * KỸ THUẬT VIÊN & SALES TẠO YÊU CẦU CẤP KEY (CHỜ ADMIN DUYỆT)
+   */
+  const createKeyReleaseRequest = async (data: {
+    customer_name: string;
+    customer_phone: string;
+    customer_email: string;
+    category_id: string;
+  }): Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }> => {
+    const email = data.customer_email?.trim();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      return {
+        success: false,
+        message: 'Bắt buộc phải có email khách hàng hợp lệ để hệ thống gửi key cho khách!',
+      };
+    }
+    if (!data.customer_name.trim()) {
+      return { success: false, message: 'Vui lòng nhập họ tên khách hàng!' };
+    }
+
+    const cat = keyCategories.find((c) => c.id === data.category_id);
+    if (!cat) {
+      return { success: false, message: 'Phân loại key không tồn tại!' };
+    }
+
+    const availableCount = licenseKeys.filter(
+      (k) => k.category_id === data.category_id && k.status === 'available'
+    ).length;
+
+    const now = new Date().toISOString();
+    const newReq: KeyReleaseRequest = {
+      id: `req-${Date.now()}`,
+      request_code: `REL-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer_name: data.customer_name.trim(),
+      customer_phone: data.customer_phone.trim(),
+      customer_email: email,
+      category_id: data.category_id,
+      category_name: cat.name,
+      requester_id: currentUser.id,
+      requester_name: currentUser.name,
+      requester_role: currentUser.role,
+      status: 'pending',
+      admin_note: availableCount === 0 ? `[⚠️ KHO HẾT KEY - Volume: 0]` : undefined,
+      created_at: now,
+      updated_at: now,
+    };
+
+    setKeyReleaseRequests((prev) => {
+      const next = [newReq, ...prev];
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    if (availableCount === 0) {
+      return {
+        success: true,
+        message: `⚠️ Yêu cầu cấp key (${cat.name}) đã được gửi đến Admin. CẢNH BÁO: Kho hiện tại đã HẾT KEY (Volume = 0), Admin cần nạp thêm kho trước khi duyệt cấp!`,
+        request: newReq,
+      };
+    }
+
+    return {
+      success: true,
+      message: `Đã gửi yêu cầu cấp key (${cat.name}) cho khách ${newReq.customer_name}. Đang chờ Admin duyệt!`,
+      request: newReq,
+    };
+  };
+
   const approveKeyReleaseRequest = async (
     requestId: string,
     adminNote?: string
@@ -1301,7 +1437,7 @@ export function StoreProvider({
     if (!availableKey) {
       return {
         success: false,
-        message: `Trong kho đã hết key sẵn sàng cho danh mục "${req.category_name}". Vui lòng nhập thêm key vào kho!`,
+        message: `⚠️ KHO HẾT KEY (Volume = 0): Trong kho đã hết key sẵn sàng cho danh mục "${req.category_name}". Vui lòng nhập thêm key vào kho trước khi xuất!`,
       };
     }
 
@@ -1365,8 +1501,26 @@ export function StoreProvider({
       return next;
     });
 
-    // 2. Simulate sending email to customer
+    // 2. Dispatch real/mock email via API route
     const emailSentTime = new Date().toISOString();
+    try {
+      if (typeof window !== 'undefined' && req.customer_email) {
+        fetch('/api/send-key-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customer_email: req.customer_email,
+            customer_name: req.customer_name,
+            customer_phone: req.customer_phone,
+            category_name: req.category_name,
+            license_code: req.released_key_code || req.assigned_key_code,
+            template: keyEmailTemplate,
+          }),
+        }).catch((err) => console.warn('Dispatch email error:', err));
+      }
+    } catch (e) {
+      console.warn('Silent email fail:', e);
+    }
 
     // 3. Mark request as active_confirmed
     setKeyReleaseRequests((prev) => {
@@ -1399,6 +1553,11 @@ export function StoreProvider({
     if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
     if (!req.released_key_id) return { success: false, message: 'Yêu cầu chưa có key được cấp!' };
 
+    // Check available volume for replacement
+    const availableCount = licenseKeys.filter(
+      (k) => k.category_id === req.category_id && k.status === 'available'
+    ).length;
+
     // 1. Mark faulty key
     setLicenseKeys((prev) => {
       const next = prev.map((k) =>
@@ -1415,18 +1574,29 @@ export function StoreProvider({
     });
 
     // 2. Update request and trigger auto re-request to Admin
-    const prevKey = req.released_key_code;
+    const prevKey = req.released_key_code || 'KEY_UNKNOWN';
+    const now = new Date().toISOString();
+    const updatedHistory = [
+      ...(req.faulty_history || []),
+      { key_code: prevKey, reason: reason.trim() || 'Key không hoạt động', timestamp: now },
+    ];
+
+    const note = availableCount === 0
+      ? `Key trước (${prevKey}) không hoạt động: "${reason}". [⚠️ CẢNH BÁO: KHO HẾT KEY THAY THẾ (Volume: 0) - Cần nạp kho gấp]`
+      : `Key trước (${prevKey}) không hoạt động: "${reason}". Hệ thống tự động yêu cầu cấp key mới.`;
+
     setKeyReleaseRequests((prev) => {
       const next = prev.map((r) =>
         r.id === requestId
           ? {
               ...r,
               status: 'auto_re_requested' as const,
-              faulty_reason: reason,
-              admin_note: `Key trước (${prevKey}) không hoạt động: "${reason}". Hệ thống tự động yêu cầu cấp key mới.`,
+              faulty_reason: reason.trim() || 'Key không hoạt động',
+              faulty_history: updatedHistory,
+              admin_note: note,
               released_key_id: undefined,
               released_key_code: undefined,
-              updated_at: new Date().toISOString(),
+              updated_at: now,
             }
           : r
       );
@@ -1434,9 +1604,52 @@ export function StoreProvider({
       return next;
     });
 
+    if (availableCount === 0) {
+      return {
+        success: true,
+        message: `⚠️ Key lỗi đã được ghi nhận. CẢNH BÁO: Kho hiện tại đã HẾT KEY THAY THẾ (Volume = 0)! Đã gửi cảnh báo yêu cầu Admin nạp thêm key gấp.`,
+      };
+    }
+
     return {
       success: true,
       message: `Key lỗi đã được ghi nhận vào kho. Hệ thống đã tự động gửi yêu cầu cấp key mới đến Admin!`,
+    };
+  };
+
+  const restoreFaultyKey = async (
+    keyId: string,
+    note?: string
+  ): Promise<{ success: boolean; message: string }> => {
+    const targetKey = licenseKeys.find((k) => k.id === keyId);
+    if (!targetKey) {
+      return { success: false, message: 'Không tìm thấy key trong hệ thống!' };
+    }
+    if (targetKey.status !== 'faulty') {
+      return { success: false, message: 'Key này hiện không ở trạng thái lỗi!' };
+    }
+
+    const restoredKey: LicenseKeyItem = {
+      ...targetKey,
+      status: 'available',
+      assigned_to_customer: undefined,
+      assigned_to_phone: undefined,
+      assigned_at: undefined,
+      request_id: undefined,
+      notes: note
+        ? `Đã khôi phục về kho: ${note} (Bởi ${currentUser.name})`
+        : `Đã khôi phục về kho sẵn sàng bởi ${currentUser.name}`,
+    };
+
+    setLicenseKeys((prev) => {
+      const next = prev.map((k) => (k.id === keyId ? restoredKey : k));
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Đã khôi phục key [${targetKey.license_code}] về trạng thái SẴN SÀNG trong kho!`,
     };
   };
 
@@ -1833,11 +2046,15 @@ export function StoreProvider({
       currentUser,
       users,
       isLoggedIn,
+      isLoggingOut,
+      logoutCountdown,
+      triggerImmediateRedirectToLogin,
       loginWithCredentials,
       logout,
       canEditStock,
       canUpdateRepairStatus,
       canAccessPayroll,
+      canAccessFinancials,
       canAccessSettings,
       canManageUsers,
       canAssignTasks,
@@ -1873,9 +2090,11 @@ export function StoreProvider({
       deleteLicenseKey,
       updateLicenseKey,
       takeKeyForCustomer,
+      createKeyReleaseRequest,
       approveKeyReleaseRequest,
       confirmKeyActive,
       reportKeyFaulty,
+      restoreFaultyKey,
       rejectKeyReleaseRequest,
       updateKeyEmailTemplate,
       addSoftwareKeys,
@@ -1916,6 +2135,8 @@ export function StoreProvider({
       currentUser,
       users,
       isLoggedIn,
+      isLoggingOut,
+      logoutCountdown,
       inventory,
       customers,
       tickets,

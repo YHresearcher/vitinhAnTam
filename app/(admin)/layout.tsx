@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
+import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
+import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 export default function AdminLayout({
@@ -13,26 +15,36 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { currentUser, isLoggedIn, isLoading, logout } = useViTinhAnTamStore();
+  const {
+    currentUser,
+    isLoggedIn,
+    isLoading,
+    canAccessPayroll,
+    canManageUsers,
+    canAccessSettings,
+    canAccessCRM,
+    logout,
+  } = useViTinhAnTamStore();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Command palette navigation items
+  // Command palette navigation items filtered by permissions
   const navItems = [
-    { title: 'Tổng Quan Bảng Điều Khiển', path: '/dashboard', category: 'Trang Chính' },
-    { title: 'Quản Lý Kho Key Bản Quyền Windows & Office', path: '/quan-ly-key', category: 'Bản Quyền' },
-    { title: 'Danh Sách Phiếu Sửa Chữa', path: '/phieu-sua-chua', category: 'Nghiệp Vụ' },
-    { title: 'Lập Phiếu Tiếp Nhận Máy Mới', path: '/phieu-sua-chua/tao-moi', category: 'Nghiệp Vụ' },
-    { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa' },
-    { title: 'Quản Lý Khách Hàng (CRM)', path: '/khach-hang', category: 'Khách Hàng' },
-    { title: 'Điều Phối Cứu Hộ Tận Nơi (Onsite)', path: '/cuu-ho-onsite', category: 'Điều Phối' },
-    { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Tài Chính' },
-    { title: 'Quản Lý Thành Viên & Phân Quyền', path: '/thanh-vien', category: 'Hệ Thống' },
-    { title: 'Cấu Hình Doanh Nghiệp & Nội Dung Web', path: '/cai-dat', category: 'Hệ Thống' },
-  ];
+    { title: 'Tổng Quan Bảng Điều Khiển', path: '/dashboard', category: 'Trang Chính', visible: true },
+    { title: 'Phân Hệ Quản Lý Tài Chính & Doanh Thu', path: '/tai-chinh', category: 'Tài Chính', visible: canAccessPayroll() },
+    { title: 'Quản Lý Kho Key Bản Quyền Windows & Office', path: '/quan-ly-key', category: 'Bản Quyền', visible: true },
+    { title: 'Danh Sách Phiếu Sửa Chữa', path: '/phieu-sua-chua', category: 'Nghiệp Vụ', visible: true },
+    { title: 'Lập Phiếu Tiếp Nhận Máy Mới', path: '/phieu-sua-chua/tao-moi', category: 'Nghiệp Vụ', visible: true },
+    { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa', visible: true },
+    { title: 'Quản Lý Khách Hàng (CRM)', path: '/khach-hang', category: 'Khách Hàng', visible: canAccessCRM() },
+    { title: 'Điều Phối Cứu Hộ Tận Nơi (Onsite)', path: '/cuu-ho-onsite', category: 'Điều Phối', visible: true },
+    { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Tài Chính', visible: canAccessPayroll() },
+    { title: 'Quản Lý Thành Viên & Phân Quyền', path: '/thanh-vien', category: 'Hệ Thống', visible: canManageUsers() },
+    { title: 'Cấu Hình Doanh Nghiệp & Nội Dung Web', path: '/cai-dat', category: 'Hệ Thống', visible: canAccessSettings() },
+  ].filter((item) => item.visible);
 
   const filteredNavItems = navItems.filter((item) =>
     item.title.toLowerCase().includes(paletteQuery.toLowerCase()) ||
@@ -234,7 +246,11 @@ export default function AdminLayout({
       {/* DEADLINE TRACKING WIDGET (Hạn chót sửa chữa / bảo hành < 3 ngày) */}
       <DeadlineTrackingWidget />
 
-      {/* Admin Key Release workflow đã được thay bằng nút "LẤY KEY" trực tiếp (xem /quan-ly-key) */}
+      {/* ADMIN KEY RELEASE POPUP (Thông báo & duyệt cấp key thời gian thực) */}
+      <AdminKeyReleasePopup />
+
+      {/* REQUESTER KEY TEST POPUP (Popup nhận key & kiểm tra hoạt động cho kỹ thuật / sales) */}
+      <RequesterKeyTestPopup />
     </div>
   );
 }
