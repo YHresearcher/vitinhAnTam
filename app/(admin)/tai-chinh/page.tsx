@@ -10,12 +10,13 @@ import { FinanceHeader } from '@/components/finance/FinanceHeader';
 import { FinanceKpiCards } from '@/components/finance/FinanceKpiCards';
 import { FinanceTabsHeader } from '@/components/finance/FinanceTabsHeader';
 import { FinanceOverviewTab } from '@/components/finance/FinanceOverviewTab';
+import { FinanceWarrantyFundTab } from '@/components/finance/FinanceWarrantyFundTab';
 import { FinanceLedgerTab } from '@/components/finance/FinanceLedgerTab';
 import { FinancePayrollTab } from '@/components/finance/FinancePayrollTab';
 import { FinanceDebtTab } from '@/components/finance/FinanceDebtTab';
 
 export default function TaiChinhPage() {
-  const { canAccessPayroll } = useViTinhAnTamStore();
+  const { canAccessPayroll, warrantyProvisions } = useViTinhAnTamStore();
 
   if (!canAccessPayroll()) {
     return (
@@ -43,7 +44,7 @@ export default function TaiChinhPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'payroll' | 'debt'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt'>('overview');
   const [timeframe, setTimeframe] = useState<TimeframeOption>('month');
 
   const [ledgerSearch, setLedgerSearch] = useState('');
@@ -99,12 +100,18 @@ export default function TaiChinhPage() {
         onTabChange={setActiveTab}
         ledgerCount={filteredLedgerList.length}
         debtCount={debtCustomersList.length}
+        warrantyCount={warrantyProvisions.length}
         onExportCSV={handleExportCSV}
       />
 
       {activeTab === 'overview' && (
-        <FinanceOverviewTab financialSummary={financialSummary} timeframeLabel={timeframeLabel} />
+        <FinanceOverviewTab
+          financialSummary={financialSummary}
+          timeframeLabel={timeframeLabel}
+          onOpenWarrantyFund={() => setActiveTab('warranty_fund')}
+        />
       )}
+      {activeTab === 'warranty_fund' && <FinanceWarrantyFundTab />}
       {activeTab === 'ledger' && (
         <FinanceLedgerTab
           ledgerList={filteredLedgerList}

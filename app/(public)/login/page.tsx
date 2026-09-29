@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { UserAccount } from '@/lib/supabase';
-import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Logo } from '@/components/Logo';
-import { RoleLoginModal, RoleCardConfig } from '@/components/login/RoleLoginModal';
+import { RoleLoginModal } from '@/components/login/RoleLoginModal';
+import { RoleCardConfig } from '@/components/login/roleConfigs';
 import { RoleCardGrid } from '@/components/login/RoleCardGrid';
 
 export default function LoginPage() {
@@ -82,7 +82,10 @@ export default function LoginPage() {
           href="/"
           className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] hover:text-[#C0392B] font-semibold px-3 py-1.5 rounded-lg hover:bg-white/80 transition-all"
         >
-          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
           <span>Về trang chủ</span>
         </Link>
       </div>
@@ -92,14 +95,14 @@ export default function LoginPage() {
         {/* Title & Badge */}
         <div className="text-center mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100/70 border border-red-200 text-[#C0392B] text-[11px] font-bold tracking-wider uppercase mb-3 shadow-2xs">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Cổng Đăng Nhập Hệ Thống Nội Bộ</span>
+            <span className="w-2 h-2 rounded-full bg-[#C0392B] animate-pulse" />
+            <span>Cổng Đăng Nhập Nội Bộ</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
             Chọn Vai Trò Để Đăng Nhập
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto">
-            Nhấp vào vai trò tương ứng của bạn để mở hộp thoại đăng nhập nhanh
+            Nhấp vào vai trò tương ứng để mở bảng đăng nhập nhanh
           </p>
         </div>
 

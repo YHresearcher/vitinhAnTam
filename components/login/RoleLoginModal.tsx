@@ -2,25 +2,7 @@
 
 import React from 'react';
 import { UserAccount } from '@/lib/supabase';
-import { Lock, User, Eye, EyeOff, AlertCircle, CheckCircle2, LogIn } from 'lucide-react';
-
-export interface RoleCardConfig {
-  role: string;
-  label: string;
-  subLabel: string;
-  badge: string;
-  defaultPass: string;
-  Icon: React.ElementType;
-  colorScheme: {
-    borderHover: string;
-    bgHover: string;
-    iconBg: string;
-    badgeBg: string;
-    badgeText: string;
-    accentBtn: string;
-    ringColor: string;
-  };
-}
+import { RoleCardConfig } from './roleConfigs';
 
 export interface RoleLoginModalProps {
   activeRole: RoleCardConfig;
@@ -40,6 +22,7 @@ export interface RoleLoginModalProps {
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
+
 export function RoleLoginModal({
   activeRole,
   users,
@@ -59,34 +42,29 @@ export function RoleLoginModal({
   onClose,
 }: RoleLoginModalProps) {
   const matchingUsers = users.filter((u) => u.role === activeRole.role);
-  const Icon = activeRole.Icon;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in font-sans"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs font-sans"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all animate-scale-up"
+        className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 bg-slate-50/80 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className={`w-11 h-11 rounded-xl flex items-center justify-center shadow-md ${activeRole.colorScheme.iconBg}`}
-            >
-              <Icon className="w-5 h-5" strokeWidth={2} />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-tr ${activeRole.colorScheme.glowColor} shadow-md`}>
+              {activeRole.iconSvg}
             </div>
             <div>
-              <h3 className="text-base font-black text-[#2B1810]">
+              <h3 className="text-base font-black text-slate-900">
                 {activeRole.label}
               </h3>
-              <span
-                className={`inline-block text-[10px] font-bold px-2 py-0.2 rounded border mt-0.5 ${activeRole.colorScheme.badgeBg} ${activeRole.colorScheme.badgeText}`}
-              >
+              <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded border mt-0.5 ${activeRole.colorScheme.badgeBg} ${activeRole.colorScheme.badgeText}`}>
                 {activeRole.badge}
               </span>
             </div>
@@ -95,7 +73,7 @@ export function RoleLoginModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center font-bold text-sm transition-colors cursor-pointer"
             title="Đóng"
           >
             ✕
@@ -117,18 +95,18 @@ export function RoleLoginModal({
                       key={u.id}
                       type="button"
                       onClick={() => onSelectUser(u)}
-                      className={`p-2 rounded-xl text-left border text-xs transition-all cursor-pointer flex items-center gap-2 ${
+                      className={`p-2.5 rounded-xl text-left border text-xs transition-all cursor-pointer flex items-center gap-2 ${
                         isSelected
-                          ? 'bg-slate-900 text-white border-slate-900 font-bold shadow-xs'
-                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                          ? `${activeRole.colorScheme.badgeBg} border-current ${activeRole.colorScheme.badgeText} font-bold shadow-xs`
+                          : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                       }`}
                     >
-                      <div className="w-6 h-6 rounded-full bg-white/20 text-center flex items-center justify-center text-[10px] font-bold shrink-0">
-                        {u.name.charAt(0)}
+                      <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 shrink-0">
+                        {u.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="truncate">
                         <div className="truncate font-semibold">{u.name}</div>
-                        <div className="text-[10px] opacity-70 font-mono">@{u.username}</div>
+                        <div className="text-[10px] text-slate-400 truncate font-mono">@{u.username}</div>
                       </div>
                     </button>
                   );
@@ -137,94 +115,88 @@ export function RoleLoginModal({
             </div>
           )}
 
-          {/* Identifier */}
+          {/* Identifier Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Tên đăng nhập / Email:
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Tên đăng nhập / Email
             </label>
-            <div className="relative">
-              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-              <input
-                type="text"
-                required
-                value={identifierInput}
-                onChange={(e) => onIdentifierChange(e.target.value)}
-                placeholder="Nhập tên đăng nhập..."
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-mono focus:outline-none focus:bg-white focus:ring-2 ${activeRole.colorScheme.ringColor} transition-all`}
-              />
-            </div>
+            <input
+              type="text"
+              required
+              value={identifierInput}
+              onChange={(e) => onIdentifierChange(e.target.value)}
+              placeholder="VD: admin hoặc admin@vitinhantham.vn"
+              className={`w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-hidden focus:ring-2 ${activeRole.colorScheme.activeRing} transition-all`}
+            />
           </div>
 
-
-          {/* Password */}
+          {/* Password Input */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-slate-700">Mật khẩu:</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-bold text-slate-700">
+                Mật khẩu
+              </label>
               <button
                 type="button"
                 onClick={onQuickFillPassword}
-                className="text-[11px] font-bold text-[#C0392B] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
               >
-                <span>Điền mẫu ({activeRole.defaultPass})</span>
+                Điền mẫu ({activeRole.defaultPass})
               </button>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                autoFocus
                 value={passwordInput}
                 onChange={(e) => onPasswordChange(e.target.value)}
-                placeholder="••••••••"
-                className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs sm:text-sm font-mono focus:outline-none focus:bg-white focus:ring-2 ${activeRole.colorScheme.ringColor} transition-all`}
+                placeholder="Nhập mật khẩu..."
+                className={`w-full px-3.5 py-2.5 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-hidden focus:ring-2 ${activeRole.colorScheme.activeRing} transition-all`}
               />
               <button
                 type="button"
                 onClick={onToggleShowPassword}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold p-1 cursor-pointer"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? 'Ẩn' : 'Hiện'}
               </button>
             </div>
           </div>
 
+          {/* Messages */}
           {errorMessage && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 font-medium flex items-center gap-2">
+              <span>⚠️</span>
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-700 font-medium flex items-center gap-2">
+              <span>✓</span>
               <span>{successMessage} Đang chuyển hướng...</span>
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-3 px-5 rounded-xl text-white font-bold text-sm shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer ${activeRole.colorScheme.accentBtn}`}
-          >
-            {isSubmitting ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <LogIn className="w-4 h-4" strokeWidth={2} />
-                <span>Đăng Nhập Nhanh</span>
-              </>
-            )}
-          </button>
-
-          <div className="text-center pt-1">
+          {/* Action Buttons */}
+          <div className="pt-2 flex items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="text-xs text-slate-400 hover:text-slate-600 font-medium transition-colors cursor-pointer"
+              className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
             >
-              Chọn vai trò khác
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`flex-2 py-2.5 ${activeRole.colorScheme.accentBtn} font-bold rounded-xl text-xs transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50`}
+            >
+              {isSubmitting ? (
+                <span>Đang xử lý...</span>
+              ) : (
+                <span>Đăng Nhập Nhanh →</span>
+              )}
             </button>
           </div>
         </form>

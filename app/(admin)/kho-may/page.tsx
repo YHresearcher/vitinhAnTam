@@ -11,6 +11,7 @@ import {
   KeyEmailTemplateConfig,
 } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
+import { SoldInventoryTab } from '@/components/admin/SoldInventoryTab';
 import { PricePreview } from '@/components/PricePreview';
 import Link from 'next/link';
 
@@ -50,13 +51,17 @@ export default function KhoMayPage() {
     updateKeyEmailTemplate,
   } = useStore();
 
-  // Navigation tab state: Máy tính, Linh kiện (mới/cũ), Phần mềm bản quyền
-  const [activeTab, setActiveTab] = useState<'machines' | 'components' | 'software'>('machines');
+  // Navigation tab state: Máy tính, Máy đã bán, Linh kiện, Phần mềm bản quyền
+  const [activeTab, setActiveTab] = useState<'machines' | 'sold' | 'components' | 'software'>('machines');
 
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'ready_to_sell' | 'testing' | 'sold' | 'aging_warning'>('all');
+
+  // Filter & Search states - Sold Machines (Máy đã bán)
+  const [soldSearchQuery, setSoldSearchQuery] = useState('');
+  const [soldWarrantyFilter, setSoldWarrantyFilter] = useState<'all' | 'active' | 'near_expiry' | 'expired'>('all');
 
   // Filter & Search states - Components (Linh kiện)
   const [partSearchQuery, setPartSearchQuery] = useState('');
@@ -480,11 +485,13 @@ export default function KhoMayPage() {
       return days >= 56 && i.qc_status !== 'sold';
     }).length;
     const agingTotal = agingYellow + agingRed;
+    const sold = inventory.filter((i) => i.qc_status === 'sold' || Boolean(i.handover_date)).length;
 
     return {
       total,
       ready,
       testing,
+      sold,
       agingYellow,
       agingRed,
       agingTotal,
@@ -499,6 +506,92 @@ export default function KhoMayPage() {
       keysTotal,
     };
   }, [inventory, spareParts, softwareLicenses, licenseKeys]);
+
+  // Helper tính toán thời gian bảo hành thời gian thực
+  const getRealtimeWarrantyStatus = (handoverDateStr?: string, warrantyMonths: number = 12) => {
+    if (!handoverDateStr) {
+      return {
+        isExpired: false,
+        isNearExpiry: false,
+        remainingText: 'Chưa kích hoạt',
+        badgeClass: 'bg-slate-100 text-slate-700 border-slate-200',
+        percentElapsed: 0,
+      };
+    }
+
+    const startDate = new Date(handoverDateStr).getTime();
+    const durationMs = warrantyMonths * 30 * 24 * 60 * 60 * 1000;
+    const expiryDate = startDate + durationMs;
+    const now = new Date().getTime();
+    const diffMs = expiryDate - now;
+    const elapsedMs = now - startDate;
+    const percentElapsed = Math.min(100, Math.max(0, Math.round((elapsedMs / durationMs) * 100)));
+
+    if (diffMs <= 0) {
+      const expiredDaysAgo = Math.floor(Math.abs(diffMs) / (24 * 60 * 60 * 1000));
+      return {
+        isExpired: true,
+        isNearExpiry: false,
+        remainingText: `Đã hết hạn (${expiredDaysAgo > 0 ? `quá ${expiredDaysAgo} ngày` : 'hôm nay'})`,
+        badgeClass: 'bg-red-50 text-red-700 border-red-200 font-bold',
+        percentElapsed: 100,
+      };
+    }
+
+    const daysRemaining = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+    const monthsRemaining = Math.floor(daysRemaining / 30);
+    const leftoverDays = daysRemaining % 30;
+
+    let text = '';
+    if (monthsRemaining > 0) {
+      text = `Còn ${monthsRemaining} tháng ${leftoverDays > 0 ? `${leftoverDays} ngày` : ''}`;
+    } else {
+      text = `Còn ${daysRemaining} ngày`;
+    }
+
+    const isNearExpiry = daysRemaining <= 30;
+    const badgeClass = isNearExpiry
+      ? 'bg-amber-50 text-amber-900 border-amber-300 font-bold animate-pulse'
+      : 'bg-emerald-50 text-emerald-800 border-emerald-200 font-semibold';
+
+    return {
+      isExpired: false,
+      isNearExpiry,
+      remainingText: text,
+      badgeClass,
+      percentElapsed,
+    };
+  };
+
+  // Danh sách máy đã bán
+  const soldMachines = useMemo(() => {
+    return inventory.filter((item) => item.qc_status === 'sold' || Boolean(item.handover_date));
+  }, [inventory]);
+
+  // Bộ lọc danh sách máy đã bán
+  const filteredSoldMachines = useMemo(() => {
+    return soldMachines.filter((item) => {
+      const status = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months);
+
+      if (soldWarrantyFilter === 'active' && status.isExpired) return false;
+      if (soldWarrantyFilter === 'near_expiry' && (!status.isNearExpiry || status.isExpired)) return false;
+      if (soldWarrantyFilter === 'expired' && !status.isExpired) return false;
+
+      if (soldSearchQuery.trim()) {
+        const q = soldSearchQuery.trim().toLowerCase();
+        const matchModel = (item.device_model || item.model || '').toLowerCase().includes(q);
+        const matchSerial = (item.serial_number || item.service_tag || '').toLowerCase().includes(q);
+        const matchCustomer = (item.customer_name || '').toLowerCase().includes(q);
+        const matchPhone = (item.customer_phone || '').toLowerCase().includes(q);
+        const matchCustomerCode = (item.customer_code || '').toLowerCase().includes(q);
+        const matchSeller = (item.sold_by || '').toLowerCase().includes(q);
+        if (!matchModel && !matchSerial && !matchCustomer && !matchPhone && !matchCustomerCode && !matchSeller) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [soldMachines, soldWarrantyFilter, soldSearchQuery]);
 
   // Phân loại key hiển thị (Dữ liệu nếu = 0 thì không hiển thị)
   const visibleKeyCategories = useMemo(() => {
@@ -821,10 +914,12 @@ export default function KhoMayPage() {
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             {activeTab === 'machines' && 'Kho Máy Bộ'}
+            {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
             {activeTab === 'software' && 'Kho Phần Mềm'}
             <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
-              {activeTab === 'machines' && `${inventory.length} máy`}
+              {activeTab === 'machines' && `${stats.ready + stats.testing} máy`}
+              {activeTab === 'sold' && `${stats.sold} máy đã bán`}
               {activeTab === 'components' && `${spareParts.length} mục`}
               {activeTab === 'software' && `${softwareLicenses.length} mục`}
             </span>
@@ -886,27 +981,43 @@ export default function KhoMayPage() {
         </div>
       </div>
 
-      {/* Category Tabs: Machines, Components, Software */}
+      {/* Category Tabs: Machines, Sold, Components, Software */}
       <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
         <button
           onClick={() => setActiveTab('machines')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'machines'
               ? 'bg-white text-blue-700 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Máy bộ</span>
+          <span>Máy bộ tồn kho</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'machines' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.total}
+            {stats.ready + stats.testing}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('sold')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'sold'
+              ? 'bg-white text-purple-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Máy đã bán</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'sold' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.sold}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('components')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'components'
               ? 'bg-white text-emerald-700 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
@@ -922,17 +1033,17 @@ export default function KhoMayPage() {
 
         <button
           onClick={() => setActiveTab('software')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
             activeTab === 'software'
               ? 'bg-white text-[#C0392B] shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Key Windows &amp; Office</span>
+          <span>Key Win &amp; Office</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'software' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.keysAvailable} sẵn có
+            {stats.keysAvailable} sẵn
           </span>
         </button>
       </div>
@@ -1335,6 +1446,17 @@ export default function KhoMayPage() {
       </div>
     </>
   )}
+
+      {/* ========================================================================= */}
+      {/* TAB: MÁY ĐÃ BÁN & BẢO HÀNH THỜI GIAN THỰC */}
+      {/* ========================================================================= */}
+      {activeTab === 'sold' && (
+        <SoldInventoryTab
+          soldMachines={soldMachines}
+          onPrintLabel={handleOpenLabelModal}
+          getRealtimeWarrantyStatus={getRealtimeWarrantyStatus}
+        />
+      )}
 
       {/* ========================================================================= */}
       {/* TAB 2: QUẢN LÝ LINH KIỆN PHẦN CỨNG (MỚI 100% & CŨ ZIN BÓC MÁY) */}

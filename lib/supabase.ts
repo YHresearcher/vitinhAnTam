@@ -175,9 +175,40 @@ export interface InventoryItem {
   image_urls?: string[];
   customer_name?: string;
   customer_phone?: string;
+  customer_code?: string;
+  sold_by?: string;
   handover_date?: string;
   created_at?: string;
 }
+
+export interface WarrantyProvision {
+  id: string;
+  item_id: string;
+  item_type: 'machine' | 'spare_part' | 'key' | 'service';
+  item_title: string;
+  serial_number?: string;
+  customer_name: string;
+  customer_phone?: string;
+  customer_code?: string;
+  seller_name?: string;
+  sale_date: string; // ISO string
+  warranty_months: number;
+  warranty_expiry_date: string; // ISO string
+  sale_price: number;
+  cost_price: number;
+  net_profit: number;
+  provision_rate: number; // 0.05 (5%)
+  provision_amount: number; // net_profit * 0.05
+  status: 'pending_approval' | 'locked' | 'unlocked' | 'settled';
+  approved_at?: string;
+  approved_by?: string;
+  unlocked_at?: string;
+  settled_at?: string;
+  settlement_year?: number;
+  notes?: string;
+  created_at: string;
+}
+
 
 export interface SparePart {
   id: string;

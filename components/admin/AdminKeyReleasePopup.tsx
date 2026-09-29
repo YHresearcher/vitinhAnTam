@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { KeyReleaseRequest } from '@/lib/supabase';
-import { KeyRound, Check, Copy, AlertTriangle } from 'lucide-react';
 
 export function AdminKeyReleasePopup() {
   const {
@@ -12,6 +11,7 @@ export function AdminKeyReleasePopup() {
     keyReleaseRequests,
     licenseKeys,
     approveKeyReleaseRequest,
+    quickRestockAndApproveKeyRequest,
     rejectKeyReleaseRequest,
   } = useViTinhAnTamStore();
 
@@ -31,6 +31,8 @@ export function AdminKeyReleasePopup() {
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
   const [rejectReasonInput, setRejectReasonInput] = useState('');
+  const [quickRestockCode, setQuickRestockCode] = useState('');
+  const [isQuickRestocking, setIsQuickRestocking] = useState(false);
   const [approvedResult, setApprovedResult] = useState<{
     requestId: string;
     keyCode: string;
@@ -144,6 +146,30 @@ export function AdminKeyReleasePopup() {
     }
   };
 
+  const handleQuickRestockAndApprove = async () => {
+    if (!currentReq) return;
+    if (!quickRestockCode.trim()) {
+      alert('Vui lòng dán hoặc nhập mã key mới vào ô bên dưới!');
+      return;
+    }
+    setIsQuickRestocking(true);
+    const res = await quickRestockAndApproveKeyRequest(currentReq.id, quickRestockCode.trim());
+    setIsQuickRestocking(false);
+
+    if (res.success && res.key) {
+      setQuickRestockCode('');
+      setApprovedResult({
+        requestId: currentReq.id,
+        keyCode: res.key.license_code,
+        customerName: currentReq.customer_name,
+        categoryName: currentReq.category_name,
+      });
+      setIsOpen(true);
+    } else {
+      alert(res.message);
+    }
+  };
+
   const handleReject = async () => {
     if (!currentReq) return;
     if (!rejectReasonInput.trim()) {
@@ -158,7 +184,7 @@ export function AdminKeyReleasePopup() {
   const renderSuccessBanner = () => (
     <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 text-center space-y-3 animate-fade-in shadow-inner">
       <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-emerald-600 text-white font-black text-lg shadow-md">
-        <Check className="w-6 h-6 stroke-[3]" />
+        ✓
       </div>
       <div>
         <div className="text-xs font-black text-emerald-900 uppercase tracking-wide">
@@ -183,7 +209,6 @@ export function AdminKeyReleasePopup() {
           onClick={() => handleCopy(approvedResult?.keyCode || '')}
           className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
         >
-          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copied ? '✓ ĐÃ COPY MÃ' : 'SAO CHÉP MÃ KEY'}</span>
         </button>
         <button
@@ -236,22 +261,51 @@ export function AdminKeyReleasePopup() {
       </div>
 
       {availableCount === 0 && (
-        <div className="p-2.5 bg-red-100 border border-red-400 rounded-xl flex items-start gap-2 text-red-900 animate-pulse">
-          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-          <div className="text-[11px] leading-tight">
-            <div className="font-black text-red-950 uppercase">🚨 KHO HẾT KEY (VOLUME = 0):</div>
-            <div className="mt-0.5 text-red-800">
-              Không thể {isFaultyReplacement ? 'cấp đổi' : 'xuất'} key lúc này vì kho đã hết. Vui lòng nạp thêm key vào kho.
+        <div className="p-3 bg-red-50 border-2 border-red-300 rounded-2xl space-y-2.5">
+          <div className="flex items-start gap-2 text-red-900">
+            <span className="text-base">🚨</span>
+            <div className="text-[11px] leading-tight flex-1">
+              <div className="font-black text-red-950 uppercase">
+                {isFaultyReplacement ? 'KEY ĐỔI LỖI (KHO TẠM HẾT - VOL: 0)' : 'KHO TẠM HẾT KEY (VOLUME = 0)'}
+              </div>
+              <div className="mt-0.5 text-red-700">
+                Dán mã key mới bên dưới để nạp kho và cấp duyệt ngay cho khách.
+              </div>
             </div>
+          </div>
+
+          {/* Inline Quick Restock Box */}
+          <div className="space-y-1.5 pt-1">
+            <div className="relative">
+              <input
+                type="text"
+                value={quickRestockCode}
+                onChange={(e) => setQuickRestockCode(e.target.value)}
+                placeholder="Dán mã key mới (VD: VK7JG-NPHTM-C97JM...)"
+                className="w-full px-3 py-2 bg-white border border-red-300 rounded-xl font-mono text-xs font-bold text-slate-900 uppercase focus:outline-hidden focus:ring-2 focus:ring-red-500 shadow-inner"
+              />
+            </div>
+            <button
+              type="button"
+              disabled={isQuickRestocking || !quickRestockCode.trim()}
+              onClick={handleQuickRestockAndApprove}
+              className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              {isQuickRestocking ? (
+                <span>Đang nạp & cấp key...</span>
+              ) : (
+                <span>⚡ Nạp Nhanh Key Mới & Duyệt Cấp Luôn</span>
+              )}
+            </button>
           </div>
         </div>
       )}
 
       {availableCount > 0 && availableCount <= 2 && (
         <div className="p-2 bg-amber-50 border border-amber-300 rounded-xl flex items-start gap-2 text-amber-900">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <span className="text-xs">⚠️</span>
           <div className="text-[11px] leading-tight">
-            <span className="font-bold text-amber-950">⚠️ CẢNH BÁO TỒN KHO THẤP:</span> Kho chỉ còn <strong>{availableCount}</strong> key khả dụng. Đề xuất nạp thêm key sớm!
+            <span className="font-bold text-amber-950">CẢNH BÁO TỒN KHO THẤP:</span> Kho chỉ còn <strong>{availableCount}</strong> key khả dụng.
           </div>
         </div>
       )}
@@ -315,20 +369,8 @@ export function AdminKeyReleasePopup() {
     }
 
     return (
-      <div className="space-y-1.5 pt-0.5">
-        {availableCount === 0 ? (
-          <button
-            type="button"
-            onClick={() =>
-              alert(
-                `Kho hiện tại có Volume = 0 (hết key cho "${currentReq.category_name}"). Vui lòng nạp thêm key vào kho trước khi duyệt cấp!`
-              )
-            }
-            className="w-full py-2.5 px-4 rounded-xl text-white font-black text-xs tracking-wider shadow-md flex items-center justify-center gap-1.5 bg-slate-500 hover:bg-slate-600 cursor-pointer"
-          >
-            ⚠️ KHO HẾT KEY (VOLUME: 0) - CHƯA THỂ DUYỆT
-          </button>
-        ) : (
+      <div className="space-y-2 pt-0.5">
+        {availableCount > 0 && (
           <button
             type="button"
             disabled={isApproving}
@@ -343,20 +385,16 @@ export function AdminKeyReleasePopup() {
           <button
             type="button"
             onClick={() => setIsRejecting(true)}
-            className="px-2.5 py-1 rounded border border-slate-200 text-slate-600 hover:text-rose-600 text-xs font-bold"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:text-rose-600 text-xs font-bold transition-colors cursor-pointer"
           >
             Từ chối
           </button>
           <Link
             href="/quan-ly-key"
             onClick={() => setIsOpen(false)}
-            className={`px-2.5 py-1 rounded text-xs font-bold transition-colors ${
-              availableCount === 0
-                ? 'bg-[#C0392B] hover:bg-[#A93226] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-[#2B1810]'
-            }`}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold transition-colors bg-slate-100 hover:bg-slate-200 text-slate-800"
           >
-            {availableCount === 0 ? '+ Nạp key vào kho' : 'Mở Kho Key →'}
+            Mở Kho Key Đầy Đủ →
           </Link>
         </div>
       </div>

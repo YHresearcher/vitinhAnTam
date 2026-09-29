@@ -19,6 +19,7 @@ import {
   LicenseKeyItem,
   KeyReleaseRequest,
   KeyEmailTemplateConfig,
+  WarrantyProvision,
   createId,
   isUuid,
 } from './supabase';
@@ -39,6 +40,7 @@ import {
   initialLicenseKeys,
   initialKeyReleaseRequests,
   initialKeyEmailTemplate,
+  initialWarrantyProvisions,
 } from './mockData';
 
 
@@ -247,11 +249,18 @@ interface StoreContextType {
     category_id: string;
   }) => Promise<{ success: boolean; message: string; request?: KeyReleaseRequest }>;
   approveKeyReleaseRequest: (requestId: string, adminNote?: string) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem }>;
+  quickRestockAndApproveKeyRequest: (requestId: string, newKeyCode: string, costPrice?: number) => Promise<{ success: boolean; message: string; key?: LicenseKeyItem }>;
   confirmKeyActive: (requestId: string) => Promise<{ success: boolean; message: string }>;
   reportKeyFaulty: (requestId: string, reason: string) => Promise<{ success: boolean; message: string }>;
   restoreFaultyKey: (keyId: string, note?: string) => Promise<{ success: boolean; message: string }>;
   rejectKeyReleaseRequest: (requestId: string, reason: string) => Promise<boolean>;
   updateKeyEmailTemplate: (updates: Partial<KeyEmailTemplateConfig>) => Promise<boolean>;
+
+  // 5% Warranty Provision Fund Lifecycle
+  warrantyProvisions: WarrantyProvision[];
+  approveWarrantyProvision: (provisionId: string) => Promise<{ success: boolean; message: string }>;
+  unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
+  settleUnlockedWarrantyProvisionsYearEnd: () => Promise<{ settledCount: number; settledTotal: number }>;
 
   // Reset
   resetToDefault: () => void;
@@ -263,20 +272,21 @@ const STORAGE_KEYS = {
   role: 'vtat_user_role_v3',
   userId: 'vtat_user_id_v3',
   users: 'vtat_users_v3',
+  inventory: 'vtat_inventory_v3',
+  customers: 'vtat_customers_v3',
+  tickets: 'vtat_tickets_v3',
+  spareParts: 'vtat_spare_parts_v3',
+  softwareLicenses: 'vtat_software_licenses_v3',
+  onsiteDispatches: 'vtat_onsite_dispatches_v3',
+  shiftLogs: 'vtat_shift_logs_v3',
+  faqs: 'vtat_faqs_v3',
+  reviews: 'vtat_reviews_v3',
   isLoggedIn: 'vtat_is_logged_in_v3',
-  inventory: 'vtat_inventory_v2',
-  customers: 'vtat_customers_v2',
-  tickets: 'vtat_tickets_v2',
-  spareParts: 'vtat_spare_parts_v2',
-  softwareLicenses: 'vtat_software_licenses_v1',
-  onsiteDispatches: 'vtat_onsite_dispatches_v2',
-  shiftLogs: 'vtat_shift_logs_v2',
-  faqs: 'vtat_faqs_v2',
-  reviews: 'vtat_reviews_v2',
-  keyCategories: 'vtat_key_categories_v1',
-  licenseKeys: 'vtat_license_keys_v1',
-  keyReleaseRequests: 'vtat_key_release_requests_v1',
-  keyEmailTemplate: 'vtat_key_email_template_v1',
+  keyCategories: 'vtat_key_categories_v3',
+  licenseKeys: 'vtat_license_keys_v3',
+  keyReleaseRequests: 'vtat_key_release_requests_v3',
+  keyEmailTemplate: 'vtat_key_email_template_v3',
+  warrantyProvisions: 'vtat_warranty_provisions_v3',
 };
 
 export function StoreProvider({
@@ -326,6 +336,9 @@ export function StoreProvider({
   const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>(initialLicenseKeys);
   const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>(initialKeyReleaseRequests);
   const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
+
+  // 5% Warranty Provision Fund State
+  const [warrantyProvisions, setWarrantyProvisions] = useState<WarrantyProvision[]>(initialWarrantyProvisions);
 
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
@@ -735,6 +748,7 @@ export function StoreProvider({
         readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, setLicenseKeys);
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
+        readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
 
         readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
           setSystemSettings((prev) => ({ ...prev, ...parsed }));
@@ -1482,6 +1496,68 @@ export function StoreProvider({
     };
   };
 
+  const quickRestockAndApproveKeyRequest = async (
+    requestId: string,
+    newKeyCode: string,
+    costPrice?: number
+  ): Promise<{ success: boolean; message: string; key?: LicenseKeyItem }> => {
+    const req = keyReleaseRequests.find((r) => r.id === requestId);
+    if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
+
+    const trimmedCode = newKeyCode.trim().toUpperCase();
+    if (!trimmedCode) return { success: false, message: 'Vui lòng nhập mã key mới!' };
+
+    const newKey: LicenseKeyItem = {
+      id: createId(),
+      category_id: req.category_id,
+      category_name: req.category_name,
+      license_code: trimmedCode,
+      status: 'assigned',
+      assigned_to_customer: req.customer_name,
+      assigned_to_phone: req.customer_phone,
+      customer_name: req.customer_name,
+      customer_phone: req.customer_phone,
+      assigned_at: new Date().toISOString(),
+      import_price: costPrice || 150000,
+      unit_price: 350000,
+      request_id: req.id,
+      notes: `Nạp nhanh & cấp cho yêu cầu #${req.id.slice(-4)} (${req.customer_name})`,
+      created_at: new Date().toISOString(),
+    };
+
+    setLicenseKeys((prev) => {
+      const next = [newKey, ...prev];
+      saveToLocal(STORAGE_KEYS.licenseKeys, next);
+      return next;
+    });
+
+    const now = new Date().toISOString();
+    setKeyReleaseRequests((prev) => {
+      const next = prev.map((r) =>
+        r.id === requestId
+          ? {
+              ...r,
+              status: 'approved_waiting_test' as const,
+              released_key_id: newKey.id,
+              released_key_code: newKey.license_code,
+              admin_id: currentUser.id,
+              admin_name: currentUser.name,
+              approved_at: now,
+              updated_at: now,
+            }
+          : r
+      );
+      saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
+      return next;
+    });
+
+    return {
+      success: true,
+      message: `Đã nạp nhanh key mới (${trimmedCode}) và duyệt cấp ngay cho khách ${req.customer_name}!`,
+      key: newKey,
+    };
+  };
+
   const confirmKeyActive = async (requestId: string): Promise<{ success: boolean; message: string }> => {
     const req = keyReleaseRequests.find((r) => r.id === requestId);
     if (!req) return { success: false, message: 'Không tìm thấy yêu cầu cấp key!' };
@@ -1836,6 +1912,8 @@ export function StoreProvider({
       qc_status: 'sold',
       customer_name: params.customerName.trim(),
       customer_phone: params.customerPhone.trim(),
+      customer_code: customerCode,
+      sold_by: currentUser.name,
       serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
       warranty_months: params.warrantyMonths,
       handover_date: new Date().toISOString(),
@@ -1892,11 +1970,124 @@ export function StoreProvider({
       return next;
     });
 
+    // 4. Calculate 5% Warranty Provision Fund from Net Profit
+    const finalSoldPrice = params.soldPrice || item.retail_price || item.price || 0;
+    const finalCostPrice = item.cost_price || item.import_price || 0;
+    const netProfit = Math.max(0, finalSoldPrice - finalCostPrice);
+    const provisionAmount = Math.max(0, Math.round(netProfit * 0.05));
+
+    if (provisionAmount > 0) {
+      const expiryDate = new Date(Date.now() + params.warrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+      const newProvision: WarrantyProvision = {
+        id: createId(),
+        item_id: item.id,
+        item_type: 'machine',
+        item_title: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+        serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
+        customer_name: params.customerName.trim(),
+        customer_phone: params.customerPhone.trim(),
+        customer_code: customerCode,
+        seller_name: currentUser.name,
+        sale_date: new Date().toISOString(),
+        warranty_months: params.warrantyMonths,
+        warranty_expiry_date: expiryDate,
+        sale_price: finalSoldPrice,
+        cost_price: finalCostPrice,
+        net_profit: netProfit,
+        provision_rate: 0.05,
+        provision_amount: provisionAmount,
+        status: currentUser.role === 'admin' ? 'locked' : 'pending_approval',
+        approved_at: currentUser.role === 'admin' ? new Date().toISOString() : undefined,
+        approved_by: currentUser.role === 'admin' ? currentUser.name : undefined,
+        created_at: new Date().toISOString(),
+      };
+
+      setWarrantyProvisions((prev) => {
+        const next = [newProvision, ...prev];
+        saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+        return next;
+      });
+    }
+
     return {
       success: true,
       customerCode,
-      message: `Bán máy thành công! Mã khách hàng: ${customerCode} (Bảo hành ${params.warrantyMonths} tháng)`,
+      message: `Bán máy thành công! Mã khách hàng: ${customerCode} (Trích 5% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
     };
+  };
+
+  const approveWarrantyProvision = async (provisionId: string): Promise<{ success: boolean; message: string }> => {
+    let targetAmount = 0;
+    setWarrantyProvisions((prev) => {
+      const next = prev.map((wp) => {
+        if (wp.id === provisionId) {
+          targetAmount = wp.provision_amount;
+          return {
+            ...wp,
+            status: 'locked' as const,
+            approved_at: new Date().toISOString(),
+            approved_by: currentUser.name,
+          };
+        }
+        return wp;
+      });
+      saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+      return next;
+    });
+    return {
+      success: true,
+      message: `Đã duyệt trích ${targetAmount.toLocaleString('vi-VN')}₫ vào Quỹ Bảo Hành phong tỏa!`,
+    };
+  };
+
+  const unlockMaturedWarrantyProvisions = async (): Promise<{ unlockedCount: number; unlockedTotal: number }> => {
+    const now = new Date().getTime();
+    let count = 0;
+    let total = 0;
+    setWarrantyProvisions((prev) => {
+      const next = prev.map((wp) => {
+        if (wp.status === 'locked' && wp.warranty_expiry_date) {
+          const expiryTime = new Date(wp.warranty_expiry_date).getTime();
+          if (now >= expiryTime) {
+            count++;
+            total += wp.provision_amount;
+            return {
+              ...wp,
+              status: 'unlocked' as const,
+              unlocked_at: new Date().toISOString(),
+            };
+          }
+        }
+        return wp;
+      });
+      saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+      return next;
+    });
+    return { unlockedCount: count, unlockedTotal: total };
+  };
+
+  const settleUnlockedWarrantyProvisionsYearEnd = async (): Promise<{ settledCount: number; settledTotal: number }> => {
+    const currentYear = new Date().getFullYear();
+    let count = 0;
+    let total = 0;
+    setWarrantyProvisions((prev) => {
+      const next = prev.map((wp) => {
+        if (wp.status === 'unlocked') {
+          count++;
+          total += wp.provision_amount;
+          return {
+            ...wp,
+            status: 'settled' as const,
+            settled_at: new Date().toISOString(),
+            settlement_year: currentYear,
+          };
+        }
+        return wp;
+      });
+      saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+      return next;
+    });
+    return { settledCount: count, settledTotal: total };
   };
 
   // CRM Customer Management
@@ -2022,6 +2213,7 @@ export function StoreProvider({
     setShiftLogs(initialShiftLogs);
     setFaqs(initialFaqs);
     setReviews(initialCustomerReviews);
+    setWarrantyProvisions(initialWarrantyProvisions);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.users);
       localStorage.removeItem(STORAGE_KEYS.userId);
@@ -2034,6 +2226,7 @@ export function StoreProvider({
       localStorage.removeItem(STORAGE_KEYS.shiftLogs);
       localStorage.removeItem(STORAGE_KEYS.faqs);
       localStorage.removeItem(STORAGE_KEYS.reviews);
+      localStorage.removeItem(STORAGE_KEYS.warrantyProvisions);
     }
   };
 
@@ -2092,11 +2285,16 @@ export function StoreProvider({
       takeKeyForCustomer,
       createKeyReleaseRequest,
       approveKeyReleaseRequest,
+      quickRestockAndApproveKeyRequest,
       confirmKeyActive,
       reportKeyFaulty,
       restoreFaultyKey,
       rejectKeyReleaseRequest,
       updateKeyEmailTemplate,
+      warrantyProvisions,
+      approveWarrantyProvision,
+      unlockMaturedWarrantyProvisions,
+      settleUnlockedWarrantyProvisionsYearEnd,
       addSoftwareKeys,
       assignSoftwareKey,
       updateSoftwareKeyStatus,
@@ -2146,6 +2344,7 @@ export function StoreProvider({
       licenseKeys,
       keyReleaseRequests,
       keyEmailTemplate,
+      warrantyProvisions,
       onsiteDispatches,
       shiftLogs,
       faqs,
