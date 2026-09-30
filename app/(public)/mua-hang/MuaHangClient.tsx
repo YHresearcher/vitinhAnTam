@@ -8,13 +8,11 @@ import { formatVND } from '@/lib/supabase';
 import {
   Check,
   ChevronRight,
-  CreditCard,
   QrCode,
   Banknote,
   Store,
   Truck,
   CheckCircle2,
-  MessageCircle,
   ArrowLeft,
   Phone,
   ShieldCheck,
@@ -23,33 +21,9 @@ import {
 // ------------------------------------------------------------------
 // Types
 // ------------------------------------------------------------------
-type PaymentMethod = 'qr' | 'installment' | null;
+type PaymentMethod = 'qr' | 'cash' | null;
 type DeliveryMethod = 'pickup' | 'delivery' | null;
 type Step = 'payment' | 'delivery' | 'confirm' | 'success';
-
-const INSTALLMENT_PARTNERS = [
-  {
-    id: 'home_credit',
-    name: 'Home Credit',
-    logo: '🏦',
-    noteVi: '0% lãi suất 6 tháng (duyệt nhanh 15 phút)',
-    noteEn: '0% interest for 6 months (quick 15-min approval)',
-  },
-  {
-    id: 'fecredit',
-    name: 'FE Credit',
-    logo: '💳',
-    noteVi: 'Trả góp linh hoạt 6-36 tháng',
-    noteEn: 'Flexible installments from 6 to 36 months',
-  },
-  {
-    id: 'shinhan',
-    name: 'Shinhan Finance',
-    logo: '🏧',
-    noteVi: 'Lãi suất ưu đãi, không cần tài sản đảm bảo',
-    noteEn: 'Preferential rates, zero collateral required',
-  },
-];
 
 // ------------------------------------------------------------------
 // Component
@@ -67,16 +41,18 @@ export default function MuaHangClient() {
   // Step state
   const [step, setStep] = useState<Step>('payment');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(null);
-  const [selectedInstallmentPartner, setSelectedInstallmentPartner] = useState<string | null>(null);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(null);
 
   // Customer info (for delivery step)
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
+  const [customerNote, setCustomerNote] = useState('');
 
-  // Order success
+  // Order submission
   const [orderCode] = useState(() => `#AT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Scroll to top on step change
   useEffect(() => {
@@ -190,7 +166,7 @@ export default function MuaHangClient() {
 
             {/* QR Code / Chuyển khoản */}
             <div
-              onClick={() => { setPaymentMethod('qr'); setSelectedInstallmentPartner(null); }}
+              onClick={() => setPaymentMethod('qr')}
               className={`bg-white rounded-xl border-2 cursor-pointer transition-all p-4 flex items-start gap-3.5 ${paymentMethod === 'qr'
                 ? 'border-[#C0392B] shadow-md shadow-[#C0392B]/10'
                 : 'border-[#E8E2D9] hover:border-[#C0392B]/50'
@@ -219,81 +195,38 @@ export default function MuaHangClient() {
               </div>
             </div>
 
-            {/* Trả góp */}
+            {/* Tiền mặt / Thanh toán tại cửa hàng */}
             <div
-              onClick={() => { setPaymentMethod('installment'); setSelectedInstallmentPartner(null); }}
-              className={`bg-white rounded-xl border-2 cursor-pointer transition-all p-4 ${paymentMethod === 'installment'
+              onClick={() => setPaymentMethod('cash')}
+              className={`bg-white rounded-xl border-2 cursor-pointer transition-all p-4 flex items-start gap-3.5 ${paymentMethod === 'cash'
                 ? 'border-[#C0392B] shadow-md shadow-[#C0392B]/10'
                 : 'border-[#E8E2D9] hover:border-[#C0392B]/50'
                 }`}
             >
-              <div className="flex items-start gap-3.5">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${paymentMethod === 'installment' ? 'bg-[#C0392B]' : 'bg-[#FAF7F2]'}`}>
-                  <Banknote className={`w-5 h-5 ${paymentMethod === 'installment' ? 'text-white' : 'text-[#C0392B]'}`} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[#2B1810]">
-                      {isEn ? 'Financing Company Installment' : 'Trả góp qua công ty tài chính'}
-                    </h3>
-                    {paymentMethod === 'installment' && <Check className="w-4 h-4 text-[#C0392B]" />}
-                  </div>
-                  <p className="text-xs text-[#6E5D53] mt-0.5 leading-snug">
-                    {isEn
-                      ? 'Fast 15-60 minute approval, no collateral needed. Flexible 6-36 month terms.'
-                      : 'Duyệt nhanh 15 -60 phút, không cần tài sản đảm bảo. Kì hạn 6-36 tháng.'}
-                  </p>
-                </div>
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${paymentMethod === 'cash' ? 'bg-[#C0392B]' : 'bg-[#FAF7F2]'}`}>
+                <Banknote className={`w-5 h-5 ${paymentMethod === 'cash' ? 'text-white' : 'text-[#C0392B]'}`} />
               </div>
-
-              {/* Installment partner options */}
-              {paymentMethod === 'installment' && (
-                <div className="mt-4 pt-3 border-t border-[#E8E2D9] space-y-2">
-                  <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">
-                    {isEn ? 'Select financing partner:' : 'Chọn đối tác tài chính:'}
-                  </div>
-                  {INSTALLMENT_PARTNERS.map((partner) => (
-                    <div
-                      key={partner.id}
-                      onClick={(e) => { e.stopPropagation(); setSelectedInstallmentPartner(partner.id); }}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedInstallmentPartner === partner.id
-                        ? 'border-[#C0392B] bg-[#FBE8DE]'
-                        : 'border-[#E8E2D9] bg-white hover:border-[#C0392B]/50'
-                        }`}
-                    >
-                      <span className="text-xl">{partner.logo}</span>
-                      <div className="flex-1">
-                        <div className="text-xs font-bold text-[#2B1810]">{partner.name}</div>
-                        <div className="text-[11px] text-[#6E5D53]">{isEn ? partner.noteEn : partner.noteVi}</div>
-                      </div>
-                      {selectedInstallmentPartner === partner.id && (
-                        <Check className="w-4 h-4 text-[#C0392B] shrink-0" />
-                      )}
-                    </div>
-                  ))}
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[#2B1810]">
+                    {isEn ? 'Cash at Showroom' : 'Tiền mặt tại cửa hàng'}
+                  </h3>
+                  {paymentMethod === 'cash' && <Check className="w-4 h-4 text-[#C0392B]" />}
                 </div>
-              )}
-            </div>
-
-            {/* Tiền mặt tại quầy */}
-            <div className="bg-white rounded-xl border border-[#E8E2D9] p-3 flex items-center gap-2.5">
-              <CreditCard className="w-4 h-4 text-[#6E5D53] shrink-0" />
-              <p className="text-xs text-[#6E5D53]">
-                {isEn ? (
-                  <>Or <strong className="text-[#2B1810]">pay with cash or bank card directly</strong> at the showroom.</>
-                ) : (
-                  <>Hoặc <strong className="text-[#2B1810]">thanh toán tiền mặt / thẻ ngân hàng trực tiếp</strong> tại cửa hàng.</>
-                )}
-              </p>
+                <p className="text-xs text-[#6E5D53] mt-0.5 leading-snug">
+                  {isEn
+                    ? 'Pay cash directly when picking up your computer at the showroom. Staff will issue a VAT invoice on the spot.'
+                    : 'Thanh toán tiền mặt trực tiếp khi nhận máy tại cửa hàng. Nhân viên xuất hóa đơn VAT ngay tại chỗ.'}
+                </p>
+              </div>
             </div>
 
             <button
               onClick={() => {
                 if (!paymentMethod) return;
-                if (paymentMethod === 'installment' && !selectedInstallmentPartner) return;
                 setStep('delivery');
               }}
-              disabled={!paymentMethod || (paymentMethod === 'installment' && !selectedInstallmentPartner)}
+              disabled={!paymentMethod}
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-40 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
               <span>{isEn ? 'Continue' : 'Tiếp tục'}</span>
@@ -385,31 +318,7 @@ export default function MuaHangClient() {
               {deliveryMethod === 'delivery' && (
                 <div className="mt-4 pt-3 border-t border-[#E8E2D9] space-y-3">
                   <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">
-                    {isEn ? 'Delivery Information:' : 'Thông tin giao hàng:'}
-                  </div>
-                  <div>
-                    <label className="text-xs text-[#6E5D53] mb-1 block">
-                      {isEn ? 'Full Name *' : 'Họ và tên *'}
-                    </label>
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder={isEn ? 'e.g. John Doe / Nguyen Van An' : 'Nguyễn Văn An'}
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-[#6E5D53] mb-1 block">
-                      {isEn ? 'Phone Number *' : 'Số điện thoại *'}
-                    </label>
-                    <input
-                      type="tel"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder="0909 053 058"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
-                    />
+                    {isEn ? 'Delivery Address:' : 'Địa chỉ giao hàng:'}
                   </div>
                   <div>
                     <label className="text-xs text-[#6E5D53] mb-1 block">
@@ -427,15 +336,51 @@ export default function MuaHangClient() {
               )}
             </div>
 
+            {/* Contact info (luôn hiển thị để xác nhận đơn hàng) */}
+            {deliveryMethod && (
+              <div className="bg-white rounded-xl border border-[#E8E2D9] p-4 space-y-3">
+                <div className="text-[11px] font-bold text-[#6E5D53] uppercase tracking-wide">
+                  {isEn ? 'Contact Information:' : 'Thông tin liên hệ:'}
+                </div>
+                <div>
+                  <label className="text-xs text-[#6E5D53] mb-1 block">
+                    {isEn ? 'Full Name *' : 'Họ và tên *'}
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder={isEn ? 'e.g. John Doe / Nguyen Van An' : 'Nguyễn Văn An'}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-[#6E5D53] mb-1 block">
+                    {isEn ? 'Phone Number *' : 'Số điện thoại *'}
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    placeholder="0909 053 058"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
+                  />
+                </div>
+              </div>
+            )}
+
             <button
               onClick={() => {
                 if (!deliveryMethod) return;
-                if (deliveryMethod === 'delivery' && (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim())) return;
+                if (!customerName.trim() || !customerPhone.trim()) return;
+                if (deliveryMethod === 'delivery' && !customerAddress.trim()) return;
                 setStep('confirm');
               }}
               disabled={
                 !deliveryMethod ||
-                (deliveryMethod === 'delivery' && (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()))
+                !customerName.trim() ||
+                !customerPhone.trim() ||
+                (deliveryMethod === 'delivery' && !customerAddress.trim())
               }
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-40 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
@@ -473,7 +418,7 @@ export default function MuaHangClient() {
                   </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
                     {paymentMethod === 'qr' && (isEn ? 'VietQR Code / Bank Transfer' : 'QR Code / Chuyển khoản')}
-                    {paymentMethod === 'installment' && `${isEn ? 'Installment' : 'Trả góp'} — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
+                    {paymentMethod === 'cash' && (isEn ? 'Cash at Showroom' : 'Tiền mặt tại cửa hàng')}
                   </div>
                 </div>
                 <button onClick={() => setStep('payment')} className="text-xs text-[#C0392B] font-semibold hover:underline">
@@ -496,7 +441,7 @@ export default function MuaHangClient() {
                       </>
                     )}
                   </div>
-                  {deliveryMethod === 'delivery' && customerName && (
+                  {customerName && (
                     <div className="text-xs text-[#6E5D53] mt-0.5">{customerName} • {customerPhone}</div>
                   )}
                 </div>
@@ -521,12 +466,49 @@ export default function MuaHangClient() {
             </div>
 
             <button
-              onClick={() => setStep('success')}
-              className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
+              onClick={async () => {
+                setIsSubmitting(true);
+                setSubmitError(null);
+                try {
+                  const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      order_code: orderCode,
+                      customer_name: customerName,
+                      customer_phone: customerPhone,
+                      customer_address: customerAddress,
+                      device_name: deviceName,
+                      device_price: devicePrice,
+                      device_tag: deviceTag,
+                      payment_method: paymentMethod,
+                      delivery_method: deliveryMethod,
+                      note: customerNote,
+                      status: 'pending',
+                    }),
+                  });
+                  if (!response.ok) throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
+                  setStep('success');
+                } catch (err: any) {
+                  setSubmitError(err.message);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={isSubmitting}
+              className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-50 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>{isEn ? 'Confirm Purchase Order' : 'Xác nhận đặt mua'}</span>
+              <span>
+                {isSubmitting
+                  ? (isEn ? 'Submitting order...' : 'Đang gửi đơn hàng...')
+                  : (isEn ? 'Confirm Purchase Order' : 'Xác nhận đặt mua')}
+              </span>
             </button>
+
+            {submitError && (
+              <p className="text-xs text-red-600 text-center font-semibold">{submitError}</p>
+            )}
 
             <p className="text-[11px] text-[#6E5D53] text-center">
               {isEn
@@ -570,7 +552,7 @@ export default function MuaHangClient() {
                 <span className="text-[#6E5D53]">{isEn ? 'Payment:' : 'Thanh toán:'}</span>
                 <span className="font-semibold text-[#2B1810]">
                   {paymentMethod === 'qr' && (isEn ? 'VietQR Code' : 'QR Code')}
-                  {paymentMethod === 'installment' && `${isEn ? 'Installment' : 'Trả góp'} — ${INSTALLMENT_PARTNERS.find(p => p.id === selectedInstallmentPartner)?.name || ''}`}
+                  {paymentMethod === 'cash' && (isEn ? 'Cash at Showroom' : 'Tiền mặt tại cửa hàng')}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -590,19 +572,11 @@ export default function MuaHangClient() {
             </div>
 
             <div className="flex flex-col gap-2.5">
-              <a
-                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(
-                  isEn
-                    ? `Hello An Tam, I just placed an order on the website:\n- Order Code: ${orderCode}\n- Computer: ${deviceName}\n- Payment: ${paymentMethod === 'qr' ? 'VietQR Code' : 'Installment'}\n- Delivery: ${deliveryMethod === 'pickup' ? 'Showroom Pickup' : `Doorstep Delivery — ${customerAddress}`}\nPlease confirm my order!`
-                    : `Chào An Tâm, tôi vừa đặt mua máy trên website:\n- Mã đơn: ${orderCode}\n- Máy: ${deviceName}\n- Thanh toán: ${paymentMethod === 'qr' ? 'QR Code' : 'Trả góp'}\n- Nhận: ${deliveryMethod === 'pickup' ? 'Tại cửa hàng' : `Giao tận nơi — ${customerAddress}`}\nNhờ xác nhận giúp tôi!`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>{isEn ? 'Send Confirmation via Zalo' : 'Gửi xác nhận qua Zalo'}</span>
-              </a>
+              <p className="text-xs text-[#6E5D53] text-center leading-relaxed">
+                {isEn
+                  ? 'The system has automatically notified the sales, admin, and technician teams to confirm your order.'
+                  : 'Hệ thống đã tự động thông báo đến đội ngũ bán hàng, quản trị và kỹ thuật để xác nhận đơn hàng của bạn.'}
+              </p>
               <Link
                 href="/"
                 className="w-full py-3 rounded-xl bg-[#FAF7F2] hover:bg-[#F0EBE3] text-[#2B1810] font-semibold text-sm flex items-center justify-center border border-[#E8E2D9] transition-all"

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
+import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
 import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
 import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -278,6 +279,9 @@ export default function AdminLayout({
 
       {/* DEADLINE TRACKING WIDGET (Hạn chót sửa chữa / bảo hành < 3 ngày) */}
       <DeadlineTrackingWidget />
+
+      {/* NEW ORDER NOTIFICATION WIDGET (Đơn hàng mới từ website — sales/admin/ktv xác nhận) */}
+      <NewOrderNotificationWidget />
 
       {/* ADMIN KEY RELEASE POPUP (Thông báo & duyệt cấp key thời gian thực) */}
       <AdminKeyReleasePopup />

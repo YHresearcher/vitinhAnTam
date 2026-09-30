@@ -3,7 +3,7 @@ import MuaHangClient from './MuaHangClient';
 
 export const metadata = {
   title: 'Mua Máy | Vi Tính An Tâm',
-  description: 'Đặt mua máy tính tuyển chọn tại Vi Tính An Tâm. Thanh toán QR Code, trả góp, nhận hàng tại cửa hàng hoặc giao tận nơi.',
+  description: 'Đặt mua máy tính tuyển chọn tại Vi Tính An Tâm. Thanh toán chuyển khoản QR Code hoặc tiền mặt, nhận hàng tại cửa hàng hoặc giao tận nơi.',
 };
 
 export default function MuaHangPage() {

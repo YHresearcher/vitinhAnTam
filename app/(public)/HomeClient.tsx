@@ -268,7 +268,7 @@ export default function HomePage() {
                       <span>{isEn ? 'Prompt warranty • Fast support' : 'Bảo hành nhanh • Hỗ trợ tận nơi'}</span>
                     </div>
                     <div className="px-3 py-1.5 rounded-lg bg-[#C0392B] text-white text-xs font-bold shadow-lg">
-                      {isEn ? '⚡ 0% Installment via ID' : '⚡ Trả góp 0% qua CCCD'}
+                      {isEn ? '⚡ Pay by QR or Cash' : '⚡ QR / Tiền mặt linh hoạt'}
                     </div>
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export default function HomePage() {
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBE8DE] text-[#C0392B] text-xs font-bold uppercase tracking-wider mb-2 border border-[#F2C4B2]">
                 <Sparkles className="w-3.5 h-3.5 text-[#C0392B]" />
-                <span>{isEn ? 'TOP 3 FEATURED SYSTEMS' : 'TOP 3 THIẾT BỊ NỔI BẬT'}</span>
+                <span>{isEn ? 'FEATURED SYSTEMS' : 'SẢN PHẨM NỔI BẬT'}</span>
               </div>
               <h2 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight">
                 {t.products.title}
@@ -345,18 +345,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setHomeProductTab('all')}
-                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${
-                  homeProductTab === 'all'
-                    ? 'bg-[#2B1810] text-white shadow-xs'
-                    : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
-                }`}
-              >
-                {isEn ? 'All Products' : 'TẤT CẢ SẢN PHẨM'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setHomeProductTab('hardware')}
+                onClick={() => setHomeProductTab(homeProductTab === 'hardware' ? 'all' : 'hardware')}
                 className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${
                   homeProductTab === 'hardware'
                     ? 'bg-[#2B1810] text-white shadow-xs'
@@ -367,7 +356,7 @@ export default function HomePage() {
               </button>
               <button
                 type="button"
-                onClick={() => setHomeProductTab('software')}
+                onClick={() => setHomeProductTab(homeProductTab === 'software' ? 'all' : 'software')}
                 className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
                   homeProductTab === 'software'
                     ? 'bg-[#C0392B] text-white shadow-xs'
@@ -389,9 +378,6 @@ export default function HomePage() {
                 <h3 className="text-xs font-black uppercase tracking-wider text-[#6E5D53]">
                   {isEn ? 'FEATURED COMPUTERS & LAPTOPS' : 'MÁY TÍNH & LAPTOP NỔI BẬT'}
                 </h3>
-                <span className="text-[11px] font-semibold text-slate-500">
-                  {isEn ? 'Featured models' : 'Mẫu máy chọn lọc'}
-                </span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map((prod) => (

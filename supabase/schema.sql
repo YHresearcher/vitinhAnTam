@@ -330,6 +330,38 @@ CREATE TABLE IF NOT EXISTS warranty_provisions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 16. BẢNG ĐƠN HÀNG TỪ WEBSITE (orders)
+CREATE TABLE IF NOT EXISTS orders (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  order_code TEXT UNIQUE NOT NULL,
+  customer_name TEXT NOT NULL DEFAULT '',
+  customer_phone TEXT NOT NULL DEFAULT '',
+  customer_address TEXT DEFAULT '',
+  device_name TEXT NOT NULL,
+  device_price NUMERIC DEFAULT 0,
+  device_tag TEXT,
+  payment_method TEXT NOT NULL DEFAULT 'qr' CHECK (payment_method IN ('qr', 'cash')),
+  delivery_method TEXT NOT NULL DEFAULT 'pickup' CHECK (delivery_method IN ('pickup', 'delivery')),
+  note TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'processing', 'completed', 'cancelled')),
+  confirmed_by TEXT,
+  confirmed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 17. BẢNG THÔNG BÁO NỘI BỘ (notifications) — thông báo đơn hàng mới đến sales/admin/kỹ thuật
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  type TEXT NOT NULL DEFAULT 'new_order',
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  ref_id TEXT,
+  ref_code TEXT,
+  recipient_roles TEXT[] NOT NULL DEFAULT '{admin,sales,technician}',
+  is_read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ============================================================================
 -- MIGRATION CHO CÁC BẢNG NẾU ĐÃ TỒN TẠI (ALTER ADD COLUMN IF NOT EXISTS)
 -- ============================================================================
