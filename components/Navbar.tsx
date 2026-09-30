@@ -70,13 +70,9 @@ export function Navbar() {
             {t.whyUs}
           </Link>
           <Link
-            href="/danh-muc-san-pham"
-            aria-current={pathname === '/danh-muc-san-pham' ? 'page' : undefined}
-            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
-              pathname === '/danh-muc-san-pham'
-                ? 'bg-[#FBE8DE] text-[#C0392B]'
-                : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
-            }`}
+            href="/#san-pham"
+            onClick={(e) => handleScrollToAnchor(e, 'san-pham')}
+            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
           >
             {t.products}
           </Link>
@@ -213,11 +209,12 @@ export function Navbar() {
             {t.whyUs}
           </Link>
           <Link
-            href="/danh-muc-san-pham"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`block px-3.5 py-2.5 text-base font-bold rounded-lg ${
-              pathname === '/danh-muc-san-pham' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
-            }`}
+            href="/#san-pham"
+            onClick={(e) => {
+              handleScrollToAnchor(e, 'san-pham');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block px-3.5 py-2.5 text-base font-bold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.products}
           </Link>

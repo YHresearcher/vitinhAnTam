@@ -44,7 +44,7 @@ export default function WhyUsPage() {
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/danh-muc-san-pham"
+              href="/#san-pham"
               className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
             >
               <span>{isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}</span>
@@ -353,7 +353,7 @@ export default function WhyUsPage() {
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Link
-              href="/danh-muc-san-pham"
+              href="/#san-pham"
               className="px-5 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs shadow-xs transition-colors"
             >
               {isEn ? 'Browse Inventory in Stock' : 'Xem Danh Mục Máy Sẵn Kho'}

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 interface LogoProps {
@@ -9,23 +9,29 @@ interface LogoProps {
 
 export function Logo({ className = 'h-auto w-auto' }: LogoProps) {
   const { systemSettings } = useViTinhAnTamStore();
-  const customLogoUrl = systemSettings?.logoUrl?.trim();
+  const [hasError, setHasError] = useState(false);
 
-  // Logo tùy chỉnh luôn thay thế hoàn toàn logo hệ thống và phần nhận diện mặc định.
-  if (customLogoUrl) {
+  // Đường dẫn ảnh logo ưu tiên:
+  // 1. Cấu hình trong systemSettings.logoUrl (nếu có)
+  // 2. File ảnh tĩnh trực tiếp tại /img/header/logo.png hoặc /logo.png
+  const logoSrc = systemSettings?.logoUrl?.trim() || '/img/header/logo.png';
+
+  // Hiển thị file ảnh nếu không bị lỗi 404
+  if (!hasError && logoSrc) {
     return (
       <div className={`flex items-center select-none ${className}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={customLogoUrl}
+          src={logoSrc}
           alt={systemSettings?.storeName || 'Logo Vi Tính An Tâm'}
+          onError={() => setHasError(true)}
           className="h-11 sm:h-12 w-auto max-h-14 max-w-[260px] sm:max-w-[340px] object-contain transition-transform hover:scale-102"
         />
       </div>
     );
   }
 
-  // Graceful Default Branding khi chưa upload ảnh logo
+  // Graceful Default Branding (dạng chữ VT + Tên cửa hàng) khi chưa có file ảnh
   const storeName = systemSettings?.storeName || 'Vi Tính An Tâm';
   const parts = storeName.split(' ');
   const firstPart = parts[0] || 'VI TÍNH';

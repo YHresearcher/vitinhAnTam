@@ -186,8 +186,8 @@ export default function HomePage() {
                 {/* Main CTA buttons */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <a
-                    href="#danh-muc-san-pham"
-                    onClick={(e) => scrollToSection(e, 'danh-muc-san-pham')}
+                    href="#san-pham"
+                    onClick={(e) => scrollToSection(e, 'san-pham')}
                     className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group cursor-pointer"
                   >
                     <span>{t.hero.btnBrowseStock || 'Xem Máy Nổi Bật'}</span>
@@ -199,12 +199,13 @@ export default function HomePage() {
                   >
                     {t.hero.btnScheduleService}
                   </Link>
-                  <Link
-                    href="/danh-muc-san-pham"
-                    className="px-4 py-3.5 text-xs font-bold text-[#C0392B] hover:underline"
+                  <a
+                    href="#san-pham"
+                    onClick={(e) => scrollToSection(e, 'san-pham')}
+                    className="px-4 py-3.5 text-xs font-bold text-[#C0392B] hover:underline cursor-pointer"
                   >
                     {isEn ? 'Full Catalog →' : 'Xem toàn bộ kho máy →'}
-                  </Link>
+                  </a>
                 </div>
 
                 {/* Quick warranty search box */}
@@ -320,15 +321,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 2. DANH MỤC SẢN PHẨM NỔI BẬT TRANG CHỦ — Card Grid Layout (3 Máy Duy Nhất) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="danh-muc-san-pham">
+        {/* 2. DANH MỤC SẢN PHẨM TRANG CHỦ — Card Grid Layout */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="san-pham">
+          <span id="danh-muc-san-pham" className="sr-only" />
           {/* Section Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-4 border-b border-slate-200">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FBE8DE] text-[#C0392B] text-xs font-bold uppercase tracking-wider mb-2 border border-[#F2C4B2]">
-                <Sparkles className="w-3.5 h-3.5 text-[#C0392B]" />
-                <span>{isEn ? 'FEATURED SYSTEMS' : 'SẢN PHẨM NỔI BẬT'}</span>
-              </div>
               <h2 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight">
                 {t.products.title}
               </h2>
@@ -373,12 +371,7 @@ export default function HomePage() {
 
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
           {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
-            <div className="space-y-4 mb-10">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black uppercase tracking-wider text-[#6E5D53]">
-                  {isEn ? 'FEATURED COMPUTERS & LAPTOPS' : 'MÁY TÍNH & LAPTOP NỔI BẬT'}
-                </h3>
-              </div>
+            <div className="space-y-6 mb-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredProducts.map((prod) => (
               <div
@@ -475,25 +468,42 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Nút Xem Toàn Bộ Kho Máy Tính Có Sẵn (Chỉ đếm máy tính bàn / laptop) đặt TRƯỚC danh sách key */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="#san-pham"
+              onClick={(e) => scrollToSection(e, 'san-pham')}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center cursor-pointer"
+            >
+              <span>
+                {isEn
+                  ? `View All ${totalReadyStock} Computers in Stock`
+                  : `Xem Toàn Bộ Kho Máy Tính Có Sẵn (${totalReadyStock} máy)`}
+              </span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+            </a>
+          </div>
         </div>
       )}
 
           {/* 2. PHẦN MỀM & KEY BẢN QUYỀN WINDOWS / OFFICE */}
           {(homeProductTab === 'all' || homeProductTab === 'software') && (
-            <div className="space-y-4 mb-8">
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+            <div className="space-y-4 mb-8 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
                     {isEn ? 'GENUINE DIGITAL LICENSE KEYS (LIFETIME ON MOTHERBOARD)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (VĨNH VIỄN THEO MAINBOARD)'}
                   </h3>
                 </div>
-                <Link
-                  href="/danh-muc-san-pham?action=buy_key"
-                  className="text-xs font-bold text-[#C0392B] hover:underline uppercase"
+                <button
+                  type="button"
+                  onClick={() => setHomeProductTab('software')}
+                  className="text-xs font-bold text-[#C0392B] hover:underline uppercase cursor-pointer"
                 >
                   {isEn ? 'All License Keys →' : 'Xem toàn bộ kho key →'}
-                </Link>
+                </button>
               </div>
 
               {availableSoftwareCategories.length === 0 ? (
@@ -548,10 +558,10 @@ export default function HomePage() {
 
                       <div className="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">
                         <Link
-                          href={`/danh-muc-san-pham?action=buy_key&type=${cat.type || 'windows'}`}
+                          href={`/mua-hang?device=${encodeURIComponent(cat.name)}&price=${cat.price}&tag=${encodeURIComponent(cat.type || 'KEY')}`}
                           className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
                         >
-                          MUA KEY TẠI DANH MỤC
+                          MUA KEY TRỰC TIẾP
                         </Link>
                         <a
                           href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ' + cat.name)}`}
@@ -568,18 +578,6 @@ export default function HomePage() {
               )}
             </div>
           )}
-
-
-          {/* YÊU CẦU 1: Nút CTA đủ nổi bật để chuyển sang trang sản phẩm */}
-          <div className="mt-12 pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/danh-muc-san-pham"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center"
-            >
-              <span>{isEn ? `View All ${allProducts.length} Computers in Stock` : `Xem Toàn Bộ Kho Máy Tính Có Sẵn (${totalReadyStock} máy)`}</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-            </Link>
-          </div>
         </section>
 
         {/* 3. DỊCH VỤ KỸ THUẬT & PHÒNG LAB ĐO KIỂM PHẦN CỨNG (Có hình ảnh thực tế) */}
