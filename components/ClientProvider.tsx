@@ -13,15 +13,17 @@ function FaviconUpdater() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const targetFavicon = systemSettings.faviconUrl?.trim();
+    const rawFavicon = systemSettings.faviconUrl?.trim();
     const links = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
 
-    // Favicon tùy chỉnh thay thế hoàn toàn favicon cũ; khi rỗng thì gỡ mọi favicon.
+    // Favicon tùy chỉnh thay thế hoàn toàn favicon cũ; khi rỗng thì xóa mọi link icon
     links.forEach((link) => link.remove());
-    if (targetFavicon) {
+    if (rawFavicon) {
       const link = document.createElement('link');
       link.rel = 'icon';
-      link.href = targetFavicon;
+      // Cache buster timestamp if it's local upload
+      const separator = rawFavicon.includes('?') ? '&' : '?';
+      link.href = `${rawFavicon}${rawFavicon.startsWith('/') ? `${separator}v=${Date.now()}` : ''}`;
       document.head.appendChild(link);
     }
   }, [systemSettings.faviconUrl]);

@@ -592,25 +592,27 @@ export default function DashboardPage() {
       {/* 2 BIỂU ĐỒ TRỌNG TÂM: DÒNG TIỀN & PHÂN BỔ THIẾT BỊ       */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* CHART 1: BIỂU ĐỒ DÒNG TIỀN & DOANH THU — CHỈ ADMIN */}
-        {isAdmin && (
+        {/* CHART 1: BIỂU ĐỒ HOẠT ĐỘNG / DOANH SỐ */}
+        {['admin', 'sales', 'technician'].includes(currentUser.role) && (
         <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-5 shadow-2xs flex flex-col justify-between">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-slate-900">
-                  Biểu Đồ Dòng Tiền &amp; Doanh Thu
+                  {isAdmin ? 'Biểu Đồ Dòng Tiền & Doanh Thu' : 'Biểu Đồ Sản Lượng Bán Hàng & Dịch Vụ'}
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => setIsDrilldownOpen(true)}
-                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
-                >
-                  Phân tích ROI &amp; Margin →
-                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDrilldownOpen(true)}
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded border border-blue-200 transition-colors"
+                  >
+                    Phân tích ROI &amp; Margin →
+                  </button>
+                )}
               </div>
 
-              {/* Timeframe switch - Stock trading button style */}
+              {/* Timeframe switch */}
               <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-lg border border-slate-200/80 shadow-2xs self-start sm:self-auto">
                 {[
                   { key: 'day', label: 'Ngày' },
@@ -641,7 +643,7 @@ export default function DashboardPage() {
             {/* SVG Area & Bar Chart */}
             <div className="relative w-full h-56 pt-2">
               {(() => {
-                const maxVal = Math.max(...cashflowData.map((d) => Math.max(d.income, d.expense))) * 1.15 || 10000000;
+                const maxVal = Math.max(...cashflowData.map((d) => Math.max(d.income, isAdmin ? d.expense : 0))) * 1.15 || 10000000;
                 const width = 580;
                 const height = 180;
                 const padLeft = 45;
@@ -663,8 +665,8 @@ export default function DashboardPage() {
 
                 const expensePoints = cashflowData.map((d, i) => ({
                   x: padLeft + i * step,
-                  y: padTop + plotH - (d.expense / maxVal) * plotH,
-                  val: d.expense,
+                  y: padTop + plotH - ((isAdmin ? d.expense : 0) / maxVal) * plotH,
+                  val: isAdmin ? d.expense : 0,
                   date: d.date,
                   label: d.label,
                 }));
@@ -734,14 +736,16 @@ export default function DashboardPage() {
                     {/* Area fill */}
                     <path d={incomeArea} fill="url(#incomeGrad)" />
 
-                    {/* Expense Line */}
-                    <path
-                      d={expensePath}
-                      fill="none"
-                      stroke="#f97316"
-                      strokeWidth="2"
-                      strokeDasharray="4 3"
-                    />
+                    {/* Expense Line (Admin Only) */}
+                    {isAdmin && (
+                      <path
+                        d={expensePath}
+                        fill="none"
+                        stroke="#f97316"
+                        strokeWidth="2"
+                        strokeDasharray="4 3"
+                      />
+                    )}
 
                     {/* Income Line */}
                     <path d={incomePath} fill="none" stroke="#2563eb" strokeWidth="2.5" />
@@ -771,15 +775,17 @@ export default function DashboardPage() {
                             />
                           )}
 
-                          {/* Expense dot */}
-                          <circle
-                            cx={expP.x}
-                            cy={expP.y}
-                            r={isHovered ? 4.5 : 3}
-                            fill="#f97316"
-                            stroke="#ffffff"
-                            strokeWidth="1.5"
-                          />
+                          {/* Expense dot (Admin Only) */}
+                          {isAdmin && (
+                            <circle
+                              cx={expP.x}
+                              cy={expP.y}
+                              r={isHovered ? 4.5 : 3}
+                              fill="#f97316"
+                              stroke="#ffffff"
+                              strokeWidth="1.5"
+                            />
+                          )}
 
                           {/* Income dot */}
                           <circle
@@ -820,14 +826,18 @@ export default function DashboardPage() {
                   <span className="text-blue-300">
                     Thu: +{cashflowData[hoveredDataPoint].income.toLocaleString('vi-VN')}₫
                   </span>
-                  <span className="text-orange-300">
-                    Chi: -{cashflowData[hoveredDataPoint].expense.toLocaleString('vi-VN')}₫
-                  </span>
-                  <span className="text-emerald-400 font-bold">
-                    Ròng: +{(
-                      cashflowData[hoveredDataPoint].income - cashflowData[hoveredDataPoint].expense
-                    ).toLocaleString('vi-VN')}₫
-                  </span>
+                  {isAdmin && (
+                    <>
+                      <span className="text-orange-300">
+                        Chi: -{cashflowData[hoveredDataPoint].expense.toLocaleString('vi-VN')}₫
+                      </span>
+                      <span className="text-emerald-400 font-bold">
+                        Ròng: +{(
+                          cashflowData[hoveredDataPoint].income - cashflowData[hoveredDataPoint].expense
+                        ).toLocaleString('vi-VN')}₫
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -838,17 +848,19 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-blue-600" />
-                <span className="font-medium text-slate-800">Dòng Thu</span>
+                <span className="font-medium text-slate-800">{isAdmin ? 'Dòng Thu' : 'Doanh số Bán & Sửa chữa'}</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-1 rounded-full bg-orange-500" />
-                <span className="font-medium text-slate-800">Dòng Chi (Vật tư)</span>
-              </span>
+              {isAdmin && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-1 rounded-full bg-orange-500" />
+                  <span className="font-medium text-slate-800">Dòng Chi (Vật tư)</span>
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-slate-500">
-              Tổng thực thu kỳ này:{' '}
+              Tổng {isAdmin ? 'thực thu' : 'doanh số'} kỳ này:{' '}
               <strong className="text-emerald-700 font-mono font-bold">
-                {netCashflow.toLocaleString('vi-VN')}₫
+                {isAdmin ? netCashflow.toLocaleString('vi-VN') : cashflowData.reduce((acc, curr) => acc + curr.income, 0).toLocaleString('vi-VN')}₫
               </strong>
             </div>
           </div>
@@ -1094,12 +1106,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Ước tính giá trị hàng sẵn:</span>
-            <span className="font-bold font-mono text-slate-900">
-              ~{deviceStats.inventoryValue.toLocaleString('vi-VN')}₫
-            </span>
-          </div>
+          {isAdmin && (
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <span>Ước tính giá trị hàng sẵn:</span>
+              <span className="font-bold font-mono text-slate-900">
+                ~{deviceStats.inventoryValue.toLocaleString('vi-VN')}₫
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

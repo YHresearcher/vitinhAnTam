@@ -119,8 +119,12 @@ export default function CaiDatPage() {
     const uploadFormData = new FormData();
     uploadFormData.append('file', file);
     uploadFormData.append('folder', 'header');
+    if (formData[field]) {
+      uploadFormData.append('oldUrl', formData[field] as string);
+    }
 
-    const hide = message.loading(`Đang tải lên file ${field === 'logoUrl' ? 'Logo' : 'Favicon'}...`, 0);
+    const fieldTitle = field === 'logoUrl' ? 'Logo' : 'Favicon';
+    const hide = message.loading(`Đang tải lên và cập nhật ${fieldTitle}...`, 0);
 
     try {
       const res = await fetch('/api/upload', {
@@ -132,19 +136,22 @@ export default function CaiDatPage() {
       hide();
 
       if (res.ok && data.success && data.url) {
+        const newUrl = `${data.url}?v=${Date.now()}`;
         setFormData((prev) => ({
           ...prev,
-          [field]: data.url,
+          [field]: newUrl,
         }));
-        message.success(`Đã lưu ảnh vào thư mục hình ảnh (${data.url})! Nhấn "Lưu cấu hình" để áp dụng.`);
+        await updateSystemSettings({ [field]: newUrl });
+        message.success(`Đã tải lên và áp dụng ${fieldTitle} mới thành công!`);
       } else {
         // Fallback sang FileReader nếu API có trục trặc
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = async (event) => {
           const result = event.target?.result as string;
           if (result) {
             setFormData((prev) => ({ ...prev, [field]: result }));
-            message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
+            await updateSystemSettings({ [field]: result });
+            message.warning(`Đã lưu tạm ${fieldTitle} (dạng Base64).`);
           }
         };
         reader.readAsDataURL(file);
@@ -152,17 +159,37 @@ export default function CaiDatPage() {
     } catch {
       hide();
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         const result = event.target?.result as string;
         if (result) {
           setFormData((prev) => ({ ...prev, [field]: result }));
-          message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
+          await updateSystemSettings({ [field]: result });
+          message.warning(`Đã lưu tạm ${fieldTitle} (dạng Base64).`);
         }
       };
       reader.readAsDataURL(file);
     }
 
     e.target.value = '';
+  };
+
+  const handleDeleteBrandAsset = async (field: 'logoUrl' | 'faviconUrl') => {
+    const currentUrl = formData[field];
+    const fieldTitle = field === 'logoUrl' ? 'Logo' : 'Favicon';
+    if (currentUrl) {
+      try {
+        await fetch('/api/upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: currentUrl }),
+        });
+      } catch (err) {
+        console.warn('Lỗi khi xóa file cũ:', err);
+      }
+    }
+    handleChange(field, '');
+    await updateSystemSettings({ [field]: '' });
+    message.success(`Đã xóa ${fieldTitle} thành công!`);
   };
 
   const handleSaveSettings = async (e?: React.FormEvent) => {
@@ -480,10 +507,7 @@ export default function CaiDatPage() {
                       {formData.logoUrl && (
                         <button
                           type="button"
-                          onClick={() => {
-                            handleChange('logoUrl', '');
-                            message.info('Đã xóa logo cũ. Nhấn "Lưu cấu hình" để áp dụng.');
-                          }}
+                          onClick={() => handleDeleteBrandAsset('logoUrl')}
                           className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -692,10 +716,7 @@ export default function CaiDatPage() {
                           {formData.faviconUrl && (
                             <button
                               type="button"
-                              onClick={() => {
-                                handleChange('faviconUrl', '');
-                                message.info('Đã xóa favicon cũ. Nhấn "Lưu cấu hình" để áp dụng.');
-                              }}
+                              onClick={() => handleDeleteBrandAsset('faviconUrl')}
                               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />

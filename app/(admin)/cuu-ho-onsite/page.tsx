@@ -61,8 +61,8 @@ export default function CuuHoOnsitePage() {
     await addServiceTicket({
       ticket_code: `#TN-${Date.now().toString().slice(-6)}`, 
       customer_name: convertingDispatch.customer_name,
-      customer_phone: convertingDispatch.customer_phone,
-      customer_address: convertingDispatch.customer_address,
+      customer_phone: convertingDispatch.customer_phone || convertingDispatch.phone || '',
+      customer_address: convertingDispatch.address,
       device_name: data.device_name,
       device_service_tag: data.device_service_tag,
       technician_name: convertingDispatch.technician_name || currentUser.name,
@@ -273,6 +273,14 @@ export default function CuuHoOnsitePage() {
           );
         })}
       </div>
+
+      {convertingDispatch && (
+        <ConvertOnsiteModal 
+          dispatch={convertingDispatch}
+          onClose={() => setConvertingDispatch(null)}
+          onConfirm={handleConvertToTicket}
+        />
+      )}
     </div>
   );
 }

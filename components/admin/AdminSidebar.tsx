@@ -4,6 +4,23 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Drawer } from 'antd';
+import {
+  LayoutDashboard,
+  CircleDollarSign,
+  Users,
+  Wrench,
+  ShoppingBag,
+  Boxes,
+  KeyRound,
+  Truck,
+  FileSpreadsheet,
+  UserCog,
+  Sliders,
+  ExternalLink,
+  ShieldCheck,
+  LogOut,
+  X,
+} from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
@@ -27,79 +44,103 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     logout,
   } = useViTinhAnTamStore();
 
-  const pendingTicketsCount = tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received').length;
-  const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed' && d.status !== 'cancelled').length;
-  const pendingKeyRequestsCount = keyReleaseRequests.filter((r) => r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested').length;
+  const pendingTicketsCount = tickets.filter(
+    (t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received'
+  ).length;
+  const pendingDispatchesCount = onsiteDispatches.filter(
+    (d) => d.status !== 'completed' && d.status !== 'cancelled'
+  ).length;
+  const pendingKeyRequestsCount = keyReleaseRequests.filter(
+    (r) => r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested'
+  ).length;
 
   const rawNavItems = [
     {
       label: 'Tổng quan',
       href: '/dashboard',
+      icon: LayoutDashboard,
       badge: null,
+      badgeColor: '',
       visible: true,
     },
     {
       label: 'Tài chính & Doanh thu',
       href: '/tai-chinh',
+      icon: CircleDollarSign,
       badge: null,
+      badgeColor: '',
       visible: canAccessPayroll(),
     },
     {
-      label: 'Khách hàng',
+      label: 'Khách hàng (CRM)',
       href: '/khach-hang',
-      badge: `${customers.length}`,
-      badgeColor: 'bg-slate-100 text-slate-700 font-mono',
+      icon: Users,
+      badge: customers.length > 0 ? `${customers.length}` : null,
+      badgeColor: 'bg-slate-100 text-slate-700 font-mono border border-slate-200',
       visible: canAccessCRM(),
     },
     {
       label: 'Phiếu sửa chữa',
       href: '/phieu-sua-chua',
+      icon: Wrench,
       badge: pendingTicketsCount > 0 ? `${pendingTicketsCount}` : null,
-      badgeColor: 'bg-blue-100 text-blue-700 font-mono',
+      badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
       visible: true,
     },
     {
       label: 'Quản lý đơn hàng',
       href: '/quan-ly-don-hang',
+      icon: ShoppingBag,
       badge: null,
+      badgeColor: '',
       visible: true,
     },
     {
       label: 'Kho máy & Linh kiện',
       href: '/kho-may',
+      icon: Boxes,
       badge: null,
+      badgeColor: '',
       visible: true,
     },
     {
       label: 'Kho key bản quyền',
       href: '/quan-ly-key',
+      icon: KeyRound,
       badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
-      badgeColor: 'bg-[#C0392B] text-white font-mono',
+      badgeColor: 'bg-[#C0392B] text-white font-mono font-bold shadow-xs',
       visible: true,
     },
     {
       label: 'Cứu hộ tận nơi',
       href: '/cuu-ho-onsite',
+      icon: Truck,
       badge: pendingDispatchesCount > 0 ? `${pendingDispatchesCount}` : null,
-      badgeColor: 'bg-amber-100 text-amber-800 font-mono',
+      badgeColor: 'bg-amber-100 text-amber-900 font-mono font-bold',
       visible: true,
     },
     {
-      label: 'Tiền công',
+      label: 'Tiền công KTV',
       href: '/tien-cong',
+      icon: FileSpreadsheet,
       badge: null,
+      badgeColor: '',
       visible: canAccessPayroll(),
     },
     {
-      label: 'Nhân sự',
+      label: 'Nhân sự & Phân quyền',
       href: '/thanh-vien',
+      icon: UserCog,
       badge: null,
+      badgeColor: '',
       visible: canManageUsers(),
     },
     {
-      label: 'Cài đặt',
+      label: 'Cấu hình hệ thống',
       href: '/cai-dat',
+      icon: Sliders,
       badge: null,
+      badgeColor: '',
       visible: canAccessSettings(),
     },
   ];
@@ -107,41 +148,56 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
   const navItems = rawNavItems.filter((item) => item.visible);
 
   const sidebarContent = (
-    <div className="flex flex-col justify-between h-full bg-white font-sans">
+    <div className="flex flex-col justify-between h-full bg-white font-sans select-none">
       <div className="flex flex-col">
         {/* Header Branding */}
-        <div className="min-h-[72px] py-2 px-4 flex items-center justify-between border-b border-slate-100">
-          <Link href="/dashboard" onClick={onCloseMobile}>
+        <div className="min-h-[68px] py-2 px-4 flex items-center justify-between border-b border-slate-100">
+          <Link href="/dashboard" onClick={onCloseMobile} className="focus:outline-none">
             <Logo />
           </Link>
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden px-2 py-1 rounded text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100"
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
+              aria-label="Đóng menu"
             >
-              Đóng
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
 
         {/* Navigation links */}
-        <nav className="flex flex-col gap-1 px-3 mt-3">
+        <nav className="flex flex-col gap-0.5 px-3 mt-3 overflow-y-auto max-h-[calc(100vh-210px)] scrollbar-thin">
+          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Phân hệ nghiệp vụ
+          </div>
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const IconComponent = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={onCloseMobile}
-                className={`flex items-center justify-between px-3.5 py-2 rounded-lg transition-all ${
+                className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 shadow-xs'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium'
+                    ? 'bg-blue-50/90 text-blue-700 font-bold border border-blue-200/80 shadow-xs'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
                 }`}
               >
-                <span className="text-sm">{item.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <IconComponent
+                    className={`w-4 h-4 shrink-0 transition-colors ${
+                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
+                    }`}
+                  />
+                  <span className="text-xs sm:text-[13px] truncate">{item.label}</span>
+                </div>
                 {item.badge && (
-                  <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${item.badgeColor}`}>
+                  <span
+                    className={`px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0 ${item.badgeColor}`}
+                  >
                     {item.badge}
                   </span>
                 )}
@@ -151,27 +207,36 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
 
           <div className="my-2 border-t border-slate-100" />
 
-          {/* Theme Mode Toggle (Dark Blue / Light) */}
-          <div className="px-0.5">
-            <ThemeToggle variant="switch" />
+          {/* Quick links */}
+          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Tiện ích nhanh
           </div>
 
-          {/* Quick links to public */}
           <Link
             href="/tra-cuu-bao-hanh"
             onClick={onCloseMobile}
-            className="px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all text-xs font-medium"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
           >
-            Tra cứu bảo hành
+            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>Tra cứu bảo hành</span>
           </Link>
 
           <Link
             href="/"
             onClick={onCloseMobile}
-            className="px-3.5 py-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all text-xs font-medium"
+            className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
           >
-            Xem trang chủ
+            <div className="flex items-center gap-2.5">
+              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+              <span>Xem trang chủ khách</span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono">Web</span>
           </Link>
+
+          {/* Theme Mode Toggle (Dark Blue / Light) */}
+          <div className="px-1 py-1">
+            <ThemeToggle variant="switch" />
+          </div>
 
           <button
             type="button"
@@ -179,17 +244,18 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
               if (onCloseMobile) onCloseMobile();
               logout();
             }}
-            className="px-3.5 py-2 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-all text-xs font-semibold w-full text-left"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors text-xs font-semibold w-full text-left mt-1 cursor-pointer"
           >
-            Đăng xuất
+            <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>Đăng xuất</span>
           </button>
         </nav>
       </div>
 
       {/* Footer Info */}
-      <div className="p-4 border-t border-slate-100 text-center">
-        <div className="text-[11px] text-slate-400 font-medium">
-          Copyright {new Date().getFullYear()} by An Tam Computer
+      <div className="p-3.5 border-t border-slate-100 text-center bg-slate-50/50">
+        <div className="text-[10px] text-slate-400 font-medium">
+          Vi Tính An Tâm • Portal v2.6
         </div>
       </div>
     </div>

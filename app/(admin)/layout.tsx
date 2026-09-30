@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Search, Plus, KeyRound, Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
@@ -152,33 +153,47 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <div className="pl-0 lg:pl-72 flex flex-col min-h-screen w-full">
         {/* Topbar */}
-        <header className="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-xs">
+        <header className="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-3 sm:px-6 lg:px-8 shadow-xs">
           <div className="flex items-center gap-3">
             {/* Mobile Toggle */}
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:text-blue-700 hover:bg-slate-100 transition-colors shrink-0 text-xs font-bold"
-              aria-label="Open Admin Menu"
+              className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:text-blue-700 hover:bg-slate-50 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+              aria-label="Mở menu quản trị"
             >
-              Menu
+              <Menu className="w-4 h-4 text-slate-600" />
+              <span>Menu</span>
+            </button>
+
+            {/* Quick Command Palette Search trigger */}
+            <button
+              type="button"
+              onClick={() => setIsCommandPaletteOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 text-slate-500 hover:text-slate-800 transition-all text-xs cursor-pointer w-48 md:w-64"
+            >
+              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <span className="flex-1 text-left truncate">Tìm trang, S/N, SĐT...</span>
+              <kbd className="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-400 shadow-2xs">⌘K</kbd>
             </button>
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Current User Role Only */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
-              <span className="text-slate-400">Vai trò:</span>
-              <span className="font-bold text-slate-800">{currentUser.roleTitle}</span>
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Current User Role Badge */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-semibold text-slate-700">{currentUser.roleTitle}</span>
             </div>
 
             {/* Quick Key Navigation */}
             <Link
               href="/quan-ly-key"
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] text-[#2B1810] border-[#E8E2D9] hover:border-[#C0392B]"
+              className="flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] text-[#2B1810] border-[#E8E2D9] hover:border-[#C0392B] hover:bg-red-50/30 shrink-0"
+              title="Kho Key Bản Quyền"
             >
-              <span>KHO KEY</span>
+              <KeyRound className="w-3.5 h-3.5 text-[#C0392B]" />
+              <span className="hidden xs:inline font-mono">KHO KEY</span>
             </Link>
 
             {/* Theme Toggle Button (Dark Blue / Light) */}
@@ -187,26 +202,28 @@ export default function AdminLayout({
             {/* Create Ticket Button */}
             <Link
               href="/phieu-sua-chua/tao-moi"
-              className="flex items-center h-9 px-3 sm:px-3.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
+              className="flex items-center gap-1 h-8.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
             >
-              <span>+ Tạo phiếu</span>
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Tạo phiếu</span>
             </Link>
 
             {/* User Profile & Logout */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
               <div
-                className={`w-8 h-8 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs`}
+                className={`w-7.5 h-7.5 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs`}
+                title={currentUser.name}
               >
                 {currentUser.name.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col leading-tight text-left">
-                <span className="text-xs font-bold text-slate-900">{currentUser.name}</span>
+                <span className="text-xs font-bold text-slate-800">{currentUser.name}</span>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
                 title="Đăng xuất khỏi hệ thống"
-                className="px-2 py-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded text-xs font-semibold transition-colors ml-1"
+                className="px-2 py-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded text-xs font-semibold transition-colors cursor-pointer"
               >
                 Thoát
               </button>

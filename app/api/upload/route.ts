@@ -22,7 +22,8 @@ const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'svg', 'ico'])
 async function safelyDeleteFile(url?: string | null) {
   if (!url || typeof url !== 'string') return;
   try {
-    const normalized = url.replace(/\\/g, '/').trim();
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const normalized = cleanUrl.replace(/\\/g, '/').trim();
     if (!normalized.startsWith('/img/') && !normalized.startsWith('/uploads/')) return;
 
     // Ngăn chặn Directory Traversal
