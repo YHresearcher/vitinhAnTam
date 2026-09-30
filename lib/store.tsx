@@ -1054,8 +1054,7 @@ export function StoreProvider({
       return next;
     });
 
-    // Dữ liệu mock (inv-1, inv-2...) không tồn tại trong DB — chỉ ghi khi id là UUID hợp lệ
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').update(data).eq('id', id),
@@ -1088,7 +1087,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.inventory, next);
       return next;
     });
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').delete().eq('id', id),
@@ -1901,7 +1900,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('service_tickets').update({ status }).eq('id', id),
@@ -1921,7 +1920,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('service_tickets').update({ technician_name: technicianName }).eq('id', id),
@@ -1939,8 +1938,7 @@ export function StoreProvider({
       return next;
     });
 
-    // Trước đây chỉ ghi localStorage -> bật Supabase là mất trạng thái sau khi refresh
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('onsite_dispatches').update({ status }).eq('id', id),
@@ -1959,7 +1957,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('onsite_dispatches').update({ technician_name: technicianName }).eq('id', id),
@@ -2118,6 +2116,30 @@ export function StoreProvider({
         saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
         return next;
       });
+
+      if (isUsingSupabase && supabase) {
+        const client = supabase;
+        runSupabaseWrite(
+          () => client.from('warranty_provisions').insert([newProvision]),
+          'Trích lập quỹ bảo hành'
+        );
+      }
+    }
+
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      runSupabaseWrite(
+        () => client.from('inventory_items').update(updatedItem).eq('id', params.itemId),
+        'Cập nhật máy đã bán'
+      );
+      runSupabaseWrite(
+        () => client.from('customers').insert([newCustomer]),
+        'Lưu khách hàng'
+      );
+      runSupabaseWrite(
+        () => client.from('service_tickets').insert([warrantyTicket]),
+        'Lưu hóa đơn bán máy'
+      );
     }
 
     return {
