@@ -98,6 +98,31 @@ async function notifyStaffByEmail(order: Record<string, unknown>): Promise<void>
         <tr><td style="padding:6px 0;color:#6b7280">Nhận hàng:</td><td>${order.delivery_method === 'delivery' ? `Giao tận nơi — ${order.customer_address || ''}` : 'Nhận tại cửa hàng'}</td></tr>
         <tr><td style="padding:6px 0;color:#6b7280">Thời gian:</td><td>${new Date().toLocaleString('vi-VN')}</td></tr>
       </table>
+      <p style="margin-top:16px;color:#6b7280;font-size:12px">
+        Email tự động từ hệ thống Vi Tính An Tâm — vui lòng không trả lời email này.
+      </p>
+    </div>
+  </div>`;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Vi Tính An Tâm <onboarding@resend.dev>',
+        to: recipients,
+        subject,
+        html,
+      }),
+    });
+  } catch (err) {
+    // Best-effort: không chặn luồng đặt hàng nếu gửi email thất bại
+    console.warn('Notify staff email failed:', err);
+  }
+}
 
 // ---------------------------------------------------------------------------
 // POST /api/orders — Khách hàng đặt đơn (công khai)
@@ -156,15 +181,13 @@ export async function POST(request: NextRequest) {
 
           // Thông báo đồng thời đến sales / admin / kỹ thuật
           const notification = {
-            type: 'new_order',
+            type: 'order',
             title: `Đơn hàng mới ${orderCode}`,
             body: `${customerName} (${customerPhone}) đặt ${deviceName} — ${
               order.delivery_method === 'delivery' ? 'giao tận nơi' : 'nhận tại cửa hàng'
             }. Cần xác nhận.`,
-            ref_id: data.id,
-            ref_code: orderCode,
-            recipient_roles: STAFF_ROLES,
-            is_read: false,
+            reference_id: data.id,
+            read: false,
           };
           try {
             await supabase.from('notifications').insert([notification]);
@@ -300,28 +323,5 @@ export async function PATCH(request: NextRequest) {
       { success: false, message: error?.message || 'Có lỗi xảy ra khi cập nhật đơn hàng.' },
       { status: 500 }
     );
-  }
-}
-
-      <p style="color:#6b7280;font-size:12px">Email tự động từ hệ thống vitinhantam.com</p>
-    </div>
-  </div>`;
-
-  try {
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${resendApiKey}`,
-      },
-      body: JSON.stringify({
-        from: 'Vi Tính An Tâm <onboarding@resend.dev>',
-        to: recipients,
-        subject,
-        html,
-      }),
-    });
-  } catch (err) {
-    console.warn('Order notify email dispatch failed:', err);
   }
 }

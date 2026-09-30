@@ -59,7 +59,13 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       visible: true,
     },
     {
-      label: 'Kho hàng',
+      label: 'Quản lý đơn hàng',
+      href: '/quan-ly-don-hang',
+      badge: null,
+      visible: true,
+    },
+    {
+      label: 'Kho máy & Linh kiện',
       href: '/kho-may',
       badge: null,
       visible: true,

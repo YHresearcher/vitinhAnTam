@@ -25,10 +25,13 @@ export default function CuuHoOnsitePage() {
     canAssignTasks,
     updateDispatchStatus,
     assignDispatchTechnician,
+    addServiceTicket,
+    currentUser,
   } = useStore();
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [notice, setNotice] = useState<string | null>(null);
+  const [convertingDispatch, setConvertingDispatch] = useState<OnsiteDispatch | null>(null);
 
   const availableTechnicians = useMemo(() => {
     return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
@@ -50,6 +53,31 @@ export default function CuuHoOnsitePage() {
       setNotice(`Đã điều động KTV ${technicianName} phụ trách ca cứu hộ!`);
       setTimeout(() => setNotice(null), 3000);
     }
+  };
+
+  const handleConvertToTicket = async (data: { device_name: string; device_service_tag: string; note: string }) => {
+    if (!convertingDispatch) return;
+    
+    await addServiceTicket({
+      ticket_code: `#TN-${Date.now().toString().slice(-6)}`, 
+      customer_name: convertingDispatch.customer_name,
+      customer_phone: convertingDispatch.customer_phone,
+      customer_address: convertingDispatch.customer_address,
+      device_name: data.device_name,
+      device_service_tag: data.device_service_tag,
+      technician_name: convertingDispatch.technician_name || currentUser.name,
+      status: 'received',
+      visual_condition: 'Nhận từ ca Cứu hộ Onsite',
+      technician_note: data.note,
+      estimated_cost: 0,
+      total_amount: 0,
+    });
+    
+    await updateDispatchStatus(convertingDispatch.id, 'completed');
+    
+    setConvertingDispatch(null);
+    setNotice('Tạo Phiếu sửa chữa & Hoàn tất Onsite thành công!');
+    setTimeout(() => setNotice(null), 3000);
   };
 
   const activeCount = onsiteDispatches.filter(
@@ -204,15 +232,24 @@ export default function CuuHoOnsitePage() {
 
               {/* Card Actions Footer */}
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                {/* Google Maps link */}
-                <a
-                  href={mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
-                >
-                  Bản đồ Maps
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    Bản đồ Maps
+                  </a>
+                  {dispatch.status === 'in_progress' && (
+                    <button
+                      onClick={() => setConvertingDispatch(dispatch)}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg transition-colors border border-indigo-200"
+                    >
+                      Nhận Máy Về Tiệm
+                    </button>
+                  )}
+                </div>
 
                 {/* Status Updater Dropdown/Buttons */}
                 <select
@@ -235,6 +272,76 @@ export default function CuuHoOnsitePage() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+
+function ConvertOnsiteModal({
+  dispatch,
+  onClose,
+  onConfirm,
+}: {
+  dispatch: OnsiteDispatch;
+  onClose: () => void;
+  onConfirm: (data: { device_name: string; device_service_tag: string; note: string }) => void;
+}) {
+  const [deviceName, setDeviceName] = useState('');
+  const [deviceTag, setDeviceTag] = useState('');
+  const [note, setNote] = useState(dispatch.issue_summary || '');
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[100] p-4 text-left">
+      <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6">
+        <h3 className="text-lg font-bold text-slate-800 mb-1">Nhận Máy Về Tiệm (Tạo Phiếu)</h3>
+        <p className="text-xs text-slate-500 mb-4">
+          Tạo nhanh Phiếu Sửa Chữa từ khách hàng <strong>{dispatch.customer_name}</strong>.
+        </p>
+
+        <div className="space-y-3 mt-4 text-sm">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Tên thiết bị nhận về</label>
+            <input
+              type="text"
+              required
+              placeholder="VD: Laptop Dell Latitude 7490"
+              value={deviceName}
+              onChange={(e) => setDeviceName(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Serial / Service Tag</label>
+            <input
+              type="text"
+              required
+              placeholder="S/N của máy để bảo hành sau này"
+              value={deviceTag}
+              onChange={(e) => setDeviceTag(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 uppercase"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Ghi chú & Tình trạng lúc nhận</label>
+            <textarea
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end mt-6">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-slate-600 border rounded-lg">Hủy</button>
+          <button
+            disabled={!deviceName || !deviceTag}
+            onClick={() => onConfirm({ device_name: deviceName, device_service_tag: deviceTag, note })}
+            className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg font-bold disabled:opacity-50"
+          >
+            Tạo & Hoàn tất Onsite
+          </button>
+        </div>
       </div>
     </div>
   );

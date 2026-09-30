@@ -195,9 +195,34 @@ ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS estimated_arrival_minutes INT;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS issue_summary TEXT;
 
-  distributor TEXT, -- Viễn Sơn, Vĩnh Xuân, Samsung Zin bóc máy
-  unit_cost NUMERIC NOT NULL DEFAULT 0,
-  unit_price NUMERIC NOT NULL DEFAULT 0,
-  shelf_location TEXT,
-  notes TEXT
+-- ==========================================
+-- 7. Bảng Đơn hàng (Orders) — khách đặt từ website
+-- ==========================================
+CREATE TABLE IF NOT EXISTS orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_code TEXT UNIQUE NOT NULL,        -- ORD-20250620-XXXX
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT NOT NULL,
+  customer_address TEXT,
+  device_name TEXT,
+  device_tag TEXT,                         -- service_tag tham chiếu thiết bị
+  device_price NUMERIC DEFAULT 0,
+  payment_method TEXT DEFAULT 'cash',      -- qr, cash
+  delivery_method TEXT DEFAULT 'pickup',   -- pickup, delivery
+  note TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',  -- pending, confirmed, processing, completed, cancelled
+  confirmed_by TEXT,
+  confirmed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 8. Bảng Thông báo nội bộ
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL DEFAULT 'order',      -- order, ticket, system
+  title TEXT NOT NULL,
+  body TEXT,
+  reference_id TEXT,                       -- ID đơn hàng / phiếu sửa
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
 );

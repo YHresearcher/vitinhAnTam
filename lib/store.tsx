@@ -112,6 +112,10 @@ interface StoreContextType {
   currentLang: 'vi' | 'en';
   setLang: (lang: 'vi' | 'en') => void;
 
+  // Theme (light/dark)
+  themeMode: 'light' | 'dark';
+  toggleTheme: () => void;
+
   // RBAC Profile & Auth & Member Management
   currentUser: UserAccount;
   users: UserAccount[];
@@ -331,6 +335,15 @@ export function StoreProvider({
     return initialSystemSettings;
   });
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
+
+  // Theme mode (light/dark) — đọc lựa chọn đã lưu, mặc định light
+  const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vtat_theme_v1');
+      if (saved === 'dark' || saved === 'light') return saved;
+    }
+    return 'light';
+  });
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
@@ -592,6 +605,16 @@ export function StoreProvider({
     if (typeof window !== 'undefined') {
       localStorage.setItem('vtat_lang_v2', lang);
     }
+  };
+
+  const toggleTheme = () => {
+    setThemeMode((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vtat_theme_v1', next);
+      }
+      return next;
+    });
   };
 
   const saveToLocal = (key: string, data: unknown) => {
@@ -1009,6 +1032,14 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.spareParts, next);
       return next;
     });
+    // Sync to Supabase
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('spare_parts').insert([newPart]),
+        'Thêm linh kiện'
+      );
+    }
     return newPart;
   };
 
@@ -1018,6 +1049,14 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.spareParts, next);
       return next;
     });
+    // Sync to Supabase
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('spare_parts').update(data).eq('id', id),
+        'Cập nhật linh kiện'
+      );
+    }
     return true;
   };
 
@@ -1030,6 +1069,14 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.spareParts, next);
       return next;
     });
+    // Sync to Supabase
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('spare_parts').delete().eq('id', id),
+        'Xóa linh kiện'
+      );
+    }
     return true;
   };
 
@@ -1882,6 +1929,14 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.shiftLogs, next);
       return next;
     });
+    // Sync to Supabase
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('shift_logs').insert([newShift]),
+        'Thêm ca làm việc'
+      );
+    }
     return newShift;
   };
 
@@ -1980,6 +2035,28 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.tickets, next);
       return next;
     });
+
+    // Sync bán hàng lên Supabase (inventory + customer + ticket)
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      const itemId = params.itemId;
+      await Promise.all([
+        isUuid(itemId)
+          ? runSupabaseWrite(
+              () => client.from('inventory_items').update(updatedItem).eq('id', itemId),
+              'Cập nhật thiết bị (bán hàng)'
+            )
+          : Promise.resolve(true),
+        runSupabaseWrite(
+          () => client.from('customers').insert([newCustomer]),
+          'Thêm khách hàng (bán hàng)'
+        ),
+        runSupabaseWrite(
+          () => client.from('service_tickets').insert([warrantyTicket]),
+          'Tạo phiếu bảo hành (bán hàng)'
+        ),
+      ]);
+    }
 
     // 4. Calculate 5% Warranty Provision Fund from Net Profit
     const finalSoldPrice = params.soldPrice || item.retail_price || item.price || 0;
@@ -2123,6 +2200,15 @@ export function StoreProvider({
       return next;
     });
 
+    // Sync to Supabase
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('customers').insert([newCustomer]),
+        'Thêm khách hàng'
+      );
+    }
+
     return newCustomer;
   };
 
@@ -2141,6 +2227,14 @@ export function StoreProvider({
       }
       return next;
     });
+    // Sync to Supabase
+    if (updated && isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('customers').update(updates).eq('id', id),
+        'Cập nhật khách hàng'
+      );
+    }
     return updated;
   };
 
@@ -2154,6 +2248,14 @@ export function StoreProvider({
       }
       return next;
     });
+    // Sync to Supabase
+    if (deleted && isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('customers').delete().eq('id', id),
+        'Xóa khách hàng'
+      );
+    }
     return deleted;
   };
 
@@ -2247,6 +2349,8 @@ export function StoreProvider({
       updateSystemSettings,
       currentLang,
       setLang,
+      themeMode,
+      toggleTheme,
       currentUser,
       users,
       isLoggedIn,
