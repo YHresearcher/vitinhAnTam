@@ -481,14 +481,74 @@ VALUES
   ('c5', '10109101', 'Trường Tiểu Học Hướng Thọ Phú', '02723829101', 'Xã Hướng Thọ Phú, Tân An', 'Tân An', 'VIP', 'Hợp đồng bảo trì định kỳ phòng máy giáo viên và học sinh')
 ON CONFLICT (id) DO NOTHING;
 
--- 6. SEED KHO MÁY (inventory_items)
+-- 6. SEED KHO MÁY & SẢN PHẨM TRƯNG BÀY (inventory_items - Toàn bộ máy sẵn có và máy đã bán bàn giao)
 INSERT INTO inventory_items (id, service_tag, device_model, model, brand, form_factor, specs, specs_summary, cpu, ram, ssd_capacity, ssd_health, serial_number, qc_status, burn_in_duration, cost_price, import_price, retail_price, price, warranty_months, stock_quantity, quantity, shelf_location, image_urls, customer_name, customer_phone, handover_date)
 VALUES
-  ('inv-1', 'ST-8F4K92X', 'Dell OptiPlex 7060 SFF', 'Dell OptiPlex 7060 SFF', 'Dell', 'SFF', '{"cpu": "Intel Core i5-8500 (6 nhân 6 luồng, max 4.10GHz)", "ram": "16GB DDR4 Bus 2666", "ssd": "SSD 256GB NVMe M.2 Tốc độ cao", "ssd_health": 100, "ssd_status": "Good"}'::jsonb, 'Core i5-8500 / 16GB / 256GB NVMe', 'Core i5-8500', '16GB DDR4', '256GB NVMe', 100, 'SN-7060-8F4K92X', 'ready_to_sell', 180, 4200000, 4200000, 5600000, 5600000, 12, 3, 3, 'Kệ A1 - Tầng 2', '{"https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
-  ('inv-2', 'TP-994L2A', 'HP ProDesk 400 G5 Mini', 'HP ProDesk 400 G5 Mini', 'HP', 'Mini', '{"cpu": "Intel Core i5-9500T (6 nhân 6 luồng, tiết kiệm điện 35W)", "ram": "16GB DDR4 Bus 2666", "ssd": "SSD 512GB NVMe Siêu nhanh", "ssd_health": 98, "ssd_status": "Good"}'::jsonb, 'Core i5-9500T / 16GB / 512GB NVMe', 'Core i5-9500T', '16GB DDR4', '512GB NVMe', 98, 'SN-400G5-994L2A', 'ready_to_sell', 240, 4500000, 4500000, 6200000, 6200000, 12, 2, 2, 'Kệ B2 - Tầng 1', '{"https://images.unsplash.com/photo-1544652478-6653e09f18a2?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
-  ('inv-3', 'LEN-M720Q-01', 'Lenovo ThinkCentre M720q Tiny', 'Lenovo ThinkCentre M720q Tiny', 'Lenovo', 'Mini', '{"cpu": "Intel Core i5-8400T (6 nhân)", "ram": "8GB DDR4 Bus 2666", "ssd": "SSD 256GB NVMe", "ssd_health": 99, "ssd_status": "Good"}'::jsonb, 'Core i5-8400T / 8GB / 256GB NVMe', 'Core i5-8400T', '8GB DDR4', '256GB NVMe', 99, 'SN-M720Q-8400T-01', 'ready_to_sell', 120, 3600000, 3600000, 4900000, 4900000, 12, 4, 4, 'Kệ B2 - Tầng 2', '{"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
-  ('inv-4', 'DELL-P3630-TWR', 'Dell Precision 3630 Tower', 'Dell Precision 3630 Tower', 'Dell', 'MT', '{"cpu": "Intel Core i7-8700 (6 nhân 12 luồng)", "ram": "32GB DDR4 Bus 2666", "ssd": "SSD 512GB NVMe + HDD 1TB", "ssd_health": 100, "ssd_status": "Good"}'::jsonb, 'Core i7-8700 / 32GB / 512GB SSD + 1TB HDD / GTX 1660 Super', 'Core i7-8700', '32GB DDR4', '512GB NVMe', 100, 'SN-P3630-8700-01', 'ready_to_sell', 360, 10500000, 10500000, 14500000, 14500000, 12, 1, 1, 'Kệ A3 - Chuyên dụng', '{"https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
-  ('inv-5', 'HP-ELITE-800G4', 'HP EliteDesk 800 G4 SFF', 'HP EliteDesk 800 G4 SFF', 'HP', 'SFF', '{"cpu": "Intel Core i7-8700 (6 nhân 12 luồng)", "ram": "16GB DDR4", "ssd": "SSD 256GB NVMe", "ssd_health": 97, "ssd_status": "Good"}'::jsonb, 'Core i7-8700 / 16GB / 256GB SSD', 'Core i7-8700', '16GB DDR4', '256GB NVMe', 97, 'SN-800G4-8700-02', 'testing', 60, 5800000, 5800000, 7800000, 7800000, 12, 1, 1, 'Khu QC Kiểm Định', '{"https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL)
+  ('inv-hp-400g5', 'HP-400G5M', 'HP ProDesk 400 G5 Mini (Siêu Nhỏ Gọn)', 'HP ProDesk 400 G5 Mini', 'HP', 'Mini', 
+   '{"cpu": "Core i5-8500T (Tiết kiệm điện, mát máy)", "ram": "RAM 8GB DDR4 (Hỗ trợ nâng lên 32GB)", "ssd": "SSD M.2 NVMe 256GB Siêu Tốc (Mới BH 36T)", "ssd_health": 100, "highlight": "Có Wi-Fi AC + Bluetooth bắt sóng xa", "gift": "Tặng combo phím chuột văn phòng mới", "badge": "TIẾT KIỆM ĐIỆN 65W", "subBadge": "Nhỏ như quyển sổ tay", "desc": "Gọn gàng trên bàn làm việc, tích hợp sẵn Wi-Fi + Bluetooth."}'::jsonb, 
+   'Core i5-8500T / 8GB / 256GB NVMe / Wi-Fi', 'Core i5-8500T', '8GB DDR4', '256GB NVMe', 100, 'SN-400G5-8500T-01', 'ready_to_sell', 30, 3200000, 3200000, 4350000, 4350000, 12, 5, 5, 'Kệ A1 - Tầng 2', 
+   '{"https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  ('inv-tp-t480s', 'TP-994L2A', 'Lenovo ThinkPad T480s (Doanh Nhân Vỏ Carbon)', 'Lenovo ThinkPad T480s', 'Lenovo', 'Laptop', 
+   '{"cpu": "Core i5-8350U vPro (Bảo mật phần cứng)", "ram": "RAM 16GB DDR4 2400MHz", "ssd": "SSD NVMe 256GB Tốc độ cao (Mới BH 36T)", "ssd_health": 98, "highlight": "Màn hình 14.0 inch Full HD IPS chống chói", "gift": "Tặng túi chống sốc cao cấp + Chuột quang", "badge": "CHUẨN ĐỘ BỀN QUÂN ĐỘI", "subBadge": "Pin 4-6h liên tục", "desc": "Khung magie siêu bền 1.3kg, bàn phím gõ êm số 1 thế giới."}'::jsonb, 
+   'Core i5-8350U / 16GB / 256GB NVMe / 14" FHD IPS', 'Core i5-8350U', '16GB DDR4', '256GB NVMe', 98, 'SN-T480S-994L2A', 'ready_to_sell', 60, 5200000, 5200000, 6850000, 6850000, 12, 3, 3, 'Kệ Laptop L1', 
+   '{"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  ('inv-dl-7490', 'DL-7490A1', 'Dell Latitude 7490 Nhôm Nguyên Khối', 'Dell Latitude 7490', 'Dell', 'Laptop', 
+   '{"cpu": "Core i5-8350U (4 nhân 8 luồng upto 3.60GHz)", "ram": "RAM 8GB DDR4 (Lên 16GB +400k)", "ssd": "SSD M.2 256GB (Khởi động máy 5 giây)", "ssd_health": 100, "highlight": "Bàn phím có đèn LED nền làm việc ban đêm", "gift": "Balo chống nước An Tâm + Sạc Oval zin", "badge": "VIỀN MÀN HÌNH SIÊU MỎNG", "subBadge": "Nhẹ 1.4kg", "desc": "Vỏ hợp kim Carbon đen mờ sang trọng, mở rộng góc 180 độ."}'::jsonb, 
+   'Core i5-8350U / 8GB / 256GB SSD / Led phím', 'Core i5-8350U', '8GB DDR4', '256GB SSD', 100, 'SN-7490-A1-0982', 'ready_to_sell', 40, 4500000, 4500000, 5950000, 5950000, 12, 2, 2, 'Tủ bảo quản kỹ thuật D1', 
+   '{"https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  ('inv-ws-t3620', 'WS-T3620', 'Dell Precision Tower 3620 Workstation', 'Dell Precision 3620', 'Dell', 'MT', 
+   '{"cpu": "Intel Xeon E3-1240 v5 / Core i7-6700", "ram": "RAM 16GB DDR4 ECC Tự Sửa Lỗi", "ssd": "SSD 256GB + HDD 1TB Lưu Trữ Dữ Liệu Lớn", "ssd_health": 100, "highlight": "Card rời NVIDIA Quadro Render 24/24", "gift": "Cài đặt miễn phí bộ Adobe, CAD bản quyền ổn định", "badge": "ĐỒ HỌA CHUYÊN NGHIỆP", "subBadge": "Nguồn 80 Plus Gold", "desc": "Chuyên trị AutoCAD, Revit, SketchUp, Photoshop mượt mà."}'::jsonb, 
+   'Xeon E3-1240 v5 / 16GB ECC / 256GB + 1TB / Quadro', 'Xeon E3-1240 v5', '16GB DDR4 ECC', '256GB + 1TB', 100, 'SN-T3620-WS-001', 'ready_to_sell', 90, 6000000, 6000000, 7850000, 7850000, 12, 1, 1, 'Khu vực kiểm tra kỹ thuật E', 
+   '{"https://images.unsplash.com/photo-1593640408182-31c70c8268f5?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  ('inv-dell-3670', 'DELL-3670-MT', 'Dell Vostro 3670 MT (Core i7 Đa Nhiệm)', 'Dell Vostro 3670 MT', 'Dell', 'MT', 
+   '{"cpu": "Core i7-8700 (6 nhân 12 luồng Turbo 4.6GHz)", "ram": "RAM 16GB DDR4 Kênh Đôi", "ssd": "SSD 512GB NVMe Mới 100% (BH 36T)", "ssd_health": 100, "highlight": "Card đồ họa rời GTX 1050Ti 4GB GDDR5", "gift": "Combo phím chuột giả cơ + Lót chuột lớn", "badge": "HIỆU NĂNG CAO CẤP", "subBadge": "Thùng máy tản nhiệt êm", "desc": "Xử lý mượt mà tác vụ văn phòng nặng, xuất nhiều màn hình cùng lúc."}'::jsonb, 
+   'Core i7-8700 / 16GB / 512GB NVMe / GTX 1050Ti', 'Core i7-8700', '16GB DDR4', '512GB NVMe', 100, 'SN-3670MT-8700-01', 'ready_to_sell', 45, 5800000, 5800000, 7500000, 7500000, 12, 2, 2, 'Kệ Kiểm Thử C1', 
+   '{"https://images.unsplash.com/photo-1547082299-de196ea013d6?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  ('inv-asus-ux3402', 'NB-ASUS-2024', 'Asus Zenbook 14 OLED UX3402', 'Asus Zenbook 14 OLED', 'Asus', 'Laptop', 
+   '{"cpu": "Core i5-1240P (12 nhân 16 luồng thế hệ mới)", "ram": "RAM 16GB LPDDR5 4800MHz Siêu Nhanh", "ssd": "SSD 512GB PCIe 4.0 NVMe Tốc Độ Cao", "ssd_health": 96, "highlight": "Màn hình OLED 2.8K sắc nét bảo vệ mắt", "gift": "Bao da chính hãng + Chuột Bluetooth", "badge": "MÀN HÌNH 2.8K OLED 90HZ", "subBadge": "Siêu mỏng nhẹ 1.39kg", "desc": "Màn hình màu 100% DCI-P3 chuẩn điện ảnh, vỏ nhôm xanh sang trọng."}'::jsonb, 
+   'Core i5-1240P / 16GB LPDDR5 / 512GB / OLED 2.8K', 'Core i5-1240P', '16GB LPDDR5', '512GB NVMe', 96, 'SN-ASUS-UX3402-09', 'ready_to_sell', 45, 11000000, 11000000, 13500000, 13500000, 12, 1, 1, 'Kệ Laptop L2', 
+   '{"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80"}', NULL, NULL, NULL),
+
+  -- MÁY ĐÃ BÀN GIAO THỰC TẾ (LƯU TRỮ VÀ TRA CỨU BẢO HÀNH)
+  ('inv-sold-st8f', 'ST-8F4K92X', 'Dell OptiPlex 7060 SFF Đồng Bộ', 'Dell OptiPlex 7060 SFF', 'Dell', 'SFF', 
+   '{"cpu": "Core i5-8500 (6 nhân 6 luồng 4.10GHz)", "ram": "RAM 16GB DDR4 Bus 2666", "ssd": "SSD NVMe 256GB Kingston Mới 100%", "ssd_health": 100, "highlight": "Hợp đồng bảo trì định kỳ 10 máy OptiPlex", "gift": "Kèm màn hình Dell 24\" & bộ phím chuột đồng bộ", "badge": "ĐÃ BÀN GIAO TẬN NƠI", "subBadge": "Bảo hành chu đáo, đổi nhanh", "desc": "Đã hoàn tất bàn giao và lắp đặt mạng LAN cho bộ phận văn phòng."}'::jsonb, 
+   'Core i5-8500 / 16GB / 256GB NVMe', 'Core i5-8500', '16GB DDR4', '256GB NVMe', 100, 'SN-7060-8F4K92X', 'sold', 45, 3800000, 3800000, 4950000, 4950000, 12, 0, 0, 'Đã bàn giao khách hàng', 
+   '{"https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=800&auto=format&fit=crop&q=80"}', 'Cty TNHH Vận Tải Long An (Anh Tuấn)', '0918234891', '15/05/2025'),
+
+  ('inv-sold-pc9921', 'PC-GAMING-9921', 'PC Gaming & Đồ Họa Core i5 13400F', 'PC Gaming Core i5 13400F', 'Khác', 'MT', 
+   '{"cpu": "Core i5-13400F (10C/16T Turbo 4.6GHz)", "ram": "RAM 32GB DDR4 Bus 3200 Tản Thép", "ssd": "SSD NVMe 512GB Kingston NV2 Gen4", "ssd_health": 100, "highlight": "Card rời RTX 3060 12GB GDDR6 Dual Fan", "gift": "Nguồn Xigmatek 650W 80 Plus + Vỏ case kính", "badge": "ĐÃ GIAO KHÁCH HÀNG", "subBadge": "Bảo hành 24 tháng", "desc": "Bộ PC dựng hình AutoCAD và render video cho văn phòng gia đình."}'::jsonb, 
+   'Core i5-13400F / 32GB / 512GB / RTX 3060 12GB', 'Core i5-13400F', '32GB DDR4', '512GB NVMe', 100, 'SN-GAMING-13400-01', 'sold', 60, 13500000, 13500000, 16800000, 16800000, 24, 0, 0, 'Đã bàn giao khách hàng', 
+   '{"https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=800&auto=format&fit=crop&q=80"}', 'Nguyễn Văn Bảy (Chú Bảy Tân An)', '0918234567', '20/04/2025'),
+
+  ('inv-sold-hp840', 'HP-840G5-HQ', 'HP EliteBook 840 G5 Vỏ Nhôm Bạc', 'HP EliteBook 840 G5', 'HP', 'Laptop', 
+   '{"cpu": "Core i5-8250U (4 nhân 8 luồng)", "ram": "RAM 16GB DDR4 Kênh Đôi", "ssd": "SSD 256GB M.2 NVMe Siêu Bền", "ssd_health": 98, "highlight": "Màn hình 14.0\" Full HD IPS chống chói", "gift": "Dock chuyển đổi Type-C + Cặp da cao cấp", "badge": "ĐÃ BÀN GIAO DOANH NGHIỆP", "subBadge": "Hóa đơn VAT đầy đủ", "desc": "Máy làm việc cơ động cho kỹ sư công trình, bàn phím gõ êm nhẹ."}'::jsonb, 
+   'Core i5-8250U / 16GB / 256GB SSD / 14" FHD IPS', 'Core i5-8250U', '16GB DDR4', '256GB SSD', 98, 'SN-840G5-HQ-0991', 'sold', 45, 4800000, 4800000, 6200000, 6200000, 12, 0, 0, 'Đã bàn giao khách hàng', 
+   '{"https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=800&auto=format&fit=crop&q=80"}', 'Cty Thiết Kế Hoàng Quân (Anh Quân)', '0909112233', '02/05/2025'),
+
+  ('inv-sold-hp400g4', 'HP-400G4-POS', 'HP ProDesk 400 G4 Mini (Máy Tính Tiền POS)', 'HP ProDesk 400 G4 Mini', 'HP', 'Mini', 
+   '{"cpu": "Core i3-7100T (Tiết kiệm điện 35W)", "ram": "RAM 8GB DDR4 Bus 2400", "ssd": "SSD 128GB NVMe + HDD 500GB", "ssd_health": 97, "highlight": "Lắp gọn sau lưng màn hình POS", "gift": "KTV hỗ trợ đấu nối máy in nhiệt & quét mã vạch", "badge": "ĐÃ LẮP ĐẶT TẬN NƠI", "subBadge": "Cài sẵn KiotViet & MISA", "desc": "Hệ thống bán hàng chạy 24/7 ổn định, kích thước siêu nhỏ gọn."}'::jsonb, 
+   'Core i3-7100T / 8GB / 128GB SSD + 500GB HDD', 'Core i3-7100T', '8GB DDR4', '128GB SSD', 97, 'SN-400G4-POS-LAN', 'sold', 30, 2500000, 2500000, 3450000, 3450000, 12, 0, 0, 'Đã bàn giao khách hàng', 
+   '{"https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80"}', 'Chị Lan - Tạp hoá Tân Tây', '0908889977', '18/05/2025'),
+
+  ('inv-len-m720q', 'LEN-M720Q-01', 'Lenovo ThinkCentre M720q Tiny', 'Lenovo ThinkCentre M720q Tiny', 'Lenovo', 'Mini', 
+   '{"cpu": "Intel Core i5-8400T (6 nhân)", "ram": "8GB DDR4 Bus 2666", "ssd": "SSD 256GB NVMe", "ssd_health": 99, "badge": "SIÊU BỀN TIẾT KIỆM ĐIỆN", "subBadge": "Bảo hành 12 tháng", "desc": "Máy bộ tí hon chuyên văn phòng, quầy lễ tân, xuất 2 màn hình nét căng."}'::jsonb, 
+   'Core i5-8400T / 8GB / 256GB NVMe', 'Core i5-8400T', '8GB DDR4', '256GB NVMe', 99, 'SN-M720Q-8400T-01', 'ready_to_sell', 120, 3600000, 3600000, 4900000, 4900000, 12, 4, 4, 'Kệ B2 - Tầng 2', 
+   '{"https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
+
+  ('inv-dell-p3630', 'DELL-P3630-TWR', 'Dell Precision 3630 Tower', 'Dell Precision 3630 Tower', 'Dell', 'MT', 
+   '{"cpu": "Intel Core i7-8700 (6 nhân 12 luồng)", "ram": "32GB DDR4 Bus 2666", "ssd": "SSD 512GB NVMe + HDD 1TB", "ssd_health": 100, "badge": "WORKSTATION ĐỒ HỌA NẶNG", "subBadge": "Bảo hành 12 tháng", "desc": "Trạm làm việc chuyên render 3D, dựng phim và tính toán kỹ thuật nặng."}'::jsonb, 
+   'Core i7-8700 / 32GB / 512GB SSD + 1TB HDD / GTX 1660 Super', 'Core i7-8700', '32GB DDR4', '512GB NVMe', 100, 'SN-P3630-8700-01', 'ready_to_sell', 360, 10500000, 10500000, 14500000, 14500000, 12, 1, 1, 'Kệ A3 - Chuyên dụng', 
+   '{"https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL),
+
+  ('inv-hp-800g4', 'HP-ELITE-800G4', 'HP EliteDesk 800 G4 SFF', 'HP EliteDesk 800 G4 SFF', 'HP', 'SFF', 
+   '{"cpu": "Intel Core i7-8700 (6 nhân 12 luồng)", "ram": "16GB DDR4", "ssd": "SSD 256GB NVMe", "ssd_health": 97, "badge": "ĐANG CHẠY QC BURNING", "subBadge": "Kiểm định 100%", "desc": "Máy đang trong buồng thử tải FurMark và MemTest 60 phút."}'::jsonb, 
+   'Core i7-8700 / 16GB / 256GB SSD', 'Core i7-8700', '16GB DDR4', '256GB NVMe', 97, 'SN-800G4-8700-02', 'testing', 60, 5800000, 5800000, 7800000, 7800000, 12, 1, 1, 'Khu QC Kiểm Định', 
+   '{"https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&w=400&q=80"}', NULL, NULL, NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- 7. SEED KHO LINH KIỆN THAY THẾ (spare_parts)
@@ -499,10 +559,55 @@ VALUES
   ('sp-3', 'RAM DDR4 8GB Bus 2666/3200 Samsung/Hynix', 'RAM', 'new', 20, 36, 'Vĩnh Xuân', 350000, 480000, 'Kệ LK-A2', 'Zin bóc máy hoặc new bảo hành 3 năm'),
   ('sp-4', 'RAM DDR4 16GB Bus 2666/3200 Kingston', 'RAM', 'new', 15, 36, 'Viễn Sơn', 650000, 890000, 'Kệ LK-A2', 'Bản quyền & tản nhiệt nhôm'),
   ('sp-5', 'Keo tản nhiệt Thermalright TF7 2g', 'ThermalPaste', 'new', 25, 0, 'Phân phối chính hãng', 60000, 100000, 'Kệ LK-B1', 'Hạ 15-20 độ, chuyên dụng spa làm mát'),
-  ('sp-6', 'Nguồn Dell OptiPlex SFF 260W 80 Plus Bronze', 'PSU', 'used', 5, 12, 'Zin bóc máy Dell', 350000, 550000, 'Kệ LK-C1', 'Zin tháo máy bộ nguyên bản chưa sửa')
+  ('sp-6', 'Nguồn Dell OptiPlex SFF 260W 80 Plus Bronze', 'PSU', 'used', 5, 12, 'Zin bóc máy Dell', 350000, 550000, 'Kệ LK-C1', 'Zin tháo máy bộ nguyên bản chưa sửa'),
+  ('sp-7', 'CPU Intel Core i7-8700 (6C/12T Tray)', 'CPU', 'used', 5, 12, 'Kho Kỹ Thuật Tân An', 2100000, 2650000, 'Tủ Kính CPU', 'Chân socket đẹp keng, test Cinebench mát'),
+  ('sp-8', 'Card Đồ Họa ASUS Phoenix GTX 1050Ti 4GB GDDR5', 'VGA', 'used', 4, 12, 'Hàng tuyển chọn phòng nét sạch', 1450000, 1850000, 'Kệ LK-VGA', 'Nguyên tem void, furmark 68 độ C')
 ON CONFLICT (id) DO NOTHING;
 
--- 8. SEED CÂU HỎI THƯỜNG GẶP (faqs)
+-- 8. SEED PHIẾU DỊCH VỤ SỬA CHỮA & TIẾP NHẬN (service_tickets)
+INSERT INTO service_tickets (id, ticket_code, customer_id, customer_name, customer_phone, customer_address, device_service_tag, service_tag, device_name, device_model, ticket_type, reception_mode, technician_name, selected_services, multi_tier_warranty, total_amount, visual_condition, status, technician_note, estimated_completion, completed_at, created_at)
+VALUES
+  ('tk-1', '#TK-2025-0590', 'c1', 'Cty TNHH Vận Tải Long An (Anh Tuấn)', '0918234891', 'KCN Lợi Bình Nhơn, Long An', 'ST-8F4K92X', 'ST-8F4K92X', 'Dell OptiPlex 7060 SFF', 'Dell OptiPlex 7060 SFF', 'counter', 'counter', 'Trịnh Minh Tuấn', 
+   '[{"id": "srv-1", "name": "Nâng cấp SSD NVMe Kingston 256GB", "price": 550000, "warranty_tier": "BH Hãng 36T"}, {"id": "srv-2", "name": "Gói Spa Làm Mát Chuyên Sâu Keo TF7", "price": 100000, "warranty_tier": "Hạ 18°C"}, {"id": "srv-3", "name": "Clone Windows 11 Pro Giữ Dữ Liệu MISA", "price": 150000, "warranty_tier": "Bản quyền số"}]'::jsonb,
+   '{"chassis_months": 12, "ssd_months": 36, "ram_months": 36, "software_days": 30, "expiry_date": "2026-05-15"}'::jsonb,
+   800000, 'Thùng máy đẹp >95%, trầy nhẹ mặt hông, ốc zin nguyên vẹn', 'completed', 'Đã test CrystalDiskInfo 100% Good, nhiệt độ FurMark ổn định 62°C', now() - interval '3 days', now() - interval '2 days', now() - interval '4 days'),
+
+  ('tk-2', '#TK-2025-0591', 'c2', 'Nguyễn Văn Bảy (Chú Bảy Tân An)', '0918234567', 'Số 15 Huỳnh Văn Nhất, P.3, Tân An', 'PC-GAMING-9921', 'PC-GAMING-9921', 'PC Gaming Core i5 13400F', 'PC Gaming Core i5 13400F', 'counter', 'counter', 'Trịnh Minh Tuấn',
+   '[{"id": "srv-4", "name": "Vệ sinh tản nhiệt nước & Tra keo TF7", "price": 150000, "warranty_tier": "BH 03 Tháng"}, {"id": "srv-5", "name": "Tối ưu Win 11 Pro sạch không rác", "price": 120000, "warranty_tier": "Hỗ trợ 30 ngày"}]'::jsonb,
+   '{"chassis_months": 24, "ssd_months": 36, "ram_months": 36, "software_days": 30, "expiry_date": "2027-04-20"}'::jsonb,
+   270000, 'Vỏ case kính cường lực sáng đẹp, bám bụi lưới lọc đáy', 'ready_deliver', 'Khách hẹn chiều 17h qua lấy', now() + interval '18 hours', NULL, now() - interval '30 hours'),
+
+  ('tk-3', '#TK-2025-0592', 'c4', 'Chị Lan - Tạp hoá Tân Tây', '0908889977', 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa', 'HP-400G4-POS', 'HP-400G4-POS', 'HP ProDesk 400 G4 Mini', 'HP ProDesk 400 G4 Mini', 'mobile', 'mobile', 'Huỳnh Minh Trí',
+   '[{"id": "srv-6", "name": "Cứu hộ Onsite kiểm tra kêu tít tít lỏng RAM", "price": 150000, "warranty_tier": "Bảo hành 30 ngày"}, {"id": "srv-7", "name": "Vệ sinh chân đồng & kiểm tra cổng COM máy in", "price": 100000, "warranty_tier": "BH 01 Tháng"}]'::jsonb,
+   '{"chassis_months": 6, "ssd_months": 12, "ram_months": 12, "software_days": 30}'::jsonb,
+   250000, 'Vỏ máy hơi dính dầu mỡ buôn bán, chân cắm nguồn chắc chắn', 'in_progress', 'KTV Trí đang di chuyển qua Tân Tây kiểm tra RAM', now() + interval '44 hours', NULL, now() - interval '10 hours'),
+
+  ('tk-4', '#TK-2025-0593', 'c3', 'Anh Hoàng (Đại lý VLXD Tân An)', '0903124578', 'QL1A, P.5, Tân An', 'DELL-VOSTRO-3681', 'DELL-VOSTRO-3681', 'Dell Vostro 3681 SFF', 'Dell Vostro 3681 SFF', 'counter', 'counter', 'Trịnh Minh Tuấn',
+   '[{"id": "srv-bh-1", "name": "Bảo hành SSD NVMe Kingston 500GB lỗi không nhận", "price": 0, "warranty_tier": "BH Đổi Mới 1-1"}]'::jsonb,
+   '{"chassis_months": 12, "ssd_months": 36}'::jsonb,
+   0, 'Máy còn nguyên tem bảo hành Vi Tính An Tâm dán ốc hông', 'received', 'Tiếp nhận bảo hành SSD đổi mới, gửi hãng test tốc độ đọc ghi', now() + interval '52 hours', NULL, now() - interval '6 hours'),
+
+  ('tk-5', '#TK-2025-0594', 'c5', 'Trường Tiểu Học Hướng Thọ Phú', '02723829101', 'Xã Hướng Thọ Phú, Tân An', 'HP-PRO-DESK-600', 'HP-PRO-DESK-600', 'HP ProDesk 600 G3 SFF', 'HP ProDesk 600 G3 SFF', 'counter', 'counter', 'Huỳnh Minh Trí',
+   '[{"id": "srv-9", "name": "Sửa nguồn máy bộ HP bật không lên đèn", "price": 250000, "warranty_tier": "BH 03 Tháng"}]'::jsonb,
+   '{"chassis_months": 3}'::jsonb,
+   250000, 'Vỏ thùng trầy xước theo thời gian, có tem phòng máy trường học', 'in_progress', 'Đã báo giá thay tụ nguồn, hẹn bàn giao sáng nay', now() - interval '4 hours', NULL, now() - interval '52 hours')
+ON CONFLICT (id) DO NOTHING;
+
+-- 9. SEED CỨU HỘ ONSITE TẬN NƠI (onsite_dispatches)
+INSERT INTO onsite_dispatches (id, customer_name, phone, address, area_zone, scheduled_time, urgency, status, issue_description, technician_name, created_at)
+VALUES
+  ('ons-1', 'Anh Minh - Cty May Long An', '0918.421.908', '42 Hùng Vương, P.2, Tân An', 'P.2 Tân An', '14:30', 'urgent', 'preparing', 'Dàn PC văn phòng tắt đột ngột liên tục, cần bộ test công suất nguồn CST & PSU dự phòng 550W', 'Huỳnh Minh Trí', now() - interval '4 hours'),
+  ('ons-2', 'Chị Lan - Tạp hoá Tân Tây', '0908.889.977', 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa', 'TT. Thủ Thừa', '16:00', 'normal', 'preparing', 'Mini PC Dell Micro cắm máy in hoá đơn kêu 3 tiếng tít tít, nghi lỏng RAM, cần vệ sinh chân đồng', 'Trịnh Minh Tuấn', now() - interval '2 hours')
+ON CONFLICT (id) DO NOTHING;
+
+-- 10. SEED NHẬT KÝ CA TRỰC KỸ THUẬT (shift_logs)
+INSERT INTO shift_logs (id, ktv_name, ktv_role, shift_date, shift_name, base_wage, tickets_completed, commission_per_ticket, total_commission, bonus_amount, total_wage, notes, created_at)
+VALUES
+  ('s1', 'Trịnh Minh Tuấn', 'Kỹ thuật viên trưởng', '2025-05-20', 'Ca 1 (08:00 - 16:00)', 250000, 4, 50000, 200000, 50000, 500000, 'Hoàn thành 4 ticket, hỗ trợ test 2 máy bãi đạt chuẩn 100%', now() - interval '1 day'),
+  ('s2', 'Huỳnh Minh Trí', 'KTV Cơ động Onsite', '2025-05-20', 'Ca 2 (13:00 - 21:00)', 280000, 3, 60000, 180000, 100000, 560000, '2 ca cứu hộ Onsite Tân An & Thủ Thừa thành công đúng giờ', now() - interval '1 day')
+ON CONFLICT (id) DO NOTHING;
+
+-- 11. SEED CÂU HỎI THƯỜNG GẶP (faqs)
 INSERT INTO faqs (id, icon, question, answer, order_index)
 VALUES
   ('faq-1', 'Clock', 'Khi máy tính gặp sự cố, An Tâm hỗ trợ kỹ thuật như thế nào?', 'Khi máy tính phát sinh vấn đề hoặc cần xử lý kỹ thuật, quý khách chỉ cần nhắn Zalo hoặc gọi trực tiếp. An Tâm luôn ưu tiên ứng phó nhanh nhất có thể: hỗ trợ từ xa qua UltraViewer/TeamViewer ngay lập tức cho lỗi phần mềm, hoặc linh hoạt đến hỗ trợ tận nơi đối với vấn đề phần cứng.', 1),
@@ -511,7 +616,7 @@ VALUES
   ('faq-4', 'CheckCircle2', 'Máy tính cũ tại An Tâm có được mở nắp kiểm tra linh kiện bên trong không?', 'Khách hàng có toàn quyền yêu cầu kỹ thuật mở nắp thùng máy để kiểm tra trực tiếp: bo mạch sạch đẹp nguyên bản chưa qua sửa chữa, tình trạng linh kiện minh bạch, kiểm tra sức khỏe ổ cứng bằng CrystalDiskInfo trước khi quyết định nhận máy.', 4)
 ON CONFLICT (id) DO NOTHING;
 
--- 9. SEED ĐÁNH GIÁ KHÁCH HÀNG (customer_reviews)
+-- 12. SEED ĐÁNH GIÁ KHÁCH HÀNG (customer_reviews)
 INSERT INTO customer_reviews (id, name, role, comment, service, location, rating)
 VALUES
   ('rev-1', 'Anh Minh Tuấn', 'Quản lý vận hành - Cty Vận Tải', 'Trang bị 6 bộ máy Dell OptiPlex cho văn phòng dùng phần mềm quản lý và hóa đơn điện tử. Máy chạy cực êm, khởi động 5 giây. Kỹ thuật viên hỗ trợ tận nơi rất chu đáo.', 'Dell OptiPlex 7060 SFF', 'Tân An (Long An - Tây Ninh)', 5),
@@ -520,7 +625,7 @@ VALUES
   ('rev-4', 'Anh Hoàng Long', 'Giám đốc Công ty Xây Dựng', 'Mua bộ máy bàn Dell Precision dùng thiết kế đồ họa và AutoCAD. Máy chạy mượt mà, render nhanh. Dịch vụ chăm sóc sau bán hàng của Vi Tính An Tâm rất tuyệt vời.', 'Dell Precision Workstation', 'Tây Ninh', 5)
 ON CONFLICT (id) DO NOTHING;
 
--- 10. SEED KHO KEY BẢN QUYỀN (license_keys)
+-- 13. SEED KHO KEY BẢN QUYỀN (license_keys)
 INSERT INTO license_keys (id, category_id, category_name, license_code, status, import_price, unit_price, notes)
 VALUES
   ('key-w11p-001', 'cat-win-pro', 'WINDOWS 11 PROFESSIONAL', 'W269N-WFGWX-YVC9B-4J6C9-T83GX', 'available', 150000, 350000, 'Key OEM số vĩnh viễn Digital License'),
@@ -531,11 +636,13 @@ VALUES
   ('key-off365-001', 'cat-off-365', 'MICROSOFT 365 FAMILY / PERSONAL', '365FM-89KLT-XXXXX-YYYYY-ZZZZZ', 'available', 290000, 590000, 'Gói thuê bao 1 năm + 1TB OneDrive')
 ON CONFLICT (id) DO NOTHING;
 
--- 11. SEED QUỸ DỰ PHÒNG BẢO HÀNH 5% (warranty_provisions)
+-- 14. SEED QUỸ DỰ PHÒNG BẢO HÀNH 5% (warranty_provisions)
 INSERT INTO warranty_provisions (id, item_id, item_type, item_title, serial_number, customer_name, customer_phone, customer_code, seller_name, sale_date, warranty_months, warranty_expiry_date, sale_price, cost_price, net_profit, provision_rate, provision_amount, status, approved_at, approved_by)
 VALUES
-  ('wp-01', 'inv-sold-1', 'machine', 'Dell OptiPlex 7060 SFF (Core i5-8500 / 16GB / 256GB SSD)', 'SN-DELL-7060-8F4K', 'Anh Trần Minh Đức', '0918123456', '15053456', 'Võ Minh Tâm (Admin)', now() - interval '185 days', 12, now() + interval '180 days', 5350000, 4200000, 1150000, 0.05, 57500, 'locked', now() - interval '185 days', 'Võ Minh Tâm (Admin)'),
-  ('wp-02', 'inv-sold-2', 'machine', 'HP ProDesk 400 G5 Mini (Core i5-9500T / 16GB / 512GB SSD)', 'SN-HP-400G5-994L', 'Nguyễn Văn Hùng', '0988123456', '12023456', 'Võ Minh Tâm (Admin)', now() - interval '370 days', 12, now() - interval '5 days', 5800000, 4200000, 1600000, 0.05, 80000, 'unlocked', now() - interval '370 days', 'Võ Minh Tâm (Admin)')
+  ('wp-01', 'inv-sold-st8f', 'machine', 'Dell OptiPlex 7060 SFF (Core i5-8500 / 16GB / 256GB SSD)', 'SN-7060-8F4K92X', 'Anh Trần Minh Đức', '0918123456', '15053456', 'Võ Minh Tâm (Admin)', now() - interval '185 days', 12, now() + interval '180 days', 5350000, 4200000, 1150000, 0.05, 57500, 'locked', now() - interval '185 days', 'Võ Minh Tâm (Admin)'),
+  ('wp-02', 'inv-hp-400g5', 'machine', 'HP ProDesk 400 G5 Mini (Core i5-8500T / 8GB / 256GB SSD)', 'SN-400G5-8500T-01', 'Nguyễn Văn Hùng', '0988123456', '12023456', 'Võ Minh Tâm (Admin)', now() - interval '370 days', 12, now() - interval '5 days', 5800000, 4200000, 1600000, 0.05, 80000, 'unlocked', now() - interval '370 days', 'Võ Minh Tâm (Admin)')
 ON CONFLICT (id) DO NOTHING;
 
--- HOÀN TẤT SCHEMA VÀ SEED DỮ LIỆU
+-- ============================================================================
+-- HOÀN TẤT TOÀN DIỆN SCHEMA VÀ SEED DỮ LIỆU
+-- ============================================================================

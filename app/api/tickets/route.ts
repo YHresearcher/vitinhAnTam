@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initialTickets } from '@/lib/mockData';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // Protected API.
 // `x-user-role` do proxy.ts đặt TỪ SESSION ĐÃ KÝ và đè lên mọi giá trị client gửi lên.
@@ -18,9 +19,27 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const { data, error } = await supabase.from('service_tickets').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        return NextResponse.json({
+          success: true,
+          total: data.length,
+          data,
+          source: 'supabase',
+        });
+      }
+    } catch {
+      // Fallback
+    }
+  }
+
   return NextResponse.json({
     success: true,
     total: initialTickets.length,
     data: initialTickets,
+    source: 'fallback',
   });
 }
+

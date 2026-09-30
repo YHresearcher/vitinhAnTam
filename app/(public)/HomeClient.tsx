@@ -33,7 +33,7 @@ import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys } = useViTinhAnTamStore();
+  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
@@ -124,28 +124,24 @@ export default function HomePage() {
     [inStockProducts]
   );
 
-  const activeFaqs = isEn && ENGLISH_FAQS ? ENGLISH_FAQS : [
-    {
-      question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
-      answer:
-        'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
-    },
-    {
-      question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
-      answer:
-        'An Tâm áp dụng chính sách bảo hành chu đáo, đổi mới linh kiện nhanh chóng. Cửa hàng hỗ trợ xử lý kỹ thuật tận nơi hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của bạn luôn được thông suốt.',
-    },
-    {
-      question: 'Windows bản quyền số có lợi ích gì cho công việc văn phòng và doanh nghiệp?',
-      answer:
-        'Máy được kích hoạt bản quyền số Microsoft theo máy. Hệ thống sạch sẽ, bảo mật tốt, không chứa mã độc hay công cụ bẻ khóa, an toàn cho dữ liệu công việc, hóa đơn điện tử và giao dịch ngân hàng.',
-    },
-    {
-      question: 'Tôi có thể nâng cấp linh kiện RAM hoặc ổ cứng SSD theo nhu cầu được không?',
-      answer:
-        'Hoàn toàn được. Cửa hàng có sẵn cả linh kiện mới chính hãng bảo hành dài hạn lẫn linh kiện cũ tháo máy chất lượng tốt. An Tâm luôn tư vấn rõ ràng tình trạng (mới báo mới, cũ báo cũ) để quý khách an tâm lựa chọn theo ngân sách.',
-    },
-  ];
+  const activeFaqs = useMemo(() => {
+    if (isEn && ENGLISH_FAQS) return ENGLISH_FAQS;
+    if (faqs && faqs.length > 0) {
+      return faqs.map((f) => ({ question: f.question, answer: f.answer }));
+    }
+    return [
+      {
+        question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
+        answer:
+          'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
+      },
+      {
+        question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
+        answer:
+          'An Tâm áp dụng chính sách bảo hành chu đáo, đổi mới linh kiện nhanh chóng. Cửa hàng hỗ trợ xử lý kỹ thuật tận nơi hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của bạn luôn được thông suốt.',
+      },
+    ];
+  }, [isEn, faqs]);
 
   return (
     <div className="w-full relative selection:bg-[#C0392B] selection:text-white">

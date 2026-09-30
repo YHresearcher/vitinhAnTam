@@ -1,5 +1,0 @@
-WARN | app\(admin)\quan-ly-key\page.tsx:94:9 | react-hooks/exhaustive-deps | The 'isWaitingTest' function makes the dependencies of useMemo Hook (at line 121) change on every render. To fix this, wrap the definition of 'isWaitingTest' in its own useCallback() Hook.
-WARN | app\(admin)\quan-ly-key\page.tsx:97:9 | react-hooks/exhaustive-deps | The 'isActive' function makes the dependencies of useMemo Hook (at line 121) change on every render. To fix this, wrap the definition of 'isActive' in its own useCallback() Hook.
-WARN | app\(admin)\quan-ly-key\page.tsx:100:9 | react-hooks/exhaustive-deps | The 'needsReplacement' function makes the dependencies of useMemo Hook (at line 121) change on every render. To fix this, wrap the definition of 'needsReplacement' in its own useCallback() Hook.
-
-TOTAL: 0 errors, 3 warnings in 55 files

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { initialInventory, initialTickets, initialCustomers } from '@/lib/mockData';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -12,27 +13,63 @@ export async function GET(request: NextRequest) {
   const cleanQuery = q.toLowerCase();
   const digitsOnly = q.replace(/\D/g, '');
 
-  // 1. Search in Inventory
+  // 1. Try querying Supabase if configured
+  if (isSupabaseConfigured() && supabase) {
+    try {
+      const [invRes, tckRes, cusRes] = await Promise.all([
+        supabase
+          .from('inventory_items')
+          .select('*')
+          .or(`service_tag.ilike.%${q}%,serial_number.ilike.%${q}%${digitsOnly.length >= 7 ? `,customer_phone.ilike.%${digitsOnly}%` : ''}`),
+        supabase
+          .from('service_tickets')
+          .select('*')
+          .or(`ticket_code.ilike.%${q}%,device_service_tag.ilike.%${q}%,service_tag.ilike.%${q}%${digitsOnly.length >= 7 ? `,customer_phone.ilike.%${digitsOnly}%` : ''}`),
+        digitsOnly.length >= 7
+          ? supabase.from('customers').select('*').ilike('phone', `%${digitsOnly}%`)
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+
+      const matchedItem = invRes.data && invRes.data.length > 0 ? invRes.data[0] : null;
+      const matchedTicket = tckRes.data && tckRes.data.length > 0 ? tckRes.data[0] : null;
+      const matchedCustomer = cusRes.data && cusRes.data.length > 0 ? cusRes.data[0] : null;
+
+      if (matchedItem || matchedTicket || matchedCustomer) {
+        return NextResponse.json({
+          found: true,
+          query: q,
+          source: 'supabase',
+          data: {
+            item: matchedItem,
+            ticket: matchedTicket,
+            customer: matchedCustomer,
+          },
+        });
+      }
+    } catch {
+      // Proceed to fallback
+    }
+  }
+
+  // 2. Fallback to Local/Mock Data
   const matchedItem = initialInventory.find(
     (item) =>
       item.service_tag.toLowerCase() === cleanQuery ||
       item.serial_number?.toLowerCase() === cleanQuery
   );
 
-  // 2. Search in Tickets (By Code, Tag or Customer Phone)
   const matchedTicket = initialTickets.find((ticket) => {
     const phoneDigits = ticket.customer_phone.replace(/\D/g, '');
     return (
       ticket.ticket_code.toLowerCase() === cleanQuery ||
       (ticket.service_tag && ticket.service_tag.toLowerCase() === cleanQuery) ||
-      (digitsOnly.length >= 9 && phoneDigits.includes(digitsOnly))
+      (digitsOnly.length >= 7 && phoneDigits.includes(digitsOnly))
     );
   });
 
-  // 3. Search in Customers
   const matchedCustomer = initialCustomers.find((c) => {
     const phoneDigits = c.phone.replace(/\D/g, '');
-    return digitsOnly.length >= 9 && phoneDigits.includes(digitsOnly);
+    return digitsOnly.length >= 7 && phoneDigits.includes(digitsOnly);
   });
 
   if (!matchedItem && !matchedTicket && !matchedCustomer) {
@@ -45,6 +82,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     found: true,
     query: q,
+    source: 'fallback',
     data: {
       item: matchedItem || null,
       ticket: matchedTicket || null,
@@ -52,3 +90,4 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+
