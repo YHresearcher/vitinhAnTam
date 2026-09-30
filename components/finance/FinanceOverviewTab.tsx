@@ -2,27 +2,29 @@
 
 import React from "react";
 import { FinancialSummaryData } from "./types";
+import { CashflowTimelinePoint, CategoryDistributionPoint } from "./financeSummaryHelpers";
 import { useViTinhAnTamStore } from "@/lib/store";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from "recharts";
+import { FinanceOverviewCharts } from "./FinanceOverviewCharts";
+import { ShieldCheck, ArrowRight, Wallet } from "lucide-react";
 
 interface Props {
   financialSummary: FinancialSummaryData;
   timeframeLabel: string;
+  timelineData?: CashflowTimelinePoint[];
+  categoryData?: CategoryDistributionPoint[];
   onOpenWarrantyFund?: () => void;
 }
 
-export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWarrantyFund }: Props) {
+const PIE_COLORS = ["#2563eb", "#10b981", "#f59e0b", "#ec4899"];
+
+export function FinanceOverviewTab({
+  financialSummary,
+  timeframeLabel,
+  timelineData = [],
+  onOpenWarrantyFund,
+}: Props) {
   const { warrantyProvisions } = useViTinhAnTamStore();
-  const { stream, totalRevenue, totalExpense, netProfit } = financialSummary;
+  const { stream, totalRevenue, totalExpense, netProfit, profitMargin } = financialSummary;
 
   // 5% warranty calculation for current scope
   const lockedFund = warrantyProvisions
@@ -43,7 +45,7 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
       rev: stream.machine.rev,
       cost: stream.machine.cost,
       profit: stream.machine.profit,
-      color: "bg-blue-600",
+      color: "#2563eb",
     },
     {
       title: "2. Sửa Chữa Tiếp Nhận",
@@ -52,7 +54,7 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
       rev: stream.ticket.rev,
       cost: stream.ticket.cost,
       profit: stream.ticket.profit,
-      color: "bg-emerald-600",
+      color: "#10b981",
     },
     {
       title: "3. Cứu Hộ Onsite",
@@ -61,7 +63,7 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
       rev: stream.onsite.rev,
       cost: stream.onsite.cost,
       profit: stream.onsite.profit,
-      color: "bg-amber-500",
+      color: "#f59e0b",
     },
     {
       title: "4. Key Win & Office",
@@ -70,15 +72,28 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
       rev: stream.key.rev,
       cost: stream.key.cost,
       profit: stream.key.profit,
-      color: "bg-rose-500",
+      color: "#f43f5e",
     },
   ];
 
-  // Maximum value for bar scaling
-  const maxBarValue = Math.max(
-    1,
-    ...cards.map((c) => Math.max(c.rev, c.cost, c.profit))
-  );
+  const pillarChartData = cards.map((c) => ({
+    name: c.title.replace(/^\d+\.\s*/, ""),
+    rev: c.rev,
+    cost: c.cost,
+    profit: c.profit,
+    margin: c.rev > 0 ? Math.round((c.profit / c.rev) * 100) : 0,
+    color: c.color,
+    count: c.count,
+  }));
+
+  const pieData = cards
+    .filter((c) => c.rev > 0)
+    .map((c, idx) => ({
+      name: c.title.replace(/^\d+\.\s*/, ""),
+      value: c.rev,
+      profit: c.profit,
+      color: c.color || PIE_COLORS[idx % PIE_COLORS.length],
+    }));
 
   return (
     <div className="space-y-6">
@@ -86,23 +101,47 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => {
           const margin = c.rev > 0 ? Math.round((c.profit / c.rev) * 100) : 0;
+          const costRatio = c.rev > 0 ? Math.round((c.cost / c.rev) * 100) : 0;
           return (
-            <div key={c.title} className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-black text-xs text-slate-700 uppercase tracking-tight">{c.title}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${c.badgeBg}`}>{c.count}</span>
-              </div>
-              <div className="text-xl font-black text-slate-900 font-mono">
-                {c.rev.toLocaleString("vi-VN")}₫
-              </div>
-              <div className="pt-3 border-t border-slate-100 space-y-1 text-xs font-mono">
-                <div className="flex justify-between text-slate-500">
-                  <span>Giá vốn/Linh kiện:</span>
-                  <span>{c.cost.toLocaleString("vi-VN")}₫</span>
+            <div
+              key={c.title}
+              className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3 flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-xs text-slate-700 uppercase tracking-tight">{c.title}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold font-mono ${c.badgeBg}`}>
+                    {c.count}
+                  </span>
                 </div>
-                <div className="flex justify-between font-black text-emerald-700">
+                <div>
+                  <div className="text-xl font-black text-slate-900 font-mono">
+                    {c.rev.toLocaleString("vi-VN")}₫
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-sans mt-0.5">Doanh thu phát sinh</div>
+                </div>
+
+                {/* Progress bar representing cost vs profit */}
+                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                  <div className="bg-rose-400 h-full" style={{ width: `${costRatio}%` }} title={`Giá vốn: ${costRatio}%`} />
+                  <div className="bg-emerald-500 h-full" style={{ width: `${margin}%` }} title={`Lãi gộp: ${margin}%`} />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between text-slate-500">
+                  <span>Giá vốn:</span>
+                  <span className="text-rose-600 font-semibold">{c.cost.toLocaleString("vi-VN")}₫</span>
+                </div>
+                <div className="flex justify-between font-bold text-emerald-700">
                   <span>Lãi gộp:</span>
-                  <span>+{c.profit.toLocaleString("vi-VN")}₫ ({margin}%)</span>
+                  <span>+{c.profit.toLocaleString("vi-VN")}₫</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-slate-100/70 text-[11px]">
+                  <span className="text-slate-400">Tỷ suất gộp:</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                    {margin}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -110,68 +149,16 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
         })}
       </div>
 
-      {/* 4-PILLARS COMPARATIVE RECHARTS BAR CHART */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-              Biểu Đồ So Sánh 4 Mảng Kinh Doanh ({timeframeLabel})
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              So sánh trực quan Doanh thu, Chi phí vốn và Lợi nhuận gộp từng trụ cột
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full h-64 pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={[
-                { name: "Bán Máy", revenue: stream.machine.rev, cost: stream.machine.cost, profit: stream.machine.profit },
-                { name: "Sửa Chữa", revenue: stream.ticket.rev, cost: stream.ticket.cost, profit: stream.ticket.profit },
-                { name: "Cứu Hộ Onsite", revenue: stream.onsite.rev, cost: stream.onsite.cost, profit: stream.onsite.profit },
-                { name: "Key Bản Quyền", revenue: stream.key.rev, cost: stream.key.cost, profit: stream.key.profit },
-              ]}
-              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
-              <YAxis
-                stroke="#94a3b8"
-                fontSize={10}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(v) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`)}
-              />
-              <RechartsTooltip
-                content={({ active, payload, label }: any) => {
-                  if (active && payload && payload.length) {
-                    const rev = payload.find((p: any) => p.dataKey === 'revenue')?.value || 0;
-                    const cost = payload.find((p: any) => p.dataKey === 'cost')?.value || 0;
-                    const profit = payload.find((p: any) => p.dataKey === 'profit')?.value || 0;
-                    const margin = rev > 0 ? Math.round((profit / rev) * 100) : 0;
-                    return (
-                      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
-                        <p className="font-bold border-b border-slate-700 pb-1 mb-1.5">{label}</p>
-                        <div className="space-y-1 font-mono">
-                          <div className="text-blue-400">Doanh thu: {rev.toLocaleString('vi-VN')}₫</div>
-                          <div className="text-slate-400">Chi phí vốn: {cost.toLocaleString('vi-VN')}₫</div>
-                          <div className="text-emerald-400 font-bold">Lãi gộp: +{profit.toLocaleString('vi-VN')}₫ ({margin}%)</div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} iconType="circle" />
-              <Bar dataKey="revenue" name="Doanh Thu" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={22} />
-              <Bar dataKey="cost" name="Chi Phí Vốn" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={22} />
-              <Bar dataKey="profit" name="Lợi Nhuận Gộp" fill="#10b981" radius={[4, 4, 0, 0]} barSize={22} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+      {/* INTERACTIVE VISUAL CHARTS SECTION */}
+      <FinanceOverviewCharts
+        timeframeLabel={timeframeLabel}
+        profitMargin={profitMargin}
+        netProfit={netProfit}
+        totalRevenue={totalRevenue}
+        timelineData={timelineData}
+        pillarChartData={pillarChartData}
+        pieData={pieData}
+      />
 
       {/* CASHFLOW DISTRIBUTION STREAM VISUAL (REQUIREMENT 7) */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs space-y-4">

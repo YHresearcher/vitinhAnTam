@@ -58,6 +58,9 @@ export default function TaiChinhPage() {
     financialSummary,
     debtCustomersList,
     technicianPayrollSummary,
+    timelineCashflowData,
+    categoryDistributionData,
+    debtAgingData,
   } = useFinancialData(timeframe);
 
   const filteredLedgerList = useMemo(() => {
@@ -108,6 +111,8 @@ export default function TaiChinhPage() {
         <FinanceOverviewTab
           financialSummary={financialSummary}
           timeframeLabel={timeframeLabel}
+          timelineData={timelineCashflowData}
+          categoryData={categoryDistributionData}
           onOpenWarrantyFund={() => setActiveTab('warranty_fund')}
         />
       )}

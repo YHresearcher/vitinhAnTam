@@ -4,7 +4,13 @@ import { useMemo } from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TimeframeOption } from './types';
 import { buildLedgerItems } from './financeHelpers';
-import { calculateFinancialSummary, calculateTechnicianPayroll } from './financeSummaryHelpers';
+import {
+  calculateFinancialSummary,
+  calculateTechnicianPayroll,
+  calculateTimelineCashflow,
+  calculateCategoryDistribution,
+  calculateDebtAging,
+} from './financeSummaryHelpers';
 
 export function useFinancialData(timeframe: TimeframeOption) {
   const { inventory, tickets, onsiteDispatches, licenseKeys, spareParts, shiftLogs } = useViTinhAnTamStore();
@@ -61,11 +67,26 @@ export function useFinancialData(timeframe: TimeframeOption) {
     return calculateTechnicianPayroll(shiftLogs, periodStart, periodEnd);
   }, [shiftLogs, periodStart, periodEnd]);
 
+  const timelineCashflowData = useMemo(() => {
+    return calculateTimelineCashflow(timeframeLedgerItems, timeframe);
+  }, [timeframeLedgerItems, timeframe]);
+
+  const categoryDistributionData = useMemo(() => {
+    return calculateCategoryDistribution(timeframeLedgerItems);
+  }, [timeframeLedgerItems]);
+
+  const debtAgingData = useMemo(() => {
+    return calculateDebtAging(debtCustomersList);
+  }, [debtCustomersList]);
+
   return {
     timeframeLabel,
     timeframeLedgerItems,
     financialSummary,
     debtCustomersList,
     technicianPayrollSummary,
+    timelineCashflowData,
+    categoryDistributionData,
+    debtAgingData,
   };
 }

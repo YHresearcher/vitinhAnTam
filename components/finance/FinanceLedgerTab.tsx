@@ -4,6 +4,7 @@ import React from 'react';
 import { LedgerItem } from './types';
 import { FinanceLedgerFilter } from './FinanceLedgerFilter';
 import { FinanceLedgerTable } from './FinanceLedgerTable';
+import { FinanceLedgerCharts } from './FinanceLedgerCharts';
 
 interface Props {
   ledgerList: LedgerItem[];
@@ -21,6 +22,7 @@ interface Props {
 export function FinanceLedgerTab(props: Props) {
   return (
     <div className="space-y-4">
+      <FinanceLedgerCharts ledgerList={props.ledgerList} />
       <FinanceLedgerFilter
         search={props.search}
         onSearchChange={props.onSearchChange}

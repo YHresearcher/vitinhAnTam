@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useViTinhAnTamStore } from "@/lib/store";
 import { WarrantyProvision } from "@/lib/supabase";
+import { FinanceWarrantyCharts } from "./FinanceWarrantyCharts";
 
 export function FinanceWarrantyFundTab() {
   const {
@@ -81,7 +82,27 @@ export function FinanceWarrantyFundTab() {
       lockedCount: warrantyProvisions.filter((p) => p.status === "locked").length,
       unlockedCount: warrantyProvisions.filter((p) => p.status === "unlocked").length,
       pendingCount: warrantyProvisions.filter((p) => p.status === "pending_approval").length,
+      settledCount: warrantyProvisions.filter((p) => p.status === "settled").length,
     };
+  }, [warrantyProvisions]);
+
+  const monthlyTrendData = useMemo(() => {
+    const map: Record<string, { provisioned: number; unlocked: number }> = {};
+    warrantyProvisions.forEach((p) => {
+      const d = new Date(p.created_at || new Date());
+      if (isNaN(d.getTime())) return;
+      const key = `T${d.getMonth() + 1}/${d.getFullYear().toString().slice(-2)}`;
+      if (!map[key]) map[key] = { provisioned: 0, unlocked: 0 };
+      map[key].provisioned += p.provision_amount;
+      if (p.status === "unlocked" || p.status === "settled") {
+        map[key].unlocked += p.provision_amount;
+      }
+    });
+    return Object.entries(map).map(([month, val]) => ({
+      month,
+      provisioned: val.provisioned,
+      unlocked: val.unlocked,
+    }));
   }, [warrantyProvisions]);
 
   const filteredList = useMemo(() => {
@@ -90,12 +111,6 @@ export function FinanceWarrantyFundTab() {
       return true;
     });
   }, [warrantyProvisions, statusFilter]);
-
-  // SVG Donut Chart Calculation
-  const radius = 70;
-  const circumference = 2 * Math.PI * radius;
-  const lockedStroke = (stats.lockedPercent / 100) * circumference;
-  const unlockedStroke = (stats.unlockedPercent / 100) * circumference;
 
   return (
     <div className="space-y-6">
@@ -139,101 +154,12 @@ export function FinanceWarrantyFundTab() {
         </div>
       )}
 
-      {/* 2-Column Overview: Donut Chart & KPI Cards */}
+      {/* VISUAL CHARTS: DONUT STATUS BREAKDOWN & MONTHLY TREND */}
+      <FinanceWarrantyCharts stats={stats} monthlyTrend={monthlyTrendData} />
+
+      {/* STATS & LIFECYCLE INFO CARDS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* DONUT CHART COMPONENT */}
-        <div className="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs flex flex-col justify-between items-center text-center">
-          <div className="w-full text-left mb-2">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">
-              Biểu Đồ Tròn Quỹ Bảo Hành 5%
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Phân bổ số dư bảo hành thực tế
-            </p>
-          </div>
-
-          <div className="relative w-48 h-48 my-3 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 180 180">
-              <circle
-                cx="90"
-                cy="90"
-                r={radius}
-                className="stroke-slate-100"
-                strokeWidth="20"
-                fill="transparent"
-              />
-              {stats.activeFundTotal > 0 && (
-                <>
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r={radius}
-                    className="stroke-amber-500 transition-all duration-500"
-                    strokeWidth="20"
-                    strokeDasharray={`${lockedStroke} ${circumference}`}
-                    strokeDashoffset="0"
-                    fill="transparent"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r={radius}
-                    className="stroke-emerald-500 transition-all duration-500"
-                    strokeWidth="20"
-                    strokeDasharray={`${unlockedStroke} ${circumference}`}
-                    strokeDashoffset={`-${lockedStroke}`}
-                    fill="transparent"
-                    strokeLinecap="round"
-                  />
-                </>
-              )}
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center text-center p-2">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                Tổng Quỹ
-              </span>
-              <span className="text-base font-black font-mono text-slate-900">
-                {stats.activeFundTotal.toLocaleString("vi-VN")}₫
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium">
-                {warrantyProvisions.length} hợp đồng
-              </span>
-            </div>
-          </div>
-
-          {/* Chart Legend */}
-          <div className="w-full grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 text-xs">
-            <div className="p-3 bg-amber-50/70 rounded-2xl border border-amber-200 text-left">
-              <div className="flex items-center gap-1.5 font-bold text-amber-900">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                <span>Đang phong tỏa</span>
-              </div>
-              <div className="text-sm font-black font-mono text-amber-800 mt-1">
-                {stats.lockedTotal.toLocaleString("vi-VN")}₫
-              </div>
-              <div className="text-[10px] text-amber-700 font-medium mt-0.5">
-                {stats.lockedCount} máy • {stats.lockedPercent}%
-              </div>
-            </div>
-
-            <div className="p-3 bg-emerald-50/70 rounded-2xl border border-emerald-200 text-left">
-              <div className="flex items-center gap-1.5 font-bold text-emerald-900">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                <span>Đã giải tỏa</span>
-              </div>
-              <div className="text-sm font-black font-mono text-emerald-800 mt-1">
-                {stats.unlockedTotal.toLocaleString("vi-VN")}₫
-              </div>
-              <div className="text-[10px] text-emerald-700 font-medium mt-0.5">
-                {stats.unlockedCount} máy • {stats.unlockedPercent}%
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* STATS & LIFECYCLE INFO CARDS */}
-        <div className="lg:col-span-7 flex flex-col justify-between space-y-4">
+        <div className="lg:col-span-12 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-5 bg-white rounded-3xl border border-slate-200 shadow-2xs space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase">

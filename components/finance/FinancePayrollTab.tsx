@@ -2,17 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronRight, Users } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from 'recharts';
+import { ChevronRight, Award, Clock, Wrench } from 'lucide-react';
+import { FinancePayrollCharts } from './FinancePayrollCharts';
 
 export interface TechSummary {
   name: string;
@@ -27,7 +18,13 @@ interface Props {
   timeframeLabel: string;
 }
 
+const TECH_PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
 export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: Props) {
+  const totalPayroll = technicianPayrollSummary.reduce((sum, k) => sum + k.totalWage + k.totalBonus, 0);
+  const totalShifts = technicianPayrollSummary.reduce((sum, k) => sum + k.shiftsCount, 0);
+  const totalTickets = technicianPayrollSummary.reduce((sum, k) => sum + k.ticketsDone, 0);
+
   const chartData = technicianPayrollSummary.map((ktv) => ({
     name: ktv.name.split(' ').slice(-1)[0] || ktv.name,
     fullName: ktv.name,
@@ -37,11 +34,20 @@ export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: 
     ticketsDone: ktv.ticketsDone,
   }));
 
+  const pieData = technicianPayrollSummary.map((ktv, idx) => ({
+    name: ktv.name,
+    value: ktv.totalWage + ktv.totalBonus,
+    tickets: ktv.ticketsDone,
+    color: TECH_PIE_COLORS[idx % TECH_PIE_COLORS.length],
+  }));
+
+  const formatCurrencyY = (v: number) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`);
+
   return (
-    <div className="space-y-4 font-sans">
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+    <div className="space-y-5 font-sans">
+      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h3 className="text-base font-bold text-slate-900">
+          <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
             Bảng Tổng Hợp Chi Trả Tiền Công &amp; Lương KTV
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -50,62 +56,56 @@ export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: 
         </div>
         <Link
           href="/tien-cong"
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
         >
           <span>Bảng Kê Chi Tiết Tiền Công</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
-      {/* Recharts Visual */}
-      {technicianPayrollSummary.length > 0 && (
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-purple-600" />
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              Biểu Đồ Thu Nhập &amp; Sản Lượng KTV ({timeframeLabel})
-            </h4>
+      {/* KPI STATS CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+            <Award className="w-5 h-5" />
           </div>
-          <div className="w-full h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
-                <YAxis
-                  stroke="#94a3b8"
-                  fontSize={10}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(v) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`)}
-                />
-                <RechartsTooltip
-                  content={({ active, payload }: any) => {
-                    if (active && payload && payload.length) {
-                      const d = payload[0].payload;
-                      return (
-                        <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
-                          <p className="font-bold border-b border-slate-700 pb-1 mb-1.5">{d.fullName}</p>
-                          <div className="space-y-1 font-mono">
-                            <div className="text-slate-300">Lương ca: {d.wage.toLocaleString('vi-VN')}₫</div>
-                            <div className="text-amber-400">Thưởng: {d.bonus.toLocaleString('vi-VN')}₫</div>
-                            <div className="text-emerald-400 font-bold">Tổng: {d.total.toLocaleString('vi-VN')}₫</div>
-                            <div className="text-cyan-300 text-[11px]">Đã xử lý: {d.ticketsDone} thiết bị</div>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} iconType="circle" />
-                <Bar dataKey="wage" name="Lương Ca" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
-                <Bar dataKey="bonus" name="Thưởng Hoàn Thành" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase">Tổng Quỹ Lương KTV</div>
+            <div className="text-base font-black text-purple-900 font-mono">{totalPayroll.toLocaleString('vi-VN')}₫</div>
           </div>
         </div>
+
+        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase">Tổng Ca Trực Thực Hiện</div>
+            <div className="text-base font-black text-blue-900 font-mono">{totalShifts} Ca Trực</div>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+            <Wrench className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase">Thiết Bị Đã Hoàn Tất</div>
+            <div className="text-base font-black text-emerald-900 font-mono">{totalTickets} Máy</div>
+          </div>
+        </div>
+      </div>
+
+      {/* VISUAL RECHARTS SECTION: COMPOSED BAR + PIE */}
+      {technicianPayrollSummary.length > 0 && (
+        <FinancePayrollCharts
+          chartData={chartData}
+          pieData={pieData}
+          totalPayroll={totalPayroll}
+        />
       )}
 
+      {/* TECH SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {technicianPayrollSummary.length === 0 ? (
           <div className="col-span-3 bg-white p-8 rounded-2xl border border-slate-200 text-center text-xs text-slate-400">
