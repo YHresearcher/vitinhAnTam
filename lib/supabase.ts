@@ -3,19 +3,21 @@ import { createClient } from '@supabase/supabase-js';
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 // Tự động chuẩn hóa nếu người dùng copy cả đường dẫn /rest/v1/ từ Dashboard
 const supabaseUrl = rawSupabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabasePublishableKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = (): boolean => {
   return Boolean(
     supabaseUrl &&
-    supabaseAnonKey &&
+    supabasePublishableKey &&
     supabaseUrl !== 'https://your-project.supabase.co' &&
     !supabaseUrl.includes('placeholder')
   );
 };
 
 export const supabase = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabasePublishableKey)
   : null;
 
 // ==========================================
