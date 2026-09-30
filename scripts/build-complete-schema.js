@@ -13,6 +13,23 @@ sqlStatements.push(`-- =========================================================
 -- Chạy toàn bộ file này 1 lần trong Supabase SQL Editor.
 -- ============================================================================
 
+-- Dọn dẹp các bảng cũ trước đó (giúp chuyển cột id từ UUID sang TEXT tương thích 100% không còn lỗi 22P02)
+DROP TABLE IF EXISTS warranty_provisions CASCADE;
+DROP TABLE IF EXISTS key_release_requests CASCADE;
+DROP TABLE IF EXISTS license_keys CASCADE;
+DROP TABLE IF EXISTS key_categories CASCADE;
+DROP TABLE IF EXISTS key_email_templates CASCADE;
+DROP TABLE IF EXISTS customer_reviews CASCADE;
+DROP TABLE IF EXISTS faqs CASCADE;
+DROP TABLE IF EXISTS system_settings CASCADE;
+DROP TABLE IF EXISTS shift_logs CASCADE;
+DROP TABLE IF EXISTS onsite_dispatches CASCADE;
+DROP TABLE IF EXISTS service_tickets CASCADE;
+DROP TABLE IF EXISTS spare_parts CASCADE;
+DROP TABLE IF EXISTS inventory_items CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+
 -- 1. BẢNG THÀNH VIÊN NỘI BỘ & PHÂN QUYỀN (users)
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
