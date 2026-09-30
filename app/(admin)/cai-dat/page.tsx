@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
-import { SystemBrandIcon } from '@/components/Logo';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
+import { UserAccount } from '@/lib/supabase';
 import Link from 'next/link';
 import {
   Tabs,
@@ -54,6 +54,8 @@ export default function CaiDatPage() {
     systemSettings,
     updateSystemSettings,
     canAccessSettings,
+    users,
+    changeUserPassword,
     faqs,
     addFaq,
     updateFaq,
@@ -84,6 +86,10 @@ export default function CaiDatPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForm] = Form.useForm();
 
+  // Member Password Modal states
+  const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
+  const [memberNewPassword, setMemberNewPassword] = useState('');
+  const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
 
 
   const handleChange = (field: keyof SystemSettings, val: string) => {
@@ -113,9 +119,6 @@ export default function CaiDatPage() {
     const uploadFormData = new FormData();
     uploadFormData.append('file', file);
     uploadFormData.append('folder', 'header');
-    if (formData[field]) {
-      uploadFormData.append('oldUrl', formData[field] || '');
-    }
 
     const hide = message.loading(`Đang tải lên file ${field === 'logoUrl' ? 'Logo' : 'Favicon'}...`, 0);
 
@@ -132,7 +135,6 @@ export default function CaiDatPage() {
         setFormData((prev) => ({
           ...prev,
           [field]: data.url,
-          ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
         }));
         message.success(`Đã lưu ảnh vào thư mục hình ảnh (${data.url})! Nhấn "Lưu cấu hình" để áp dụng.`);
       } else {
@@ -141,11 +143,7 @@ export default function CaiDatPage() {
         reader.onload = (event) => {
           const result = event.target?.result as string;
           if (result) {
-            setFormData((prev) => ({
-              ...prev,
-              [field]: result,
-              ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
-            }));
+            setFormData((prev) => ({ ...prev, [field]: result }));
             message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
           }
         };
@@ -157,11 +155,7 @@ export default function CaiDatPage() {
       reader.onload = (event) => {
         const result = event.target?.result as string;
         if (result) {
-          setFormData((prev) => ({
-            ...prev,
-            [field]: result,
-            ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
-          }));
+          setFormData((prev) => ({ ...prev, [field]: result }));
           message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
         }
       };
@@ -169,47 +163,6 @@ export default function CaiDatPage() {
     }
 
     e.target.value = '';
-  };
-
-  const handleResetLogo = async () => {
-    const old = formData.logoUrl;
-    if (old && (old.startsWith('/img/') || old.startsWith('/uploads/'))) {
-      try {
-        await fetch('/api/upload', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: old }),
-        });
-      } catch (e) {
-        console.warn('Lỗi khi xóa file logo cũ:', e);
-      }
-    }
-    setFormData((prev) => ({
-      ...prev,
-      logoUrl: '',
-      logoDisplayMode: 'icon_with_text',
-    }));
-    message.info('Đã chuyển về Logo Hệ Thống Mới.');
-  };
-
-  const handleResetFavicon = async () => {
-    const old = formData.faviconUrl;
-    if (old && (old.startsWith('/img/') || old.startsWith('/uploads/'))) {
-      try {
-        await fetch('/api/upload', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: old }),
-        });
-      } catch (e) {
-        console.warn('Lỗi khi xóa file favicon cũ:', e);
-      }
-    }
-    setFormData((prev) => ({
-      ...prev,
-      faviconUrl: '',
-    }));
-    message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
   };
 
   const handleSaveSettings = async (e?: React.FormEvent) => {
@@ -250,7 +203,7 @@ export default function CaiDatPage() {
           zaloLink: 'https://zalo.me/0909053058',
           whatsappNumber: '0909053058',
           whatsappLink: 'https://wa.me/84909053058',
-          email: 'lienhe@vitinhantam.com',
+          email: 'lienhe@vitinhantham.vn',
           address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
           streetAddress: '52 Nguyễn Cửu Vân',
           district: 'P. Long An',
@@ -260,7 +213,7 @@ export default function CaiDatPage() {
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
           footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
+          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
           storeName: 'Vi Tính An Tâm',
         };
         setFormData(defaultData);
@@ -329,6 +282,23 @@ export default function CaiDatPage() {
   };
 
 
+  const handleSaveMemberPassword = async () => {
+    if (!memberForPassword) return;
+    if (!memberNewPassword.trim() || memberNewPassword.trim().length < 4) {
+      message.error('Mật khẩu phải có tối thiểu 4 ký tự!');
+      return;
+    }
+    setIsChangingMemberPassword(true);
+    const ok = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
+    setIsChangingMemberPassword(false);
+    if (ok) {
+      message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
+      setMemberForPassword(null);
+      setMemberNewPassword('');
+    } else {
+      message.error('Không thể cập nhật mật khẩu.');
+    }
+  };
 
   const handleDeleteReview = async (id: string) => {
     await deleteReview(id);
@@ -510,11 +480,14 @@ export default function CaiDatPage() {
                       {formData.logoUrl && (
                         <button
                           type="button"
-                          onClick={handleResetLogo}
+                          onClick={() => {
+                            handleChange('logoUrl', '');
+                            message.info('Đã xóa logo cũ. Nhấn "Lưu cấu hình" để áp dụng.');
+                          }}
                           className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Dùng Logo Hệ Thống Mới</span>
+                          <span>Xóa logo hiện tại</span>
                         </button>
                       )}
                     </div>
@@ -537,12 +510,17 @@ export default function CaiDatPage() {
                               className="h-14 sm:h-18 w-auto max-h-20 max-w-[120px] sm:max-w-[160px] object-contain"
                             />
                           ) : (
-                            <SystemBrandIcon className="w-14 h-14 sm:w-16 sm:h-16" />
+                            <span className="text-xs font-medium text-slate-400">Chưa cấu hình logo</span>
                           )}
                           <div className="flex flex-col leading-none">
-                            <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
-                              {formData.storeName || 'Vi Tính An Tâm'}
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-black text-xl sm:text-2xl text-[#2B1810]">
+                                {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
+                              </span>
+                              <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
+                                {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
+                              </span>
+                            </div>
                             <span className="text-xs sm:text-[13px] font-semibold text-[#6E5D53] tracking-wider uppercase mt-1">
                               {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
                             </span>
@@ -696,28 +674,32 @@ export default function CaiDatPage() {
 
                         <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
                           <div className="flex items-center gap-2.5">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={formData.faviconUrl || '/favicon.ico'}
-                              alt="Favicon Preview"
-                              className="w-6 h-6 object-contain rounded-xs shrink-0"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/favicon.ico';
-                              }}
-                            />
+                            {formData.faviconUrl ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
+                              <img
+                                src={formData.faviconUrl}
+                                alt="Favicon Preview"
+                                className="w-6 h-6 object-contain rounded-xs shrink-0"
+                              />
+                            ) : (
+                              <span className="w-6 h-6 rounded-xs border border-dashed border-slate-300 shrink-0" />
+                            )}
                             <span className="text-xs font-medium text-slate-700">
-                              {formData.faviconUrl ? 'Favicon tùy chỉnh' : 'Favicon hệ thống'}
+                              {formData.faviconUrl ? 'Favicon tùy chỉnh' : 'Chưa cấu hình favicon'}
                             </span>
                           </div>
 
                           {formData.faviconUrl && (
                             <button
                               type="button"
-                              onClick={handleResetFavicon}
+                              onClick={() => {
+                                handleChange('faviconUrl', '');
+                                message.info('Đã xóa favicon cũ. Nhấn "Lưu cấu hình" để áp dụng.');
+                              }}
                               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Khôi phục mặc định</span>
+                              <span>Xóa favicon hiện tại</span>
                             </button>
                           )}
                         </div>
@@ -1098,6 +1080,100 @@ export default function CaiDatPage() {
             ),
           },
           {
+            key: 'security',
+            label: (
+              <span className="font-bold text-xs sm:text-sm">
+                Bảo Mật &amp; Mật Khẩu
+              </span>
+            ),
+            children: (
+              <Card className="rounded-2xl border-slate-200 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Quản Lý &amp; Đổi Mật Khẩu Thành Viên</h3>
+                    <p className="text-xs text-slate-500">
+                      Quản trị viên có quyền sửa đổi mật khẩu đăng nhập của tất cả nhân sự trong hệ thống.
+                    </p>
+                  </div>
+                  <Link
+                    href="/thanh-vien"
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
+                  >
+                    Quản lý phân quyền chi tiết →
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-slate-100">
+                  {users.map((u) => (
+                    <div
+                      key={u.id}
+                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-xl ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs shadow-xs`}
+                        >
+                          {u.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs sm:text-sm text-slate-900">{u.name}</span>
+                            <Tag
+                              color={
+                                u.role === 'admin'
+                                  ? 'blue'
+                                  : u.role === 'technician'
+                                  ? 'green'
+                                  : u.role === 'outsourced'
+                                  ? 'orange'
+                                  : 'purple'
+                              }
+                              className="text-[10px] m-0 font-bold"
+                            >
+                              {u.role === 'admin'
+                                ? 'ADMIN'
+                                : u.role === 'technician'
+                                ? 'KỸ THUẬT'
+                                : u.role === 'outsourced'
+                                ? 'THUÊ NGOÀI'
+                                : 'KINH DOANH'}
+                            </Tag>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
+                            <span>
+                              Tên đăng nhập:{' '}
+                              <strong className="font-mono text-slate-800">{u.email}</strong>
+                            </span>
+                            <span>•</span>
+                            <span>
+                              SĐT: <span className="font-mono text-slate-700">{u.phone}</span>
+                            </span>
+                            <span>•</span>
+                            <span>
+                              Mật khẩu: <span className="font-mono text-blue-600 font-bold">••••••</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-end sm:self-center">
+                        <Button
+                          onClick={() => {
+                            setMemberForPassword(u);
+                            setMemberNewPassword('');
+                          }}
+                          className="text-xs font-semibold hover:border-amber-500 hover:text-amber-600"
+                        >
+                          Đổi Mật Khẩu
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ),
+          },
+          {
             key: 'key-email',
             label: (
               <span className="font-bold text-xs sm:text-sm">
@@ -1227,6 +1303,37 @@ export default function CaiDatPage() {
         </Form>
       </Modal>
 
+      {/* Modal Đổi Mật Khẩu Thành Viên */}
+      <Modal
+        title="Đổi Mật Khẩu Thành Viên"
+        open={Boolean(memberForPassword)}
+        onCancel={() => {
+          setMemberForPassword(null);
+          setMemberNewPassword('');
+        }}
+        onOk={handleSaveMemberPassword}
+        confirmLoading={isChangingMemberPassword}
+        okText="Lưu Mật Khẩu Mới"
+        cancelText="Hủy"
+      >
+        {memberForPassword && (
+          <div className="space-y-4 pt-2">
+            <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
+              <div>Thành viên: <strong className="text-slate-900">{memberForPassword.name}</strong></div>
+              <div>Tên đăng nhập: <strong className="font-mono text-slate-900">{memberForPassword.email}</strong></div>
+              <div>Vai trò: <strong className="text-blue-700 uppercase">{memberForPassword.role}</strong></div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+              <Input.Password
+                value={memberNewPassword}
+                onChange={(e) => setMemberNewPassword(e.target.value)}
+                placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)"
+              />
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -1,9 +1,31 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { isAbsolute, join, relative } from 'node:path';
 import { initialSystemSettings, SystemSettings } from '@/lib/store';
 
 const DATA_DIR = join(process.cwd(), '.data');
 const SETTINGS_FILE = join(DATA_DIR, 'settings.json');
+
+const BRAND_ASSET_FIELDS = ['logoUrl', 'faviconUrl'] as const;
+
+type BrandAssetField = (typeof BRAND_ASSET_FIELDS)[number];
+
+function removeReplacedLocalAsset(previousUrl: string | undefined, nextUrl: string | undefined) {
+  if (!previousUrl || previousUrl === nextUrl || !previousUrl.startsWith('/img/')) return;
+
+  // Chỉ xóa file nằm trong public/img, không bao giờ đụng tới URL ngoài hệ thống.
+  const relativePath = previousUrl.split('?')[0].replace(/^\/img\//, '');
+  const assetPath = join(process.cwd(), 'public', 'img', relativePath);
+  const imgRoot = join(process.cwd(), 'public', 'img');
+  const pathFromImgRoot = relative(imgRoot, assetPath);
+
+  if (!isAbsolute(pathFromImgRoot) && !pathFromImgRoot.startsWith('..') && existsSync(assetPath)) {
+    try {
+      unlinkSync(assetPath);
+    } catch (error) {
+      console.warn(`Không thể xóa asset thương hiệu cũ (${previousUrl}):`, error);
+    }
+  }
+}
 
 let memorySettings: SystemSettings | null = null;
 
@@ -38,6 +60,13 @@ export function getStoredSettings(): SystemSettings {
 export function saveStoredSettings(data: Partial<SystemSettings>): SystemSettings {
   const current = getStoredSettings();
   const updated: SystemSettings = { ...current, ...data };
+
+  for (const field of BRAND_ASSET_FIELDS as readonly BrandAssetField[]) {
+    if (field in data) {
+      removeReplacedLocalAsset(current[field], updated[field]);
+    }
+  }
+
   memorySettings = updated;
 
   try {

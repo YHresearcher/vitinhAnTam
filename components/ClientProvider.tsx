@@ -13,14 +13,12 @@ function FaviconUpdater() {
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const targetFavicon = systemSettings.faviconUrl?.trim() || '/favicon.ico';
-
+    const targetFavicon = systemSettings.faviconUrl?.trim();
     const links = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
-    if (links.length > 0) {
-      links.forEach((l) => {
-        l.href = targetFavicon;
-      });
-    } else {
+
+    // Favicon tùy chỉnh thay thế hoàn toàn favicon cũ; khi rỗng thì gỡ mọi favicon.
+    links.forEach((link) => link.remove());
+    if (targetFavicon) {
       const link = document.createElement('link');
       link.rel = 'icon';
       link.href = targetFavicon;
