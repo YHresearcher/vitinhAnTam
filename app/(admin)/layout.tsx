@@ -183,6 +183,7 @@ export default function AdminLayout({
             {/* Quick Key Navigation */}
             <Link
               href="/quan-ly-key"
+              prefetch={true}
               className="flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] text-[#2B1810] border-[#E8E2D9] hover:border-[#C0392B] hover:bg-red-50/30 shrink-0"
               title="Kho Key Bản Quyền"
             >
@@ -196,6 +197,7 @@ export default function AdminLayout({
             {/* Create Ticket Button */}
             <Link
               href="/phieu-sua-chua/tao-moi"
+              prefetch={true}
               className="flex items-center gap-1 h-8.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />

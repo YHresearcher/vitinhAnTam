@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Drawer } from 'antd';
@@ -42,6 +42,12 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canAccessCRM,
     logout,
   } = useViTinhAnTamStore();
+
+  const handleNavClick = () => {
+    if (mobileOpen && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
 
   const pendingTicketsCount = tickets.filter(
     (t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received'
@@ -144,14 +150,30 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     },
   ];
 
-  const navItems = rawNavItems.filter((item) => item.visible);
+  const navItems = useMemo(() => {
+    return rawNavItems.filter((item) => item.visible);
+  }, [
+    canAccessPayroll,
+    canAccessCRM,
+    canManageUsers,
+    canAccessSettings,
+    customers.length,
+    pendingTicketsCount,
+    pendingDispatchesCount,
+    pendingKeyRequestsCount,
+  ]);
 
   const sidebarContent = (
     <div className="flex flex-col justify-between h-full bg-white font-sans select-none">
       <div className="flex flex-col">
         {/* Header Branding */}
         <div className="min-h-[68px] py-2 px-4 flex items-center justify-between border-b border-slate-100">
-          <Link href="/dashboard" onClick={onCloseMobile} className="focus:outline-none">
+          <Link
+            href="/dashboard"
+            prefetch={true}
+            onClick={handleNavClick}
+            className="focus:outline-none"
+          >
             <Logo />
           </Link>
           {onCloseMobile && (
@@ -178,7 +200,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={onCloseMobile}
+                prefetch={true}
+                onClick={handleNavClick}
                 className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 ${
                   isActive
                     ? 'bg-blue-50/90 text-blue-700 font-bold border border-blue-200/80 shadow-xs'
@@ -213,7 +236,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
 
           <Link
             href="/tra-cuu-bao-hanh"
-            onClick={onCloseMobile}
+            prefetch={true}
+            onClick={handleNavClick}
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
           >
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -222,7 +246,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
 
           <Link
             href="/"
-            onClick={onCloseMobile}
+            prefetch={true}
+            onClick={handleNavClick}
             className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
           >
             <div className="flex items-center gap-2.5">
@@ -235,7 +260,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           <button
             type="button"
             onClick={() => {
-              if (onCloseMobile) onCloseMobile();
+              handleNavClick();
               logout();
             }}
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors text-xs font-semibold w-full text-left mt-1 cursor-pointer"
@@ -270,8 +295,9 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         styles={{ body: { padding: 0 } }}
         width={280}
         closable={false}
+        destroyOnClose
       >
-        {sidebarContent}
+        {mobileOpen ? sidebarContent : null}
       </Drawer>
     </>
   );
