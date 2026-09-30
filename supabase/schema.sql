@@ -60,6 +60,13 @@ CREATE TABLE IF NOT EXISTS spare_parts (
   condition TEXT DEFAULT 'new', -- new (mới 100%), used (zin bóc máy / cũ 99%)
   quantity_in_stock INT NOT NULL DEFAULT 0,
   warranty_months INT DEFAULT 36,
+  distributor TEXT, -- Viễn Sơn, Vĩnh Xuân, Samsung Zin bóc máy
+  unit_cost NUMERIC NOT NULL DEFAULT 0,
+  unit_price NUMERIC NOT NULL DEFAULT 0,
+  shelf_location TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
 -- 4. Bảng Phiếu dịch vụ & Bảo hành đa tầng (Multi-tier Tickets)
 -- Các cột JSONB đều có DEFAULT vì trong ServiceTicket (TS) chúng là optional
@@ -189,9 +196,11 @@ ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS estimated_arrival_minutes INT;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS issue_summary TEXT;
 
-  distributor TEXT, -- Viễn Sơn, Vĩnh Xuân, Samsung Zin bóc máy
-  unit_cost NUMERIC NOT NULL DEFAULT 0,
-  unit_price NUMERIC NOT NULL DEFAULT 0,
-  shelf_location TEXT,
-  notes TEXT
-);
+-- Tắt RLS để các thao tác từ Frontend qua Anon Key diễn ra suôn sẻ
+ALTER TABLE customers DISABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory_items DISABLE ROW LEVEL SECURITY;
+ALTER TABLE spare_parts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE service_tickets DISABLE ROW LEVEL SECURITY;
+ALTER TABLE onsite_dispatches DISABLE ROW LEVEL SECURITY;
+ALTER TABLE shift_logs DISABLE ROW LEVEL SECURITY;
+
