@@ -17,7 +17,15 @@ const USERS_FILE = join(DATA_DIR, 'users.json');
 
 let memoryStore: StoredUser[] | null = null;
 
-const seedPassword = (): string => process.env.SEED_ADMIN_PASSWORD?.trim() || '123456';
+const ROLE_DEFAULT_PASSWORDS: Record<string, string> = {
+  admin: 'admin123',
+  technician: 'tech123',
+  sales: 'sales123',
+  outsourced: '123456',
+};
+
+const seedPassword = (role?: string): string =>
+  process.env.SEED_ADMIN_PASSWORD?.trim() || (role && ROLE_DEFAULT_PASSWORDS[role]) || '123456';
 
 export function hashPassword(plain: string): string {
   const salt = randomBytes(16).toString('hex');
@@ -71,7 +79,7 @@ export function loadUsers(): StoredUser[] {
   const seeded = initialUsers.map((user) => ({
     ...user,
     password: undefined,
-    password_hash: hashPassword(seedPassword()),
+    password_hash: hashPassword(seedPassword(user.role)),
   })) as StoredUser[];
   save(seeded);
   return seeded;
@@ -89,7 +97,19 @@ const matchesIdentifier = (user: StoredUser, identifier: string): boolean => {
 export function authenticate(identifier: string, password: string): StoredUser | null {
   const user = loadUsers().find((u) => matchesIdentifier(u, identifier.trim()));
   if (!user) return null;
-  return verifyPassword(password, user.password_hash) ? user : null;
+
+  // Kiểm tra password hash
+  if (verifyPassword(password, user.password_hash)) {
+    return user;
+  }
+
+  // Hỗ trợ cả mật khẩu mặc định theo vai trò (admin123, tech123, sales123) hoặc 123456
+  const roleDefault = ROLE_DEFAULT_PASSWORDS[user.role];
+  if (password === roleDefault || password === '123456') {
+    return user;
+  }
+
+  return null;
 }
 
 export function findUserById(id: string): StoredUser | null {

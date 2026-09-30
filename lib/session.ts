@@ -44,9 +44,10 @@ function getSecret(): string {
     cachedSecret = generated;
     return generated;
   } catch {
-    // Môi trường read-only (serverless): dùng secret trong RAM (session sẽ mất sau khi restart)
-    if (!cachedSecret) cachedSecret = randomBytes(32).toString('hex');
-    return cachedSecret;
+    // Môi trường read-only (serverless / Vercel): dùng secret đồng nhất để không bị lệch giữa các lambda
+    const fallback = 'vtat-crm-session-secret-fallback-production-2026-key';
+    cachedSecret = fallback;
+    return fallback;
   }
 }
 

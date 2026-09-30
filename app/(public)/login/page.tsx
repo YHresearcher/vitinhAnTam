@@ -57,9 +57,8 @@ export default function LoginPage() {
 
     if (res.success && res.user) {
       setSuccessMessage(res.message);
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 250);
+      // Chuyển hướng ngay lập tức đến trang quản trị
+      window.location.replace('/dashboard');
     } else {
       setErrorMessage(res.message || 'Mật khẩu không chính xác!');
     }

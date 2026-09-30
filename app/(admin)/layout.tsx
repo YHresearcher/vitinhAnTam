@@ -89,12 +89,23 @@ export default function AdminLayout({
     router.push('/login');
   };
 
-  // Màn hình chờ kiểm tra quyền hoặc chuyển hướng nếu chưa đăng nhập
-  if (isLoading || !isLoggedIn) {
+  // Màn hình chờ đang tải dữ liệu / kiểm tra phiên
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-12 h-12 border-3 border-red-200 border-t-red-600 rounded-full animate-spin mb-4" />
+        <h2 className="text-sm font-bold text-slate-800 mb-1">Đang tải trung tâm điều phối Vi Tính An Tâm...</h2>
+        <p className="text-xs text-slate-500">Đang đồng bộ quyền hạn và dữ liệu hệ thống</p>
+      </div>
+    );
+  }
+
+  // Màn hình yêu cầu đăng nhập nếu chưa có phiên
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold mb-3 border border-blue-200">
-          Bảo Mật
+        <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold mb-3 border border-amber-200">
+          Bảo Mật Nội Bộ
         </span>
         <h2 className="text-base font-bold text-slate-900 mb-1">Yêu cầu xác thực tài khoản</h2>
         <p className="text-xs text-slate-500 mb-4 max-w-sm">
@@ -102,7 +113,7 @@ export default function AdminLayout({
         </p>
         <Link
           href="/login"
-          className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm"
+          className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm"
         >
           Đến trang Đăng Nhập
         </Link>
