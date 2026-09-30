@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import { ServiceTicket } from '@/lib/supabase';
+import { TicketDetailModal } from '@/components/admin/TicketDetailModal';
 
 const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string; text: string; border: string }> = {
   received: { label: 'Tiếp nhận mới', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
@@ -17,7 +19,7 @@ const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string
   cancelled: { label: 'Hủy phiếu', bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
 };
 
-export default function PhieuSuaChuaPage() {
+function PhieuSuaChuaContent() {
   const {
     tickets,
     users,
@@ -27,6 +29,20 @@ export default function PhieuSuaChuaPage() {
     updateTicketStatus,
     assignTicketTechnician,
   } = useStore();
+
+  const searchParams = useSearchParams();
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
+  // Sync ticketId from URL query param
+  useEffect(() => {
+    const ticketIdParam = searchParams.get('ticketId') || searchParams.get('id') || searchParams.get('code');
+    if (ticketIdParam) {
+      const match = tickets.find((t) => t.id === ticketIdParam || t.ticket_code === ticketIdParam);
+      if (match) {
+        setSelectedTicketId(match.id);
+      }
+    }
+  }, [searchParams, tickets]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -269,6 +285,7 @@ export default function PhieuSuaChuaPage() {
                 <th className="py-3 px-4">Trạng Thái</th>
                 <th className="py-3 px-4">KTV</th>
                 <th className="py-3 px-4 text-right">Chi Phí</th>
+                <th className="py-3 px-4 text-center">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-xs">
@@ -452,6 +469,17 @@ export default function PhieuSuaChuaPage() {
                           </div>
                         )}
                       </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTicketId(ticket.id)}
+                          className="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 hover:border-blue-600 rounded-lg text-xs font-bold transition-all shadow-2xs"
+                        >
+                          Mở Phiếu
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -460,6 +488,28 @@ export default function PhieuSuaChuaPage() {
           </table>
         </div>
       </div>
+
+      {/* Ticket Detail Modal */}
+      {selectedTicketId && (
+        <TicketDetailModal
+          ticketId={selectedTicketId}
+          onClose={() => setSelectedTicketId(null)}
+        />
+      )}
     </div>
+  );
+}
+
+export default function PhieuSuaChuaPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-8 text-center text-slate-500 text-sm font-medium">
+          Đang tải dữ liệu phiếu sửa chữa...
+        </div>
+      }
+    >
+      <PhieuSuaChuaContent />
+    </Suspense>
   );
 }

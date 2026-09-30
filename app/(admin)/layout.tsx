@@ -28,6 +28,8 @@ export default function AdminLayout({
     canAccessCRM,
     logout,
     themeMode,
+    currentLang,
+    setLang,
   } = useViTinhAnTamStore();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -193,6 +195,30 @@ export default function AdminLayout({
 
             {/* Theme Toggle Icon Button (Dark / Light) */}
             <ThemeToggle variant="icon" />
+
+            {/* Language Switcher */}
+            <div className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setLang('vi')}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  currentLang === 'vi' ? 'bg-white text-blue-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title="Tiếng Việt"
+              >
+                VN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang('en')}
+                className={`px-1.5 py-0.5 rounded transition-all ${
+                  currentLang === 'en' ? 'bg-white text-blue-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'
+                }`}
+                title="English"
+              >
+                EN
+              </button>
+            </div>
 
             {/* Create Ticket Button */}
             <Link

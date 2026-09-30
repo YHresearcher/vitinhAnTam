@@ -2,7 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Users } from 'lucide-react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from 'recharts';
 
 export interface TechSummary {
   name: string;
@@ -18,6 +28,15 @@ interface Props {
 }
 
 export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: Props) {
+  const chartData = technicianPayrollSummary.map((ktv) => ({
+    name: ktv.name.split(' ').slice(-1)[0] || ktv.name,
+    fullName: ktv.name,
+    wage: ktv.totalWage,
+    bonus: ktv.totalBonus,
+    total: ktv.totalWage + ktv.totalBonus,
+    ticketsDone: ktv.ticketsDone,
+  }));
+
   return (
     <div className="space-y-4 font-sans">
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
@@ -37,6 +56,55 @@ export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: 
           <ChevronRight className="w-3.5 h-3.5" />
         </Link>
       </div>
+
+      {/* Recharts Visual */}
+      {technicianPayrollSummary.length > 0 && (
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs space-y-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-purple-600" />
+            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+              Biểu Đồ Thu Nhập &amp; Sản Lượng KTV ({timeframeLabel})
+            </h4>
+          </div>
+          <div className="w-full h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
+                <YAxis
+                  stroke="#94a3b8"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`)}
+                />
+                <RechartsTooltip
+                  content={({ active, payload }: any) => {
+                    if (active && payload && payload.length) {
+                      const d = payload[0].payload;
+                      return (
+                        <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
+                          <p className="font-bold border-b border-slate-700 pb-1 mb-1.5">{d.fullName}</p>
+                          <div className="space-y-1 font-mono">
+                            <div className="text-slate-300">Lương ca: {d.wage.toLocaleString('vi-VN')}₫</div>
+                            <div className="text-amber-400">Thưởng: {d.bonus.toLocaleString('vi-VN')}₫</div>
+                            <div className="text-emerald-400 font-bold">Tổng: {d.total.toLocaleString('vi-VN')}₫</div>
+                            <div className="text-cyan-300 text-[11px]">Đã xử lý: {d.ticketsDone} thiết bị</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} iconType="circle" />
+                <Bar dataKey="wage" name="Lương Ca" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+                <Bar dataKey="bonus" name="Thưởng Hoàn Thành" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {technicianPayrollSummary.length === 0 ? (

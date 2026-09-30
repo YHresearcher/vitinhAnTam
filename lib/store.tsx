@@ -214,6 +214,7 @@ interface StoreContextType {
   // Ticket actions
   addServiceTicket: (ticket: Omit<ServiceTicket, 'id' | 'created_at'>) => Promise<ServiceTicket>;
   updateTicketStatus: (id: string, status: ServiceTicket['status']) => Promise<boolean>; // Tech & Admin only
+  updateTicketDetails: (id: string, updates: Partial<ServiceTicket>) => Promise<boolean>;
 
   // Onsite dispatch actions
   updateDispatchStatus: (id: string, status: OnsiteDispatch['status']) => Promise<void>;
@@ -604,6 +605,9 @@ export function StoreProvider({
     setCurrentLang(lang);
     if (typeof window !== 'undefined') {
       localStorage.setItem('vtat_lang_v2', lang);
+      try {
+        document.documentElement.lang = lang;
+      } catch {}
     }
   };
 
@@ -797,10 +801,29 @@ export function StoreProvider({
           })
           .catch(() => {});
 
+        // Tự động hóa nhận diện ngôn ngữ & đồng bộ
+        let resolvedLang: 'vi' | 'en' = 'vi';
         const savedLang = localStorage.getItem('vtat_lang_v2');
         if (savedLang === 'vi' || savedLang === 'en') {
-          setCurrentLang(savedLang);
+          resolvedLang = savedLang;
+        } else {
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryLang = urlParams.get('lang');
+            if (queryLang === 'vi' || queryLang === 'en') {
+              resolvedLang = queryLang;
+            } else if (typeof navigator !== 'undefined') {
+              const navLang = (navigator.language || (navigator.languages && navigator.languages[0]) || '').toLowerCase();
+              if (navLang && !navLang.startsWith('vi')) {
+                resolvedLang = 'en';
+              }
+            }
+          } catch {}
         }
+        setCurrentLang(resolvedLang);
+        try {
+          document.documentElement.lang = resolvedLang;
+        } catch {}
       }
 
       if (!supabasePulledOk) {
@@ -1858,6 +1881,23 @@ export function StoreProvider({
     return true;
   };
 
+  const updateTicketDetails = async (id: string, updates: Partial<ServiceTicket>): Promise<boolean> => {
+    setTickets((prev) => {
+      const next = prev.map((t) => (t.id === id ? { ...t, ...updates } : t));
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('service_tickets').update(updates).eq('id', id),
+        'Cập nhật thông tin phiếu'
+      );
+    }
+    return true;
+  };
+
   const assignTicketTechnician = async (id: string, technicianName: string): Promise<boolean> => {
     if (!canAssignTasks()) {
       return false;
@@ -2437,6 +2477,7 @@ export function StoreProvider({
       deleteInventoryItem,
       addServiceTicket,
       updateTicketStatus,
+      updateTicketDetails,
       assignTicketTechnician,
       updateDispatchStatus,
       assignDispatchTechnician,

@@ -245,7 +245,7 @@ export function DeadlineTrackingWidget() {
                         </span>
                       </span>
                       <Link
-                        href="/phieu-sua-chua"
+                        href={`/phieu-sua-chua?ticketId=${ticket.id}`}
                         onClick={() => setIsOpen(false)}
                         className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded-lg transition-colors"
                       >

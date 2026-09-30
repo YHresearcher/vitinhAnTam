@@ -3,6 +3,16 @@
 import React from "react";
 import { FinancialSummaryData } from "./types";
 import { useViTinhAnTamStore } from "@/lib/store";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from "recharts";
 
 interface Props {
   financialSummary: FinancialSummaryData;
@@ -100,7 +110,7 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
         })}
       </div>
 
-      {/* 4-PILLARS COMPARATIVE BAR CHART VISUAL (REQUIREMENT 7) */}
+      {/* 4-PILLARS COMPARATIVE RECHARTS BAR CHART */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
@@ -111,66 +121,55 @@ export function FinanceOverviewTab({ financialSummary, timeframeLabel, onOpenWar
               So sánh trực quan Doanh thu, Chi phí vốn và Lợi nhuận gộp từng trụ cột
             </p>
           </div>
-          <div className="flex items-center gap-3 text-xs font-bold font-mono">
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-600" /><span>Doanh Thu</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-slate-300" /><span>Chi Phí Vốn</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-emerald-500" /><span>Lãi Gộp</span></div>
-          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-3">
-          {cards.map((c) => {
-            const revHeight = Math.max(8, Math.round((c.rev / maxBarValue) * 100));
-            const costHeight = Math.max(8, Math.round((c.cost / maxBarValue) * 100));
-            const profitHeight = Math.max(8, Math.round((Math.max(0, c.profit) / maxBarValue) * 100));
-
-            return (
-              <div key={c.title} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col justify-between space-y-3">
-                <div className="text-xs font-bold text-slate-800 truncate">{c.title}</div>
-                
-                {/* 3 Bars in column */}
-                <div className="h-36 flex items-end justify-center gap-3 pt-2 px-2 border-b border-slate-200">
-                  {/* Revenue Bar */}
-                  <div className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                    <span className="text-[10px] font-bold font-mono text-blue-700 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {(c.rev / 1000000).toFixed(1)}M
-                    </span>
-                    <div
-                      style={{ height: `${revHeight}%` }}
-                      className="w-full bg-blue-600 rounded-t-lg transition-all shadow-xs group-hover:bg-blue-700"
-                    />
-                  </div>
-
-                  {/* Cost Bar */}
-                  <div className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                    <span className="text-[10px] font-bold font-mono text-slate-600 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {(c.cost / 1000000).toFixed(1)}M
-                    </span>
-                    <div
-                      style={{ height: `${costHeight}%` }}
-                      className="w-full bg-slate-300 rounded-t-lg transition-all group-hover:bg-slate-400"
-                    />
-                  </div>
-
-                  {/* Profit Bar */}
-                  <div className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                    <span className="text-[10px] font-bold font-mono text-emerald-700 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {(c.profit / 1000000).toFixed(1)}M
-                    </span>
-                    <div
-                      style={{ height: `${profitHeight}%` }}
-                      className="w-full bg-emerald-500 rounded-t-lg transition-all shadow-xs group-hover:bg-emerald-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-500">
-                  <span>Lãi: <strong className="text-emerald-700 font-bold">{c.profit.toLocaleString("vi-VN")}₫</strong></span>
-                  <span>{c.rev > 0 ? Math.round((c.profit / c.rev) * 100) : 0}%</span>
-                </div>
-              </div>
-            );
-          })}
+        <div className="w-full h-64 pt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={[
+                { name: "Bán Máy", revenue: stream.machine.rev, cost: stream.machine.cost, profit: stream.machine.profit },
+                { name: "Sửa Chữa", revenue: stream.ticket.rev, cost: stream.ticket.cost, profit: stream.ticket.profit },
+                { name: "Cứu Hộ Onsite", revenue: stream.onsite.rev, cost: stream.onsite.cost, profit: stream.onsite.profit },
+                { name: "Key Bản Quyền", revenue: stream.key.rev, cost: stream.key.cost, profit: stream.key.profit },
+              ]}
+              margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
+              <YAxis
+                stroke="#94a3b8"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`)}
+              />
+              <RechartsTooltip
+                content={({ active, payload, label }: any) => {
+                  if (active && payload && payload.length) {
+                    const rev = payload.find((p: any) => p.dataKey === 'revenue')?.value || 0;
+                    const cost = payload.find((p: any) => p.dataKey === 'cost')?.value || 0;
+                    const profit = payload.find((p: any) => p.dataKey === 'profit')?.value || 0;
+                    const margin = rev > 0 ? Math.round((profit / rev) * 100) : 0;
+                    return (
+                      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
+                        <p className="font-bold border-b border-slate-700 pb-1 mb-1.5">{label}</p>
+                        <div className="space-y-1 font-mono">
+                          <div className="text-blue-400">Doanh thu: {rev.toLocaleString('vi-VN')}₫</div>
+                          <div className="text-slate-400">Chi phí vốn: {cost.toLocaleString('vi-VN')}₫</div>
+                          <div className="text-emerald-400 font-bold">Lãi gộp: +{profit.toLocaleString('vi-VN')}₫ ({margin}%)</div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} iconType="circle" />
+              <Bar dataKey="revenue" name="Doanh Thu" fill="#2563eb" radius={[4, 4, 0, 0]} barSize={22} />
+              <Bar dataKey="cost" name="Chi Phí Vốn" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={22} />
+              <Bar dataKey="profit" name="Lợi Nhuận Gộp" fill="#10b981" radius={[4, 4, 0, 0]} barSize={22} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
