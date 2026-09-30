@@ -331,7 +331,9 @@ export function StoreProvider({
         if (raw) {
           return { ...initialSystemSettings, ...JSON.parse(raw) };
         }
-      } catch (e) {}
+      } catch {
+        // Fallback to initialSystemSettings on JSON parse/storage failure
+      }
     }
     return initialSystemSettings;
   });

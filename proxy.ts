@@ -18,6 +18,7 @@ const PROTECTED_PAGES = [
   '/cai-dat',
   '/cuu-ho-onsite',
   '/quan-ly-key',
+  '/quan-ly-don-hang',
 ];
 
 const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
@@ -98,6 +99,7 @@ export const config = {
     '/cai-dat/:path*',
     '/cuu-ho-onsite/:path*',
     '/quan-ly-key/:path*',
+    '/quan-ly-don-hang/:path*',
     '/api/inventory/:path*',
     '/api/tickets/:path*',
   ],

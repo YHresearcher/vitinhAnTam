@@ -11,8 +11,6 @@ import {
   HardDrive,
   ShieldCheck,
   ArrowRight,
-  ArrowUp,
-  PhoneCall,
   MessageSquare,
   ChevronDown,
   Gift,
@@ -20,7 +18,6 @@ import {
   ScanLine,
   Search,
   Sparkles,
-  MapPin,
   Zap,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';

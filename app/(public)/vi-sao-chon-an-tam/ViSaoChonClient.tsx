@@ -9,7 +9,6 @@ import {
   HardDrive,
   Thermometer,
   Clock,
-  Phone,
   ArrowRight,
   CheckCircle2,
   XCircle,
@@ -17,10 +16,8 @@ import {
 } from 'lucide-react';
 
 export default function WhyUsPage() {
-  const { currentLang, systemSettings } = useViTinhAnTamStore();
+  const { currentLang } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
-  const hotline = systemSettings?.hotline || '0909.053.058';
-  const cleanHotline = hotline.replace(/\./g, '');
 
   return (
     <div className="w-full">

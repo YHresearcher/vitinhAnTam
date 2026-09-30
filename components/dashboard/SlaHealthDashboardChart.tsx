@@ -11,7 +11,7 @@ import {
   Tooltip,
   Cell,
 } from 'recharts';
-import { Clock, AlertTriangle, CheckCircle2, Flame } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 export interface SlaHealthData {
   overdue: number;

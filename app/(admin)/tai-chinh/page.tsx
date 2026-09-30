@@ -17,32 +17,7 @@ import { FinanceDebtTab } from '@/components/finance/FinanceDebtTab';
 
 export default function TaiChinhPage() {
   const { canAccessPayroll, warrantyProvisions } = useViTinhAnTamStore();
-
-  if (!canAccessPayroll()) {
-    return (
-      <div className="max-w-2xl mx-auto py-16 px-4">
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-5">
-          <div className="inline-block px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full uppercase">
-            Bảo Mật Nội Bộ
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-bold text-slate-900">Quyền Truy Cập Bị Giới Hạn</h2>
-            <p className="text-sm text-slate-600 max-w-md mx-auto">
-              Phân hệ tài chính &amp; doanh thu chỉ dành cho Quản Trị Viên (Admin).
-            </p>
-          </div>
-          <div className="pt-2">
-            <Link
-              href="/login"
-              className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg"
-            >
-              Đăng nhập bằng tài khoản Admin
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const hasAccess = canAccessPayroll();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt'>('overview');
   const [timeframe, setTimeframe] = useState<TimeframeOption>('month');
@@ -60,7 +35,6 @@ export default function TaiChinhPage() {
     technicianPayrollSummary,
     timelineCashflowData,
     categoryDistributionData,
-    debtAgingData,
   } = useFinancialData(timeframe);
 
   const filteredLedgerList = useMemo(() => {
@@ -93,6 +67,32 @@ export default function TaiChinhPage() {
     link.download = `so-quy-tai-chinh-${timeframe}.csv`;
     link.click();
   };
+
+  if (!hasAccess) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 px-4">
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center space-y-5">
+          <div className="inline-block px-3 py-1 bg-rose-100 text-rose-800 text-xs font-bold rounded-full uppercase">
+            Bảo Mật Nội Bộ
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-slate-900">Quyền Truy Cập Bị Giới Hạn</h2>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
+              Phân hệ tài chính &amp; doanh thu chỉ dành cho Quản Trị Viên (Admin).
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href="/login"
+              className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg"
+            >
+              Đăng nhập bằng tài khoản Admin
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16 font-sans">

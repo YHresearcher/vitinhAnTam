@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { message } from 'antd';
 import {
   ShoppingBag,
@@ -52,9 +52,9 @@ export default function OrderManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [executingOrder, setExecutingOrder] = useState<Order | null>(null);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async (showLoading = false) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const res = await fetch('/api/orders?limit=100', { cache: 'no-store' });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -65,13 +65,13 @@ export default function OrderManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchOrders();
-    const tm = setInterval(fetchOrders, 30000);
+    fetchOrders(false);
+    const tm = setInterval(() => fetchOrders(false), 30000);
     return () => clearInterval(tm);
-  }, []);
+  }, [fetchOrders]);
 
   const changeStatus = async (orderId: string, newStatus: string) => {
     try {
@@ -164,7 +164,7 @@ export default function OrderManagementPage() {
 
           <button
             type="button"
-            onClick={fetchOrders}
+            onClick={() => fetchOrders(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />

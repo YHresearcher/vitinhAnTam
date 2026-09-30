@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import { useViTinhAnTamStore } from "@/lib/store";
-import { WarrantyProvision } from "@/lib/supabase";
 import { FinanceWarrantyCharts } from "./FinanceWarrantyCharts";
 
 export function FinanceWarrantyFundTab() {

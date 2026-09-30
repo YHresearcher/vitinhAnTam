@@ -35,17 +35,16 @@ export default function DashboardPage() {
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
   const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
-  const [hoveredDataPoint, setHoveredDataPoint] = useState<number | null>(null);
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   const [activeListTab, setActiveListTab] = useState<'tickets' | 'onsite' | 'qc'>('tickets');
 
-  // Helper tính số ngày tồn kho của thiết bị
-  const getItemDaysInStock = (item: InventoryItem) => {
+  // Helper tính số ngày tồn kho của thiết bị (thuần túy theo timestamp)
+  const getItemDaysInStock = (item: InventoryItem, nowTimestamp = Date.now()) => {
     const dateStr = item.import_date || item.created_at;
     if (!dateStr) return 0;
     const itemDate = new Date(dateStr).getTime();
     if (Number.isNaN(itemDate)) return 0;
-    return Math.max(0, Math.floor((Date.now() - itemDate) / (1000 * 60 * 60 * 24)));
+    return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
   };
 
   // ==========================================
@@ -372,8 +371,6 @@ export default function DashboardPage() {
 
   const totalIncome = cashflowData.reduce((acc, cur) => acc + cur.income, 0);
   const totalExpense = cashflowData.reduce((acc, cur) => acc + cur.expense, 0);
-  const netCashflow = totalIncome - totalExpense;
-  const profitMargin = totalIncome > 0 ? Math.round((netCashflow / totalIncome) * 100) : 0;
 
   // 4 Revenue Pillars Data for Donut Chart
   const revenuePillarsData = useMemo(() => {

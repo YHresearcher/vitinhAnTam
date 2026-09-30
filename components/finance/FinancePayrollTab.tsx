@@ -41,8 +41,6 @@ export function FinancePayrollTab({ technicianPayrollSummary, timeframeLabel }: 
     color: TECH_PIE_COLORS[idx % TECH_PIE_COLORS.length],
   }));
 
-  const formatCurrencyY = (v: number) => (v >= 1000000 ? `${(v / 1000000).toFixed(0)}Tr` : `${v}`);
-
   return (
     <div className="space-y-5 font-sans">
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">

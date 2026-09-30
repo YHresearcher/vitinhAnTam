@@ -5,6 +5,17 @@ import { useViTinhAnTamStore } from '@/lib/store';
 import { KeyCategory, KeyReleaseRequest } from '@/lib/supabase';
 import { PricePreview } from '@/components/PricePreview';
 
+// ===== Nhóm trạng thái (store đang dùng 'approved_waiting_test' / 'active_confirmed') =====
+// Chờ xác nhận active sau khi đã LẤY key
+const isWaitingTest = (r: KeyReleaseRequest) =>
+  r.status === 'approved' || r.status === 'approved_waiting_test';
+// Key đã kích hoạt thành công
+const isActive = (r: KeyReleaseRequest) =>
+  r.status === 'activated' || r.status === 'active_confirmed';
+// Key lỗi -> cần LẤY key thay thế
+const needsReplacement = (r: KeyReleaseRequest) =>
+  r.status === 'auto_re_requested' || r.status === 'faulty_re_requesting';
+
 export default function QuanLyKeyPage() {
   const {
     currentUser,
@@ -97,17 +108,6 @@ export default function QuanLyKeyPage() {
     }
   };
 
-  // ===== Nhóm trạng thái (store đang dùng 'approved_waiting_test' / 'active_confirmed') =====
-  // Chờ xác nhận active sau khi đã LẤY key
-  const isWaitingTest = (r: KeyReleaseRequest) =>
-    r.status === 'approved' || r.status === 'approved_waiting_test';
-  // Key đã kích hoạt thành công
-  const isActive = (r: KeyReleaseRequest) =>
-    r.status === 'activated' || r.status === 'active_confirmed';
-  // Key lỗi -> cần LẤY key thay thế
-  const needsReplacement = (r: KeyReleaseRequest) =>
-    r.status === 'auto_re_requested' || r.status === 'faulty_re_requesting';
-
   // Filtered Requests
   const filteredRequests = useMemo(() => {
     return keyReleaseRequests.filter((r) => {
@@ -126,7 +126,7 @@ export default function QuanLyKeyPage() {
       }
       return true;
     });
-  }, [keyReleaseRequests, requestFilter, requestSearch, isWaitingTest, isActive, needsReplacement]);
+  }, [keyReleaseRequests, requestFilter, requestSearch]);
 
   // Filtered License Keys
   const filteredKeys = useMemo(() => {
@@ -306,8 +306,9 @@ export default function QuanLyKeyPage() {
       } else {
         setTestEmailFeedback(`⚠️ Gửi thử không thành công: ${data.message}`);
       }
-    } catch (err: any) {
-      setTestEmailFeedback(`❌ Lỗi kết nối gửi email: ${err?.message || 'Không thể gửi'}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Không thể gửi';
+      setTestEmailFeedback(`❌ Lỗi kết nối gửi email: ${msg}`);
     } finally {
       setIsSendingTestEmail(false);
     }

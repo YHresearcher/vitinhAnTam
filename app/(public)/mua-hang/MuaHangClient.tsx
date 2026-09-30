@@ -366,6 +366,18 @@ export default function MuaHangClient() {
                     className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
                   />
                 </div>
+                <div>
+                  <label className="text-xs text-[#6E5D53] mb-1 block">
+                    {isEn ? 'Order Note (Optional)' : 'Ghi chú thêm (Không bắt buộc)'}
+                  </label>
+                  <textarea
+                    rows={2}
+                    value={customerNote}
+                    onChange={(e) => setCustomerNote(e.target.value)}
+                    placeholder={isEn ? 'Specific delivery time, software requests...' : 'Giao giờ hành chính, cài đặt phần mềm...'}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B] resize-none"
+                  />
+                </div>
               </div>
             )}
 
@@ -489,8 +501,8 @@ export default function MuaHangClient() {
                   });
                   if (!response.ok) throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
                   setStep('success');
-                } catch (err: any) {
-                  setSubmitError(err.message);
+                } catch (err: unknown) {
+                  setSubmitError(err instanceof Error ? err.message : 'Đặt hàng thất bại');
                 } finally {
                   setIsSubmitting(false);
                 }

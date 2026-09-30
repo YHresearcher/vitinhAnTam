@@ -38,7 +38,6 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
   const {
     tickets,
     users,
-    currentUser,
     canUpdateRepairStatus,
     canAssignTasks,
     updateTicketDetails,
@@ -61,7 +60,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
   const [newPartName, setNewPartName] = useState('');
   const [newPartQty, setNewPartQty] = useState(1);
   const [newPartPrice, setNewPartPrice] = useState<number>(0);
-  const [newPartWarranty, setNewPartWarranty] = useState<number>(12);
+  const [newPartWarranty] = useState<number>(12);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 

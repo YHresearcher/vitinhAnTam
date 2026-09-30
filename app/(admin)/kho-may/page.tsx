@@ -59,10 +59,6 @@ export default function KhoMayPage() {
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'ready_to_sell' | 'testing' | 'sold' | 'aging_warning'>('all');
 
-  // Filter & Search states - Sold Machines (Máy đã bán)
-  const [soldSearchQuery, setSoldSearchQuery] = useState('');
-  const [soldWarrantyFilter, setSoldWarrantyFilter] = useState<'all' | 'active' | 'near_expiry' | 'expired'>('all');
-
   // Filter & Search states - Components (Linh kiện)
   const [partSearchQuery, setPartSearchQuery] = useState('');
   const [partConditionFilter, setPartConditionFilter] = useState<'all' | 'new' | 'used'>('all');
@@ -396,12 +392,12 @@ export default function KhoMayPage() {
   });
 
   // Helper tính số ngày tồn kho
-  const getItemDaysInStock = (item: InventoryItem) => {
+  const getItemDaysInStock = (item: InventoryItem, nowTimestamp = Date.now()) => {
     const dateStr = item.import_date || item.created_at;
     if (!dateStr) return 0;
     const itemDate = new Date(dateStr).getTime();
     if (Number.isNaN(itemDate)) return 0;
-    return Math.max(0, Math.floor((Date.now() - itemDate) / (1000 * 60 * 60 * 24)));
+    return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
   };
 
   // Filtered inventory - Machines
@@ -567,31 +563,6 @@ export default function KhoMayPage() {
   const soldMachines = useMemo(() => {
     return inventory.filter((item) => item.qc_status === 'sold' || Boolean(item.handover_date));
   }, [inventory]);
-
-  // Bộ lọc danh sách máy đã bán
-  const filteredSoldMachines = useMemo(() => {
-    return soldMachines.filter((item) => {
-      const status = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months);
-
-      if (soldWarrantyFilter === 'active' && status.isExpired) return false;
-      if (soldWarrantyFilter === 'near_expiry' && (!status.isNearExpiry || status.isExpired)) return false;
-      if (soldWarrantyFilter === 'expired' && !status.isExpired) return false;
-
-      if (soldSearchQuery.trim()) {
-        const q = soldSearchQuery.trim().toLowerCase();
-        const matchModel = (item.device_model || item.model || '').toLowerCase().includes(q);
-        const matchSerial = (item.serial_number || item.service_tag || '').toLowerCase().includes(q);
-        const matchCustomer = (item.customer_name || '').toLowerCase().includes(q);
-        const matchPhone = (item.customer_phone || '').toLowerCase().includes(q);
-        const matchCustomerCode = (item.customer_code || '').toLowerCase().includes(q);
-        const matchSeller = (item.sold_by || '').toLowerCase().includes(q);
-        if (!matchModel && !matchSerial && !matchCustomer && !matchPhone && !matchCustomerCode && !matchSeller) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }, [soldMachines, soldWarrantyFilter, soldSearchQuery]);
 
   // Phân loại key hiển thị (Dữ liệu nếu = 0 thì không hiển thị)
   const visibleKeyCategories = useMemo(() => {

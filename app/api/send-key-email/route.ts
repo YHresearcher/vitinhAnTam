@@ -115,10 +115,11 @@ export async function POST(req: Request) {
       subject: subject,
       recipient: customer_email,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error sending key email:', error);
+    const msg = error instanceof Error ? error.message : 'Có lỗi xảy ra khi xử lý gửi email.';
     return NextResponse.json(
-      { success: false, message: error?.message || 'Có lỗi xảy ra khi xử lý gửi email.' },
+      { success: false, message: msg },
       { status: 500 }
     );
   }

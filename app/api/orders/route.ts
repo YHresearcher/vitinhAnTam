@@ -218,10 +218,11 @@ export async function POST(request: NextRequest) {
       order_code: orderCode,
       source,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Create order error:', error);
+    const msg = error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo đơn hàng.';
     return NextResponse.json(
-      { success: false, message: error?.message || 'Có lỗi xảy ra khi tạo đơn hàng.' },
+      { success: false, message: msg },
       { status: 500 }
     );
   }
@@ -317,10 +318,11 @@ export async function PATCH(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true, source: 'fallback' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Update order error:', error);
+    const msg = error instanceof Error ? error.message : 'Có lỗi xảy ra khi cập nhật đơn hàng.';
     return NextResponse.json(
-      { success: false, message: error?.message || 'Có lỗi xảy ra khi cập nhật đơn hàng.' },
+      { success: false, message: msg },
       { status: 500 }
     );
   }

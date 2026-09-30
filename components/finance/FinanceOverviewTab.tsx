@@ -3,9 +3,9 @@
 import React from "react";
 import { FinancialSummaryData } from "./types";
 import { CashflowTimelinePoint, CategoryDistributionPoint } from "./financeSummaryHelpers";
-import { useViTinhAnTamStore } from "@/lib/store";
 import { FinanceOverviewCharts } from "./FinanceOverviewCharts";
-import { ShieldCheck, ArrowRight, Wallet } from "lucide-react";
+import { useViTinhAnTamStore } from "@/lib/store";
+import type { WarrantyProvision } from "@/lib/supabase";
 
 interface Props {
   financialSummary: FinancialSummaryData;
@@ -28,12 +28,12 @@ export function FinanceOverviewTab({
 
   // 5% warranty calculation for current scope
   const lockedFund = warrantyProvisions
-    .filter((p) => p.status === "locked")
-    .reduce((sum, p) => sum + p.provision_amount, 0);
+    .filter((p: WarrantyProvision) => p.status === "locked")
+    .reduce((sum: number, p: WarrantyProvision) => sum + p.provision_amount, 0);
 
   const unlockedFund = warrantyProvisions
-    .filter((p) => p.status === "unlocked")
-    .reduce((sum, p) => sum + p.provision_amount, 0);
+    .filter((p: WarrantyProvision) => p.status === "unlocked")
+    .reduce((sum: number, p: WarrantyProvision) => sum + p.provision_amount, 0);
 
   const totalFund = lockedFund + unlockedFund;
 

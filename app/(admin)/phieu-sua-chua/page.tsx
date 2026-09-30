@@ -38,11 +38,11 @@ function PhieuSuaChuaContent() {
     const ticketIdParam = searchParams.get('ticketId') || searchParams.get('id') || searchParams.get('code');
     if (ticketIdParam) {
       const match = tickets.find((t) => t.id === ticketIdParam || t.ticket_code === ticketIdParam);
-      if (match) {
+      if (match && match.id !== selectedTicketId) {
         setSelectedTicketId(match.id);
       }
     }
-  }, [searchParams, tickets]);
+  }, [searchParams, tickets, selectedTicketId]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
