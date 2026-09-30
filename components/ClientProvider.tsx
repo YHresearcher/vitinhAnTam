@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, theme as antdTheme } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import { StoreProvider, useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { LogoutCountdownModal } from '@/components/LogoutCountdownModal';
@@ -31,6 +31,43 @@ function FaviconUpdater() {
   return null;
 }
 
+function ThemedAppContainer({ children }: { children: React.ReactNode }) {
+  const { themeMode } = useViTinhAnTamStore();
+  const isDark = themeMode === 'dark';
+
+  return (
+    <ConfigProvider
+      locale={viVN}
+      theme={{
+        algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+        token: {
+          colorPrimary: isDark ? '#E05A47' : '#C0392B',
+          borderRadius: 8,
+          fontFamily: 'var(--font-be-vietnam-pro), system-ui, sans-serif',
+          colorLink: isDark ? '#60A5FA' : '#C0392B',
+          colorLinkHover: isDark ? '#93C5FD' : '#D9531E',
+          ...(isDark
+            ? {
+                colorBgBase: '#0B132B',
+                colorBgContainer: '#1C2541',
+                colorBgElevated: '#232F52',
+                colorBorder: '#2D3A66',
+                colorBorderSecondary: '#1E294B',
+                colorText: '#E2E8F0',
+                colorTextSecondary: '#94A3B8',
+                colorTextHeading: '#F1F5F9',
+              }
+            : {}),
+        },
+      }}
+    >
+      <FaviconUpdater />
+      <LogoutCountdownModal />
+      {children}
+    </ConfigProvider>
+  );
+}
+
 export function ClientProvider({
   children,
   initialSettings,
@@ -47,25 +84,11 @@ export function ClientProvider({
   }, []);
 
   return (
-    <ConfigProvider
-      locale={viVN}
-      theme={{
-        token: {
-          colorPrimary: '#C0392B',
-          borderRadius: 8,
-          fontFamily: 'var(--font-be-vietnam-pro), system-ui, sans-serif',
-          colorLink: '#C0392B',
-          colorLinkHover: '#D9531E',
-        },
-      }}
-    >
-      <StoreProvider initialSettings={initialSettings}>
-        <FaviconUpdater />
-        <LogoutCountdownModal />
-        {children}
-      </StoreProvider>
-    </ConfigProvider>
+    <StoreProvider initialSettings={initialSettings}>
+      <ThemedAppContainer>{children}</ThemedAppContainer>
+    </StoreProvider>
   );
 }
+
 
 

@@ -155,6 +155,13 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
+                  var theme = localStorage.getItem('vtat_theme_mode');
+                  if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+
                   var raw = localStorage.getItem('vtat_system_settings_v2');
                   if (raw) {
                     var parsed = JSON.parse(raw);

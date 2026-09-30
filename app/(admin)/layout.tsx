@@ -7,6 +7,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
 import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 export default function AdminLayout({
@@ -160,6 +161,9 @@ export default function AdminLayout({
             >
               <span>KHO KEY</span>
             </Link>
+
+            {/* Theme Toggle Button (Dark Blue / Light) */}
+            <ThemeToggle variant="pill" />
 
             {/* Create Ticket Button */}
             <Link

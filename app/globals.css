@@ -133,3 +133,208 @@ nextjs-portal,
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* ==========================================================================
+   HỆ THỐNG MÀU SẮC GIAO DIỆN TỐI (DARK BLUE PALETTE)
+   Tông nền xanh đêm Dark Blue dịu mắt, chống mỏi điều tiết, tương phản chuẩn WCAG
+   ========================================================================== */
+html.dark {
+  color-scheme: dark;
+  --color-surface-canvas: #0B132B;
+  --color-surface-card: #1C2541;
+  --color-surface-card-warm: #162039;
+  --color-border-default: #2D3A66;
+  --color-text-main: #E2E8F0;
+  --color-text-muted: #94A3B8;
+  --color-brand-primary: #E05A47;
+  --color-brand-accent: #FF7A64;
+}
+
+html.dark body {
+  background-color: #0B132B !important;
+  color: #E2E8F0 !important;
+}
+
+/* 1. Nền canvas và giấy */
+html.dark .bg-\[\#FAF7F2\],
+html.dark .bg-subtle-paper {
+  background-color: #0B132B !important;
+}
+
+html.dark .bg-subtle-paper {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0) !important;
+}
+
+/* 2. Thẻ Card, Panel và Khối trắng */
+html.dark .bg-white,
+html.dark .bg-\[\#FFFDF9\],
+html.dark .bg-\[\#FDFBF7\] {
+  background-color: #1C2541 !important;
+}
+
+/* 3. Khối màu phụ / Xám nhạt / Hover */
+html.dark .bg-slate-50,
+html.dark .bg-\[\#F4EFEA\] {
+  background-color: #162039 !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-\[\#EFE9DF\] {
+  background-color: #232F52 !important;
+}
+
+html.dark .hover\:bg-\[\#F4EFEA\]:hover,
+html.dark .hover\:bg-slate-50:hover {
+  background-color: #232F52 !important;
+}
+
+html.dark .hover\:bg-slate-100:hover {
+  background-color: #2A3860 !important;
+}
+
+/* 4. Viền và ngăn cách */
+html.dark .border-\[\#E8E2D9\],
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-\[\#F2C4B2\] {
+  border-color: #2D3A66 !important;
+}
+
+html.dark .border-slate-100,
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1E294B !important;
+}
+
+/* 5. Màu chữ & Tiêu đề */
+html.dark .text-\[\#2B1810\],
+html.dark .text-\[\#1A0F0A\],
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #F1F5F9 !important;
+}
+
+html.dark .text-\[\#6E5D53\],
+html.dark .text-\[\#5C4D44\],
+html.dark .text-slate-600,
+html.dark .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-slate-700 {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-slate-400 {
+  color: #64748B !important;
+}
+
+/* 6. Header Navbar & Footer */
+html.dark header.sticky {
+  background-color: rgba(11, 19, 43, 0.92) !important;
+  border-color: #2D3A66 !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html.dark header nav a.bg-\[\#FBE8DE\] {
+  background-color: rgba(224, 90, 71, 0.2) !important;
+  color: #FF7A64 !important;
+}
+
+html.dark footer#chinh-sach {
+  background-color: #070D1F !important;
+  border-color: #1C2541 !important;
+}
+
+/* 7. Nhãn & Huy hiệu nổi bật */
+html.dark .bg-\[\#FBE8DE\] {
+  background-color: rgba(224, 90, 71, 0.18) !important;
+  border-color: rgba(224, 90, 71, 0.35) !important;
+  color: #FF7A64 !important;
+}
+
+html.dark .text-\[\#C0392B\] {
+  color: #FF7A64 !important;
+}
+
+html.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.16) !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  color: #60A5FA !important;
+}
+
+html.dark .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  color: #FBBF24 !important;
+}
+
+html.dark .bg-green-100,
+html.dark .bg-emerald-100 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  color: #34D399 !important;
+}
+
+/* 8. Giao diện Quản trị viên (Admin Scope) */
+html.dark .admin-scope {
+  background-color: #0B132B !important;
+  color: #E2E8F0 !important;
+}
+
+html.dark .admin-scope main {
+  background-color: #0B132B !important;
+}
+
+html.dark .admin-scope header {
+  background-color: rgba(11, 19, 43, 0.95) !important;
+  border-color: #2D3A66 !important;
+}
+
+html.dark .admin-scope aside,
+html.dark .admin-scope aside > div {
+  background-color: #101B38 !important;
+  border-color: #2D3A66 !important;
+}
+
+html.dark .admin-scope aside nav a.text-slate-700 {
+  color: #94A3B8 !important;
+}
+
+html.dark .admin-scope aside nav a.text-slate-700:hover {
+  background-color: #1C2541 !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark .admin-scope aside nav a.bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #60A5FA !important;
+}
+
+/* 9. Ô nhập liệu Form & Select */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select,
+html.dark .ant-input,
+html.dark .ant-input-affix-wrapper,
+html.dark .ant-select-selector {
+  background-color: #162039 !important;
+  border-color: #2D3A66 !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark .ant-input-affix-wrapper input {
+  background-color: transparent !important;
+}
+
+/* 10. Thanh cuộn Scrollbar Dark Blue */
+html.dark ::-webkit-scrollbar-track {
+  background: #0B132B;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #232F52;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #2D3A66;
+}
+

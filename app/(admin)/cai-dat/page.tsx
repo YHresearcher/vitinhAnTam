@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { SystemBrandIcon } from '@/components/Logo';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
-import { UserAccount } from '@/lib/supabase';
 import Link from 'next/link';
 import {
   Tabs,
@@ -55,8 +54,6 @@ export default function CaiDatPage() {
     systemSettings,
     updateSystemSettings,
     canAccessSettings,
-    users,
-    changeUserPassword,
     faqs,
     addFaq,
     updateFaq,
@@ -87,10 +84,6 @@ export default function CaiDatPage() {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [reviewForm] = Form.useForm();
 
-  // Member Password Modal states
-  const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
-  const [memberNewPassword, setMemberNewPassword] = useState('');
-  const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
 
 
   const handleChange = (field: keyof SystemSettings, val: string) => {
@@ -283,23 +276,6 @@ export default function CaiDatPage() {
   };
 
 
-  const handleSaveMemberPassword = async () => {
-    if (!memberForPassword) return;
-    if (!memberNewPassword.trim() || memberNewPassword.trim().length < 4) {
-      message.error('Mật khẩu phải có tối thiểu 4 ký tự!');
-      return;
-    }
-    setIsChangingMemberPassword(true);
-    const ok = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
-    setIsChangingMemberPassword(false);
-    if (ok) {
-      message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
-      setMemberForPassword(null);
-      setMemberNewPassword('');
-    } else {
-      message.error('Không thể cập nhật mật khẩu.');
-    }
-  };
 
   const handleDeleteReview = async (id: string) => {
     await deleteReview(id);
@@ -1080,100 +1056,6 @@ export default function CaiDatPage() {
             ),
           },
           {
-            key: 'security',
-            label: (
-              <span className="font-bold text-xs sm:text-sm">
-                Bảo Mật &amp; Mật Khẩu
-              </span>
-            ),
-            children: (
-              <Card className="rounded-2xl border-slate-200 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100">
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-900">Quản Lý &amp; Đổi Mật Khẩu Thành Viên</h3>
-                    <p className="text-xs text-slate-500">
-                      Quản trị viên có quyền sửa đổi mật khẩu đăng nhập của tất cả nhân sự trong hệ thống.
-                    </p>
-                  </div>
-                  <Link
-                    href="/thanh-vien"
-                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 border border-blue-200 transition-colors w-fit"
-                  >
-                    Quản lý phân quyền chi tiết →
-                  </Link>
-                </div>
-
-                <div className="divide-y divide-slate-100">
-                  {users.map((u) => (
-                    <div
-                      key={u.id}
-                      className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-10 h-10 rounded-xl ${u.avatarBg} text-white font-bold flex items-center justify-center text-xs shadow-xs`}
-                        >
-                          {u.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-xs sm:text-sm text-slate-900">{u.name}</span>
-                            <Tag
-                              color={
-                                u.role === 'admin'
-                                  ? 'blue'
-                                  : u.role === 'technician'
-                                  ? 'green'
-                                  : u.role === 'outsourced'
-                                  ? 'orange'
-                                  : 'purple'
-                              }
-                              className="text-[10px] m-0 font-bold"
-                            >
-                              {u.role === 'admin'
-                                ? 'ADMIN'
-                                : u.role === 'technician'
-                                ? 'KỸ THUẬT'
-                                : u.role === 'outsourced'
-                                ? 'THUÊ NGOÀI'
-                                : 'KINH DOANH'}
-                            </Tag>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
-                            <span>
-                              Tên đăng nhập:{' '}
-                              <strong className="font-mono text-slate-800">{u.email}</strong>
-                            </span>
-                            <span>•</span>
-                            <span>
-                              SĐT: <span className="font-mono text-slate-700">{u.phone}</span>
-                            </span>
-                            <span>•</span>
-                            <span>
-                              Mật khẩu: <span className="font-mono text-blue-600 font-bold">••••••</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 self-end sm:self-center">
-                        <Button
-                          onClick={() => {
-                            setMemberForPassword(u);
-                            setMemberNewPassword('');
-                          }}
-                          className="text-xs font-semibold hover:border-amber-500 hover:text-amber-600"
-                        >
-                          Đổi Mật Khẩu
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            ),
-          },
-          {
             key: 'key-email',
             label: (
               <span className="font-bold text-xs sm:text-sm">
@@ -1303,37 +1185,6 @@ export default function CaiDatPage() {
         </Form>
       </Modal>
 
-      {/* Modal Đổi Mật Khẩu Thành Viên */}
-      <Modal
-        title="Đổi Mật Khẩu Thành Viên"
-        open={Boolean(memberForPassword)}
-        onCancel={() => {
-          setMemberForPassword(null);
-          setMemberNewPassword('');
-        }}
-        onOk={handleSaveMemberPassword}
-        confirmLoading={isChangingMemberPassword}
-        okText="Lưu Mật Khẩu Mới"
-        cancelText="Hủy"
-      >
-        {memberForPassword && (
-          <div className="space-y-4 pt-2">
-            <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
-              <div>Thành viên: <strong className="text-slate-900">{memberForPassword.name}</strong></div>
-              <div>Tên đăng nhập: <strong className="font-mono text-slate-900">{memberForPassword.email}</strong></div>
-              <div>Vai trò: <strong className="text-blue-700 uppercase">{memberForPassword.role}</strong></div>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-              <Input.Password
-                value={memberNewPassword}
-                onChange={(e) => setMemberNewPassword(e.target.value)}
-                placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)"
-              />
-            </div>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 }

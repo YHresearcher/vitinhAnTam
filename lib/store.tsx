@@ -262,6 +262,11 @@ interface StoreContextType {
   unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
   settleUnlockedWarrantyProvisionsYearEnd: () => Promise<{ settledCount: number; settledTotal: number }>;
 
+  // Theme Mode (Dark Blue vs Light)
+  themeMode: 'light' | 'dark';
+  toggleTheme: () => void;
+  setThemeMode: (mode: 'light' | 'dark') => void;
+
   // Reset
   resetToDefault: () => void;
 }
@@ -330,6 +335,52 @@ export function StoreProvider({
     return initialSystemSettings;
   });
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
+  const [themeMode, setThemeModeState] = useState<'light' | 'dark'>('light');
+
+  // Khởi tạo Theme Mode từ LocalStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vtat_theme_mode');
+      if (saved === 'dark' || saved === 'light') {
+        setThemeModeState(saved);
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setThemeModeState('dark');
+        document.documentElement.classList.add('dark');
+      }
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setThemeModeState((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vtat_theme_mode', next);
+        if (next === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+      return next;
+    });
+  };
+
+  const setThemeMode = (mode: 'light' | 'dark') => {
+    setThemeModeState(mode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vtat_theme_mode', mode);
+      if (mode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
@@ -2458,6 +2509,9 @@ export function StoreProvider({
       updateDispatchStatus,
       assignDispatchTechnician,
       addShiftLog,
+      themeMode,
+      toggleTheme,
+      setThemeMode,
       resetToDefault,
     }),
     [
@@ -2486,6 +2540,7 @@ export function StoreProvider({
       isLoading,
       syncStatus,
       lastSyncedAt,
+      themeMode,
     ]
   );
 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Drawer } from 'antd';
 import { Logo } from '@/components/Logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 interface AdminSidebarProps {
@@ -143,6 +144,11 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           })}
 
           <div className="my-2 border-t border-slate-100" />
+
+          {/* Theme Mode Toggle (Dark Blue / Light) */}
+          <div className="px-0.5">
+            <ThemeToggle variant="switch" />
+          </div>
 
           {/* Quick links to public */}
           <Link
