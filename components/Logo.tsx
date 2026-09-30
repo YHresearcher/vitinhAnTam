@@ -5,53 +5,64 @@ import { useViTinhAnTamStore } from '@/lib/store';
 
 interface LogoProps {
   className?: string;
+  variant?: 'light' | 'dark';
+  hideSlogan?: boolean;
 }
 
-export function Logo({ className = 'h-auto w-auto' }: LogoProps) {
-  const { systemSettings } = useViTinhAnTamStore();
+export function Logo({ className = '', variant = 'light', hideSlogan = false }: LogoProps) {
+  const { currentLang, systemSettings } = useViTinhAnTamStore();
   const [hasError, setHasError] = useState(false);
 
-  // Đường dẫn ảnh logo ưu tiên:
-  // 1. Cấu hình trong systemSettings.logoUrl (nếu có)
-  // 2. File ảnh tĩnh trực tiếp tại /img/header/logo.png hoặc /logo.png
+  // Đường dẫn ảnh logo
   const logoSrc = systemSettings?.logoUrl?.trim() || '/img/header/logo.png';
-
-  // Hiển thị file ảnh nếu không bị lỗi 404
-  if (!hasError && logoSrc) {
-    return (
-      <div className={`flex items-center select-none ${className}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={logoSrc}
-          alt={systemSettings?.storeName || 'Logo Vi Tính An Tâm'}
-          onError={() => setHasError(true)}
-          className="h-11 sm:h-12 w-auto max-h-14 max-w-[260px] sm:max-w-[340px] object-contain transition-transform hover:scale-102"
-        />
-      </div>
-    );
-  }
-
-  // Graceful Default Branding (dạng chữ VT + Tên cửa hàng) khi chưa có file ảnh
-  const storeName = systemSettings?.storeName || 'Vi Tính An Tâm';
-  const parts = storeName.split(' ');
-  const firstPart = parts[0] || 'VI TÍNH';
-  const restPart = parts.slice(1).join(' ') || 'AN TÂM';
+  const isEn = currentLang === 'en';
+  const sloganText = isEn ? 'Sold with Care, Keeping You Carefree' : 'Bán bằng tâm để bạn an tâm';
 
   return (
-    <div className={`flex items-center gap-2.5 select-none ${className}`}>
-      <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#C0392B] to-[#E67E22] text-white flex items-center justify-center font-black text-sm shadow-xs tracking-wider">
-        VT
+    <div className={`flex items-center gap-2.5 sm:gap-3 select-none ${className}`}>
+      {/* Biểu tượng Logo / Image */}
+      <div className="shrink-0 flex items-center justify-center">
+        {!hasError && logoSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={logoSrc}
+            alt="Logo Vi Tính An Tâm"
+            onError={() => setHasError(true)}
+            className="h-10 sm:h-11 md:h-12 w-auto max-h-12 max-w-[120px] object-contain transition-transform hover:scale-105"
+          />
+        ) : (
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-tr from-[#C0392B] to-[#E67E22] text-white flex items-center justify-center font-black text-sm sm:text-base shadow-sm tracking-wider">
+            VT
+          </div>
+        )}
       </div>
-      <div className="flex flex-col leading-none text-left">
-        <div className="flex items-center gap-1">
-          <span className="font-black text-base sm:text-lg text-slate-900 tracking-tight">{firstPart}</span>
-          <span className="font-black text-base sm:text-lg text-[#C0392B] tracking-tight">{restPart}</span>
+
+      {/* Brand Name & Slogan (Hardcoded & Bất Biến) */}
+      <div className="flex flex-col leading-none text-left justify-center">
+        <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
+          <span
+            className={`font-black text-base sm:text-lg lg:text-[19px] tracking-tight uppercase ${
+              variant === 'dark' ? 'text-white' : 'text-[#2B1810]'
+            }`}
+          >
+            VI TÍNH
+          </span>
+          <span className="font-black text-base sm:text-lg lg:text-[19px] tracking-tight text-[#C0392B] uppercase">
+            AN TÂM
+          </span>
         </div>
-        <span className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase mt-0.5">
-          {systemSettings?.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
-        </span>
+        {!hideSlogan && (
+          <span
+            className={`text-[10px] sm:text-[11px] lg:text-[11.5px] font-semibold tracking-wide whitespace-nowrap mt-1 uppercase ${
+              variant === 'dark' ? 'text-slate-300' : 'text-[#6E5D53]'
+            }`}
+          >
+            {sloganText}
+          </span>
+        )}
       </div>
     </div>
   );
 }
+
 
