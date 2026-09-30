@@ -125,7 +125,7 @@ export function RoleLoginModal({
               required
               value={identifierInput}
               onChange={(e) => onIdentifierChange(e.target.value)}
-              placeholder="VD: admin hoặc admin@vitinhantham.vn"
+              placeholder="VD: admin hoặc admin@vitinhantam.com"
               className={`w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:outline-hidden focus:ring-2 ${activeRole.colorScheme.activeRing} transition-all`}
             />
           </div>

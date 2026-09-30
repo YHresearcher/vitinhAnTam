@@ -35,7 +35,7 @@ export const TRANSLATIONS = {
       policiesTitle: 'CHÍNH SÁCH & ĐIỀU LỆ',
       swapPolicy: 'Bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi chu đáo',
       privacyPolicy: 'Cam kết tuyệt đối bảo mật dữ liệu khách hàng',
-      copyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Tận tâm trao chất lượng.`,
+      copyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Tận tâm trao chất lượng.`,
       warrantyTerms: 'Quy định bảo hành',
       internalLogin: 'Đăng nhập nội bộ',
     },
@@ -438,7 +438,7 @@ export const TRANSLATIONS = {
       swapPolicy: 'Prompt warranty with attentive on-site technical support',
       privacyPolicy: '100% strict corporate data confidentiality',
       copyright:
-        `© ${new Date().getFullYear()} Vi Tinh An Tam (vitinhantham.vn) - Dedicated to Premium Quality.`,
+        `© ${new Date().getFullYear()} Vi Tinh An Tam (vitinhantam.com) - Dedicated to Premium Quality.`,
       warrantyTerms: 'Warranty Terms',
       internalLogin: 'Staff Portal',
     },

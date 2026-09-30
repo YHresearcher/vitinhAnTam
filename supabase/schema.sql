@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
   zalo_contacts JSONB DEFAULT '[]'::jsonb,
   whatsapp_number TEXT DEFAULT '0909053058',
   whatsapp_link TEXT DEFAULT 'https://wa.me/84909053058',
-  email TEXT DEFAULT 'lienhe@vitinhantham.vn',
+  email TEXT DEFAULT 'lienhe@vitinhantam.com',
   address TEXT DEFAULT '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   street_address TEXT DEFAULT '52 Nguyễn Cửu Vân',
   district TEXT DEFAULT 'P. Long An',
@@ -407,10 +407,10 @@ ALTER TABLE warranty_provisions DISABLE ROW LEVEL SECURITY;
 -- 1. SEED THÀNH VIÊN NỘI BỘ
 INSERT INTO users (id, username, name, email, phone, role, role_title, avatar_bg, status, permissions)
 VALUES
-  ('u-admin-1', 'thanhphan', 'Thanh Phan', 'thanhphan@vitinhantham.vn', '0909.053.058', 'admin', 'Quản trị viên (Admin)', 'bg-blue-600', 'active', '{"can_edit_stock": true, "can_update_repair_status": true, "can_access_payroll": true, "can_manage_users": true}'::jsonb),
-  ('u-sales-1', 'sales01', 'Sales 01', 'sales01@vitinhantham.vn', '0933.345.678', 'sales', 'Chuyên viên Bán hàng & CSKH', 'bg-purple-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": false, "can_access_payroll": false, "can_manage_users": false}'::jsonb),
-  ('u-tech-1', 'tech01', 'Kỹ thuật viên 01', 'tech01@vitinhantham.vn', '0977.123.456', 'technician', 'Kỹ thuật viên phần cứng & QC', 'bg-emerald-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": true, "can_access_payroll": false, "can_manage_users": false}'::jsonb),
-  ('u-outsourced-1', 'ktv_ngoai01', 'Trần Văn Cường (KTV Thuê Ngoài)', 'cuong.ktvngoai@vitinhantham.vn', '0988.765.432', 'outsourced', 'Kỹ thuật viên đối tác / Thuê ngoài', 'bg-amber-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": true, "can_access_payroll": false, "can_manage_users": false}'::jsonb)
+  ('u-admin-1', 'thanhphan', 'Thanh Phan', 'thanhphan@vitinhantam.com', '0909.053.058', 'admin', 'Quản trị viên (Admin)', 'bg-blue-600', 'active', '{"can_edit_stock": true, "can_update_repair_status": true, "can_access_payroll": true, "can_manage_users": true}'::jsonb),
+  ('u-sales-1', 'sales01', 'Sales 01', 'sales01@vitinhantam.com', '0933.345.678', 'sales', 'Chuyên viên Bán hàng & CSKH', 'bg-purple-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": false, "can_access_payroll": false, "can_manage_users": false}'::jsonb),
+  ('u-tech-1', 'tech01', 'Kỹ thuật viên 01', 'tech01@vitinhantam.com', '0977.123.456', 'technician', 'Kỹ thuật viên phần cứng & QC', 'bg-emerald-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": true, "can_access_payroll": false, "can_manage_users": false}'::jsonb),
+  ('u-outsourced-1', 'ktv_ngoai01', 'Trần Văn Cường (KTV Thuê Ngoài)', 'cuong.ktvngoai@vitinhantam.com', '0988.765.432', 'outsourced', 'Kỹ thuật viên đối tác / Thuê ngoài', 'bg-amber-600', 'active', '{"can_edit_stock": false, "can_update_repair_status": true, "can_access_payroll": false, "can_manage_users": false}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
 -- 2. SEED CẤU HÌNH HỆ THỐNG
@@ -423,7 +423,7 @@ VALUES (
   'https://zalo.me/0909053058',
   '0909053058',
   'https://wa.me/84909053058',
-  'lienhe@vitinhantham.vn',
+  'lienhe@vitinhantam.com',
   '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   '52 Nguyễn Cửu Vân',
   'P. Long An',
@@ -450,7 +450,7 @@ VALUES (
   1,
   'Bàn Giao Key Bản Quyền Chính Hãng — Vi Tính An Tâm',
   'Vi Tính An Tâm — Bộ Phận Bản Quyền',
-  'lienhe@vitinhantham.vn',
+  'lienhe@vitinhantam.com',
   'XÁC NHẬN BÀN GIAO KEY BẢN QUYỀN CHÍNH HÃNG',
   '0909.053.058',
   '0909053058',

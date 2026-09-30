@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
-import { ThemeToggle } from './ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TRANSLATIONS } from '@/lib/translations';
 import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
@@ -147,9 +146,6 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Theme Toggle Button (Dark Blue / Light) */}
-          <ThemeToggle />
-
           {/* SINGLE UNIFIED LOGIN / USER ACCESS */}
           {isLoggedIn ? (
             <div className="flex items-center gap-0.5">
@@ -245,11 +241,6 @@ export function Navbar() {
           >
             {t.contact}
           </Link>
-
-          <div className="pt-2 mt-2 border-t border-[#E8E2D9] flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5C4D44]">Giao diện:</span>
-            <ThemeToggle variant="pill" />
-          </div>
         </div>
       )}
     </header>

@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     title: 'Lý Do Chọn Vi Tính An Tâm — Mua Máy Tính & Dịch Vụ Uy Tín',
     description:
       'Lý do chọn Vi Tính An Tâm: Bo mạch nguyên bản, linh kiện mới cũ minh bạch, kiểm tra cẩn thận và hỗ trợ kỹ thuật nhanh chóng không làm gián đoạn công việc của bạn.',
-    url: 'https://vitinhantham.vn/vi-sao-chon-an-tam',
+    url: 'https://vitinhantam.com/vi-sao-chon-an-tam',
     images: [
       {
-        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
         alt: 'Lý do chọn Vi Tính An Tâm',
@@ -33,13 +33,13 @@ const breadcrumbJsonLd = {
       '@type': 'ListItem',
       position: 1,
       name: 'Trang chủ',
-      item: 'https://vitinhantham.vn',
+      item: 'https://vitinhantam.com',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Lý do chọn An Tâm',
-      item: 'https://vitinhantham.vn/vi-sao-chon-an-tam',
+      item: 'https://vitinhantam.com/vi-sao-chon-an-tam',
     },
   ],
 };

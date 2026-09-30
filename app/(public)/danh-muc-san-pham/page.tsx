@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     title: 'Danh Mục Máy Tính Cũ Chuẩn A — Vi Tính An Tâm',
     description:
       'PC đồng bộ Dell OptiPlex, HP ProDesk, Lenovo ThinkCentre tuyển chọn. Giá từ 3tr, bảo hành 1 đổi 1 hỏa tốc.',
-    url: 'https://vitinhantham.vn/danh-muc-san-pham',
+    url: 'https://vitinhantam.com/danh-muc-san-pham',
     images: [
       {
-        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
         alt: 'Danh mục máy tính cũ chuẩn A tại Vi Tính An Tâm',
@@ -33,13 +33,13 @@ const breadcrumbJsonLd = {
       '@type': 'ListItem',
       position: 1,
       name: 'Trang chủ',
-      item: 'https://vitinhantham.vn',
+      item: 'https://vitinhantam.com',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Danh mục sản phẩm',
-      item: 'https://vitinhantham.vn/danh-muc-san-pham',
+      item: 'https://vitinhantam.com/danh-muc-san-pham',
     },
   ],
 };

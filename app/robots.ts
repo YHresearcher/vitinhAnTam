@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/dashboard', '/kho-may', '/phieu-sua-chua', '/tien-cong', '/cuu-ho-onsite', '/thanh-vien', '/cai-dat', '/api/'],
       },
     ],
-    sitemap: 'https://vitinhantham.vn/sitemap.xml',
+    sitemap: 'https://vitinhantam.com/sitemap.xml',
   };
 }

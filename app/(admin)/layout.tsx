@@ -25,12 +25,30 @@ export default function AdminLayout({
     canAccessSettings,
     canAccessCRM,
     logout,
+    themeMode,
   } = useViTinhAnTamStore();
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  // Dark mode lifecycle specifically for admin portal
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (themeMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+    return () => {
+      // Ensure frontend pages are strictly light mode when navigating away from admin
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+  }, [themeMode]);
 
   // Command palette navigation items filtered by permissions
   const navItems = [

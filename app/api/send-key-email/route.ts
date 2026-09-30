@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     }
 
     const senderName = template?.sender_name || 'Vi Tính An Tâm Support';
-    const senderEmail = template?.sender_email || 'hotro@vitinhantham.vn';
+    const senderEmail = template?.sender_email || 'hotro@vitinhantam.com';
     const supportPhone = template?.support_phone || '0901.234.567';
     const warrantyInfo = template?.warranty_info || 'Bảo hành kích hoạt 1 đổi 1 trọn đời cho 01 thiết bị';
     const customFooter = template?.footer_note || 'Trân trọng cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ tại Vi Tính An Tâm!';
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: `${senderName} <${senderEmail.includes('@vitinhantham.vn') ? 'onboarding@resend.dev' : senderEmail}>`,
+            from: `${senderName} <${senderEmail.includes('@vitinhantam.com') ? 'onboarding@resend.dev' : senderEmail}>`,
             to: [customer_email],
             subject: subject,
             html: htmlContent,

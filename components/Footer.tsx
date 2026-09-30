@@ -40,7 +40,7 @@ export function Footer() {
               <p>
                 <strong className="text-white font-bold">{t.emailLabel}</strong>{' '}
                 <a href={`mailto:${systemSettings.email}`} className="hover:text-white transition-colors">
-                  {systemSettings.email || 'lienhe@vitinhantham.vn'}
+                  {systemSettings.email || 'lienhe@vitinhantam.com'}
                 </a>
               </p>
             </div>
@@ -112,7 +112,7 @@ export function Footer() {
         </div>
 
         <div className="pt-8 border-t border-[#332219] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8D7B73]">
-          <p>© {new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - {currentLang === 'en' ? 'Sold with Care, Keeping You Carefree.' : 'Bán bằng tâm để bạn an tâm.'}</p>
+          <p>© {new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - {currentLang === 'en' ? 'Sold with Care, Keeping You Carefree.' : 'Bán bằng tâm để bạn an tâm.'}</p>
           <div className="flex flex-wrap items-center gap-5">
             <a className="hover:text-[#E67E22] transition-colors font-medium" href="#chinh-sach">
               {t.warrantyTerms}

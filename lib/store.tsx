@@ -91,7 +91,7 @@ export const initialSystemSettings: SystemSettings = {
   ],
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
-  email: 'lienhe@vitinhantham.vn',
+  email: 'lienhe@vitinhantam.com',
   address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   streetAddress: '52 Nguyễn Cửu Vân',
   district: 'P. Long An',
@@ -101,7 +101,7 @@ export const initialSystemSettings: SystemSettings = {
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',
   footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
+  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 };
 
@@ -337,20 +337,12 @@ export function StoreProvider({
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
   const [themeMode, setThemeModeState] = useState<'light' | 'dark'>('light');
 
-  // Khởi tạo Theme Mode từ LocalStorage
+  // Khởi tạo Theme Mode từ LocalStorage (việc gắn class .dark sẽ do layout admin quản lý)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('vtat_theme_mode');
       if (saved === 'dark' || saved === 'light') {
         setThemeModeState(saved);
-        if (saved === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        setThemeModeState('dark');
-        document.documentElement.classList.add('dark');
       }
     }
   }, []);
@@ -360,11 +352,6 @@ export function StoreProvider({
       const next = prev === 'light' ? 'dark' : 'light';
       if (typeof window !== 'undefined') {
         localStorage.setItem('vtat_theme_mode', next);
-        if (next === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
       }
       return next;
     });
@@ -374,11 +361,6 @@ export function StoreProvider({
     setThemeModeState(mode);
     if (typeof window !== 'undefined') {
       localStorage.setItem('vtat_theme_mode', mode);
-      if (mode === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
     }
   };
 

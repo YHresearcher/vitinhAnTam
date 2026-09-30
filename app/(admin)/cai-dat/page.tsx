@@ -113,6 +113,9 @@ export default function CaiDatPage() {
     const uploadFormData = new FormData();
     uploadFormData.append('file', file);
     uploadFormData.append('folder', 'header');
+    if (formData[field]) {
+      uploadFormData.append('oldUrl', formData[field] || '');
+    }
 
     const hide = message.loading(`Đang tải lên file ${field === 'logoUrl' ? 'Logo' : 'Favicon'}...`, 0);
 
@@ -129,6 +132,7 @@ export default function CaiDatPage() {
         setFormData((prev) => ({
           ...prev,
           [field]: data.url,
+          ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
         }));
         message.success(`Đã lưu ảnh vào thư mục hình ảnh (${data.url})! Nhấn "Lưu cấu hình" để áp dụng.`);
       } else {
@@ -137,7 +141,11 @@ export default function CaiDatPage() {
         reader.onload = (event) => {
           const result = event.target?.result as string;
           if (result) {
-            setFormData((prev) => ({ ...prev, [field]: result }));
+            setFormData((prev) => ({
+              ...prev,
+              [field]: result,
+              ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
+            }));
             message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
           }
         };
@@ -149,7 +157,11 @@ export default function CaiDatPage() {
       reader.onload = (event) => {
         const result = event.target?.result as string;
         if (result) {
-          setFormData((prev) => ({ ...prev, [field]: result }));
+          setFormData((prev) => ({
+            ...prev,
+            [field]: result,
+            ...(field === 'logoUrl' ? { logoDisplayMode: 'image_only' } : {}),
+          }));
           message.warning(`Đã tải tạm ảnh (dạng Base64). Nhấn "Lưu" để cập nhật.`);
         }
       };
@@ -157,6 +169,47 @@ export default function CaiDatPage() {
     }
 
     e.target.value = '';
+  };
+
+  const handleResetLogo = async () => {
+    const old = formData.logoUrl;
+    if (old && (old.startsWith('/img/') || old.startsWith('/uploads/'))) {
+      try {
+        await fetch('/api/upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: old }),
+        });
+      } catch (e) {
+        console.warn('Lỗi khi xóa file logo cũ:', e);
+      }
+    }
+    setFormData((prev) => ({
+      ...prev,
+      logoUrl: '',
+      logoDisplayMode: 'icon_with_text',
+    }));
+    message.info('Đã chuyển về Logo Hệ Thống Mới.');
+  };
+
+  const handleResetFavicon = async () => {
+    const old = formData.faviconUrl;
+    if (old && (old.startsWith('/img/') || old.startsWith('/uploads/'))) {
+      try {
+        await fetch('/api/upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: old }),
+        });
+      } catch (e) {
+        console.warn('Lỗi khi xóa file favicon cũ:', e);
+      }
+    }
+    setFormData((prev) => ({
+      ...prev,
+      faviconUrl: '',
+    }));
+    message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
   };
 
   const handleSaveSettings = async (e?: React.FormEvent) => {
@@ -197,7 +250,7 @@ export default function CaiDatPage() {
           zaloLink: 'https://zalo.me/0909053058',
           whatsappNumber: '0909053058',
           whatsappLink: 'https://wa.me/84909053058',
-          email: 'lienhe@vitinhantham.vn',
+          email: 'lienhe@vitinhantam.com',
           address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
           streetAddress: '52 Nguyễn Cửu Vân',
           district: 'P. Long An',
@@ -207,7 +260,7 @@ export default function CaiDatPage() {
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
           footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
+          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
           storeName: 'Vi Tính An Tâm',
         };
         setFormData(defaultData);
@@ -457,10 +510,7 @@ export default function CaiDatPage() {
                       {formData.logoUrl && (
                         <button
                           type="button"
-                          onClick={() => {
-                            handleChange('logoUrl', '');
-                            message.info('Đã chuyển về Logo Hệ Thống Mới.');
-                          }}
+                          onClick={handleResetLogo}
                           className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -490,14 +540,9 @@ export default function CaiDatPage() {
                             <SystemBrandIcon className="w-14 h-14 sm:w-16 sm:h-16" />
                           )}
                           <div className="flex flex-col leading-none">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-black text-xl sm:text-2xl text-[#2B1810]">
-                                {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
-                              </span>
-                              <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
-                                {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
-                              </span>
-                            </div>
+                            <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
+                              {formData.storeName || 'Vi Tính An Tâm'}
+                            </span>
                             <span className="text-xs sm:text-[13px] font-semibold text-[#6E5D53] tracking-wider uppercase mt-1">
                               {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
                             </span>
@@ -668,10 +713,7 @@ export default function CaiDatPage() {
                           {formData.faviconUrl && (
                             <button
                               type="button"
-                              onClick={() => {
-                                handleChange('faviconUrl', '');
-                                message.info('Đã khôi phục Favicon mặc định (/favicon.ico).');
-                              }}
+                              onClick={handleResetFavicon}
                               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />

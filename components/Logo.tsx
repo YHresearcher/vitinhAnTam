@@ -114,16 +114,11 @@ export function Logo({ className = 'h-auto w-auto', variant = 'light', slogan }:
         <SystemBrandIcon className="w-11 h-11 sm:w-12 sm:h-12" />
       )}
 
-      {/* Typography: Tên thương hiệu & Slogan */}
+      {/* Typography: Tên thương hiệu & Slogan (Đồng bộ một màu thương hiệu duy nhất) */}
       <div className="flex flex-col leading-tight justify-center">
-        <div className="flex items-center gap-1">
-          <span className={`font-black text-xs sm:text-sm tracking-tight ${variant === 'dark' ? 'text-white' : 'text-[#2B1810]'}`}>
-            {systemSettings?.storeName ? systemSettings.storeName.split(' ')[0] : 'VI TÍNH'}
-          </span>
-          <span className="font-black text-xs sm:text-sm tracking-tight text-[#C0392B]">
-            {systemSettings?.storeName ? systemSettings.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
-          </span>
-        </div>
+        <span className={`font-black text-xs sm:text-sm tracking-tight ${variant === 'dark' ? 'text-white' : 'text-[#C0392B]'}`}>
+          {systemSettings?.storeName || 'Vi Tính An Tâm'}
+        </span>
         <span className={`text-[9px] sm:text-[10px] font-semibold tracking-wider uppercase mt-0.5 ${variant === 'dark' ? 'text-slate-400' : 'text-[#6E5D53]'}`}>
           {currentSlogan}
         </span>

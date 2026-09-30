@@ -814,7 +814,7 @@ export default function MemberManagementPage() {
                     required
                     value={newUserForm.email}
                     onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                    placeholder="nam.hoang@vitinhantham.vn"
+                    placeholder="nam.hoang@vitinhantam.com"
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                   />
                 </div>

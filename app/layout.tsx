@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vitinhantham.vn'),
+  metadataBase: new URL('https://vitinhantam.com'),
   title: {
     default: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
   icons: {
     icon: '/favicon.ico',
   },
-  authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantham.vn' }],
+  authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantam.com' }],
   creator: 'Vi Tính An Tâm',
   publisher: 'Vi Tính An Tâm',
   formatDetection: {
@@ -61,13 +61,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, bảo hành chu đáo. Hotline: 0909.053.058.',
-    url: 'https://vitinhantham.vn',
+    url: 'https://vitinhantam.com',
     siteName: 'Vi Tính An Tâm',
     locale: 'vi_VN',
     type: 'website',
     images: [
       {
-        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, hỗ trợ tận tâm.',
-    images: ['https://vitinhantham.vn/anh-that-cua-hang.jpg'],
+    images: ['https://vitinhantam.com/anh-that-cua-hang.jpg'],
   },
   robots: {
     index: true,
@@ -98,10 +98,10 @@ const jsonLd = {
   '@type': 'LocalBusiness',
   name: 'Vi Tính An Tâm',
   slogan: 'Bán bằng tâm để bạn an tâm',
-  url: 'https://vitinhantham.vn',
+  url: 'https://vitinhantam.com',
   telephone: '+84909053058',
-  email: 'lienhe@vitinhantham.vn',
-  image: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+  email: 'lienhe@vitinhantam.com',
+  image: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '45 Nguyễn Huệ, Phường 1',
@@ -155,13 +155,6 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('vtat_theme_mode');
-                  if (theme === 'dark' || (!theme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                  }
-
                   var raw = localStorage.getItem('vtat_system_settings_v2');
                   if (raw) {
                     var parsed = JSON.parse(raw);

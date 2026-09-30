@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 
@@ -16,6 +16,30 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'svg', 'ico']);
 
+/**
+ * Xóa an toàn file ảnh cũ trên máy chủ (chỉ xóa trong /public/img/ hoặc /public/uploads/)
+ */
+async function safelyDeleteFile(url?: string | null) {
+  if (!url || typeof url !== 'string') return;
+  try {
+    const normalized = url.replace(/\\/g, '/').trim();
+    if (!normalized.startsWith('/img/') && !normalized.startsWith('/uploads/')) return;
+
+    // Ngăn chặn Directory Traversal
+    const relativePath = normalized.replace(/^\/+/, '');
+    if (relativePath.includes('..')) return;
+
+    const fullPath = join(process.cwd(), 'public', relativePath);
+    await unlink(fullPath);
+  } catch (err: unknown) {
+    // Bỏ qua lỗi nếu file không tồn tại (ENOENT)
+    const code = (err as { code?: string })?.code;
+    if (code !== 'ENOENT') {
+      console.warn('Lỗi khi xóa file cũ:', err);
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Kiểm tra session Admin / Quyền quản trị
@@ -31,6 +55,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const targetFolder = (formData.get('folder') as string) || 'header';
+    const oldUrl = formData.get('oldUrl') as string | null;
 
     if (!file) {
       return NextResponse.json(
@@ -80,6 +105,11 @@ export async function POST(request: NextRequest) {
 
     const publicUrl = `/img/${safeFolder}/${filename}`;
 
+    // 8. Tự động xóa file cũ nếu có để giải phóng dung lượng hosting
+    if (oldUrl && oldUrl !== publicUrl) {
+      await safelyDeleteFile(oldUrl);
+    }
+
     return NextResponse.json({
       success: true,
       url: publicUrl,
@@ -90,6 +120,42 @@ export async function POST(request: NextRequest) {
     console.error('Lỗi khi upload file:', error);
     return NextResponse.json(
       { success: false, message: 'Xảy ra lỗi trong quá trình lưu trữ file.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    // 1. Kiểm tra session Admin / Quyền quản trị
+    const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+    if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+      return NextResponse.json(
+        { success: false, message: 'Bạn không có quyền xóa file hệ thống.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const url = body.url as string | undefined;
+
+    if (!url) {
+      return NextResponse.json(
+        { success: false, message: 'Không tìm thấy URL file cần xóa.' },
+        { status: 400 }
+      );
+    }
+
+    await safelyDeleteFile(url);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Đã xóa file ảnh thành công!',
+    });
+  } catch (error) {
+    console.error('Lỗi khi xóa file:', error);
+    return NextResponse.json(
+      { success: false, message: 'Xảy ra lỗi khi xóa file.' },
       { status: 500 }
     );
   }

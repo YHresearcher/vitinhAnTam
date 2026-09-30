@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     title: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
     description:
       'Linh kiện rõ ràng, máy nguyên bản chưa qua sửa chữa, bảo hành chu đáo. Hotline: 0909.053.058.',
-    url: 'https://vitinhantham.vn',
+    url: 'https://vitinhantam.com',
     images: [
       {
-        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -44,7 +44,7 @@ const faqJsonLd = {
       name: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Khi máy gặp bất kỳ sự cố nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu theo số Serial (S/N). Chúng tôi luôn ứng phó nhanh với tình huống, hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng, đổi linh kiện kịp thời để công việc của quý khách không bị ảnh hưởng.',
+        text: 'Khi máy gặp bất kỳ sự cố nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu theo số Service Tag hoặc số điện thoại. Chúng tôi luôn ứng phó nhanh với tình huống, hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng, đổi linh kiện kịp thời để công việc của quý khách không bị ảnh hưởng.',
       },
     },
     {
@@ -71,12 +71,12 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Vi Tính An Tâm',
-  url: 'https://vitinhantham.vn',
+  url: 'https://vitinhantam.com',
   potentialAction: {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: 'https://vitinhantham.vn/tra-cuu-bao-hanh?tag={search_term_string}',
+      urlTemplate: 'https://vitinhantam.com/tra-cuu-bao-hanh?tag={search_term_string}',
     },
     'query-input': 'required name=search_term_string',
   },

@@ -84,7 +84,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'admin',
     roleTitle: 'Quản trị viên (Admin)',
     avatarBg: 'bg-blue-600',
-    email: 'thanhphan@vitinhantham.vn',
+    email: 'thanhphan@vitinhantam.com',
     phone: '0909.053.058',
   },
   technician: {
@@ -94,7 +94,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'technician',
     roleTitle: 'Kỹ thuật viên phần cứng & QC',
     avatarBg: 'bg-emerald-600',
-    email: 'tech01@vitinhantham.vn',
+    email: 'tech01@vitinhantam.com',
     phone: '0977.123.456',
   },
   outsourced: {
@@ -104,7 +104,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'outsourced',
     roleTitle: 'Kỹ thuật viên đối tác / Thuê ngoài',
     avatarBg: 'bg-amber-600',
-    email: 'cuong.ktvngoai@vitinhantham.vn',
+    email: 'cuong.ktvngoai@vitinhantam.com',
     phone: '0988.765.432',
   },
   sales: {
@@ -114,7 +114,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'sales',
     roleTitle: 'Chuyên viên Bán hàng & CSKH',
     avatarBg: 'bg-purple-600',
-    email: 'sales01@vitinhantham.vn',
+    email: 'sales01@vitinhantam.com',
     phone: '0933.345.678',
   },
 };
