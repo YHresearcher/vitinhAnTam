@@ -91,7 +91,7 @@ export const initialSystemSettings: SystemSettings = {
   ],
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
-  email: 'lienhe@vitinhantam.com',
+  email: 'lienhe@vitinhantham.vn',
   address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   streetAddress: '52 Nguyễn Cửu Vân',
   district: 'P. Long An',
@@ -101,7 +101,7 @@ export const initialSystemSettings: SystemSettings = {
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',
   footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
+  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 };
 
@@ -175,6 +175,7 @@ interface StoreContextType {
   isUsingSupabase: boolean;
   isLoading: boolean;
   syncStatus: 'synced' | 'local' | 'syncing';
+  syncError: string | null;
   lastSyncedAt: string | null;
   syncWithSupabase: () => Promise<void>;
 
@@ -262,11 +263,6 @@ interface StoreContextType {
   unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
   settleUnlockedWarrantyProvisionsYearEnd: () => Promise<{ settledCount: number; settledTotal: number }>;
 
-  // Theme Mode (Dark Blue vs Light)
-  themeMode: 'light' | 'dark';
-  toggleTheme: () => void;
-  setThemeMode: (mode: 'light' | 'dark') => void;
-
   // Reset
   resetToDefault: () => void;
 }
@@ -335,34 +331,6 @@ export function StoreProvider({
     return initialSystemSettings;
   });
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
-  const [themeMode, setThemeModeState] = useState<'light' | 'dark'>('light');
-
-  // Khởi tạo Theme Mode từ LocalStorage (việc gắn class .dark sẽ do layout admin quản lý)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('vtat_theme_mode');
-      if (saved === 'dark' || saved === 'light') {
-        setThemeModeState(saved);
-      }
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    setThemeModeState((prev) => {
-      const next = prev === 'light' ? 'dark' : 'light';
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('vtat_theme_mode', next);
-      }
-      return next;
-    });
-  };
-
-  const setThemeMode = (mode: 'light' | 'dark') => {
-    setThemeModeState(mode);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vtat_theme_mode', mode);
-    }
-  };
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
@@ -376,6 +344,7 @@ export function StoreProvider({
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'local' | 'syncing'>('local');
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const isUsingSupabase = isSupabaseConfigured();
 
@@ -648,278 +617,172 @@ export function StoreProvider({
       const { error } = await operation();
       if (error) {
         console.warn(`${label}: Supabase trả lỗi -> ${error.message}`);
+        setSyncError(`${label}: ${error.message}`);
         setSyncStatus('local');
         return false;
       }
       return true;
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không xác định';
       console.warn(`${label}: không gọi được Supabase ->`, err);
+      setSyncError(`${label}: ${message}`);
       setSyncStatus('local');
       return false;
     }
   };
 
   // Load from Storage or Supabase
-  // Load from Storage or Supabase
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
       try {
-        // 1. Kiểm tra và khôi phục phiên đăng nhập từ máy chủ qua /api/auth/me
-        let serverUserLoaded = false;
-        try {
-          const authRes = await fetch('/api/auth/me');
-          if (authRes.ok) {
-            const authData = await authRes.json();
-            if (authData?.success && authData?.user) {
-              setCurrentUser(authData.user);
-              setIsLoggedIn(true);
-              serverUserLoaded = true;
-              if (typeof window !== 'undefined') {
-                localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
-                localStorage.setItem(STORAGE_KEYS.userId, authData.user.id);
-                localStorage.setItem(STORAGE_KEYS.role, authData.user.role);
-              }
+      // Load saved users
+      let currentUsersList = initialUsers;
+      if (typeof window !== 'undefined') {
+        const savedUsersJson = localStorage.getItem(STORAGE_KEYS.users);
+        if (savedUsersJson) {
+          try {
+            const parsed = JSON.parse(savedUsersJson);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              // Không bao giờ khôi phục mật khẩu plaintext (nếu còn sót từ bản cũ)
+              currentUsersList = parsed.map((item: Partial<UserAccount>) => {
+                const safe: Partial<UserAccount> = { ...item };
+                delete safe.password;
+                return safe as UserAccount;
+              });
+              setUsers(currentUsersList);
             }
-          }
-        } catch {
-          // Không gọi được /api/auth/me -> tiếp tục kiểm tra localStorage
-        }
-
-        // 2. Load saved users & session fallback từ localStorage
-        let currentUsersList = initialUsers;
-        if (typeof window !== 'undefined') {
-          const savedUsersJson = localStorage.getItem(STORAGE_KEYS.users);
-          if (savedUsersJson) {
-            try {
-              const parsed = JSON.parse(savedUsersJson);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                currentUsersList = parsed.map((item: Partial<UserAccount>) => {
-                  const safe: Partial<UserAccount> = { ...item };
-                  delete safe.password;
-                  return safe as UserAccount;
-                });
-                setUsers(currentUsersList);
-              }
-            } catch (e) {
-              console.warn('Failed to parse saved users:', e);
-            }
-          }
-
-          if (!serverUserLoaded) {
-            const savedLoggedIn = localStorage.getItem(STORAGE_KEYS.isLoggedIn);
-            if (savedLoggedIn === 'true') {
-              setIsLoggedIn(true);
-              const savedUserId = localStorage.getItem(STORAGE_KEYS.userId);
-              const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
-              if (savedUserId) {
-                const matched = currentUsersList.find((u) => u.id === savedUserId);
-                if (matched) setCurrentUser(matched);
-              } else if (savedRole) {
-                const matched = currentUsersList.find((u) => u.role === savedRole);
-                if (matched) setCurrentUser(matched);
-              }
-            } else {
-              setIsLoggedIn(false);
-            }
+          } catch (e) {
+            console.warn('Failed to parse saved users:', e);
           }
         }
 
-        // 3. Đọc toàn bộ dữ liệu từ Supabase (nếu đã cấu hình)
-        const pullFromSupabase = async (): Promise<boolean> => {
-          if (!isUsingSupabase || !supabase) return false;
+        // Load saved user id or role ONLY if user is already logged in
+        const savedLoggedIn = localStorage.getItem(STORAGE_KEYS.isLoggedIn);
+        if (savedLoggedIn === 'true') {
+          setIsLoggedIn(true);
+          const savedUserId = localStorage.getItem(STORAGE_KEYS.userId);
+          const savedRole = localStorage.getItem(STORAGE_KEYS.role) as UserRole | null;
+          if (savedUserId) {
+            const matched = currentUsersList.find((u) => u.id === savedUserId);
+            if (matched) setCurrentUser(matched);
+          } else if (savedRole) {
+            const matched = currentUsersList.find((u) => u.role === savedRole);
+            if (matched) setCurrentUser(matched);
+          }
+        } else {
+          setIsLoggedIn(false);
+        }
+      }
 
-          const [
-            invRes,
-            cusRes,
-            tckRes,
-            spRes,
-            onsRes,
-            shfRes,
-            faqRes,
-            revRes,
-            catRes,
-            keyRes,
-            reqRes,
-            wpRes,
-            setRes,
-            usrRes,
-          ] = await Promise.all([
-            supabase.from('inventory_items').select('*'),
-            supabase.from('customers').select('*'),
-            supabase.from('service_tickets').select('*'),
-            supabase.from('spare_parts').select('*'),
-            supabase.from('onsite_dispatches').select('*'),
-            supabase.from('shift_logs').select('*'),
-            supabase.from('faqs').select('*').order('order_index', { ascending: true }),
-            supabase.from('customer_reviews').select('*'),
-            supabase.from('key_categories').select('*'),
-            supabase.from('license_keys').select('*'),
-            supabase.from('key_release_requests').select('*'),
-            supabase.from('warranty_provisions').select('*'),
-            supabase.from('system_settings').select('*').limit(1),
-            supabase.from('users').select('*'),
-          ]);
+      // Đọc dữ liệu từ Supabase. supabase-js KHÔNG ném exception — lỗi nằm trong `.error`,
+      // nên bắt buộc phải kiểm tra từng kết quả, nếu không sẽ báo "đã đồng bộ" sai sự thật.
+      const pullFromSupabase = async (): Promise<boolean> => {
+        if (!isUsingSupabase || !supabase) return false;
 
-          let hasAnyData = false;
+        const results = await Promise.all([
+          supabase.from('inventory_items').select('*'),
+          supabase.from('customers').select('*'),
+          supabase.from('service_tickets').select('*'),
+          supabase.from('spare_parts').select('*'),
+          supabase.from('onsite_dispatches').select('*'),
+          supabase.from('shift_logs').select('*'),
+        ]);
 
-          if (invRes.data && invRes.data.length > 0) {
-            setInventory(invRes.data as InventoryItem[]);
-            hasAnyData = true;
-          }
-          if (cusRes.data && cusRes.data.length > 0) {
-            setCustomers(cusRes.data as Customer[]);
-            hasAnyData = true;
-          }
-          if (tckRes.data && tckRes.data.length > 0) {
-            setTickets(tckRes.data as ServiceTicket[]);
-            hasAnyData = true;
-          }
-          if (spRes.data && spRes.data.length > 0) {
-            setSpareParts(spRes.data as SparePart[]);
-            hasAnyData = true;
-          }
-          if (onsRes.data && onsRes.data.length > 0) {
-            setOnsiteDispatches(onsRes.data as OnsiteDispatch[]);
-            hasAnyData = true;
-          }
-          if (shfRes.data && shfRes.data.length > 0) {
-            setShiftLogs(shfRes.data as ShiftLog[]);
-            hasAnyData = true;
-          }
-          if (faqRes.data && faqRes.data.length > 0) {
-            setFaqs(faqRes.data as FaqItem[]);
-            hasAnyData = true;
-          }
-          if (revRes.data && revRes.data.length > 0) {
-            setReviews(revRes.data as CustomerReview[]);
-            hasAnyData = true;
-          }
-          if (catRes.data && catRes.data.length > 0) {
-            setKeyCategories(catRes.data as KeyCategory[]);
-            hasAnyData = true;
-          }
-          if (keyRes.data && keyRes.data.length > 0) {
-            setLicenseKeys(keyRes.data as LicenseKeyItem[]);
-            hasAnyData = true;
-          }
-          if (reqRes.data && reqRes.data.length > 0) {
-            setKeyReleaseRequests(reqRes.data as KeyReleaseRequest[]);
-            hasAnyData = true;
-          }
-          if (wpRes.data && wpRes.data.length > 0) {
-            setWarrantyProvisions(wpRes.data as WarrantyProvision[]);
-            hasAnyData = true;
-          }
-          if (setRes.data && setRes.data.length > 0) {
-            const rawSet = setRes.data[0];
-            const mappedSettings: Partial<SystemSettings> = {
-              logoUrl: rawSet.logo_url ?? rawSet.logoUrl,
-              logoDisplayMode: rawSet.logo_display_mode ?? rawSet.logoDisplayMode,
-              faviconUrl: rawSet.favicon_url ?? rawSet.faviconUrl,
-              brandSlogan: rawSet.brand_slogan ?? rawSet.brandSlogan,
-              hotline: rawSet.hotline,
-              zaloNumber: rawSet.zalo_number ?? rawSet.zaloNumber,
-              zaloLink: rawSet.zalo_link ?? rawSet.zaloLink,
-              zaloContacts: rawSet.zalo_contacts ?? rawSet.zaloContacts,
-              whatsappNumber: rawSet.whatsapp_number ?? rawSet.whatsappNumber,
-              whatsappLink: rawSet.whatsapp_link ?? rawSet.whatsappLink,
-              email: rawSet.email,
-              address: rawSet.address,
-              streetAddress: rawSet.street_address ?? rawSet.streetAddress,
-              district: rawSet.district,
-              city: rawSet.city,
-              serviceAreas: rawSet.service_areas ?? rawSet.serviceAreas,
-              workingHoursWeekday: rawSet.working_hours_weekday ?? rawSet.workingHoursWeekday,
-              workingHoursWeekend: rawSet.working_hours_weekend ?? rawSet.workingHoursWeekend,
-              primeHours: rawSet.prime_hours ?? rawSet.primeHours,
-              footerAbout: rawSet.footer_about ?? rawSet.footerAbout,
-              footerCopyright: rawSet.footer_copyright ?? rawSet.footerCopyright,
-              storeName: rawSet.store_name ?? rawSet.storeName,
-            };
-            setSystemSettings((prev) => ({ ...prev, ...mappedSettings }));
-            hasAnyData = true;
-          }
-          if (usrRes.data && usrRes.data.length > 0) {
-            const cleanUsers = usrRes.data.map((u: Partial<UserAccount>) => {
-              const safe = { ...u };
-              delete safe.password;
-              return safe as UserAccount;
-            });
-            setUsers(cleanUsers);
-            hasAnyData = true;
-          }
+        const failures = results.flatMap((result) => (result.error ? [result.error] : []));
+        if (failures.length > 0) {
+          throw new Error(failures.map((failure) => failure.message).join(' | '));
+        }
 
-          setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
-          return hasAnyData;
+        const [
+          invData = [],
+          cusData = [],
+          tckData = [],
+          spData = [],
+          onsData = [],
+          shfData = [],
+        ] = results.map((result) => result.data ?? []);
+
+        if (invData.length > 0) setInventory(invData as InventoryItem[]);
+        if (cusData.length > 0) setCustomers(cusData as Customer[]);
+        if (tckData.length > 0) setTickets(tckData as ServiceTicket[]);
+        if (spData.length > 0) setSpareParts(spData as SparePart[]);
+        if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
+        if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+
+        setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
+        return true;
+      };
+
+      let supabasePulledOk = false;
+      try {
+        if (await pullFromSupabase()) {
+          setSyncStatus('synced');
+          supabasePulledOk = true;
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Không xác định';
+        console.warn('Could not fetch from Supabase, fallback to local storage:', err);
+        setSyncError(`Tải dữ liệu Supabase: ${message}`);
+      }
+
+      // Local storage fallback / persistence for remaining items (keys, settings, faqs, reviews)
+      if (typeof window !== 'undefined') {
+        const readJson = <T,>(key: string, apply: (value: T) => void) => {
+          const raw = localStorage.getItem(key);
+          if (!raw) return;
+          try {
+            apply(JSON.parse(raw) as T);
+          } catch (e) {
+            console.warn(`Bỏ qua dữ liệu hỏng trong localStorage (${key}):`, e);
+            localStorage.removeItem(key);
+          }
         };
 
-        let supabasePulledOk = false;
-        try {
-          if (await pullFromSupabase()) {
-            setSyncStatus('synced');
-            supabasePulledOk = true;
-          }
-        } catch (err) {
-          console.warn('Could not fetch from Supabase, fallback to local storage:', err);
-        }
-
-        // 4. Local storage fallback / persistence
-        if (typeof window !== 'undefined') {
-          const readJson = <T,>(key: string, apply: (value: T) => void) => {
-            const raw = localStorage.getItem(key);
-            if (!raw) return;
-            try {
-              apply(JSON.parse(raw) as T);
-            } catch (e) {
-              console.warn(`Bỏ qua dữ liệu hỏng trong localStorage (${key}):`, e);
-              localStorage.removeItem(key);
-            }
-          };
-
-          if (!supabasePulledOk) {
-            readJson<InventoryItem[]>(STORAGE_KEYS.inventory, setInventory);
-            readJson<Customer[]>(STORAGE_KEYS.customers, setCustomers);
-            readJson<ServiceTicket[]>(STORAGE_KEYS.tickets, setTickets);
-            readJson<SparePart[]>(STORAGE_KEYS.spareParts, setSpareParts);
-            readJson<OnsiteDispatch[]>(STORAGE_KEYS.onsiteDispatches, setOnsiteDispatches);
-            readJson<ShiftLog[]>(STORAGE_KEYS.shiftLogs, setShiftLogs);
-            readJson<SoftwareLicense[]>(STORAGE_KEYS.softwareLicenses, setSoftwareLicenses);
-            readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
-            readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
-            readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, setKeyCategories);
-            readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, setLicenseKeys);
-            readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
-            readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
-            readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
-          }
-
-          readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
-            setSystemSettings((prev) => ({ ...prev, ...parsed }));
-          });
-
-          // Tải cấu hình mới nhất từ máy chủ (.data/settings.json)
-          fetch('/api/settings')
-            .then((res) => res.json())
-            .then((resData) => {
-              if (resData?.success && resData?.data) {
-                setSystemSettings((prev) => ({ ...prev, ...resData.data }));
-                try {
-                  localStorage.setItem('vtat_system_settings_v2', JSON.stringify(resData.data));
-                } catch {}
-              }
-            })
-            .catch(() => {});
-
-          const savedLang = localStorage.getItem('vtat_lang_v2');
-          if (savedLang === 'vi' || savedLang === 'en') {
-            setCurrentLang(savedLang);
-          }
-        }
-
         if (!supabasePulledOk) {
-          setSyncStatus('local');
+          readJson<InventoryItem[]>(STORAGE_KEYS.inventory, setInventory);
+          readJson<Customer[]>(STORAGE_KEYS.customers, setCustomers);
+          readJson<ServiceTicket[]>(STORAGE_KEYS.tickets, setTickets);
+          readJson<SparePart[]>(STORAGE_KEYS.spareParts, setSpareParts);
+          readJson<OnsiteDispatch[]>(STORAGE_KEYS.onsiteDispatches, setOnsiteDispatches);
+          readJson<ShiftLog[]>(STORAGE_KEYS.shiftLogs, setShiftLogs);
         }
+
+        readJson<SoftwareLicense[]>(STORAGE_KEYS.softwareLicenses, setSoftwareLicenses);
+        readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
+        readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
+        readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, setKeyCategories);
+        readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, setLicenseKeys);
+        readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
+        readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
+        readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
+
+        readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
+          setSystemSettings((prev) => ({ ...prev, ...parsed }));
+        });
+
+        // Tải cấu hình mới nhất từ máy chủ (.data/settings.json)
+        fetch('/api/settings')
+          .then((res) => res.json())
+          .then((resData) => {
+            if (resData?.success && resData?.data) {
+              setSystemSettings((prev) => ({ ...prev, ...resData.data }));
+              try {
+                localStorage.setItem('vtat_system_settings_v2', JSON.stringify(resData.data));
+              } catch {}
+            }
+          })
+          .catch(() => {});
+
+        const savedLang = localStorage.getItem('vtat_lang_v2');
+        if (savedLang === 'vi' || savedLang === 'en') {
+          setCurrentLang(savedLang);
+        }
+      }
+
+      if (!supabasePulledOk) {
+        setSyncStatus('local');
+      }
     } finally {
       // Luôn tắt loading — kể cả khi JSON.parse/Supabase lỗi, nếu không app sẽ treo màn hình chờ.
       setIsLoading(false);
@@ -958,10 +821,12 @@ export function StoreProvider({
   // Đồng bộ thủ công: kéo dữ liệu mới nhất từ Supabase về (ghi đã xảy ra inline ở từng hành động)
   const syncWithSupabase = async () => {
     if (!isUsingSupabase || !supabase) {
+      setSyncError('Chưa cấu hình Supabase hoặc thiếu biến môi trường kết nối.');
       setSyncStatus('local');
       return;
     }
     setSyncStatus('syncing');
+    setSyncError(null);
     try {
       const [
         invResult,
@@ -1003,7 +868,9 @@ export function StoreProvider({
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
       setSyncStatus('synced');
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không xác định';
       console.error('Sync failed:', err);
+      setSyncError(message);
       setSyncStatus('local');
     }
   };
@@ -1087,7 +954,8 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
+    // Dữ liệu mock (inv-1, inv-2...) không tồn tại trong DB — chỉ ghi khi id là UUID hợp lệ
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').update(data).eq('id', id),
@@ -1120,7 +988,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.inventory, next);
       return next;
     });
-    if (isUsingSupabase && supabase) {
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').delete().eq('id', id),
@@ -1933,7 +1801,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('service_tickets').update({ status }).eq('id', id),
@@ -1953,7 +1821,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('service_tickets').update({ technician_name: technicianName }).eq('id', id),
@@ -1971,7 +1839,8 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
+    // Trước đây chỉ ghi localStorage -> bật Supabase là mất trạng thái sau khi refresh
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('onsite_dispatches').update({ status }).eq('id', id),
@@ -1990,7 +1859,7 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
+    if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('onsite_dispatches').update({ technician_name: technicianName }).eq('id', id),
@@ -2149,30 +2018,6 @@ export function StoreProvider({
         saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
         return next;
       });
-
-      if (isUsingSupabase && supabase) {
-        const client = supabase;
-        runSupabaseWrite(
-          () => client.from('warranty_provisions').insert([newProvision]),
-          'Trích lập quỹ bảo hành'
-        );
-      }
-    }
-
-    if (isUsingSupabase && supabase) {
-      const client = supabase;
-      runSupabaseWrite(
-        () => client.from('inventory_items').update(updatedItem).eq('id', params.itemId),
-        'Cập nhật máy đã bán'
-      );
-      runSupabaseWrite(
-        () => client.from('customers').insert([newCustomer]),
-        'Lưu khách hàng'
-      );
-      runSupabaseWrite(
-        () => client.from('service_tickets').insert([warrantyTicket]),
-        'Lưu hóa đơn bán máy'
-      );
     }
 
     return {
@@ -2477,6 +2322,7 @@ export function StoreProvider({
       isUsingSupabase,
       isLoading,
       syncStatus,
+      syncError,
       lastSyncedAt,
       syncWithSupabase,
       findWarrantyByTagOrPhone,
@@ -2491,9 +2337,6 @@ export function StoreProvider({
       updateDispatchStatus,
       assignDispatchTechnician,
       addShiftLog,
-      themeMode,
-      toggleTheme,
-      setThemeMode,
       resetToDefault,
     }),
     [
@@ -2521,8 +2364,8 @@ export function StoreProvider({
       isUsingSupabase,
       isLoading,
       syncStatus,
+      syncError,
       lastSyncedAt,
-      themeMode,
     ]
   );
 

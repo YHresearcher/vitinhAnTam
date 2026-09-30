@@ -4,7 +4,7 @@ import React from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 export function SyncStatusBadge() {
-  const { isUsingSupabase, syncStatus, lastSyncedAt, syncWithSupabase } = useViTinhAnTamStore();
+  const { isUsingSupabase, syncStatus, syncError, lastSyncedAt, syncWithSupabase } = useViTinhAnTamStore();
 
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -13,7 +13,7 @@ export function SyncStatusBadge() {
         disabled={syncStatus === 'syncing'}
         title={
           isUsingSupabase
-            ? 'Trạng thái: ' + syncStatus + '. Nhấp để đồng bộ ngay.'
+            ? syncError || 'Trạng thái: ' + syncStatus + '. Nhấp để đồng bộ ngay.'
             : 'Dữ liệu bảo mật an toàn. Nhấp để đồng bộ Supabase.'
         }
         className={'px-2.5 py-1 rounded-full border transition-all flex items-center gap-1.5 font-medium ' + (
@@ -38,6 +38,8 @@ export function SyncStatusBadge() {
             ? 'Đã đồng bộ Cloud (' + (lastSyncedAt || 'OK') + ')'
             : syncStatus === 'syncing'
             ? 'Đang đồng bộ...'
+            : syncError
+            ? 'Đồng bộ lỗi'
             : 'Dữ liệu an toàn'}
         </span>
         {syncStatus !== 'syncing' && (
