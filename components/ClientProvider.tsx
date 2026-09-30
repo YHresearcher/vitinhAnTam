@@ -35,6 +35,16 @@ function ThemedAppContainer({ children }: { children: React.ReactNode }) {
   const { themeMode } = useViTinhAnTamStore();
   const isDark = themeMode === 'dark';
 
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, [isDark]);
+
   return (
     <ConfigProvider
       locale={viVN}

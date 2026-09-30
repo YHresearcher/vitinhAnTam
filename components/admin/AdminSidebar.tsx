@@ -22,7 +22,6 @@ import {
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 interface AdminSidebarProps {
@@ -232,11 +231,6 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             </div>
             <span className="text-[10px] text-slate-400 font-mono">Web</span>
           </Link>
-
-          {/* Theme Mode Toggle (Dark Blue / Light) */}
-          <div className="px-1 py-1">
-            <ThemeToggle variant="switch" />
-          </div>
 
           <button
             type="button"

@@ -44,12 +44,6 @@ export default function AdminLayout({
         document.documentElement.classList.remove('dark');
       }
     }
-    return () => {
-      // Ensure frontend pages are strictly light mode when navigating away from admin
-      if (typeof document !== 'undefined') {
-        document.documentElement.classList.remove('dark');
-      }
-    };
   }, [themeMode]);
 
   // Command palette navigation items filtered by permissions
@@ -196,8 +190,8 @@ export default function AdminLayout({
               <span className="hidden xs:inline font-mono">KHO KEY</span>
             </Link>
 
-            {/* Theme Toggle Button (Dark Blue / Light) */}
-            <ThemeToggle variant="pill" />
+            {/* Theme Toggle Icon Button (Dark / Light) */}
+            <ThemeToggle variant="icon" />
 
             {/* Create Ticket Button */}
             <Link

@@ -76,15 +76,6 @@ strong, b, .font-semibold, .font-medium {
   font-feature-settings: "tnum" on;
 }
 
-/* Gỡ bỏ 100% tất cả icon trong toàn bộ hệ thống quản lý */
-.admin-scope svg.lucide,
-.admin-scope svg[class*="lucide"],
-.admin-scope [class*="lucide-"],
-.admin-scope .anticon,
-.admin-scope [role="img"]:not(img) {
-  display: none !important;
-}
-
 /* Smooth custom scrollbars in warm earth tones */
 ::-webkit-scrollbar {
   width: 6px;
@@ -309,6 +300,39 @@ html.dark .admin-scope aside nav a.bg-blue-50 {
   background-color: rgba(59, 130, 246, 0.2) !important;
   border-color: rgba(59, 130, 246, 0.4) !important;
   color: #60A5FA !important;
+}
+
+html.dark .admin-scope .bg-white {
+  background-color: #101B38 !important;
+  border-color: #2D3A66 !important;
+}
+
+html.dark .admin-scope .bg-slate-50 {
+  background-color: #162039 !important;
+  border-color: #2D3A66 !important;
+}
+
+html.dark .admin-scope .bg-slate-100 {
+  background-color: #1E294B !important;
+}
+
+html.dark .admin-scope .text-slate-900,
+html.dark .admin-scope .text-slate-800 {
+  color: #F8FAFC !important;
+}
+
+html.dark .admin-scope .text-slate-700 {
+  color: #CBD5E1 !important;
+}
+
+html.dark .admin-scope .text-slate-600,
+html.dark .admin-scope .text-slate-500 {
+  color: #94A3B8 !important;
+}
+
+html.dark .admin-scope .border-slate-200,
+html.dark .admin-scope .border-slate-100 {
+  border-color: #2D3A66 !important;
 }
 
 /* 9. Ô nhập liệu Form & Select */
