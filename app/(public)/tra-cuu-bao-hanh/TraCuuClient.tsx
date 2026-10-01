@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { formatDateVN, InventoryItem, ServiceTicket, Customer } from '@/lib/supabase';
+import { formatDateVN, InventoryItem, ServiceTicket, Customer, supabase } from '@/lib/supabase';
 import { TRANSLATIONS } from '@/lib/translations';
 import {
   Search,
@@ -50,8 +50,32 @@ function WarrantyLookupContent() {
     }
     setIsSearching(true);
     setHasSearched(true);
-    setTimeout(() => {
-      const res = findWarrantyByTagOrPhone(q);
+    setTimeout(async () => {
+      let res = findWarrantyByTagOrPhone(q);
+      // Nếu chưa thấy trong bộ nhớ, truy vấn trực tiếp đúng 1 bản ghi từ Supabase theo mã phiếu / SĐT / Service Tag
+      if (!res || (!res.item && !res.ticket)) {
+        if (supabase) {
+          try {
+            const rawDigits = q.replace(/\D/g, '');
+            const filterParts = [`ticket_code.ilike.%${q}%`, `device_service_tag.ilike.%${q}%`];
+            if (rawDigits.length >= 7) {
+              filterParts.push(`customer_phone.ilike.%${rawDigits}%`);
+            }
+            const { data: tckData } = await supabase
+              .from('service_tickets')
+              .select('*')
+              .or(filterParts.join(','))
+              .limit(1);
+
+            if (tckData && tckData.length > 0) {
+              res = { ticket: tckData[0] as ServiceTicket };
+            }
+          } catch (e) {
+            console.warn('Lỗi tra cứu trực tiếp Supabase:', e);
+          }
+        }
+      }
+
       setIsSearching(false);
       if (res && (res.item || res.ticket)) {
         setSearchResult(res);
