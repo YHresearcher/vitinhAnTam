@@ -10,11 +10,11 @@ interface LogoProps {
 }
 
 export function Logo({ className = '', variant = 'light', hideSlogan = false }: LogoProps) {
-  const { currentLang, systemSettings } = useViTinhAnTamStore();
+  const { currentLang } = useViTinhAnTamStore();
   const [hasError, setHasError] = useState(false);
 
-  // Đường dẫn ảnh logo
-  const logoSrc = systemSettings?.logoUrl?.trim() || '/img/header/logo.png';
+  // Đường dẫn ảnh logo cố định chuẩn thương hiệu
+  const logoSrc = '/img/header/logo.png';
   const isEn = currentLang === 'en';
   const sloganText = isEn ? 'Sold with Care, Keeping You Carefree' : 'Bán bằng tâm để bạn an tâm';
 
@@ -22,7 +22,7 @@ export function Logo({ className = '', variant = 'light', hideSlogan = false }: 
     <div className={`flex items-center gap-2.5 sm:gap-3 select-none ${className}`}>
       {/* Biểu tượng Logo / Image */}
       <div className="shrink-0 flex items-center justify-center">
-        {!hasError && logoSrc ? (
+        {!hasError ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={logoSrc}
@@ -37,7 +37,7 @@ export function Logo({ className = '', variant = 'light', hideSlogan = false }: 
         )}
       </div>
 
-      {/* Brand Name & Slogan (Hardcoded & Bất Biến) */}
+      {/* Brand Name & Slogan */}
       <div className="flex flex-col leading-none text-left justify-center">
         <div className="flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
           <span

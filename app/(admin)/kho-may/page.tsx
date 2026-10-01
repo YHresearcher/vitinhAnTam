@@ -391,14 +391,16 @@ export default function KhoMayPage() {
     warranty_months: 12,
   });
 
-  // Helper tính số ngày tồn kho
-  const getItemDaysInStock = (item: InventoryItem, nowTimestamp = Date.now()) => {
-    const dateStr = item.import_date || item.created_at;
-    if (!dateStr) return 0;
-    const itemDate = new Date(dateStr).getTime();
-    if (Number.isNaN(itemDate)) return 0;
-    return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
-  };
+// Helper tính số ngày tồn kho
+function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number {
+  const dateStr = item.import_date || item.created_at;
+  if (!dateStr) return 0;
+  const itemDate = new Date(dateStr).getTime();
+  if (Number.isNaN(itemDate)) return 0;
+  return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
+}
+
+  const nowTimestamp = useMemo(() => Date.now(), []);
 
   // Filtered inventory - Machines
   const filteredInventory = useMemo(() => {
@@ -419,7 +421,7 @@ export default function KhoMayPage() {
 
       let matchesStatus = true;
       if (selectedStatus === 'aging_warning') {
-        const days = getItemDaysInStock(item);
+        const days = calculateDaysInStock(item, nowTimestamp);
         matchesStatus = days >= 50 && item.qc_status !== 'sold';
       } else if (selectedStatus !== 'all') {
         matchesStatus = item.qc_status === selectedStatus;
@@ -427,7 +429,7 @@ export default function KhoMayPage() {
 
       return matchesSearch && matchesBrand && matchesStatus;
     });
-  }, [inventory, searchQuery, selectedBrand, selectedStatus]);
+  }, [inventory, searchQuery, selectedBrand, selectedStatus, nowTimestamp]);
 
   // Filtered Spare Parts - Linh kiện
   const filteredSpareParts = useMemo(() => {
@@ -473,11 +475,11 @@ export default function KhoMayPage() {
 
     // Thiết bị cảnh báo tồn kho lâu (Aging Warning: 50-55d Yellow, 56-60d+ Red)
     const agingYellow = inventory.filter((i) => {
-      const days = getItemDaysInStock(i);
+      const days = calculateDaysInStock(i, nowTimestamp);
       return days >= 50 && days < 56 && i.qc_status !== 'sold';
     }).length;
     const agingRed = inventory.filter((i) => {
-      const days = getItemDaysInStock(i);
+      const days = calculateDaysInStock(i, nowTimestamp);
       return days >= 56 && i.qc_status !== 'sold';
     }).length;
     const agingTotal = agingYellow + agingRed;
@@ -1190,7 +1192,7 @@ export default function KhoMayPage() {
                 filteredInventory.map((item) => {
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
-                  const daysInStock = getItemDaysInStock(item);
+                  const daysInStock = calculateDaysInStock(item, nowTimestamp);
                   const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold';
                   const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold';
 
@@ -3044,7 +3046,7 @@ export default function KhoMayPage() {
                     <span className="text-[10px] text-slate-500">Tuổi kho &amp; Cảnh báo:</span>
                     <div className="mt-0.5">
                       {(() => {
-                        const days = getItemDaysInStock(viewingSpecsItem);
+                        const days = calculateDaysInStock(viewingSpecsItem, nowTimestamp);
                         if (viewingSpecsItem.qc_status === 'sold') {
                           return <span className="text-slate-400 font-mono">Đã bán</span>;
                         }

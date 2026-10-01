@@ -38,18 +38,20 @@ export default function DashboardPage() {
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
   const [activeListTab, setActiveListTab] = useState<'tickets' | 'onsite' | 'qc'>('tickets');
 
-  // Helper tính số ngày tồn kho của thiết bị (thuần túy theo timestamp)
-  const getItemDaysInStock = (item: InventoryItem, nowTimestamp = Date.now()) => {
-    const dateStr = item.import_date || item.created_at;
-    if (!dateStr) return 0;
-    const itemDate = new Date(dateStr).getTime();
-    if (Number.isNaN(itemDate)) return 0;
-    return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
-  };
+// Helper tính số ngày tồn kho của thiết bị (thuần túy theo timestamp)
+function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number {
+  const dateStr = item.import_date || item.created_at;
+  if (!dateStr) return 0;
+  const itemDate = new Date(dateStr).getTime();
+  if (Number.isNaN(itemDate)) return 0;
+  return Math.max(0, Math.floor((nowTimestamp - itemDate) / (1000 * 60 * 60 * 24)));
+}
 
   // ==========================================
   // THỐNG KÊ THIẾT BỊ & CẢNH BÁO TỒN KHO LÂU
   // ==========================================
+  const nowTimestamp = useMemo(() => Date.now(), []);
+
   const deviceStats = useMemo(() => {
     const total = inventory.length;
     const rts = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
@@ -59,15 +61,15 @@ export default function DashboardPage() {
 
     // Aging alerts: 50-55d Yellow, 56-60d+ Red
     const agingYellowItems = inventory.filter((i) => {
-      const days = getItemDaysInStock(i);
+      const days = calculateDaysInStock(i, nowTimestamp);
       return days >= 50 && days < 56 && i.qc_status !== 'sold';
     });
     const agingRedItems = inventory.filter((i) => {
-      const days = getItemDaysInStock(i);
+      const days = calculateDaysInStock(i, nowTimestamp);
       return days >= 56 && i.qc_status !== 'sold';
     });
     const allAgingItems = [...agingRedItems, ...agingYellowItems].sort(
-      (a, b) => getItemDaysInStock(b) - getItemDaysInStock(a)
+      (a, b) => calculateDaysInStock(b, nowTimestamp) - calculateDaysInStock(a, nowTimestamp)
     );
     const agingCapital = allAgingItems.reduce(
       (sum, i) => sum + (i.import_price || i.cost_price || 0),
@@ -368,9 +370,6 @@ export default function DashboardPage() {
       return { label: bucket.label, date: bucket.date, income, expense };
     });
   }, [inventory, licenseKeys, tickets, cashflowTimeframe]);
-
-  const totalIncome = cashflowData.reduce((acc, cur) => acc + cur.income, 0);
-  const totalExpense = cashflowData.reduce((acc, cur) => acc + cur.expense, 0);
 
   // 4 Revenue Pillars Data for Donut Chart
   const revenuePillarsData = useMemo(() => {
@@ -810,7 +809,7 @@ export default function DashboardPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {deviceStats.allAgingItems.map((item) => {
-                    const days = getItemDaysInStock(item);
+                    const days = calculateDaysInStock(item, nowTimestamp);
                     const isRed = days >= 56;
 
                     return (

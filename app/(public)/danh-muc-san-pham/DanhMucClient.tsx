@@ -459,10 +459,10 @@ function ProductsCatalogContent() {
                   <span>{selectedProduct.isSold ? t.products.soldBadge : t.qcModal.badge}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
-                <div className="text-xs text-slate-500 font-mono mt-0.5">
-                  {t.qcModal.serviceTag}{' '}
-                  <span className="font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-mono">
-                    {selectedProduct.serviceTag}
+                <div className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+                  <span className="text-slate-500">{t.qcModal.serviceTag || (isEn ? 'QC Status:' : 'Trạng thái kiểm định:')}</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                    {isEn ? '100% Factory Standard Passed' : '100% Đạt Chuẩn Xuất Xưởng'}
                   </span>
                 </div>
               </div>
@@ -574,7 +574,7 @@ function ProductsCatalogContent() {
             ) : (
               <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Link
-                  href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}&tag=${encodeURIComponent(selectedProduct.serviceTag)}`}
+                  href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}`}
                   onClick={() => setSelectedProduct(null)}
                   className="flex-1 py-3 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
                 >
@@ -582,7 +582,7 @@ function ProductsCatalogContent() {
                   <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
                 </Link>
                 <a
-                  href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})`)}`}
+                  href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name}` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name}, vui lòng gửi thêm hình ảnh thực tế`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-3 px-5 rounded-lg bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"

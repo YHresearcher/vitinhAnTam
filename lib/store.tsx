@@ -52,9 +52,6 @@ export interface ZaloContactItem {
 }
 
 export interface SystemSettings {
-  logoUrl?: string;
-  logoDisplayMode?: 'icon_with_text' | 'image_only';
-  faviconUrl?: string;
   brandSlogan?: string;
   hotline: string;
   zaloNumber: string;
@@ -77,9 +74,6 @@ export interface SystemSettings {
 }
 
 export const initialSystemSettings: SystemSettings = {
-  logoUrl: '',
-  logoDisplayMode: 'icon_with_text',
-  faviconUrl: '',
   brandSlogan: 'Bán bằng tâm để bạn an tâm',
   hotline: '0909.053.058',
   zaloNumber: '0909053058',
@@ -370,13 +364,13 @@ export function StoreProvider({
 
   const triggerImmediateRedirectToLogin = () => {
     setIsLoggingOut(false);
-    window.location.href = '/login';
+    window.location.assign('/login');
   };
 
   useEffect(() => {
     if (!isLoggingOut) return;
     if (logoutCountdown <= 0) {
-      window.location.href = '/login';
+      window.location.assign('/login');
       return;
     }
     const timer = setTimeout(() => {

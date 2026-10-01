@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TRANSLATIONS } from '@/lib/translations';
-import { User, LogOut, LogIn, Menu, X } from 'lucide-react';
+import { User, LogOut, LogIn, Menu, X, Calendar } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -94,6 +94,15 @@ export function Navbar() {
 
         {/* Right CTAs */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* Nút Đặt Lịch Ngay trên Desktop */}
+          <Link
+            href="/dat-lich"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs lg:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>{t.bookNow || (isEn ? 'Book Service' : 'Đặt Lịch Ngay')}</span>
+          </Link>
+
           {/* Language Switcher - SVG Flags */}
           <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
             <button
@@ -238,6 +247,18 @@ export function Navbar() {
           >
             {t.contact}
           </Link>
+
+          {/* Mobile CTA Đặt Lịch Ngay */}
+          <div className="pt-2 pb-1">
+            <Link
+              href="/dat-lich"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full py-3 px-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              <span>{t.bookNow || (isEn ? 'Book Service' : 'Đặt Lịch Ngay')}</span>
+            </Link>
+          </div>
 
           {/* Mobile Language Switcher */}
           <div className="pt-2 border-t border-[#E8E2D9] flex items-center justify-between px-3.5">

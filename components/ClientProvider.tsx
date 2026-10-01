@@ -8,29 +8,6 @@ import { LogoutCountdownModal } from '@/components/LogoutCountdownModal';
 
 const DEFAULT_TITLE = 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm';
 
-function FaviconUpdater() {
-  const { systemSettings } = useViTinhAnTamStore();
-
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    const rawFavicon = systemSettings.faviconUrl?.trim();
-    const links = document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']");
-
-    // Favicon tùy chỉnh thay thế hoàn toàn favicon cũ; khi rỗng thì xóa mọi link icon
-    links.forEach((link) => link.remove());
-    if (rawFavicon) {
-      const link = document.createElement('link');
-      link.rel = 'icon';
-      // Cache buster timestamp if it's local upload
-      const separator = rawFavicon.includes('?') ? '&' : '?';
-      link.href = `${rawFavicon}${rawFavicon.startsWith('/') ? `${separator}v=${Date.now()}` : ''}`;
-      document.head.appendChild(link);
-    }
-  }, [systemSettings.faviconUrl]);
-
-  return null;
-}
-
 function ThemedAppContainer({ children }: { children: React.ReactNode }) {
   const { themeMode } = useViTinhAnTamStore();
   const isDark = themeMode === 'dark';
@@ -71,7 +48,6 @@ function ThemedAppContainer({ children }: { children: React.ReactNode }) {
         },
       }}
     >
-      <FaviconUpdater />
       <LogoutCountdownModal />
       {children}
     </ConfigProvider>

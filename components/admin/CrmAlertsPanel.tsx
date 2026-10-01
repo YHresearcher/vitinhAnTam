@@ -10,6 +10,40 @@ export interface CrmAlertsPanelProps {
   compact?: boolean;
 }
 
+// Helper thuần túy: Tính số ngày còn lại đến sinh nhật (0 - 3 ngày)
+function getBirthdayInfo(birthDateStr: string | undefined, now: Date) {
+  if (!birthDateStr) return null;
+  let bMonth = 0;
+  let bDay = 0;
+  if (birthDateStr.includes('-')) {
+    const parts = birthDateStr.split('-');
+    if (parts.length >= 3) {
+      bMonth = parseInt(parts[1], 10);
+      bDay = parseInt(parts[2], 10);
+    }
+  } else if (birthDateStr.includes('/')) {
+    const parts = birthDateStr.split('/');
+    if (parts.length >= 2) {
+      bDay = parseInt(parts[0], 10);
+      bMonth = parseInt(parts[1], 10);
+    }
+  }
+  if (!bMonth || !bDay || Number.isNaN(bMonth) || Number.isNaN(bDay)) return null;
+
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let target = new Date(now.getFullYear(), bMonth - 1, bDay);
+  const diffDays = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) {
+    target = new Date(now.getFullYear() + 1, bMonth - 1, bDay);
+  }
+  const daysRemaining = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
+  return {
+    daysRemaining,
+    dayFormatted: `${String(bDay).padStart(2, '0')}/${String(bMonth).padStart(2, '0')}`,
+    isUpcoming: daysRemaining >= 0 && daysRemaining <= 3,
+  };
+}
+
 export function CrmAlertsPanel({
   customers,
   inventory,
@@ -19,46 +53,12 @@ export function CrmAlertsPanel({
   const [activeAlertTab, setActiveAlertTab] = useState<'birthday' | 'maintenance'>('birthday');
   const [copiedZaloId, setCopiedZaloId] = useState<string | null>(null);
 
-  // Helper: Tính số ngày còn lại đến sinh nhật (0 - 3 ngày)
-  const getBirthdayInfo = (birthDateStr?: string) => {
-    if (!birthDateStr) return null;
-    let bMonth = 0;
-    let bDay = 0;
-    if (birthDateStr.includes('-')) {
-      const parts = birthDateStr.split('-');
-      if (parts.length >= 3) {
-        bMonth = parseInt(parts[1], 10);
-        bDay = parseInt(parts[2], 10);
-      }
-    } else if (birthDateStr.includes('/')) {
-      const parts = birthDateStr.split('/');
-      if (parts.length >= 2) {
-        bDay = parseInt(parts[0], 10);
-        bMonth = parseInt(parts[1], 10);
-      }
-    }
-    if (!bMonth || !bDay || Number.isNaN(bMonth) || Number.isNaN(bDay)) return null;
-
-    const now = new Date();
-    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    let target = new Date(now.getFullYear(), bMonth - 1, bDay);
-    const diffDays = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) {
-      target = new Date(now.getFullYear() + 1, bMonth - 1, bDay);
-    }
-    const daysRemaining = Math.round((target.getTime() - nowMidnight.getTime()) / (1000 * 60 * 60 * 24));
-    return {
-      daysRemaining,
-      dayFormatted: `${String(bDay).padStart(2, '0')}/${String(bMonth).padStart(2, '0')}`,
-      isUpcoming: daysRemaining >= 0 && daysRemaining <= 3,
-    };
-  };
-
   // Danh sách sinh nhật trong 3 ngày tới
   const upcomingBirthdayCustomers = useMemo(() => {
+    const now = new Date();
     return customers
       .map((cust) => {
-        const info = getBirthdayInfo(cust.birth_date);
+        const info = getBirthdayInfo(cust.birth_date, now);
         if (info && info.isUpcoming) {
           return { customer: cust, daysRemaining: info.daysRemaining, dayFormatted: info.dayFormatted };
         }

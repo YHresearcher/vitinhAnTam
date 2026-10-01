@@ -28,6 +28,11 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://vitinhantham.vn'),
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   title: {
     default: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
@@ -146,32 +151,6 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`}>
       <head>
-        {/* Synchronous LocalStorage Initializer to prevent logo & favicon flash on refresh */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var raw = localStorage.getItem('vtat_system_settings_v2');
-                  if (raw) {
-                    var parsed = JSON.parse(raw);
-                    if (parsed && typeof parsed === 'object') {
-                      window.__INITIAL_SYSTEM_SETTINGS__ = parsed;
-                      var existingLinks = document.querySelectorAll("link[rel*='icon']");
-                      existingLinks.forEach(function(link) { link.remove(); });
-                      if (parsed.faviconUrl && parsed.faviconUrl.trim()) {
-                        var link = document.createElement('link');
-                        link.rel = 'icon';
-                        link.href = parsed.faviconUrl.trim();
-                        document.head.appendChild(link);
-                      }
-                    }
-                  }
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
         {/* Schema.org Structured Data for Local SEO */}
         <script
           type="application/ld+json"

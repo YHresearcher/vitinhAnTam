@@ -12,6 +12,7 @@ export const TRANSLATIONS = {
       adminPortal: 'Vào hệ thống quản trị (Dashboard)',
       signIn: 'Đăng nhập nội bộ',
       logout: 'Đăng xuất',
+      bookNow: 'Đặt Lịch Ngay',
     },
     footer: {
       hubTitle: 'CỬA HÀNG VI TÍNH AN TÂM',
@@ -56,8 +57,8 @@ export const TRANSLATIONS = {
       pillar3Desc:
         'Hỗ trợ kỹ thuật kịp thời từ xa hoặc tận nơi trong khả năng, hạn chế tối đa gián đoạn công việc.',
       quickSearchLabel: 'Tra cứu bảo hành/sửa chữa:',
-      quickSearchPlaceholder: 'Nhập Serial Number hoặc Số điện thoại...',
-      quickSearchBtn: 'Tìm kiếm',
+      quickSearchPlaceholder: 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...',
+      quickSearchBtn: 'Tra Cứu',
       btnBrowseStock: 'XEM DANH MỤC MÁY SẴN HÀNG',
       btnScheduleService: 'ĐẶT LỊCH KIỂM TRA/NÂNG CẤP',
     },
@@ -75,6 +76,7 @@ export const TRANSLATIONS = {
       priceLabel: 'Giá bán:',
       btnInspect: 'Thông tin thiết bị',
       btnOrder: 'Đặt Mua Máy',
+      btnZaloChat: 'Chat Zalo Xem Thêm Ảnh Thật',
       tabInStock: 'Sẵn hàng',
       tabSold: 'Đã bán',
       tabAll: 'Tất cả',
@@ -83,14 +85,14 @@ export const TRANSLATIONS = {
       soldToLabel: 'Khách nhận:',
       handoverDateLabel: 'Ngày bàn giao:',
       warrantyActiveLabel: 'Bảo hành chu đáo, hỗ trợ nhanh',
-      btnLookupWarranty: 'Tra Cứu Bảo Hành S/N',
+      btnLookupWarranty: 'Tra Cứu Bảo Hành',
       btnOrderSimilar: 'Đặt Cấu Hình Tương Tự',
       emptyInStock: 'Hiện chưa có máy thuộc phân mục này đang sẵn kho. Quý khách có thể liên hệ để đặt lắp ráp theo yêu cầu.',
       emptySold: 'Chưa có hồ sơ máy đã bàn giao thuộc nhóm này.',
     },
     qcModal: {
       badge: 'HỒ SƠ KIỂM ĐỊNH QC • ĐẠT TIÊU CHUẨN',
-      serviceTag: 'S/N Service Tag:',
+      serviceTag: 'Mã Kiểm Định QC:',
       priceLabel: 'Giá bán niêm yết:',
       cpuMemoryTitle: 'Vi xử lý & Bộ nhớ:',
       stressTestGood: 'Chạy thử thực tế: Ổn định & Mát mẻ',
@@ -107,14 +109,16 @@ export const TRANSLATIONS = {
       policy: 'Chính sách:',
       policyVal: 'Bảo hành 12 tháng, hỗ trợ kỹ thuật và xử lý nhanh chóng',
       btnReserve: 'Mua Ngay',
-      btnZaloPhotos: 'Chat Zalo Xem Ảnh Thật Máy',
+      btnZaloPhotos: 'Chat Zalo Xem Thêm Ảnh Thật Máy',
     },
     services: {
       tag: 'DỊCH VỤ CỨU HỘ & BẢO DƯỠNG MÁY TÍNH TẬN NƠI',
       title: 'DỊCH VỤ TẬN NƠI & "SPA HỒI SINH MÁY CŨ"',
       subtitle:
         'Không cần mang vác cồng kềnh ra tiệm. Kỹ thuật viên An Tâm mang trang thiết bị chuyên dụng đến kiểm tra, bảo dưỡng và tối ưu trực tiếp trước sự giám sát của quý khách.',
+      commitmentBadge: 'Xem Trực Tiếp Trước Mặt • Không Tráo Linh Kiện • Báo Giá Trước Khi Làm',
       pkg1Title: 'GÓI HỒI SINH MÁY CŨ',
+      pkg1Time: '⏱️ Xử lý 30 - 45 phút • Xem trực tiếp tại tiệm',
       pkg1Desc:
         'Biến máy tính đang chạy ổ cơ HDD ì ạch trở nên mượt mà như máy mới mua chỉ sau 45 phút.',
       pkg1F1: 'Nâng cấp SSD NVMe/SATA (tùy chọn mới chính hãng hoặc bóc máy zin)',
@@ -124,6 +128,7 @@ export const TRANSLATIONS = {
       pkg1Sub: 'Tư vấn nâng cấp đúng nhu cầu, không vẽ bệnh',
       pkg2Badge: 'ĐƯỢC ĐẶT NHIỀU NHẤT',
       pkg2Title: 'SPA LÀM MÁT CHUYÊN SÂU',
+      pkg2Time: '⏱️ Xử lý 45 - 60 phút • Lấy liền trong ngày',
       pkg2Desc:
         'Khắc phục triệt để tình trạng quạt hú to, máy nóng bỏng tay, tắt đột ngột khi mở nhiều ứng dụng hoặc làm việc trưa hè.',
       pkg2F1: 'Vệ sinh sạch sâu buồng linh kiện & cánh quạt',
@@ -132,6 +137,7 @@ export const TRANSLATIONS = {
       pkg2Price: 'Báo giá tận nơi theo dòng máy',
       pkg2Sub: 'Kiểm tra nhiệt độ CPU & cánh quạt miễn phí',
       pkg3Title: 'TỐI ƯU WINDOWS SẠCH BẢN QUYỀN',
+      pkg3Time: '⏱️ Xử lý 20 - 40 phút • Bảo toàn dữ liệu 100%',
       pkg3Desc:
         'Loại bỏ sạch các công cụ crack nguy hiểm tiềm ẩn mã độc đào coin hoặc đánh cắp tài khoản ngân hàng của cơ quan, hộ kinh doanh.',
       pkg3F1: 'Cài đặt Win 10/11 Pro sạch gốc từ Microsoft',
@@ -144,8 +150,8 @@ export const TRANSLATIONS = {
       btnBigDispatch: 'Đặt Lịch Kỹ Thuật Viên Tận Nơi',
     },
     warrantyBanner: {
-      title: 'CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ THEO S/N',
-      desc: 'Mọi thiết bị xuất xưởng đều được định danh bằng Service Tag dập sẵn trên thân máy. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền mà không cần giữ hoá đơn giấy.',
+      title: 'CỔNG KIỂM TRA BẢO HÀNH ĐIỆN TỬ',
+      desc: 'Mọi thiết bị xuất xưởng đều được lưu trữ hồ sơ điện tử an toàn. Tra cứu minh bạch thời hạn bảo hành phần cứng và bản quyền bằng Số điện thoại hoặc Mã bảo hành mà không cần giữ hoá đơn giấy.',
       btnCheck: 'Kiểm Tra Ngay',
     },
     qcProcess: {
@@ -413,6 +419,7 @@ export const TRANSLATIONS = {
       adminPortal: 'Admin Dashboard',
       signIn: 'Staff Sign In',
       logout: 'Sign Out',
+      bookNow: 'Book Service',
     },
     footer: {
       hubTitle: 'VI TINH AN TAM STORE',
@@ -458,9 +465,9 @@ export const TRANSLATIONS = {
       pillar3Title: 'RAPID RESPONSE & DEDICATED CARE',
       pillar3Desc:
         'Prompt technical assistance remotely or on-site to minimize any disruption to your workflow.',
-      quickSearchLabel: 'Quick S/N Lookup:',
-      quickSearchPlaceholder: 'Enter Service Tag or phone number...',
-      quickSearchBtn: 'Search Warranty',
+      quickSearchLabel: 'Quick Lookup:',
+      quickSearchPlaceholder: 'Enter phone number or warranty code...',
+      quickSearchBtn: 'Lookup',
       btnBrowseStock: 'BROWSE READY INVENTORY',
       btnScheduleService: 'SCHEDULE INSPECTION / UPGRADE',
     },
@@ -476,8 +483,9 @@ export const TRANSLATIONS = {
       inStock: 'In Stock:',
       inStockSuffix: 'units',
       priceLabel: 'Official Package Price:',
-      btnInspect: 'Inspect QC & S/N',
+      btnInspect: 'Device Details',
       btnOrder: 'Order Now',
+      btnZaloChat: 'Chat Zalo For Real Photos',
       tabInStock: 'In Stock',
       tabSold: 'Sold',
       tabAll: 'All',
@@ -486,14 +494,14 @@ export const TRANSLATIONS = {
       soldToLabel: 'Client:',
       handoverDateLabel: 'Handover Date:',
       warrantyActiveLabel: 'Attentive Warranty & Quick Support',
-      btnLookupWarranty: 'Lookup S/N Warranty',
+      btnLookupWarranty: 'Lookup Warranty',
       btnOrderSimilar: 'Order Similar Setup',
       emptyInStock: 'No in-stock units found for this category. Contact us to build a custom setup.',
       emptySold: 'No handover records found for this category.',
     },
     qcModal: {
       badge: 'HARDWARE QC AUDIT • PASSED & CERTIFIED',
-      serviceTag: 'Hardware Service Tag:',
+      serviceTag: 'QC Audit Code:',
       priceLabel: 'Official Retail Price:',
       cpuMemoryTitle: 'Processor & Memory Audit:',
       stressTestGood: 'Real-world testing: Stable & Cool',
@@ -517,7 +525,9 @@ export const TRANSLATIONS = {
       title: 'ON-SITE "BUSINESS PC REVIVAL & MAINTENANCE" SERVICE',
       subtitle:
         'No need to haul heavy desktop towers to retail repair shops. Certified An Tam engineers bring laboratory diagnostic gear to service, tune, and optimize your systems directly under your supervision.',
+      commitmentBadge: 'Watch Live On-Site • Zero Component Swapping • Upfront Transparent Pricing',
       pkg1Title: 'OFFICE PC ACCELERATION & REVIVAL',
+      pkg1Time: '⏱️ Duration: 30 - 45 mins • Watch live at store',
       pkg1Desc:
         'Transform sluggish mechanical HDD systems into fast productivity machines in just 45 minutes.',
       pkg1F1: 'SSD upgrade (choice of brand-new genuine or original tested units)',
@@ -527,6 +537,7 @@ export const TRANSLATIONS = {
       pkg1Sub: 'Honest recommendations tailored to real needs, zero inflated diagnosis',
       pkg2Badge: 'MOST POPULAR CHOICE',
       pkg2Title: 'DEEP THERMAL SPA & SILENT TUNE-UP',
+      pkg2Time: '⏱️ Duration: 45 - 60 mins • Same-day pickup',
       pkg2Desc:
         'Permanently eliminate howling fans, high temperatures, and abrupt shutdowns during heavy workday multitasking.',
       pkg2F1: 'Thorough dust eradication for cooling chambers and fans',
@@ -535,6 +546,7 @@ export const TRANSLATIONS = {
       pkg2Price: 'Transparent quote tailored to chassis form factor',
       pkg2Sub: 'Free CPU temperature & bearing vibration diagnosis included',
       pkg3Title: 'GENUINE WINDOWS & SECURITY OPTIMIZATION',
+      pkg3Time: '⏱️ Duration: 20 - 40 mins • 100% Data Preserved',
       pkg3Desc:
         'Clean installation from official Microsoft images, eliminating dangerous crack tools and adware.',
       pkg3F1: 'Pristine Windows 10/11 Pro setup directly from Microsoft master media',
@@ -548,8 +560,8 @@ export const TRANSLATIONS = {
         'Request An On-Site Technician (Hotline: 0909.053.058)',
     },
     warrantyBanner: {
-      title: 'ELECTRONIC WARRANTY PORTAL VIA HARDWARE S/N',
-      desc: 'Every delivered unit is cataloged by the manufacturer Service Tag engraved onto its chassis. Transparently inspect hardware coverage and OS entitlements without keeping paper receipts.',
+      title: 'ELECTRONIC WARRANTY PORTAL',
+      desc: 'Every delivered unit is cataloged in our electronic warranty database. Transparently inspect hardware coverage and OS entitlements by Phone Number or Warranty Code without keeping paper receipts.',
       btnCheck: 'Check Warranty Now',
     },
     qcProcess: {
@@ -972,45 +984,63 @@ export const ENGLISH_FAQS = [
   },
 ];
 
-export const ENGLISH_REVIEWS = [
+export const ENGLISH_REVIEWS: Array<{
+  id?: string;
+  name: string;
+  role: string;
+  comment: string;
+  service: string;
+  location: string;
+  rating?: number;
+}> = [
   {
+    id: 'en-rev-1',
     name: 'Mr. Minh Tuan',
     role: 'Chief Accountant - Logistics Corp',
     comment:
       'We outfitted 6 Dell OptiPlex units for our accounting team running MISA ERP and electronic tax invoices. Systems boot fast and run whisper-quiet. The technician was exceptionally polite and professional.',
     service: 'Dell OptiPlex 7060 SFF',
     location: 'Central District',
+    rating: 5,
   },
   {
+    id: 'en-rev-2',
     name: 'Ms. Mai Lan',
     role: 'Secondary School Teacher',
     comment:
       'The PC revival package and SSD upgrade breathed new life into our older home desktop. Everything was done right in my living room, keeping all my lesson plans and family photos intact.',
     service: 'NVMe SSD Upgrade & Thermal Spa',
     location: 'Local District',
+    rating: 5,
   },
   {
+    id: 'en-rev-3',
     name: 'Mr. Bay Nam',
     role: 'Residential Client',
     comment:
       'I am an elder and not tech-savvy. An Tam sent an engineer to my house in the evening to rewire my printer and test the power unit. Very patient, clear explanations, and very reasonable pricing.',
     service: 'On-site Support',
     location: 'Local District',
+    rating: 5,
   },
   {
+    id: 'en-rev-4',
     name: 'Mr. Quoc Hoang',
     role: 'Director - Construction Engineering Ltd',
     comment:
       'The prompt support and honest component transparency is why our firm selected An Tam as our long-term IT partner. We have complete peace of mind regarding day-to-day operations.',
     service: 'Corporate PC Fleet Maintenance',
     location: 'Industrial Park',
+    rating: 5,
   },
   {
+    id: 'en-rev-5',
     name: 'Ms. Thuy Nga',
     role: 'E-commerce Business Owner',
     comment:
       'My workstation power supply blew during a busy evening shift. I called the hotline and a technician helped check and swap a replacement promptly. Truly a lifesaver.',
     service: 'PSU Replacement & Machine Spa',
     location: 'Local Area',
+    rating: 5,
   },
 ];

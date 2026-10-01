@@ -20,13 +20,7 @@ import {
   Space,
 } from 'antd';
 import {
-  Upload,
-  Globe,
-  RotateCcw,
-  Trash2,
-  Eye,
   Sparkles,
-  Palette,
   PhoneCall,
   HelpCircle,
   MessageSquareQuote,
@@ -99,99 +93,6 @@ export default function CaiDatPage() {
     }));
   };
 
-  const handleFileUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    field: 'logoUrl' | 'faviconUrl'
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/') && !file.name.endsWith('.ico')) {
-      message.error('Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, SVG, WebP, ICO)!');
-      return;
-    }
-
-    if (file.size > 4 * 1024 * 1024) {
-      message.error('Kích thước ảnh vượt quá 4MB. Vui lòng chọn ảnh dung lượng nhẹ hơn!');
-      return;
-    }
-
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('folder', 'header');
-    if (formData[field]) {
-      uploadFormData.append('oldUrl', formData[field] as string);
-    }
-
-    const fieldTitle = field === 'logoUrl' ? 'Logo' : 'Favicon';
-    const hide = message.loading(`Đang tải lên và cập nhật ${fieldTitle}...`, 0);
-
-    try {
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData,
-      });
-
-      const data = await res.json();
-      hide();
-
-      if (res.ok && data.success && data.url) {
-        const newUrl = `${data.url}?v=${Date.now()}`;
-        setFormData((prev) => ({
-          ...prev,
-          [field]: newUrl,
-        }));
-        await updateSystemSettings({ [field]: newUrl });
-        message.success(`Đã tải lên và áp dụng ${fieldTitle} mới thành công!`);
-      } else {
-        // Fallback sang FileReader nếu API có trục trặc
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          const result = event.target?.result as string;
-          if (result) {
-            setFormData((prev) => ({ ...prev, [field]: result }));
-            await updateSystemSettings({ [field]: result });
-            message.warning(`Đã lưu tạm ${fieldTitle} (dạng Base64).`);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    } catch {
-      hide();
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          setFormData((prev) => ({ ...prev, [field]: result }));
-          await updateSystemSettings({ [field]: result });
-          message.warning(`Đã lưu tạm ${fieldTitle} (dạng Base64).`);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    e.target.value = '';
-  };
-
-  const handleDeleteBrandAsset = async (field: 'logoUrl' | 'faviconUrl') => {
-    const currentUrl = formData[field];
-    const fieldTitle = field === 'logoUrl' ? 'Logo' : 'Favicon';
-    if (currentUrl) {
-      try {
-        await fetch('/api/upload', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url: currentUrl }),
-        });
-      } catch (err) {
-        console.warn('Lỗi khi xóa file cũ:', err);
-      }
-    }
-    handleChange(field, '');
-    await updateSystemSettings({ [field]: '' });
-    message.success(`Đã xóa ${fieldTitle} thành công!`);
-  };
-
   const handleSaveSettings = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsSaving(true);
@@ -221,9 +122,6 @@ export default function CaiDatPage() {
       okType: 'danger',
       onOk: () => {
         const defaultData: SystemSettings = {
-          logoUrl: '',
-          logoDisplayMode: 'icon_with_text',
-          faviconUrl: '',
           brandSlogan: 'Bán bằng tâm để bạn an tâm',
           hotline: '0909.053.058',
           zaloNumber: '0909053058',
@@ -485,138 +383,47 @@ export default function CaiDatPage() {
         defaultActiveKey="branding"
         type="card"
         items={[
-          // TAB 1: NHẬN DIỆN THƯƠNG HIỆU
+          // TAB 1: THƯƠNG HIỆU & SLOGAN
           {
             key: 'branding',
             label: (
               <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-[#C0392B]">
-                <Palette className="w-4 h-4 text-[#C0392B]" />
-                <span>Nhận Diện (Logo &amp; Favicon)</span>
+                <Sparkles className="w-4 h-4 text-[#C0392B]" />
+                <span>Thương Hiệu &amp; Slogan</span>
               </span>
             ),
             children: (
               <Card className="rounded-xl border-slate-200 shadow-xs">
                 <form onSubmit={handleSaveSettings} className="space-y-6">
-                  {/* Xem trước Logo x2 */}
+                  {/* Xem trước Logo & Nhận diện */}
                   <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-xs font-bold uppercase tracking-wider text-[#6E5D53] flex items-center gap-1.5">
-                        <Eye className="w-4 h-4 text-[#C0392B]" />
-                        Xem trước Logo (Hiển thị kích thước thực x2)
+                        <Sparkles className="w-4 h-4 text-[#C0392B]" />
+                        Xem trước Nhận diện Thương hiệu
                       </span>
-                      {formData.logoUrl && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteBrandAsset('logoUrl')}
-                          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Xóa logo hiện tại</span>
-                        </button>
-                      )}
                     </div>
 
                     <div className="bg-white p-5 rounded-lg border border-[#E8E2D9] flex items-center justify-center min-h-[90px]">
-                      {formData.logoDisplayMode === 'image_only' && formData.logoUrl ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
+                      <div className="flex items-center gap-3.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={formData.logoUrl}
-                          alt="Logo Preview"
-                          className="h-16 sm:h-20 max-h-24 w-auto max-w-[360px] sm:max-w-[480px] object-contain"
+                          src="/img/header/logo.png"
+                          alt="Logo Vi Tính An Tâm"
+                          className="h-14 sm:h-18 w-auto max-h-20 max-w-[120px] sm:max-w-[160px] object-contain"
                         />
-                      ) : (
-                        <div className="flex items-center gap-3.5">
-                          {formData.logoUrl ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img
-                              src={formData.logoUrl}
-                              alt="Logo Icon"
-                              className="h-14 sm:h-18 w-auto max-h-20 max-w-[120px] sm:max-w-[160px] object-contain"
-                            />
-                          ) : (
-                            <span className="text-xs font-medium text-slate-400">Chưa cấu hình logo</span>
-                          )}
-                          <div className="flex flex-col leading-none">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-black text-xl sm:text-2xl text-[#2B1810]">
-                                {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
-                              </span>
-                              <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
-                                {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
-                              </span>
-                            </div>
-                            <span className="text-xs sm:text-[13px] font-semibold text-[#6E5D53] tracking-wider uppercase mt-1">
-                              {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
+                        <div className="flex flex-col leading-none">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-xl sm:text-2xl text-[#2B1810]">
+                              {formData.storeName ? formData.storeName.split(' ')[0] : 'VI TÍNH'}
+                            </span>
+                            <span className="font-black text-xl sm:text-2xl text-[#C0392B]">
+                              {formData.storeName ? formData.storeName.split(' ').slice(1).join(' ') : 'AN TÂM'}
                             </span>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Cấu hình Logo */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                        Tải ảnh Logo (PNG, JPG, SVG, WebP)
-                      </label>
-                      <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-slate-50/50 hover:bg-red-50/20 rounded-xl p-4 text-center transition-colors">
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                          onChange={(e) => handleFileUpload(e, 'logoUrl')}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          title="Chọn file ảnh logo"
-                        />
-                        <div className="flex flex-col items-center justify-center gap-1 pointer-events-none">
-                          <Upload className="w-5 h-5 text-[#C0392B]" />
-                          <span className="text-xs font-bold text-slate-800">Chọn file ảnh từ máy tính</span>
-                          <span className="text-[11px] text-slate-500">Hỗ trợ ảnh trong suốt PNG/SVG (tối đa 2MB)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1">
-                          Hoặc dán URL ảnh Logo
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="https://... hoặc /images/..."
-                          value={formData.logoUrl || ''}
-                          onChange={(e) => handleChange('logoUrl', e.target.value)}
-                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1">
-                          Kiểu hiển thị Logo:
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleChange('logoDisplayMode', 'icon_with_text')}
-                            className={`p-2 text-center rounded-lg border text-xs transition-all ${
-                              formData.logoDisplayMode !== 'image_only'
-                                ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
-                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                            }`}
-                          >
-                            Biểu tượng + Tên &amp; Slogan
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleChange('logoDisplayMode', 'image_only')}
-                            className={`p-2 text-center rounded-lg border text-xs transition-all ${
-                              formData.logoDisplayMode === 'image_only'
-                                ? 'border-[#C0392B] bg-red-50/50 text-[#C0392B] font-bold'
-                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                            }`}
-                          >
-                            Chỉ dùng hình ảnh Logo
-                          </button>
+                          <span className="text-xs sm:text-[13px] font-semibold text-[#6E5D53] tracking-wider uppercase mt-1">
+                            {formData.brandSlogan || 'Bán bằng tâm để bạn an tâm'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -656,78 +463,6 @@ export default function CaiDatPage() {
                     </div>
                   </div>
 
-                  {/* Cấu hình Favicon */}
-                  <div className="pt-4 border-t border-slate-100">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3 flex items-center gap-1.5">
-                      <Globe className="w-4 h-4 text-[#C0392B]" />
-                      Favicon Tab Trình Duyệt
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Tải file favicon (.ico, .png, .svg)
-                        </label>
-                        <div className="relative border-2 border-dashed border-slate-300 hover:border-[#C0392B] bg-slate-50/50 hover:bg-red-50/20 rounded-xl p-4 text-center transition-colors">
-                          <input
-                            type="file"
-                            accept=".ico,image/png,image/svg+xml,image/webp"
-                            onChange={(e) => handleFileUpload(e, 'faviconUrl')}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            title="Chọn file favicon"
-                          />
-                          <div className="flex flex-col items-center justify-center gap-1 pointer-events-none">
-                            <Upload className="w-5 h-5 text-[#C0392B]" />
-                            <span className="text-xs font-bold text-slate-800">Chọn file favicon</span>
-                            <span className="text-[11px] text-slate-500">Chuẩn 32x32px hoặc 64x64px</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                          Đường dẫn Favicon trực tiếp (URL):
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="https://... hoặc /favicon.ico"
-                          value={formData.faviconUrl || ''}
-                          onChange={(e) => handleChange('faviconUrl', e.target.value)}
-                          className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs text-slate-800 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white font-mono mb-2.5"
-                        />
-
-                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                          <div className="flex items-center gap-2.5">
-                            {formData.faviconUrl ? (
-                              /* eslint-disable-next-line @next/next/no-img-element */
-                              <img
-                                src={formData.faviconUrl}
-                                alt="Favicon Preview"
-                                className="w-6 h-6 object-contain rounded-xs shrink-0"
-                              />
-                            ) : (
-                              <span className="w-6 h-6 rounded-xs border border-dashed border-slate-300 shrink-0" />
-                            )}
-                            <span className="text-xs font-medium text-slate-700">
-                              {formData.faviconUrl ? 'Favicon tùy chỉnh' : 'Chưa cấu hình favicon'}
-                            </span>
-                          </div>
-
-                          {formData.faviconUrl && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteBrandAsset('faviconUrl')}
-                              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold cursor-pointer"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                              <span>Xóa favicon hiện tại</span>
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* Nút lưu riêng của tab */}
                   <div className="pt-4 border-t border-slate-200 flex justify-end">
                     <Button
@@ -736,7 +471,7 @@ export default function CaiDatPage() {
                       loading={isSaving}
                       className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-9 px-6 rounded-lg text-xs"
                     >
-                      Lưu Nhận Diện Thương Hiệu
+                      Lưu Cấu Hình Thương Hiệu
                     </Button>
                   </div>
                 </form>

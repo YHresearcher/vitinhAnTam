@@ -19,18 +19,22 @@ import {
   Search,
   Sparkles,
   Zap,
+  Star,
+  Clock,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
 import {
   TRANSLATIONS,
   ENGLISH_FAQS,
+  ENGLISH_REVIEWS,
 } from '@/lib/translations';
+import { initialCustomerReviews } from '@/lib/mockData';
 import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs } = useViTinhAnTamStore();
+  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs, reviews } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
@@ -140,6 +144,13 @@ export default function HomePage() {
     ];
   }, [isEn, faqs]);
 
+  // Danh sách đánh giá khách hàng (Được khôi phục và tối ưu hóa)
+  const displayReviews = useMemo(() => {
+    if (isEn) return ENGLISH_REVIEWS;
+    if (reviews && reviews.length > 0) return reviews;
+    return initialCustomerReviews;
+  }, [isEn, reviews]);
+
   return (
     <div className="w-full relative selection:bg-[#C0392B] selection:text-white">
       {/* Toast Notification */}
@@ -180,36 +191,29 @@ export default function HomePage() {
                   {t.hero.description}
                 </p>
 
-                {/* Main CTA buttons */}
+                {/* Main CTA buttons - Tối ưu phần chọn lựa theo Hick's Law */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <a
                     href="#san-pham"
                     onClick={(e) => scrollToSection(e, 'san-pham')}
                     className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group cursor-pointer"
                   >
-                    <span>{t.hero.btnBrowseStock || 'Xem Máy Nổi Bật'}</span>
+                    <span>{t.hero.btnBrowseStock || (isEn ? 'Browse Inventory' : 'Xem Máy Nổi Bật')}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </a>
                   <Link
                     href="/dat-lich"
-                    className="px-6 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition-all shadow-2xs"
+                    className="px-6 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition-all shadow-2xs hover:-translate-y-0.5"
                   >
-                    {t.hero.btnScheduleService}
+                    {t.hero.btnScheduleService || (isEn ? 'Book Service' : 'Đặt Lịch Kỹ Thuật')}
                   </Link>
-                  <a
-                    href="#san-pham"
-                    onClick={(e) => scrollToSection(e, 'san-pham')}
-                    className="px-4 py-3.5 text-xs font-bold text-[#C0392B] hover:underline cursor-pointer"
-                  >
-                    {isEn ? 'Full Catalog →' : 'Xem toàn bộ kho máy →'}
-                  </a>
                 </div>
 
                 {/* Quick warranty search box */}
                 <div className="pt-2">
                   <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>{isEn ? 'Check warranty & factory QC records by Service Tag / Phone number:' : 'Tra cứu bảo hành & hồ sơ xuất xưởng theo Service Tag / Số điện thoại:'}</span>
+                    <span>{isEn ? 'Check warranty & service history by Phone Number / Warranty Code:' : 'Tra cứu bảo hành & lịch sử sửa chữa theo Số Điện Thoại / Mã Bảo Hành:'}</span>
                   </div>
                   <form
                     onSubmit={handleSearchSubmit}
@@ -223,24 +227,24 @@ export default function HomePage() {
                         type="text"
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
-                        placeholder={t.hero.quickSearchPlaceholder || 'Nhập Service Tag (VD: HP-400G5M, DL-7490A1)...'}
-                        aria-label="Nhập Service Tag"
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-mono shadow-2xs"
+                        placeholder={t.hero.quickSearchPlaceholder || (isEn ? 'Enter phone number or warranty code...' : 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...')}
+                        aria-label="Nhập Số Điện Thoại hoặc Mã Bảo Hành"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-medium shadow-2xs"
                       />
                     </div>
                     <button
                       type="submit"
                       className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center gap-1 shadow-2xs shrink-0"
                     >
-                      <span>{t.hero.quickSearchBtn || 'Tra Cứu'}</span>
+                      <span>{t.hero.quickSearchBtn || (isEn ? 'Lookup' : 'Tra Cứu')}</span>
                     </button>
                   </form>
                 </div>
               </div>
 
-              {/* Right Column: Hero Showroom Image with Floating Badges */}
+              {/* Right Column: Hero Showroom Image (Clean & Modern) */}
               <div className="lg:col-span-5 relative">
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200/90 aspect-16/11 group">
+                <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200/90 aspect-16/11 group bg-slate-100">
                   <Image
                     src="/images/hero-showroom.jpg"
                     alt="Showroom Vi Tính An Tâm - Máy Tính Doanh Nghiệp Tuyển Chọn"
@@ -249,26 +253,6 @@ export default function HomePage() {
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                   />
-                  {/* Subtle dark gradient overlay on bottom for badge contrast */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 pointer-events-none" />
-
-                  {/* Floating Badges */}
-                  <div className="absolute top-3.5 left-3.5">
-                    <div className="px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-lg flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{isEn ? '100% Grade-A Original Motherboards' : '100% Mainboard Nguyên Zin Chuẩn A'}</span>
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-3.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between gap-2">
-                    <div className="px-3 py-1.5 rounded-lg bg-white/95 backdrop-blur-md text-[#1A0F0A] text-xs font-bold shadow-lg border border-white flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{isEn ? 'Prompt warranty • Fast support' : 'Bảo hành nhanh • Hỗ trợ tận nơi'}</span>
-                    </div>
-                    <div className="px-3 py-1.5 rounded-lg bg-[#C0392B] text-white text-xs font-bold shadow-lg">
-                      {isEn ? '⚡ Pay by QR or Cash' : '⚡ QR / Tiền mặt linh hoạt'}
-                    </div>
-                  </div>
                 </div>
 
                 {/* Sub-card trust badges underneath image */}
@@ -394,11 +378,6 @@ export default function HomePage() {
                       {prod.badge}
                     </span>
                   </div>
-                  <div className="absolute bottom-3 right-3">
-                    <span className="px-2.5 py-1 rounded bg-black/80 backdrop-blur-xs text-white font-mono text-[11px] font-bold border border-white/20">
-                      {prod.serviceTag}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Content */}
@@ -454,7 +433,7 @@ export default function HomePage() {
                       <span>{t.products.btnInspect}</span>
                     </button>
                     <Link
-                      href={`/mua-hang?device=${encodeURIComponent(prod.name)}&price=${prod.price}&tag=${encodeURIComponent(prod.serviceTag)}`}
+                      href={`/mua-hang?device=${encodeURIComponent(prod.name)}&price=${prod.price}`}
                       className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
                     >
                       <span>{t.products.btnOrder}</span>
@@ -639,8 +618,14 @@ export default function HomePage() {
               {/* Gói 1 */}
               <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
                 <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
-                    01
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      01
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg1Time || '⏱️ Xử lý 30 - 45 phút • Xem trực tiếp'}</span>
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg1Title}</h3>
                   <p className="text-xs text-[#6E5D53] leading-relaxed">
@@ -682,8 +667,14 @@ export default function HomePage() {
                   {t.services.pkg2Badge}
                 </div>
                 <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#F2C4B2]">
-                    02
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#F2C4B2]">
+                      02
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 text-[11px] font-semibold border border-amber-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg2Time || '⏱️ Xử lý 45 - 60 phút • Lấy liền trong ngày'}</span>
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg2Title}</h3>
                   <p className="text-xs text-[#6E5D53] leading-relaxed">
@@ -722,8 +713,14 @@ export default function HomePage() {
               {/* Gói 3 */}
               <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
                 <div className="space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
-                    03
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      03
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg3Time || '⏱️ Xử lý 20 - 40 phút • Bảo toàn dữ liệu'}</span>
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg3Title}</h3>
                   <p className="text-xs text-[#6E5D53] leading-relaxed">
@@ -819,7 +816,70 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 5. FAQ DẠNG COLLAPSED ACCORDION */}
+        {/* 5. BẰNG CHỨNG XÃ HỘI & ĐÁNH GIÁ KHÁCH HÀNG (SOCIAL PROOF & REVIEWS) */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20 border-t border-[#E8E2D9]" id="danh-gia">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs">
+              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>{isEn ? '1,200+ Satisfied Corporate & Private Clients' : '1.200+ Khách Hàng Doanh Nghiệp & Cá Nhân Tin Chọn'}</span>
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
+              {t.reviews.title || (isEn ? 'CLIENT TESTIMONIALS & FEEDBACK' : 'NHẬN XÉT CỦA KHÁCH HÀNG')}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6E5D53]">
+              {t.reviews.ratingText || (isEn ? 'From corporate & private clients across Long An - Tay Ninh' : 'Từ khách hàng doanh nghiệp & cá nhân tại Long An - Tây Ninh')}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayReviews.slice(0, 6).map((rev, idx) => (
+              <div
+                key={rev.id || idx}
+                className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] hover:shadow-md transition-all flex flex-col justify-between group"
+              >
+                <div className="space-y-3">
+                  {/* Star Rating & Verified Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-0.5 text-amber-400">
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <CheckCircle className="w-3 h-3 text-emerald-600" />
+                      <span>{isEn ? 'Verified' : 'Đã xác thực'}</span>
+                    </span>
+                  </div>
+
+                  {/* Comment Quote */}
+                  <p className="text-xs sm:text-sm text-[#2B1810] italic leading-relaxed pt-1">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+                </div>
+
+                {/* Author Info */}
+                <div className="pt-4 border-t border-[#E8E2D9] mt-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-xs sm:text-sm text-[#2B1810] group-hover:text-[#C0392B] transition-colors">
+                      {rev.name}
+                    </div>
+                    <div className="text-[11px] text-[#6E5D53]">{rev.role}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">{rev.location}</div>
+                  </div>
+                  {rev.service && (
+                    <div className="text-right shrink-0">
+                      <span className="inline-block px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E8E2D9] text-[10px] font-bold text-[#6E5D53]">
+                        {rev.service}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 6. FAQ DẠNG COLLAPSED ACCORDION */}
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
           <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
             <div className="text-xs uppercase tracking-widest text-[#C0392B] font-bold">
@@ -885,15 +945,15 @@ export default function HomePage() {
           <div className="p-2 sm:p-4 space-y-6 font-inter">
             <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-800 text-xs font-semibold mb-1.5 border border-slate-200">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold mb-1.5 border border-emerald-200">
                   <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
                   <span>{t.qcModal.badge}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
-                <div className="text-xs text-slate-500 font-mono mt-0.5">
-                  {t.qcModal.serviceTag}{' '}
-                  <span className="font-bold text-slate-900 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 font-mono">
-                    {selectedProduct.serviceTag}
+                <div className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+                  <span className="text-slate-500">{t.qcModal.serviceTag || (isEn ? 'QC Status:' : 'Trạng thái kiểm định:')}</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                    {isEn ? '100% Factory Standard Passed' : '100% Đạt Chuẩn Xuất Xưởng'}
                   </span>
                 </div>
               </div>
@@ -957,7 +1017,7 @@ export default function HomePage() {
             {/* Modal Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
-                href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}&tag=${encodeURIComponent(selectedProduct.serviceTag)}`}
+                href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}`}
                 onClick={() => setSelectedProduct(null)}
                 className="flex-1 py-3 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
               >
@@ -965,13 +1025,13 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
               <a
-                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name} (S/N: ${selectedProduct.serviceTag})`)}`}
+                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name}` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name}, vui lòng gửi thêm hình ảnh thực tế`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
-                <span>{t.qcModal.btnZaloPhotos}</span>
+                <span>{t.qcModal.btnZaloPhotos || (isEn ? 'Chat Zalo For Real Photos' : 'Chat Zalo Xem Thêm Ảnh Thật')}</span>
               </a>
             </div>
           </div>
