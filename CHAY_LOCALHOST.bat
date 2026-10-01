@@ -7,8 +7,8 @@ echo             VI TINH AN TAM - KHO MAY TINH VA BAN QUYEN KEY
 echo ===================================================================
 echo.
 
-echo [*] Thu muc: c:\Users\pntha\.gemini\antigravity-ide\scratch\New folder\vitinhAnTam
-cd /d "c:\Users\pntha\.gemini\antigravity-ide\scratch\New folder\vitinhAnTam"
+echo [*] Thu muc: %~dp0
+cd /d "%~dp0"
 
 echo [*] Kiem tra va giai phong cong 3000...
 powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"

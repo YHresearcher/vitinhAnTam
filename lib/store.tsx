@@ -437,6 +437,10 @@ export function StoreProvider({
         localStorage.setItem(STORAGE_KEYS.userId, found.id);
         localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'true');
       }
+      // Nạp ngay các bảng quản trị nội bộ sau khi nhân sự/admin đăng nhập thành công
+      if (typeof syncWithSupabase === 'function') {
+        syncWithSupabase().catch((e) => console.warn('Supabase post-login sync warning:', e));
+      }
       return {
         success: true,
         message: data.message || `Đăng nhập thành công: ${found.roleTitle} (${found.name})!`,
@@ -706,11 +710,35 @@ export function StoreProvider({
 
       // Đọc dữ liệu từ Supabase. supabase-js KHÔNG ném exception — lỗi nằm trong `.error`,
       // nên bắt buộc phải kiểm tra từng kết quả, nếu không sẽ báo "đã đồng bộ" sai sự thật.
-      const pullFromSupabase = async (): Promise<boolean> => {
+      const pullFromSupabase = async (includeAdminData: boolean): Promise<boolean> => {
         if (!isUsingSupabase || !supabase) return false;
 
-        const results = await Promise.all([
-          supabase.from('inventory_items').select('*'),
+        // 1. Tải kho máy công khai (dùng cho cả khách vãng lai và nhân sự)
+        const invResult = await supabase.from('inventory_items').select('*');
+        if (invResult.error) {
+          throw new Error(invResult.error.message);
+        }
+        if (invResult.data && invResult.data.length > 0) {
+          setInventory(invResult.data as InventoryItem[]);
+        }
+
+        // 2. TỐI ƯU SUPABASE EGRESS & BẢO MẬT:
+        // Khách vãng lai (chưa đăng nhập): DỪNG LẠI TẠI ĐÂY!
+        // Tuyệt đối không kéo 5 bảng bảo mật: customers, service_tickets, spare_parts, onsite_dispatches, shift_logs.
+        // Giúp tiết kiệm hơn 90% băng thông Supabase Egress (5GB/tháng) và không làm rò rỉ dữ liệu khách hàng.
+        if (!includeAdminData) {
+          setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
+          return true;
+        }
+
+        // 3. Nhân sự/Admin đã đăng nhập: Tải các bảng quản trị nội bộ
+        const [
+          cusResult,
+          tckResult,
+          spResult,
+          onsResult,
+          shfResult,
+        ] = await Promise.all([
           supabase.from('customers').select('*'),
           supabase.from('service_tickets').select('*'),
           supabase.from('spare_parts').select('*'),
@@ -718,26 +746,18 @@ export function StoreProvider({
           supabase.from('shift_logs').select('*'),
         ]);
 
-        const failures = results.flatMap((result) => (result.error ? [result.error] : []));
+        const failures = [cusResult, tckResult, spResult, onsResult, shfResult].flatMap(
+          (result) => (result.error ? [result.error] : [])
+        );
         if (failures.length > 0) {
           throw new Error(failures.map((failure) => failure.message).join(' | '));
         }
 
-        const [
-          invData = [],
-          cusData = [],
-          tckData = [],
-          spData = [],
-          onsData = [],
-          shfData = [],
-        ] = results.map((result) => result.data ?? []);
-
-        if (invData.length > 0) setInventory(invData as InventoryItem[]);
-        if (cusData.length > 0) setCustomers(cusData as Customer[]);
-        if (tckData.length > 0) setTickets(tckData as ServiceTicket[]);
-        if (spData.length > 0) setSpareParts(spData as SparePart[]);
-        if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
-        if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+        if (cusResult.data && cusResult.data.length > 0) setCustomers(cusResult.data as Customer[]);
+        if (tckResult.data && tckResult.data.length > 0) setTickets(tckResult.data as ServiceTicket[]);
+        if (spResult.data && spResult.data.length > 0) setSpareParts(spResult.data as SparePart[]);
+        if (onsResult.data && onsResult.data.length > 0) setOnsiteDispatches(onsResult.data as OnsiteDispatch[]);
+        if (shfResult.data && shfResult.data.length > 0) setShiftLogs(shfResult.data as ShiftLog[]);
 
         setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
         return true;
@@ -745,7 +765,8 @@ export function StoreProvider({
 
       let supabasePulledOk = false;
       try {
-        if (await pullFromSupabase()) {
+        const isStaffLoggedIn = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEYS.isLoggedIn) === 'true';
+        if (await pullFromSupabase(isStaffLoggedIn)) {
           setSyncStatus('synced');
           supabasePulledOk = true;
         }

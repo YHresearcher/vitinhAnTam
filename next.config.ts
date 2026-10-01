@@ -3,10 +3,24 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: false,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'antd', '@ant-design/icons'],
+    optimizePackageImports: ['lucide-react', 'antd', '@ant-design/icons', 'recharts'],
   },
   images: {
-    unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vitinhantham.vn',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
+      },
+    ],
   },
   async redirects() {
     return [

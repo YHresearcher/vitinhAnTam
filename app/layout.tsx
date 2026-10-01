@@ -7,14 +7,14 @@ import { getStoredSettings } from '@/lib/server/settings';
 
 const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['vietnamese', 'latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-be-vietnam-pro',
   display: 'swap',
 });
 
 const inter = Inter({
   subsets: ['vietnamese', 'latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
   display: 'swap',
 });
