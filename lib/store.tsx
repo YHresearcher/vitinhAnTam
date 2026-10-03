@@ -71,6 +71,16 @@ export interface SystemSettings {
   footerAbout: string;
   footerCopyright: string;
   storeName: string;
+
+  // Cấu hình Tích hợp Webhook & Zalo Bot API
+  zaloBotToken?: string;
+  zaloBotSecretToken?: string;
+  zaloDefaultChatId?: string;
+  customWebhookUrl?: string;
+  notifyOnNewBooking?: boolean;
+  notifyOnNewOrder?: boolean;
+  notifyOnNewTicket?: boolean;
+  notifyOnKeyRequest?: boolean;
 }
 
 export const initialSystemSettings: SystemSettings = {
@@ -97,6 +107,16 @@ export const initialSystemSettings: SystemSettings = {
   footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
+
+  // Mặc định cấu hình Zalo Bot & Webhook
+  zaloBotToken: '',
+  zaloBotSecretToken: '',
+  zaloDefaultChatId: '',
+  customWebhookUrl: '',
+  notifyOnNewBooking: true,
+  notifyOnNewOrder: true,
+  notifyOnNewTicket: true,
+  notifyOnKeyRequest: true,
 };
 
 interface StoreContextType {
@@ -1875,6 +1895,25 @@ export function StoreProvider({
         'Tạo phiếu sửa chữa'
       );
     }
+    // Gửi thông báo Webhook & Zalo Bot khi tạo phiếu tiếp nhận sửa chữa tại quầy
+    if (typeof window !== 'undefined' && ticketData.visual_condition !== 'Tiếp nhận qua hệ thống đặt lịch Online') {
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'new_ticket',
+          payload: {
+            ticketCode: newTicket.ticket_code,
+            customerName: newTicket.customer_name,
+            customerPhone: newTicket.customer_phone,
+            deviceType: newTicket.device_name,
+            issueDescription: newTicket.issue_description,
+            technicianName: newTicket.technician_name,
+          },
+        }),
+      }).catch(() => undefined);
+    }
+
     return newTicket;
   };
 

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TRANSLATIONS } from '@/lib/translations';
+import { ON_SITE_LOCATIONS } from '@/lib/locations';
 import {
   Calendar,
   Store,
@@ -13,6 +14,7 @@ import {
   MessageCircle,
   Bike,
   Sparkles,
+  MapPin,
 } from 'lucide-react';
 
 function AppointmentBookingContent() {
@@ -26,13 +28,34 @@ function AppointmentBookingContent() {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [locationType, setLocationType] = useState<'counter' | 'onsite'>('onsite');
-  const [address, setAddress] = useState('');
-  const [deviceType, setDeviceType] = useState(prefilledDevice || (currentLang === 'en' ? 'Dell/HP Desktop PC' : 'PC Đồng bộ Dell/HP'));
+
+  // Address State
+  const [selectedCity, setSelectedCity] = useState<'long_an' | 'tphcm'>('long_an');
+  const [selectedDistrict, setSelectedDistrict] = useState('tan_an');
+  const [selectedWard, setSelectedWard] = useState('Phường 1');
+  const [streetAddress, setStreetAddress] = useState('');
+
+  // Device dropdown: PC or Laptop
+  const initialDeviceType = useMemo(() => {
+    if (prefilledDevice) {
+      if (
+        prefilledDevice.toLowerCase().includes('laptop') ||
+        prefilledDevice.toLowerCase().includes('thinkpad') ||
+        prefilledDevice.toLowerCase().includes('notebook')
+      ) {
+        return 'Laptop (Máy tính xách tay)';
+      }
+      return 'PC (Máy tính để bàn)';
+    }
+    return 'PC (Máy tính để bàn)';
+  }, [prefilledDevice]);
+
+  const [deviceType, setDeviceType] = useState(initialDeviceType);
   const [serviceNeeded, setServiceNeeded] = useState(prefilledService || '');
   const [appointmentDate, setAppointmentDate] = useState(
     new Date().toISOString().split('T')[0]
   );
-  const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ cứu hộ khẩn (17:30 - 21:00)');
+  const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ chiều tối (17:30 - 21:00)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{
     code: string;
@@ -45,6 +68,31 @@ function AppointmentBookingContent() {
   } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Current districts & wards
+  const availableDistricts = useMemo(() => {
+    return ON_SITE_LOCATIONS[selectedCity].districts;
+  }, [selectedCity]);
+
+  const availableWards = useMemo(() => {
+    const dist = availableDistricts.find((d) => d.id === selectedDistrict) || availableDistricts[0];
+    return dist ? dist.wards : [];
+  }, [availableDistricts, selectedDistrict]);
+
+  const handleCityChange = (city: 'long_an' | 'tphcm') => {
+    setSelectedCity(city);
+    const firstDist = ON_SITE_LOCATIONS[city].districts[0];
+    setSelectedDistrict(firstDist.id);
+    setSelectedWard(firstDist.wards[0]);
+  };
+
+  const handleDistrictChange = (distId: string) => {
+    setSelectedDistrict(distId);
+    const dist = availableDistricts.find((d) => d.id === distId);
+    if (dist && dist.wards.length > 0) {
+      setSelectedWard(dist.wards[0]);
+    }
+  };
+
   const handleSelectQuickService = (serv: string) => {
     if (serviceNeeded) {
       if (!serviceNeeded.includes(serv)) {
@@ -55,6 +103,27 @@ function AppointmentBookingContent() {
     }
   };
 
+  const getFullAddress = () => {
+    if (locationType === 'counter') {
+      return currentLang === 'en'
+        ? 'Vi Tinh An Tam Store (45 Nguyen Hue, Ward 1, Tan An, Long An)'
+        : 'Cửa hàng Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Tân An, Long An)';
+    }
+
+    const currentDistName =
+      availableDistricts.find((d) => d.id === selectedDistrict)?.name || '';
+    const cityName = selectedCity === 'long_an' ? 'Long An' : 'TP. Hồ Chí Minh';
+
+    const parts = [
+      streetAddress.trim(),
+      selectedWard,
+      selectedCity === 'long_an' ? 'TP. Tân An' : currentDistName,
+      cityName,
+    ].filter(Boolean);
+
+    return parts.join(', ');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim() || !customerPhone.trim() || !serviceNeeded.trim()) {
@@ -62,8 +131,8 @@ function AppointmentBookingContent() {
       return;
     }
 
-    if (locationType === 'onsite' && !address.trim()) {
-      setErrorMsg(t.errAddress);
+    if (locationType === 'onsite' && !streetAddress.trim()) {
+      setErrorMsg(t.errAddress || 'Vui lòng nhập số nhà, tên đường!');
       return;
     }
 
@@ -72,20 +141,21 @@ function AppointmentBookingContent() {
 
     try {
       const ticketCode = `#TK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const fullAddr = getFullAddress();
 
       await addServiceTicket({
         ticket_code: ticketCode,
         customer_name: customerName.trim(),
         customer_phone: customerPhone.trim(),
-        customer_address: address.trim() || 'Tại quầy 52 Nguyễn Cửu Vân, P. Long An, Tây Ninh',
+        customer_address: fullAddr,
         device_service_tag: 'ST-PENDING',
-        device_name: deviceType,
+        device_name: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
         reception_mode: locationType === 'onsite' ? 'mobile' : 'counter',
         ticket_type: locationType === 'onsite' ? 'onsite' : 'counter',
         issue_description: `Đặt lịch: ${serviceNeeded || 'Kiểm tra máy tổng quát'}`,
         estimated_cost: locationType === 'onsite' ? 150000 : 100000,
-        dispatch_address: locationType === 'onsite' ? address.trim() : undefined,
-        technician_name: 'KTV Trực ca Tây Ninh',
+        dispatch_address: locationType === 'onsite' ? fullAddr : undefined,
+        technician_name: selectedCity === 'long_an' ? 'KTV Trực ca Tân An' : 'KTV Trực ca TP.HCM',
         selected_services: [
           {
             id: 'srv-booking',
@@ -103,20 +173,36 @@ function AppointmentBookingContent() {
         total_amount: locationType === 'onsite' ? 150000 : 100000,
         visual_condition: 'Tiếp nhận qua hệ thống đặt lịch Online',
         status: 'processing',
-        technician_note: `Lịch hẹn: ${appointmentDate} (${timeSlot})`,
+        technician_note: `Lịch hẹn: ${appointmentDate} (${timeSlot}) • Khu vực: ${fullAddr}`,
         estimated_completion: `${timeSlot} - ${appointmentDate}`,
       });
 
+      // Gửi thông báo Webhook / Zalo Bot tự động
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'new_booking',
+          payload: {
+            ticketCode,
+            customerName: customerName.trim(),
+            customerPhone: customerPhone.trim(),
+            address: fullAddr,
+            deviceType: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
+            serviceNeeded,
+            bookingDate: appointmentDate,
+            bookingTime: timeSlot,
+          },
+        }),
+      }).catch(() => undefined);
+
       setBookingSuccess({
         code: ticketCode,
-        name: customerName,
-        phone: customerPhone,
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
         date: appointmentDate,
         slot: timeSlot,
-        location:
-          locationType === 'onsite'
-            ? address
-            : (currentLang === 'en' ? 'Vi Tinh An Tam Store (52 Nguyen Cuu Van, Long An Ward, Tay Ninh)' : 'Cửa hàng Vi Tính An Tâm (52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh)'),
+        location: fullAddr,
         service: serviceNeeded,
       });
     } catch {
@@ -129,8 +215,8 @@ function AppointmentBookingContent() {
   const getZaloShareUrl = () => {
     if (!bookingSuccess) return systemSettings.zaloLink;
     const msg = currentLang === 'en'
-      ? `Hello Vi Tinh An Tam, I just scheduled an appointment on the website:\n- Ticket: ${bookingSuccess.code}\n- Customer: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Service: ${bookingSuccess.service}\n- Scheduled Time: ${bookingSuccess.slot} on ${bookingSuccess.date}\n- Location: ${bookingSuccess.location}\nPlease confirm!`
-      : `Xin chào Vi Tính An Tâm, tôi vừa đặt lịch hẹn trên website:\n- Mã phiếu: ${bookingSuccess.code}\n- Khách hàng: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Nhu cầu: ${bookingSuccess.service}\n- Thời gian: ${bookingSuccess.slot} ngày ${bookingSuccess.date}\n- Địa điểm: ${bookingSuccess.location}\nNhờ kỹ thuật viên xác nhận giúp tôi!`;
+      ? `Hello Vi Tinh An Tam, I just scheduled an appointment on the website:\n- Ticket: ${bookingSuccess.code}\n- Customer: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Device: ${deviceType}\n- Service: ${bookingSuccess.service}\n- Scheduled Time: ${bookingSuccess.slot} on ${bookingSuccess.date}\n- Location: ${bookingSuccess.location}\nPlease confirm!`
+      : `Xin chào Vi Tính An Tâm, tôi vừa đặt lịch hẹn trên website:\n- Mã phiếu: ${bookingSuccess.code}\n- Khách hàng: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Thiết bị: ${deviceType}\n- Nhu cầu: ${bookingSuccess.service}\n- Thời gian: ${bookingSuccess.slot} ngày ${bookingSuccess.date}\n- Địa điểm: ${bookingSuccess.location}\nNhờ kỹ thuật viên xác nhận giúp tôi!`;
     return `https://zalo.me/${systemSettings.zaloNumber}?text=${encodeURIComponent(msg)}`;
   };
 
@@ -187,6 +273,10 @@ function AppointmentBookingContent() {
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.customerLabel}</span>
                 <span className="font-semibold text-slate-800">{bookingSuccess.name} ({bookingSuccess.phone})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">{t.deviceLabel}</span>
+                <span className="font-semibold text-slate-800">{deviceType}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">{t.serviceLabel}</span>
@@ -287,7 +377,7 @@ function AppointmentBookingContent() {
                 </div>
               </div>
 
-              {/* 2. Thông tin liên hệ */}
+              {/* 2. Thông tin khách hàng */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                   {t.step2Title}
@@ -299,7 +389,7 @@ function AppointmentBookingContent() {
                       type="text"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      placeholder={t.namePlaceholder}
+                      placeholder=""
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       required
                     />
@@ -310,43 +400,109 @@ function AppointmentBookingContent() {
                       type="tel"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      placeholder={t.phonePlaceholder}
+                      placeholder=""
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
                       required
                     />
                   </div>
                 </div>
 
+                {/* Dropdowns địa chỉ phục vụ tận nơi */}
                 {locationType === 'onsite' && (
-                  <div>
-                    <span className="text-xs text-slate-500 mb-1 block">{t.addressLabel}</span>
-                    <input
-                      type="text"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder={t.addressPlaceholder}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all"
-                      required={locationType === 'onsite'}
-                    />
+                  <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] space-y-3">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                      <MapPin className="w-4 h-4 text-[#C0392B]" />
+                      <span>{t.addressLabel}</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Dropdown Tỉnh / Thành Phố */}
+                      <div>
+                        <span className="text-xs text-slate-500 mb-1 block">{t.cityLabel}</span>
+                        <select
+                          value={selectedCity}
+                          onChange={(e) => handleCityChange(e.target.value as 'long_an' | 'tphcm')}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all cursor-pointer"
+                        >
+                          <option value="long_an">Long An</option>
+                          <option value="tphcm">TP. Hồ Chí Minh</option>
+                        </select>
+                      </div>
+
+                      {/* Dropdown Quận (Chỉ hiển thị khi chọn TP.HCM) */}
+                      {selectedCity === 'tphcm' && (
+                        <div>
+                          <span className="text-xs text-slate-500 mb-1 block">{t.districtLabel}</span>
+                          <select
+                            value={selectedDistrict}
+                            onChange={(e) => handleDistrictChange(e.target.value)}
+                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all cursor-pointer"
+                          >
+                            {availableDistricts.map((d) => (
+                              <option key={d.id} value={d.id}>
+                                {currentLang === 'en' ? d.nameEn : d.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+
+                      {/* Dropdown Phường / Xã */}
+                      <div className={selectedCity === 'long_an' ? 'sm:col-span-1' : 'sm:col-span-2'}>
+                        <span className="text-xs text-slate-500 mb-1 block">
+                          {selectedCity === 'long_an' ? `${t.wardLabel} (Nội thành Tân An)` : t.wardLabel}
+                        </span>
+                        <select
+                          value={selectedWard}
+                          onChange={(e) => setSelectedWard(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all cursor-pointer"
+                        >
+                          {availableWards.map((w) => (
+                            <option key={w} value={w}>
+                              {w}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Ô nhập Số nhà, tên đường (không placeholder) */}
+                    <div>
+                      <span className="text-xs text-slate-500 mb-1 block">{t.streetAddressLabel}</span>
+                      <input
+                        type="text"
+                        value={streetAddress}
+                        onChange={(e) => setStreetAddress(e.target.value)}
+                        placeholder=""
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all"
+                        required={locationType === 'onsite'}
+                      />
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* 3. Dòng máy & Nhu cầu */}
+              {/* 3. Nhu cầu sửa chữa / Nâng cấp */}
               <div className="space-y-3">
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                   {t.step3Title}
                 </label>
 
+                {/* Dropdown chọn PC / Laptop */}
                 <div>
                   <span className="text-xs text-slate-500 mb-1 block">{t.deviceLabel}</span>
-                  <input
-                    type="text"
+                  <select
                     value={deviceType}
                     onChange={(e) => setDeviceType(e.target.value)}
-                    placeholder={t.devicePlaceholder}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all mb-2"
-                  />
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-slate-50 focus:bg-white transition-all cursor-pointer"
+                  >
+                    <option value="PC (Máy tính để bàn)">
+                      {currentLang === 'en' ? 'Desktop PC / Workstation' : 'PC (Máy tính để bàn)'}
+                    </option>
+                    <option value="Laptop (Máy tính xách tay)">
+                      {currentLang === 'en' ? 'Laptop / Notebook' : 'Laptop (Máy tính xách tay)'}
+                    </option>
+                  </select>
                 </div>
 
                 {/* Quick Service Pills */}
@@ -364,6 +520,7 @@ function AppointmentBookingContent() {
                   ))}
                 </div>
 
+                {/* Textarea vấn đề với placeholder ẩn theo yêu cầu */}
                 <textarea
                   rows={3}
                   value={serviceNeeded}

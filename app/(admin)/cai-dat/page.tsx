@@ -18,13 +18,23 @@ import {
   Card,
   Tag,
   Space,
+  Switch,
 } from 'antd';
+
 import {
   Sparkles,
   PhoneCall,
   HelpCircle,
   MessageSquareQuote,
   Save,
+  Bot,
+  Send,
+  Radio,
+  RefreshCw,
+  Trash2,
+  Copy,
+  Bell,
+  Zap,
 } from 'lucide-react';
 
 const { TextArea } = Input;
@@ -84,6 +94,146 @@ export default function CaiDatPage() {
   const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
   const [memberNewPassword, setMemberNewPassword] = useState('');
   const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
+
+  // Webhook & Zalo Bot states
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [isSettingWebhook, setIsSettingWebhook] = useState(false);
+  const [isCheckingWebhook, setIsCheckingWebhook] = useState(false);
+  const [isDeletingWebhook, setIsDeletingWebhook] = useState(false);
+  const [webhookInfoModalOpen, setWebhookInfoModalOpen] = useState(false);
+  const [webhookInfoData, setWebhookInfoData] = useState<unknown>(null);
+
+  const getSystemWebhookUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/api/webhook/zalo`;
+    }
+    return 'https://vitinhantham.vn/api/webhook/zalo';
+  };
+
+  const handleCopyWebhookUrl = () => {
+    const url = getSystemWebhookUrl();
+    navigator.clipboard.writeText(url);
+    message.success('Đã sao chép Webhook URL vào bộ nhớ tạm!');
+  };
+
+  const handleTestWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token trước khi gửi thử nghiệm!');
+      return;
+    }
+    if (!formData.zaloDefaultChatId?.trim()) {
+      message.error('Vui lòng nhập Chat ID / Group ID nhận tin nhắn!');
+      return;
+    }
+
+    setIsTestingWebhook(true);
+    try {
+      // Tự động lưu cấu hình trước khi test
+      await updateSystemSettings(formData);
+      const res = await fetch('/api/webhook/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatId: formData.zaloDefaultChatId.trim() }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        message.success('Đã gửi tin nhắn thử nghiệm thành công đến Zalo!');
+      } else {
+        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại Token & Chat ID'}`);
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      message.error(`Lỗi khi gửi test: ${errMsg}`);
+    } finally {
+      setIsTestingWebhook(false);
+    }
+  };
+
+  const handleSetWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token!');
+      return;
+    }
+    setIsSettingWebhook(true);
+    try {
+      await updateSystemSettings(formData);
+      const webhookUrl = getSystemWebhookUrl();
+      const res = await fetch('/api/webhook/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set',
+          webhookUrl,
+          secretToken: formData.zaloBotSecretToken?.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        message.success('Đã đăng ký Webhook URL với Zalo Bot Platform thành công!');
+      } else {
+        message.error(`Đăng ký Webhook thất bại: ${data.error}`);
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      message.error(`Lỗi thiết lập: ${errMsg}`);
+    } finally {
+      setIsSettingWebhook(false);
+    }
+  };
+
+  const handleGetWebhookInfo = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token!');
+      return;
+    }
+    setIsCheckingWebhook(true);
+    try {
+      await updateSystemSettings(formData);
+      const res = await fetch('/api/webhook/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'info' }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setWebhookInfoData(data.info);
+        setWebhookInfoModalOpen(true);
+      } else {
+        message.error(`Không thể lấy thông tin Webhook: ${data.error}`);
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      message.error(`Lỗi kiểm tra: ${errMsg}`);
+    } finally {
+      setIsCheckingWebhook(false);
+    }
+  };
+
+  const handleDeleteWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token!');
+      return;
+    }
+    setIsDeletingWebhook(true);
+    try {
+      const res = await fetch('/api/webhook/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete' }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        message.success('Đã hủy đăng ký Webhook trên Zalo Bot!');
+      } else {
+        message.error(`Hủy Webhook thất bại: ${data.error}`);
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      message.error(`Lỗi hủy: ${errMsg}`);
+    } finally {
+      setIsDeletingWebhook(false);
+    }
+  };
 
 
   const handleChange = (field: keyof SystemSettings, val: string) => {
@@ -755,6 +905,244 @@ export default function CaiDatPage() {
               </Card>
             ),
           },
+          // TAB: TÍCH HỢP WEBHOOK & ZALO BOT
+          {
+            key: 'webhook_zalo',
+            label: (
+              <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-[#0068FF]">
+                <Bot className="w-4 h-4 text-[#0068FF]" />
+                <span>Tích Hợp Webhook &amp; Zalo Bot</span>
+              </span>
+            ),
+            children: (
+              <Card className="rounded-xl border-slate-200 shadow-xs space-y-6">
+                <form onSubmit={handleSaveSettings} className="space-y-6">
+                  {/* Mục 1: Webhook Endpoint URL của hệ thống */}
+                  <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Radio className="w-4 h-4 text-blue-600 animate-pulse" />
+                        <h3 className="text-xs sm:text-sm font-bold text-blue-900 uppercase">
+                          Webhook Receiver Endpoint (Điểm Tiếp Nhận Sự Kiện)
+                        </h3>
+                      </div>
+                      <Tag color="blue" className="font-mono text-[11px] w-fit">
+                        Sẵn sàng nhận HTTP POST
+                      </Tag>
+                    </div>
+
+                    <p className="text-xs text-blue-800 leading-relaxed">
+                      Sử dụng URL này để dán vào cấu hình Webhook trên <strong>Zalo Bot Platform</strong>, <strong>Zalo OA</strong> hoặc hệ thống webhook bên thứ ba (n8n, Zapier, Make).
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                      <div className="flex-1 bg-white border border-blue-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 flex items-center justify-between overflow-x-auto shadow-inner">
+                        <span>{getSystemWebhookUrl()}</span>
+                      </div>
+                      <Button
+                        type="primary"
+                        icon={<Copy className="w-3.5 h-3.5" />}
+                        onClick={handleCopyWebhookUrl}
+                        className="bg-[#0068FF] hover:bg-[#0052cc] text-white font-semibold text-xs h-9 px-4 shrink-0"
+                      >
+                        Sao chép Webhook URL
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Mục 2: Cấu hình Zalo Bot API Token & Chat ID */}
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-[#0068FF]" />
+                      1. Thông Tin Xác Thực Zalo Bot API
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Zalo Bot Token (Cấp từ Zalo Bot Platform)
+                        </label>
+                        <Input.Password
+                          value={formData.zaloBotToken || ''}
+                          onChange={(e) => handleChange('zaloBotToken', e.target.value)}
+                          placeholder="VD: bot123456789:AAEF..."
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Token bí mật dùng để gọi API Zalo Bot.
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Secret Token (Chuỗi bảo vệ Header Webhook)
+                        </label>
+                        <Input
+                          value={formData.zaloBotSecretToken || ''}
+                          onChange={(e) => handleChange('zaloBotSecretToken', e.target.value)}
+                          placeholder="VD: an_tam_secret_key_2026"
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Khớp với header <code>X-Bot-Token</code> do Zalo gửi tới.
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Default Chat ID / Group ID nhận thông báo *
+                        </label>
+                        <Input
+                          value={formData.zaloDefaultChatId || ''}
+                          onChange={(e) => handleChange('zaloDefaultChatId', e.target.value)}
+                          placeholder="VD: 84909053058 hoặc ID Group"
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          ID cá nhân hoặc ID nhóm Zalo để nhận thông báo khẩn.
+                        </span>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Custom Webhook URL mở rộng (Tùy chọn: n8n, CRM, Zapier, Telegram)
+                        </label>
+                        <Input
+                          value={formData.customWebhookUrl || ''}
+                          onChange={(e) => handleChange('customWebhookUrl', e.target.value)}
+                          placeholder="VD: https://n8n.example.com/webhook/vitinh-antam"
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mục 3: Bộ công tắc kích hoạt sự kiện tự động (Triggers) */}
+                  <div className="pt-3 border-t border-slate-100">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-amber-600" />
+                      2. Kích Hoạt Thông Báo Tự Động (Event Triggers)
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">🚨 Đặt lịch dịch vụ tận nơi mới</div>
+                          <div className="text-[11px] text-slate-500">Khách gửi form đặt lịch từ trang /dat-lich</div>
+                        </div>
+                        <Switch
+                          checked={formData.notifyOnNewBooking !== false}
+                          onChange={(checked) => setFormData((prev) => ({ ...prev, notifyOnNewBooking: checked }))}
+                        />
+                      </div>
+
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">🛒 Đơn hàng website mới</div>
+                          <div className="text-[11px] text-slate-500">Khách đặt hàng sản phẩm online</div>
+                        </div>
+                        <Switch
+                          checked={formData.notifyOnNewOrder !== false}
+                          onChange={(checked) => setFormData((prev) => ({ ...prev, notifyOnNewOrder: checked }))}
+                        />
+                      </div>
+
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">🛠️ Phiếu sửa chữa mới</div>
+                          <div className="text-[11px] text-slate-500">Tiếp nhận máy sửa chữa tại quầy</div>
+                        </div>
+                        <Switch
+                          checked={formData.notifyOnNewTicket !== false}
+                          onChange={(checked) => setFormData((prev) => ({ ...prev, notifyOnNewTicket: checked }))}
+                        />
+                      </div>
+
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">🔑 Yêu cầu cấp key bản quyền</div>
+                          <div className="text-[11px] text-slate-500">Nhân viên gửi yêu cầu cấp license key</div>
+                        </div>
+                        <Switch
+                          checked={formData.notifyOnKeyRequest !== false}
+                          onChange={(checked) => setFormData((prev) => ({ ...prev, notifyOnKeyRequest: checked }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mục 4: Bảng thao tác nhanh & Kiểm tra kết nối Zalo Bot */}
+                  <div className="pt-3 border-t border-slate-100">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-3 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-emerald-600" />
+                      3. Bảng Điều Khiển Hành Động Nhanh (Zalo Bot Action Center)
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      <Button
+                        type="primary"
+                        icon={<Send className="w-3.5 h-3.5" />}
+                        loading={isTestingWebhook}
+                        onClick={handleTestWebhook}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 text-xs"
+                      >
+                        Gửi Tin Nhắn Test
+                      </Button>
+
+                      <Button
+                        icon={<Zap className="w-3.5 h-3.5 text-blue-600" />}
+                        loading={isSettingWebhook}
+                        onClick={handleSetWebhook}
+                        className="font-semibold h-9 text-xs border-blue-300 text-blue-700 hover:border-blue-500"
+                      >
+                        Đăng Ký setWebhook
+                      </Button>
+
+                      <Button
+                        icon={<RefreshCw className="w-3.5 h-3.5 text-slate-600" />}
+                        loading={isCheckingWebhook}
+                        onClick={handleGetWebhookInfo}
+                        className="font-semibold h-9 text-xs border-slate-300 text-slate-700 hover:border-slate-500"
+                      >
+                        Xem Trạng Thái Info
+                      </Button>
+
+                      <Popconfirm
+                        title="Hủy đăng ký Webhook"
+                        description="Bạn có chắc chắn muốn hủy đăng ký Webhook trên Zalo Bot?"
+                        onConfirm={handleDeleteWebhook}
+                        okText="Hủy Webhook"
+                        cancelText="Đóng"
+                        okType="danger"
+                      >
+                        <Button
+                          danger
+                          icon={<Trash2 className="w-3.5 h-3.5" />}
+                          loading={isDeletingWebhook}
+                          className="font-semibold h-9 text-xs"
+                        >
+                          Hủy deleteWebhook
+                        </Button>
+                      </Popconfirm>
+                    </div>
+                  </div>
+
+                  {/* Nút lưu cấu hình */}
+                  <div className="pt-4 border-t border-slate-200 flex justify-end">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={isSaving}
+                      className="bg-[#0068FF] hover:bg-[#0052cc] text-white font-bold h-9 px-6 rounded-lg text-xs shadow-sm shadow-blue-500/20"
+                    >
+                      Lưu Cấu Hình Webhook &amp; Zalo Bot
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            ),
+          },
+
 
           // TAB 3: QUẢN LÝ FAQ
           {
@@ -1090,6 +1478,33 @@ export default function CaiDatPage() {
           </div>
         )}
       </Modal>
+
+      {/* Modal Xem Trạng Thái Webhook Info */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 text-slate-900 font-bold">
+            <Radio className="w-4 h-4 text-blue-600" />
+            <span>Thông Tin Trạng Thái Webhook Từ Zalo Bot</span>
+          </div>
+        }
+        open={webhookInfoModalOpen}
+        onCancel={() => setWebhookInfoModalOpen(false)}
+        footer={[
+          <Button key="close" type="primary" onClick={() => setWebhookInfoModalOpen(false)}>
+            Đóng
+          </Button>,
+        ]}
+      >
+        <div className="pt-2 space-y-3">
+          <p className="text-xs text-slate-600">
+            Dữ liệu phản hồi trực tiếp từ Zalo Bot Platform API (<code>getWebhookInfo</code>):
+          </p>
+          <pre className="p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl overflow-x-auto max-h-72 whitespace-pre-wrap">
+            {JSON.stringify(webhookInfoData, null, 2)}
+          </pre>
+        </div>
+      </Modal>
+
     </div>
   );
 }
