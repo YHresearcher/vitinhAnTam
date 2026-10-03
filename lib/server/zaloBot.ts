@@ -1,18 +1,20 @@
 import { getStoredSettings } from '@/lib/server/settings';
 
-const ZALO_BOT_API_BASE = 'https://bot-api.zalo.me';
-
 /**
- * Định dạng cấu hình Zalo Bot lấy từ settings
+ * Định dạng cấu hình Bot & Webhook lấy từ settings
  */
 export function getZaloBotConfig() {
   const settings = getStoredSettings();
+  const provider = (settings.botProvider || process.env.BOT_PROVIDER || 'telegram') as 'telegram' | 'zalo_oa' | 'custom_gateway';
+  const apiBaseUrl = (settings.botApiBaseUrl || process.env.BOT_API_BASE_URL || '').trim();
   const token = (settings.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
   const secretToken = (settings.zaloBotSecretToken || process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
   const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
   return {
+    provider,
+    apiBaseUrl,
     token,
     secretToken,
     defaultChatId,
@@ -22,26 +24,91 @@ export function getZaloBotConfig() {
 }
 
 /**
- * Gửi tin nhắn qua Zalo Bot API
- * Endpoint: POST https://bot-api.zalo.me/bot{TOKEN}/sendMessage
+ * Gửi tin nhắn thông báo qua Bot (Telegram / Zalo OA / Custom Gateway)
  */
 export async function sendZaloBotMessage(params: {
   chatId?: string;
   text: string;
   parseMode?: 'markdown' | 'HTML';
+  token?: string;
+  provider?: 'telegram' | 'zalo_oa' | 'custom_gateway';
+  apiBaseUrl?: string;
 }): Promise<{ ok: boolean; result?: unknown; error?: string }> {
-  const { token, defaultChatId } = getZaloBotConfig();
-  const targetChatId = params.chatId || defaultChatId;
+  const config = getZaloBotConfig();
+  const provider = params.provider || config.provider;
+  const apiBaseUrl = (params.apiBaseUrl !== undefined ? params.apiBaseUrl : config.apiBaseUrl).trim();
+  const token = (params.token !== undefined ? params.token : config.token).trim();
+  const targetChatId = (params.chatId || config.defaultChatId).trim();
 
-  if (!token) {
-    return { ok: false, error: 'Chưa cấu hình Zalo Bot Token trong Cài Đặt Hệ Thống.' };
+  if (!token && provider !== 'custom_gateway') {
+    return { ok: false, error: 'Chưa nhập Bot Token / Access Token.' };
   }
-  if (!targetChatId) {
-    return { ok: false, error: 'Chưa cấu hình Chat ID / Group ID nhận tin nhắn.' };
+  if (!targetChatId && provider !== 'custom_gateway') {
+    return { ok: false, error: 'Chưa nhập Chat ID / User ID / Group ID nhận tin nhắn.' };
   }
 
   try {
-    const url = `${ZALO_BOT_API_BASE}/bot${token}/sendMessage`;
+    // 1. ZALO OA (Official Account OpenAPI)
+    if (provider === 'zalo_oa') {
+      const url = apiBaseUrl || 'https://openapi.zalo.me/v3.0/oa/message/cs';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          access_token: token,
+        },
+        body: JSON.stringify({
+          recipient: {
+            user_id: targetChatId,
+          },
+          message: {
+            text: params.text,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || (data.error && data.error !== 0)) {
+        return {
+          ok: false,
+          error: data.message || `Lỗi Zalo OA API (mã lỗi: ${data.error})`,
+          result: data,
+        };
+      }
+      return { ok: true, result: data };
+    }
+
+    // 2. CUSTOM GATEWAY / PROXY BOT
+    if (provider === 'custom_gateway') {
+      const url = apiBaseUrl || targetChatId;
+      if (!url || !url.startsWith('http')) {
+        return { ok: false, error: 'Vui lòng nhập URL Endpoint hợp lệ (bắt đầu bằng http:// hoặc https://).' };
+      }
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          chat_id: targetChatId,
+          text: params.text,
+          message: params.text,
+          timestamp: new Date().toISOString(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({ status: res.status }));
+      if (!res.ok) {
+        return { ok: false, error: `Lỗi Gateway (HTTP ${res.status})`, result: data };
+      }
+      return { ok: true, result: data };
+    }
+
+    // 3. TELEGRAM BOT API (Mặc định - Cực kỳ tin cậy & miễn phí 100%)
+    const base = apiBaseUrl || 'https://api.telegram.org';
+    const cleanBase = base.replace(/\/+$/, '');
+    const url = `${cleanBase}/bot${token}/sendMessage`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -58,7 +125,7 @@ export async function sendZaloBotMessage(params: {
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: data.description || data.message || `Lỗi Zalo Bot API (HTTP ${res.status})`,
+        error: data.description || data.message || `Lỗi Bot API (HTTP ${res.status})`,
         result: data,
       };
     }
@@ -66,25 +133,33 @@ export async function sendZaloBotMessage(params: {
     return { ok: true, result: data };
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    return { ok: false, error: `Lỗi kết nối Zalo Bot: ${errMsg}` };
+    return { ok: false, error: `Lỗi kết nối Bot API: ${errMsg}` };
   }
 }
 
+
 /**
- * Đăng ký Webhook với Zalo Bot Platform (setWebhook)
- * Endpoint: POST https://bot-api.zalo.me/bot{TOKEN}/setWebhook
+ * Đăng ký Webhook với Bot Platform (setWebhook)
  */
-export async function setZaloWebhook(webhookUrl: string, secretToken?: string): Promise<{ ok: boolean; result?: unknown; error?: string }> {
-  const { token, secretToken: storedSecret } = getZaloBotConfig();
+export async function setZaloWebhook(
+  webhookUrl: string,
+  secretToken?: string,
+  tokenOverride?: string,
+  apiBaseUrlOverride?: string
+): Promise<{ ok: boolean; result?: unknown; error?: string }> {
+  const config = getZaloBotConfig();
+  const token = (tokenOverride || config.token).trim();
+  const secret = secretToken || config.secretToken;
+  const apiBaseUrl = (apiBaseUrlOverride !== undefined ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
-    return { ok: false, error: 'Chưa cấu hình Zalo Bot Token.' };
+    return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
-  const secret = secretToken || storedSecret;
-
   try {
-    const url = `${ZALO_BOT_API_BASE}/bot${token}/setWebhook`;
+    const base = apiBaseUrl || 'https://api.telegram.org';
+    const cleanBase = base.replace(/\/+$/, '');
+    const url = `${cleanBase}/bot${token}/setWebhook`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -113,18 +188,24 @@ export async function setZaloWebhook(webhookUrl: string, secretToken?: string): 
 }
 
 /**
- * Lấy thông tin trạng thái Webhook (getWebhookInfo / testWebhook)
- * Endpoint: GET https://bot-api.zalo.me/bot{TOKEN}/getWebhookInfo
+ * Lấy thông tin trạng thái Webhook (getWebhookInfo)
  */
-export async function getZaloWebhookInfo(): Promise<{ ok: boolean; result?: unknown; error?: string }> {
-  const { token } = getZaloBotConfig();
+export async function getZaloWebhookInfo(
+  tokenOverride?: string,
+  apiBaseUrlOverride?: string
+): Promise<{ ok: boolean; result?: unknown; error?: string }> {
+  const config = getZaloBotConfig();
+  const token = (tokenOverride || config.token).trim();
+  const apiBaseUrl = (apiBaseUrlOverride !== undefined ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
-    return { ok: false, error: 'Chưa cấu hình Zalo Bot Token.' };
+    return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
   try {
-    const url = `${ZALO_BOT_API_BASE}/bot${token}/getWebhookInfo`;
+    const base = apiBaseUrl || 'https://api.telegram.org';
+    const cleanBase = base.replace(/\/+$/, '');
+    const url = `${cleanBase}/bot${token}/getWebhookInfo`;
     const res = await fetch(url, {
       method: 'GET',
     });
@@ -147,17 +228,23 @@ export async function getZaloWebhookInfo(): Promise<{ ok: boolean; result?: unkn
 
 /**
  * Hủy đăng ký Webhook (deleteWebhook)
- * Endpoint: POST https://bot-api.zalo.me/bot{TOKEN}/deleteWebhook
  */
-export async function deleteZaloWebhook(): Promise<{ ok: boolean; result?: unknown; error?: string }> {
-  const { token } = getZaloBotConfig();
+export async function deleteZaloWebhook(
+  tokenOverride?: string,
+  apiBaseUrlOverride?: string
+): Promise<{ ok: boolean; result?: unknown; error?: string }> {
+  const config = getZaloBotConfig();
+  const token = (tokenOverride || config.token).trim();
+  const apiBaseUrl = (apiBaseUrlOverride !== undefined ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
-    return { ok: false, error: 'Chưa cấu hình Zalo Bot Token.' };
+    return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
   try {
-    const url = `${ZALO_BOT_API_BASE}/bot${token}/deleteWebhook`;
+    const base = apiBaseUrl || 'https://api.telegram.org';
+    const cleanBase = base.replace(/\/+$/, '');
+    const url = `${cleanBase}/bot${token}/deleteWebhook`;
     const res = await fetch(url, {
       method: 'POST',
       headers: {

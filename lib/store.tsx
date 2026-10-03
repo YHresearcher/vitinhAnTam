@@ -72,7 +72,9 @@ export interface SystemSettings {
   footerCopyright: string;
   storeName: string;
 
-  // Cấu hình Tích hợp Webhook & Zalo Bot API
+  // Cấu hình Tích hợp Webhook & Zalo / Telegram Bot API
+  botProvider?: 'telegram' | 'zalo_oa' | 'custom_gateway';
+  botApiBaseUrl?: string;
   zaloBotToken?: string;
   zaloBotSecretToken?: string;
   zaloDefaultChatId?: string;
@@ -108,7 +110,9 @@ export const initialSystemSettings: SystemSettings = {
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 
-  // Mặc định cấu hình Zalo Bot & Webhook
+  // Mặc định cấu hình Zalo / Telegram Bot & Webhook
+  botProvider: 'telegram',
+  botApiBaseUrl: '',
   zaloBotToken: '',
   zaloBotSecretToken: '',
   zaloDefaultChatId: '',

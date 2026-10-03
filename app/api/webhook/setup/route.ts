@@ -13,21 +13,21 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { action, webhookUrl, secretToken } = body;
+    const { action, webhookUrl, secretToken, token, apiBaseUrl } = body;
 
     if (action === 'set') {
       if (!webhookUrl) {
         return NextResponse.json({ ok: false, error: 'Vui lòng cung cấp URL Webhook cần đăng ký.' }, { status: 400 });
       }
-      const res = await setZaloWebhook(webhookUrl, secretToken);
+      const res = await setZaloWebhook(webhookUrl, secretToken, token, apiBaseUrl);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }
-      return NextResponse.json({ ok: true, message: 'Đăng ký Webhook với Zalo Bot thành công!', result: res.result });
+      return NextResponse.json({ ok: true, message: 'Đăng ký Webhook với Bot thành công!', result: res.result });
     }
 
     if (action === 'info') {
-      const res = await getZaloWebhookInfo();
+      const res = await getZaloWebhookInfo(token, apiBaseUrl);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'delete') {
-      const res = await deleteZaloWebhook();
+      const res = await deleteZaloWebhook(token, apiBaseUrl);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }
