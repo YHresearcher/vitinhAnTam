@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dispatchSystemEvent, sendZaloBotMessage } from '@/lib/server/zaloBot';
+import { sendZaloBotMessage } from '@/lib/server/zaloBot';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 
 export async function POST(req: NextRequest) {
@@ -15,19 +15,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const targetChatId = body.chatId;
     const token = body.token;
-    const provider = body.provider;
     const apiBaseUrl = body.apiBaseUrl;
 
     const res = await sendZaloBotMessage({
       chatId: targetChatId,
       token,
-      provider,
       apiBaseUrl,
-      text: `🧪 [THỬ NGHIỆM KẾT NỐI BOT THÀNH CÔNG]\n` +
+      text: `🧪 [THỬ NGHIỆM KẾT NỐI ZALO BOT THÀNH CÔNG]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `✅ Xin chào! Đây là tin nhắn kiểm tra kết nối từ hệ thống Quản Trị Vi Tính An Tâm.\n` +
         `⏰ Thời gian: ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}\n` +
-        `🎉 Cấu hình Bot (${provider === 'zalo_oa' ? 'Zalo OA' : provider === 'custom_gateway' ? 'Custom Gateway' : 'Telegram Bot'}) đang hoạt động rất tốt!`,
+        `🎉 Zalo Bot API (bot-api.zapps.me) đang hoạt động rất tốt!`,
     });
 
     if (!res.ok) {

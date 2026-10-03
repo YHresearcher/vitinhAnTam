@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
     // 1. Kiểm tra secret_token nếu có cấu hình
     if (config.secretToken) {
       const headerSecret =
+        req.headers.get('x-telegram-bot-api-secret-token') ||
         req.headers.get('x-bot-token') ||
         req.headers.get('secret_token') ||
         req.headers.get('x-zalo-secret') ||
@@ -30,8 +31,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const body = await req.json().catch(() => ({}));
-    console.log('[Zalo Webhook Received]:', JSON.stringify(body, null, 2));
+    const rawBody = await req.json().catch(() => ({}));
+    console.log('[Zalo Webhook Received]:', JSON.stringify(rawBody, null, 2));
+
+    // Zalo Bot webhook bọc update trong trường "result" (xem ví dụ Flask trong docs python-zalo-bot)
+    const body =
+      rawBody && typeof rawBody === 'object' && rawBody.result && typeof rawBody.result === 'object'
+        ? rawBody.result
+        : rawBody;
 
     // 2. Trích xuất thông tin người gửi & nội dung tin nhắn (chuẩn Zalo Bot Platform)
     // Cấu trúc Zalo Bot payload:
@@ -43,6 +50,7 @@ export async function POST(req: NextRequest) {
       body.sender?.id ||
       message.from?.id ||
       message.chat?.id ||
+      body.chat?.id ||
       body.chat_id ||
       body.user_id_by_app;
 
@@ -71,6 +79,8 @@ export async function POST(req: NextRequest) {
         `• Zalo hỗ trợ: ${config.settings.zaloNumber || hotline}\n` +
         `• Giờ làm việc: ${config.settings.workingHoursWeekday || '08h00 - 17h30'}\n` +
         `• Địa chỉ: ${config.settings.address || 'Tây Ninh'}`;
+    } else if (textLower === 'id' || textLower === 'uid' || textLower === 'user_id') {
+      replyText = `🔎 Zalo User ID của bạn là: ${senderId}\n\nDùng ID này tại: Cài đặt -> phần "Zalo User ID nhận tin nhắn".`;
     } else if (textLower.startsWith('tn-') || textLower.startsWith('phieu-')) {
       replyText = `🔍 Hệ thống đã tiếp nhận yêu cầu tra cứu mã phiếu [${text}]. Kỹ thuật viên sẽ kiểm tra chi tiết và phản hồi bạn trong ít phút!`;
     } else if (textLower.startsWith('at-') || textLower.startsWith('don-')) {
@@ -79,7 +89,7 @@ export async function POST(req: NextRequest) {
 
     if (replyText) {
       await sendZaloBotMessage({
-        chatId: senderId,
+        chatId: message.chat?.id || body.chat?.id || senderId,
         text: replyText,
       });
     }

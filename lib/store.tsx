@@ -72,8 +72,7 @@ export interface SystemSettings {
   footerCopyright: string;
   storeName: string;
 
-  // Cấu hình Tích hợp Webhook & Zalo / Telegram Bot API
-  botProvider?: 'telegram' | 'zalo_oa' | 'custom_gateway';
+  // Cấu hình Tích hợp Zalo Bot API (bot-api.zapps.me)
   botApiBaseUrl?: string;
   zaloBotToken?: string;
   zaloBotSecretToken?: string;
@@ -110,8 +109,7 @@ export const initialSystemSettings: SystemSettings = {
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 
-  // Mặc định cấu hình Zalo / Telegram Bot & Webhook
-  botProvider: 'telegram',
+  // Mặc định cấu hình Zalo Bot & Webhook
   botApiBaseUrl: '',
   zaloBotToken: '',
   zaloBotSecretToken: '',
@@ -600,16 +598,20 @@ export function StoreProvider({
       return next;
     });
 
-    // Đồng bộ cấu hình lên máy chủ (.data/settings.json)
+    // Đồng bộ cấu hình lên máy chủ (.data/settings.json) — await để đảm bảo đã lưu
+    // xong trước khi handler gọi tiếp API (tránh race làm mất cấu hình Bot).
     try {
-      fetch('/api/settings', {
+      const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
-      }).catch((err) => {
-        console.warn('Không thể đồng bộ settings lên server:', err);
       });
-    } catch {}
+      if (!res.ok) {
+        console.warn('Máy chủ từ chối lưu cấu hình:', res.status);
+      }
+    } catch (err) {
+      console.warn('Không thể đồng bộ settings lên server:', err);
+    }
 
     // Đồng bộ Supabase nếu đã cấu hình
     if (isSupabaseConfigured() && supabase) {

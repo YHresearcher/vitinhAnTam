@@ -19,7 +19,6 @@ import {
   Tag,
   Space,
   Switch,
-  Select,
 } from 'antd';
 
 import {
@@ -111,22 +110,14 @@ export default function CaiDatPage() {
     return 'https://vitinhantham.vn/api/webhook/zalo';
   };
 
-  // Kiểm tra nhanh Bot Token trước khi gọi Bot Platform (tránh lỗi401 "invalid token specified" khó hiểu)
+  // Kiểm tra nhanh Zalo Bot Token (định dạng <id>:<secret>) trước khi gọi Zalo Bot API
   const validateBotTokenFormat = (): string | null => {
-    const provider = formData.botProvider || 'telegram';
-    if (provider !== 'telegram') return null; // Zalo OA (JWT) & Custom Gateway có định dạng riêng
     const token = formData.zaloBotToken?.trim() || '';
-    if (token && !/^\d{1,17}:[A-Za-z0-9_-]{20,}$/.test(token)) {
-      return 'Bot Token sai định dạng. Token từ @BotFather có dạng 1234567890:AA... (phần số trước dấu ":" tối đa 17 chữ số) — vui lòng copy lại toàn bộ Token.';
+    if (token && !/^\d+:\S+$/.test(token)) {
+      return 'Zalo Bot Token sai định dạng (cần dạng <id>:<secret>). Lấy Token tại https://bot.zapps.vn/docs/create-bot/ và copy lại toàn bộ.';
     }
     return null;
   };
-
-  // Chức năng Webhook (set/get/delete) chỉ hoạt động với Bot API kiểu Telegram
-  const validateWebhookProvider = (): string | null =>
-    (formData.botProvider || 'telegram') === 'zalo_oa'
-      ? 'Chức năng Webhook chỉ áp dụng cho Telegram Bot API / Gateway tương thích. Với Zalo OA, hãy cấu hình Webhook trong Zalo Developers Portal.'
-      : null;
 
   const handleCopyWebhookUrl = () => {
     const url = getSystemWebhookUrl();
@@ -135,12 +126,12 @@ export default function CaiDatPage() {
   };
 
   const handleTestWebhook = async () => {
-    if (!formData.zaloBotToken?.trim() && formData.botProvider !== 'custom_gateway') {
-      message.error('Vui lòng nhập Bot Token / Access Token trước khi gửi thử nghiệm!');
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token trước khi gửi thử nghiệm!');
       return;
     }
-    if (!formData.zaloDefaultChatId?.trim() && formData.botProvider !== 'custom_gateway') {
-      message.error('Vui lòng nhập Chat ID / Group ID nhận tin nhắn!');
+    if (!formData.zaloDefaultChatId?.trim()) {
+      message.error('Vui lòng nhập Chat ID nhận tin nhắn!');
       return;
     }
     const tokenFormatError = validateBotTokenFormat();
@@ -159,7 +150,6 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           chatId: formData.zaloDefaultChatId?.trim(),
           token: formData.zaloBotToken?.trim(),
-          provider: formData.botProvider || 'telegram',
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -180,11 +170,6 @@ export default function CaiDatPage() {
   const handleSetWebhook = async () => {
     if (!formData.zaloBotToken?.trim()) {
       message.error('Vui lòng nhập Bot Token!');
-      return;
-    }
-    const webhookProviderError = validateWebhookProvider();
-    if (webhookProviderError) {
-      message.error(webhookProviderError);
       return;
     }
     const tokenFormatError = validateBotTokenFormat();
@@ -226,11 +211,6 @@ export default function CaiDatPage() {
       message.error('Vui lòng nhập Bot Token!');
       return;
     }
-    const webhookProviderError = validateWebhookProvider();
-    if (webhookProviderError) {
-      message.error(webhookProviderError);
-      return;
-    }
     const tokenFormatError = validateBotTokenFormat();
     if (tokenFormatError) {
       message.error(tokenFormatError);
@@ -266,11 +246,6 @@ export default function CaiDatPage() {
   const handleDeleteWebhook = async () => {
     if (!formData.zaloBotToken?.trim()) {
       message.error('Vui lòng nhập Bot Token!');
-      return;
-    }
-    const webhookProviderError = validateWebhookProvider();
-    if (webhookProviderError) {
-      message.error(webhookProviderError);
       return;
     }
     const tokenFormatError = validateBotTokenFormat();
@@ -1026,120 +1001,70 @@ export default function CaiDatPage() {
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Chọn nền tảng Bot */}
-                      <div className="sm:col-span-2">
+                      {/* Nền tảng Zalo Bot (duy nhất) */}
+                      <div className="sm:col-span-2 p-3.5 bg-[#0068FF]/5 border border-[#0068FF]/20 rounded-xl">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Nền Tảng Bot Thông Báo
+                          Nền Tảng Bot: Zalo Bot API (bot-api.zapps.me)
                         </label>
-                        <Select
-                          value={formData.botProvider || 'telegram'}
-                          onChange={(val) => handleChange('botProvider', val)}
-                          className="w-full text-xs"
-                          options={[
-                            {
-                              value: 'telegram',
-                              label: '✈️ Telegram Bot API (Khuyên dùng - 100% Miễn phí, nhận tin nhắn tức thì)',
-                            },
-                            {
-                              value: 'zalo_oa',
-                              label: '💬 Zalo Official Account OpenAPI (openapi.zalo.me - Tin CSKH Zalo OA)',
-                            },
-                            {
-                              value: 'custom_gateway',
-                              label: '🔌 Custom Webhook Gateway / Server Proxy Riêng',
-                            },
-                          ]}
-                        />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          {formData.botProvider === 'zalo_oa'
-                            ? 'Sử dụng Zalo OA Access Token & User ID đã cấp quyền tư vấn CSKH.'
-                            : formData.botProvider === 'custom_gateway'
-                            ? 'Bắn dữ liệu thông báo qua URL endpoint máy chủ riêng hoặc proxy n8n / Zapier.'
-                            : 'Telegram Bot hoạt động ổn định nhất, thông báo tức thì đến điện thoại, máy tính hoàn toàn miễn phí.'}
+                        <span className="text-[11px] text-slate-600 block leading-relaxed">
+                          Hệ thống chỉ tích hợp Zalo Bot (theo SDK python-zalo-bot). Tạo bot & lấy Token tại{' '}
+                          <a
+                            href="https://bot.zapps.vn/docs/create-bot/"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline text-[#0068FF] font-semibold"
+                          >
+                            bot.zapps.vn/docs/create-bot
+                          </a>
+                          . Các API sử dụng: sendMessage, setWebhook, getWebhookInfo, deleteWebhook.
                         </span>
                       </div>
 
                       {/* Bot Token / Access Token */}
                       <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          {formData.botProvider === 'zalo_oa'
-                            ? 'Zalo OA Access Token *'
-                            : formData.botProvider === 'custom_gateway'
-                            ? 'API Key / Secret Bearer Token (Tùy chọn)'
-                            : 'Telegram Bot Token (từ @BotFather) *'}
+                          Zalo Bot Token *
                         </label>
                         <Input.Password
                           value={formData.zaloBotToken || ''}
                           onChange={(e) => handleChange('zaloBotToken', e.target.value)}
-                          placeholder={
-                            formData.botProvider === 'zalo_oa'
-                              ? 'VD: eyJhbGciOiJIUzI1NiIsIn...'
-                              : formData.botProvider === 'custom_gateway'
-                              ? 'VD: secret_api_token_123'
-                              : 'VD: 7123456789:AAHq7B0...'
-                          }
+                          placeholder="VD: 1234567890123:AbCdEf..."
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          {formData.botProvider === 'zalo_oa'
-                            ? 'Lấy Access Token từ Zalo Developers OA Portal.'
-                            : formData.botProvider === 'custom_gateway'
-                            ? 'Gửi kèm trong Header Authorization: Bearer <token>'
-                            : 'Mở Telegram -> chat với @BotFather -> gõ /newbot để lấy Bot Token.'}
+                          Lấy Zalo Bot Token tại https://bot.zapps.vn/docs/create-bot/ — định dạng &lt;id&gt;:&lt;secret&gt;.
                         </span>
                       </div>
 
                       {/* Chat ID / User ID */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          {formData.botProvider === 'zalo_oa'
-                            ? 'Zalo User ID nhận tin nhắn *'
-                            : formData.botProvider === 'custom_gateway'
-                            ? 'Target Chat ID (Tùy chọn)'
-                            : 'Telegram Chat ID / Group ID nhận thông báo *'}
+                          Chat ID nhận tin nhắn *
                         </label>
                         <Input
                           value={formData.zaloDefaultChatId || ''}
                           onChange={(e) => handleChange('zaloDefaultChatId', e.target.value)}
-                          placeholder={
-                            formData.botProvider === 'zalo_oa'
-                              ? 'VD: 84909053058 hoặc User ID Zalo'
-                              : formData.botProvider === 'custom_gateway'
-                              ? 'VD: my-channel-id'
-                              : 'VD: 123456789 hoặc -1001234567890'
-                          }
+                          placeholder="VD: 1234567890123"
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          {formData.botProvider === 'zalo_oa'
-                            ? 'ID người dùng Zalo đã bấm Quan tâm / Nhắn tin cho OA.'
-                            : formData.botProvider === 'custom_gateway'
-                            ? 'Mã phòng / định danh nhận tin.'
-                            : 'Nhắn cho bot @userinfobot trên Telegram để lấy Chat ID của bạn.'}
+                          ID người/nhóm nhận thông báo — lấy từ update.message.chat.id khi nhắn cho bot, hoặc lệnh /id.
                         </span>
                       </div>
 
-                      {/* API Base URL tùy chỉnh */}
+                      {/* Zalo Bot API Base URL */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          {formData.botProvider === 'custom_gateway' ? 'Gateway Endpoint URL *' : 'Tùy chỉnh API Base URL (Mặc định để trống)'}
+                          Zalo Bot API Base URL (để trống = bot-api.zapps.me)
                         </label>
                         <Input
                           value={formData.botApiBaseUrl || ''}
                           onChange={(e) => handleChange('botApiBaseUrl', e.target.value)}
-                          placeholder={
-                            formData.botProvider === 'zalo_oa'
-                              ? 'https://openapi.zalo.me/v3.0/oa/message/cs'
-                              : formData.botProvider === 'custom_gateway'
-                              ? 'https://your-bot-server.com/api/send'
-                              : 'https://api.telegram.org'
-                          }
+                          placeholder="https://bot-api.zapps.me"
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          {formData.botProvider === 'custom_gateway'
-                            ? 'URL máy chủ nhận POST payload thông báo.'
-                            : 'Để trống để sử dụng API chuẩn mặc định.'}
+                          Chỉ chỉnh khi Zalo thay đổi endpoint hoặc bạn dùng proxy riêng.
                         </span>
                       </div>
 
@@ -1155,7 +1080,7 @@ export default function CaiDatPage() {
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          Khớp với header bảo mật <code>X-Bot-Token</code> khi nhận webhook.
+                          Khớp với header bảo mật <code>X-Telegram-Bot-Api-Secret-Token</code> (hoặc <code>X-Bot-Token</code>) khi Zalo gửi webhook.
                         </span>
                       </div>
 
