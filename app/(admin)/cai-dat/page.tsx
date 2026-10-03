@@ -110,11 +110,29 @@ export default function CaiDatPage() {
     return 'https://vitinhantham.vn/api/webhook/zalo';
   };
 
-  // Kiểm tra nhanh Zalo Bot Token (định dạng <id>:<secret>) trước khi gọi Zalo Bot API
+  // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <id>:<secret>)
   const validateBotTokenFormat = (): string | null => {
-    const token = formData.zaloBotToken?.trim() || '';
-    if (token && !/^\d+:\S+$/.test(token)) {
-      return 'Zalo Bot Token sai định dạng (cần dạng <id>:<secret>). Lấy Token tại https://bot.zapps.vn/docs/create-bot/ và copy lại toàn bộ.';
+    const raw = formData.zaloBotToken || '';
+    const token = raw.trim();
+    if (!token) return null;
+    if (/^https?:\/\//i.test(token)) {
+      return 'Bạn đang dán cả URL vào ô Token — hãy chỉ dán Token dạng <id>:<secret> (xem tại bot.zapps.vn/docs/create-bot/).';
+    }
+    if (token.startsWith('bot') && token.slice(3).includes(':')) {
+      return 'Token có tiền tố "bot" ở đầu — hãy bỏ phần "bot", chỉ giữ <id>:<secret>.';
+    }
+    if (!token.includes(':')) {
+      return `Token thiếu dấu ":" (chuỗi ${token.length} ký tự, không có dấu ":") — cần dạng <id>:<secret>. Copy lại toàn bộ Token từ trang tạo bot.`;
+    }
+    const pre = token.split(':', 1)[0];
+    if (!/^\d+$/.test(pre)) {
+      return `Phần trước dấu ":" phải là SỐ (id bot) — hiện tại là "${pre.slice(0, 24)}". Copy lại đúng Token từ trang tạo bot.`;
+    }
+    if (/\s/.test(token)) {
+      return 'Token có khoảng trắng ở giữa — hãy copy lại cả chuỗi liền mạch.';
+    }
+    if (/[/?#]/.test(token)) {
+      return 'Token chứa ký tự / ? # — sẽ làm hỏng URL gọi API. Hãy lấy lại Token từ trang tạo bot.';
     }
     return null;
   };

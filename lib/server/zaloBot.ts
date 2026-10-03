@@ -78,7 +78,7 @@ export async function sendZaloBotMessage(params: {
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi sendMessage (HTTP ${res.status})`),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi sendMessage (HTTP ${res.status})`, token, apiBaseUrl),
         result: data,
       };
     }
@@ -92,21 +92,47 @@ export async function sendZaloBotMessage(params: {
 
 
 /**
+ * Phân tích Zalo Bot Token để chỉ ra chính xác lỗi format (chỉ hiển thị phần id, không lộ secret)
+ */
+function diagnoseZaloToken(token: string): string {
+  if (!token) return 'chưa có Token';
+  if (/^https?:\/\//i.test(token)) {
+    return 'bạn đang dán cả URL vào ô Token — cần dán chuỗi <id>:<secret>';
+  }
+  if (token.startsWith('bot') && token.slice(3).includes(':')) {
+    return 'Token có tiền tố "bot" ở đầu — hãy bỏ phần "bot"';
+  }
+  if (!token.includes(':')) {
+    return `thiếu dấu ":" (chuỗi ${token.length} ký tự) — cần dạng <id>:<secret>`;
+  }
+  const pre = token.split(':', 1)[0];
+  if (!/^\d+$/.test(pre)) {
+    return `phần trước dấu ":" phải là SỐ, hiện tại là "${pre.slice(0, 24)}"`;
+  }
+  if (/\s/.test(token)) {
+    return 'Token có khoảng trắng ở giữa — copy lại cả chuỗi';
+  }
+  if (/[/?#]/.test(token)) {
+    return 'Token chứa ký tự / ? # — làm hỏng URL, hãy lấy lại Token';
+  }
+  return `đúng chuẩn <id>:<secret> (id ${pre.length} số) — sai ở secret (bị cắt cụt?) hoặc token đã bị thu hồi`;
+}
+
+/**
  * Chuyển lỗi thô từ Zalo Bot API thành thông báo dễ hiểu cho quản trị viên
  * VD: "Unauthorized: invalid token specified" -> kèm hướng dẫn kiểm tra lại Token
  */
-function humanizeBotApiError(rawError: unknown): string {
+function humanizeBotApiError(rawError: unknown, token?: string, apiBaseUrl?: string): string {
   const raw = typeof rawError === 'string' ? rawError : String(rawError);
   const lower = raw.toLowerCase();
+  const tokenDiagnosis = token ? diagnoseZaloToken(token) : 'chưa có Token';
 
-  if (lower.includes('invalid token specified')) {
-    return `${raw} — Zalo Bot Token không hợp lệ: Token có dạng <id>:<secret>. Lấy lại Token tại https://bot.zapps.vn/docs/create-bot/ và copy toàn bộ.`;
-  }
-  if (lower === 'unauthorized') {
-    return `${raw} — Zalo Bot Token không đúng hoặc đã bị thu hồi. Lấy lại Token tại https://bot.zapps.vn/docs/create-bot/.`;
+  if (lower.includes('invalid token specified') || lower === 'unauthorized') {
+    return `${raw} — Zalo Bot Token không hoạt động: ${tokenDiagnosis}. Lấy lại Token tại https://bot.zapps.vn/docs/create-bot/.`;
   }
   if (lower.includes('not found')) {
-    return `${raw} — Kiểm tra lại Zalo Bot Token (định dạng <id>:<secret>) và Bot API Base URL.`;
+    const base = apiBaseUrl?.trim() || `${ZALO_BOT_BASE_URL} (mặc định)`;
+    return `${raw} — Kiểm tra lại Zalo Bot Token & Bot API Base URL. | Token: ${tokenDiagnosis} | Base URL đang dùng: ${base}`;
   }
   return raw;
 }
@@ -146,7 +172,7 @@ export async function setZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`, token, apiBaseUrl),
         result: data,
       };
     }
@@ -185,7 +211,7 @@ export async function getZaloWebhookInfo(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`, token, apiBaseUrl),
         result: data,
       };
     }
@@ -226,7 +252,7 @@ export async function deleteZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`, token, apiBaseUrl),
         result: data,
       };
     }
