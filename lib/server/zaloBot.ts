@@ -139,6 +139,26 @@ export async function sendZaloBotMessage(params: {
 
 
 /**
+ * Chuyển lỗi thô từ Bot API (kiểu Telegram) thành thông báo dễ hiểu cho quản trị viên
+ * VD: "Unauthorized: invalid token specified" -> kèm hướng dẫn kiểm tra lại Token
+ */
+function humanizeBotApiError(rawError: unknown): string {
+  const raw = typeof rawError === 'string' ? rawError : String(rawError);
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('invalid token specified')) {
+    return `${raw} — Bot Token không hợp lệ: phần số trước dấu ":" phải là ID thật của bot (lớn hơn 0, tối đa 17 chữ số). Hãy copy lại đúng Token từ @BotFather (dạng 1234567890:AA...).`;
+  }
+  if (lower === 'unauthorized') {
+    return `${raw} — Bot Token không đúng, đã bị thu hồi hoặc không tồn tại. Kiểm tra lại Token trong @BotFather (lệnh /token).`;
+  }
+  if (lower.includes('not found')) {
+    return `${raw} — Kiểm tra lại Bot API Base URL và định dạng Token (bot_id:secret).`;
+  }
+  return raw;
+}
+
+/**
  * Đăng ký Webhook với Bot Platform (setWebhook)
  */
 export async function setZaloWebhook(
@@ -175,7 +195,7 @@ export async function setZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`,
+        error: humanizeBotApiError(data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`),
         result: data,
       };
     }
@@ -214,7 +234,7 @@ export async function getZaloWebhookInfo(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`,
+        error: humanizeBotApiError(data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`),
         result: data,
       };
     }
@@ -257,7 +277,7 @@ export async function deleteZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`,
+        error: humanizeBotApiError(data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`),
         result: data,
       };
     }

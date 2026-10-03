@@ -111,6 +111,23 @@ export default function CaiDatPage() {
     return 'https://vitinhantham.vn/api/webhook/zalo';
   };
 
+  // Kiểm tra nhanh Bot Token trước khi gọi Bot Platform (tránh lỗi401 "invalid token specified" khó hiểu)
+  const validateBotTokenFormat = (): string | null => {
+    const provider = formData.botProvider || 'telegram';
+    if (provider !== 'telegram') return null; // Zalo OA (JWT) & Custom Gateway có định dạng riêng
+    const token = formData.zaloBotToken?.trim() || '';
+    if (token && !/^\d{1,17}:[A-Za-z0-9_-]{20,}$/.test(token)) {
+      return 'Bot Token sai định dạng. Token từ @BotFather có dạng 1234567890:AA... (phần số trước dấu ":" tối đa 17 chữ số) — vui lòng copy lại toàn bộ Token.';
+    }
+    return null;
+  };
+
+  // Chức năng Webhook (set/get/delete) chỉ hoạt động với Bot API kiểu Telegram
+  const validateWebhookProvider = (): string | null =>
+    (formData.botProvider || 'telegram') === 'zalo_oa'
+      ? 'Chức năng Webhook chỉ áp dụng cho Telegram Bot API / Gateway tương thích. Với Zalo OA, hãy cấu hình Webhook trong Zalo Developers Portal.'
+      : null;
+
   const handleCopyWebhookUrl = () => {
     const url = getSystemWebhookUrl();
     navigator.clipboard.writeText(url);
@@ -124,6 +141,11 @@ export default function CaiDatPage() {
     }
     if (!formData.zaloDefaultChatId?.trim() && formData.botProvider !== 'custom_gateway') {
       message.error('Vui lòng nhập Chat ID / Group ID nhận tin nhắn!');
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
       return;
     }
 
@@ -160,6 +182,16 @@ export default function CaiDatPage() {
       message.error('Vui lòng nhập Bot Token!');
       return;
     }
+    const webhookProviderError = validateWebhookProvider();
+    if (webhookProviderError) {
+      message.error(webhookProviderError);
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
+      return;
+    }
     setIsSettingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -194,6 +226,16 @@ export default function CaiDatPage() {
       message.error('Vui lòng nhập Bot Token!');
       return;
     }
+    const webhookProviderError = validateWebhookProvider();
+    if (webhookProviderError) {
+      message.error(webhookProviderError);
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
+      return;
+    }
     setIsCheckingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -224,6 +266,16 @@ export default function CaiDatPage() {
   const handleDeleteWebhook = async () => {
     if (!formData.zaloBotToken?.trim()) {
       message.error('Vui lòng nhập Bot Token!');
+      return;
+    }
+    const webhookProviderError = validateWebhookProvider();
+    if (webhookProviderError) {
+      message.error(webhookProviderError);
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
       return;
     }
     setIsDeletingWebhook(true);
