@@ -65,13 +65,13 @@ export default function MemberManagementPage() {
       return;
     }
 
-    const ok = await changeUserPassword(passwordModalUser.id, newPassword.trim());
-    if (ok) {
+    const result = await changeUserPassword(passwordModalUser.id, newPassword.trim());
+    if (result.ok) {
       showToast(`Đã cập nhật mật khẩu thành công cho ${passwordModalUser.name}!`);
       setPasswordModalUser(null);
       setNewPassword('');
     } else {
-      showToast('Có lỗi xảy ra khi cập nhật mật khẩu.');
+      showToast(result.message || 'Có lỗi xảy ra khi cập nhật mật khẩu.');
     }
   };
 

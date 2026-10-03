@@ -425,14 +425,14 @@ export default function CaiDatPage() {
       return;
     }
     setIsChangingMemberPassword(true);
-    const ok = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
+    const result = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
     setIsChangingMemberPassword(false);
-    if (ok) {
+    if (result.ok) {
       message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
       setMemberForPassword(null);
       setMemberNewPassword('');
     } else {
-      message.error('Không thể cập nhật mật khẩu.');
+      message.error(result.message || 'Không thể cập nhật mật khẩu.');
     }
   };
 

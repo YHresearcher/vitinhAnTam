@@ -14,6 +14,11 @@ function requireAdmin(request: NextRequest) {
   return { session };
 }
 
+function serverError(err: unknown): NextResponse {
+  const message = err instanceof Error ? err.message : 'Lỗi máy chủ khi lưu tài khoản.';
+  return NextResponse.json({ success: false, message }, { status: 500 });
+}
+
 export async function POST(request: NextRequest) {
   const guard = requireAdmin(request);
   if ('error' in guard) return guard.error;
@@ -36,7 +41,12 @@ export async function POST(request: NextRequest) {
     if (password.length < 4) {
       return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
     }
-    const created = upsertUser({ ...user, password });
+    let created;
+    try {
+      created = upsertUser({ ...user, password });
+    } catch (err) {
+      return serverError(err);
+    }
     return NextResponse.json({ success: true, user: created }, { status: 201 });
   }
 
@@ -52,7 +62,12 @@ export async function POST(request: NextRequest) {
     }
     const safePatch: Partial<UserAccount> = { ...patch };
     delete safePatch.password;
-    const updated = upsertUser({ ...safePatch, password }, { id });
+    let updated;
+    try {
+      updated = upsertUser({ ...safePatch, password }, { id });
+    } catch (err) {
+      return serverError(err);
+    }
     return NextResponse.json({ success: true, user: updated });
   }
 
@@ -62,7 +77,12 @@ export async function POST(request: NextRequest) {
     if (password.length < 4) {
       return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
     }
-    const updated = setPassword(id, password);
+    let updated;
+    try {
+      updated = setPassword(id, password);
+    } catch (err) {
+      return serverError(err);
+    }
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản.' }, { status: 404 });
     }
@@ -77,7 +97,14 @@ export async function POST(request: NextRequest) {
     if (id === guard.session?.sub) {
       return NextResponse.json({ success: false, message: 'Bạn không thể xóa chính mình.' }, { status: 400 });
     }
-    return NextResponse.json({ success: removeUser(id) });
+    const removed = removeUser(id);
+    if (!removed) {
+      return NextResponse.json(
+        { success: false, message: 'Không xóa được tài khoản (không tìm thấy hoặc không ghi được file).' },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({ success: true });
   }
 
   return NextResponse.json({ success: false, message: 'Hành động không hợp lệ.' }, { status: 400 });

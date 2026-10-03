@@ -178,7 +178,7 @@ interface StoreContextType {
 
   // Member management actions (Admin)
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
-  changeUserPassword: (id: string, newPassword: string) => Promise<boolean>;
+  changeUserPassword: (id: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   addUser: (user: Omit<UserAccount, 'id' | 'created_at'>) => Promise<UserAccount>;
   deleteUser: (id: string) => Promise<boolean>;
 
@@ -534,13 +534,25 @@ export function StoreProvider({
     return true;
   };
 
-  const changeUserPassword = async (id: string, newPassword: string): Promise<boolean> => {
+  const changeUserPassword = async (
+    id: string,
+    newPassword: string
+  ): Promise<{ ok: boolean; message?: string }> => {
     const response = await callUsersApi({ action: 'password', id, password: newPassword });
-    if (!response || !response.ok) {
-      console.warn('Không đổi được mật khẩu trên máy chủ.');
-      return false;
+    if (!response) {
+      return { ok: false, message: 'Không gọi được máy chủ — mật khẩu CHƯA thay đổi.' };
     }
-    return true;
+    const data = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      message?: string;
+    } | null;
+    if (!response.ok || !data?.success) {
+      return {
+        ok: false,
+        message: data?.message || 'Máy chủ từ chối cập nhật mật khẩu — mật khẩu CHƯA thay đổi.',
+      };
+    }
+    return { ok: true };
   };
 
   const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {

@@ -10,6 +10,8 @@ export type SafeUser = Omit<UserAccount, 'password'>;
 
 export interface StoredUser extends SafeUser {
   password_hash: string;
+  /** true khi người dùng đã chủ động đặt/đổi mật khẩu — khi đó không dùng mật khẩu mặc định nữa */
+  password_changed?: boolean;
 }
 
 const DATA_DIR = join(process.cwd(), '.data');
@@ -51,13 +53,23 @@ export function stripSecrets(user: StoredUser): SafeUser {
   return safe;
 }
 
-function save(users: StoredUser[]): void {
-  memoryStore = users;
+/**
+ * Ghi danh sách người dùng ra file. Trả về false nếu không ghi được
+ * (file read-only / sai quyền...). Khi ghi thất bại KHÔNG cập nhật RAM
+ * để tránh "báo thành công nhưng không lưu được" và lệch giữa các instance.
+ */
+function save(users: StoredUser[]): boolean {
   try {
     mkdirSync(DATA_DIR, { recursive: true });
     writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
-  } catch {
-    // Không ghi được file -> giữ trong RAM (mất sau khi restart)
+    memoryStore = users;
+    return true;
+  } catch (err) {
+    console.error(
+      'Không ghi được .data/users.json:',
+      err instanceof Error ? err.message : err
+    );
+    return false;
   }
 }
 
@@ -81,6 +93,7 @@ export function loadUsers(): StoredUser[] {
     password: undefined,
     password_hash: hashPassword(seedPassword(user.role)),
   })) as StoredUser[];
+  memoryStore = seeded; // dùng ngay cả khi không ghi được file (môi trường read-only)
   save(seeded);
   return seeded;
 }
@@ -103,10 +116,14 @@ export function authenticate(identifier: string, password: string): StoredUser |
     return user;
   }
 
-  // Hỗ trợ cả mật khẩu mặc định theo vai trò (admin123, tech123, sales123) hoặc 123456
-  const roleDefault = ROLE_DEFAULT_PASSWORDS[user.role];
-  if (password === roleDefault || password === '123456') {
-    return user;
+  // Mật khẩu mặc định theo vai trò (admin123, tech123...) hoặc 123456 CHỈ áp dụng
+  // cho tài khoản CHƯA TỪNG đổi mật khẩu. Sau khi đổi, cửa hậu bị đóng để
+  // mật khẩu cũ/mặc định không thể đăng nhập được nữa.
+  if (!user.password_changed) {
+    const roleDefault = ROLE_DEFAULT_PASSWORDS[user.role];
+    if (password === roleDefault || password === '123456') {
+      return user;
+    }
   }
 
   return null;
@@ -148,12 +165,16 @@ export function upsertUser(
     password_hash: password
       ? hashPassword(password)
       : base.password_hash ?? hashPassword(seedPassword()),
+    // Khi có đặt mật khẩu qua form => đóng cửa hậu mật khẩu mặc định của tài khoản này
+    ...(password ? { password_changed: true } : {}),
   } as StoredUser;
 
   const updated = [...users];
   if (index >= 0) updated[index] = next;
   else updated.push(next);
-  save(updated);
+  if (!save(updated)) {
+    throw new Error('Không ghi được .data/users.json — thay đổi CHƯA được lưu.');
+  }
   return stripSecrets(next);
 }
 
@@ -162,16 +183,21 @@ export function setPassword(id: string, plain: string): SafeUser | null {
   const index = users.findIndex((u) => u.id === id);
   if (index < 0) return null;
 
-  const next: StoredUser = { ...users[index], password_hash: hashPassword(plain) };
+  const next: StoredUser = {
+    ...users[index],
+    password_hash: hashPassword(plain),
+    password_changed: true,
+  };
   const updated = [...users];
   updated[index] = next;
-  save(updated);
+  if (!save(updated)) {
+    throw new Error('Không ghi được .data/users.json — mật khẩu CHƯA được lưu!');
+  }
   return stripSecrets(next);
 }
 
 export function removeUser(id: string): boolean {
   const users = loadUsers();
   if (!users.some((u) => u.id === id)) return false;
-  save(users.filter((u) => u.id !== id));
-  return true;
+  return save(users.filter((u) => u.id !== id));
 }
