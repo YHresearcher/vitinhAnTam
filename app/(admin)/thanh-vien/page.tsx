@@ -85,12 +85,18 @@ export default function MemberManagementPage() {
     if (editingUser.role === 'admin') {
       defaultTitle = defaultTitle || 'Quản trị viên hệ thống';
       avatarBg = 'bg-blue-600';
+    } else if (editingUser.role === 'tech_manager') {
+      defaultTitle = defaultTitle || 'Quản lý kỹ thuật';
+      avatarBg = 'bg-teal-600';
     } else if (editingUser.role === 'technician') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên';
       avatarBg = 'bg-emerald-600';
     } else if (editingUser.role === 'outsourced') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
+    } else if (editingUser.role === 'sales_manager') {
+      defaultTitle = defaultTitle || 'Quản lý bán hàng';
+      avatarBg = 'bg-indigo-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -139,12 +145,18 @@ export default function MemberManagementPage() {
     if (newUserForm.role === 'admin') {
       defaultTitle = defaultTitle || 'Quản trị viên hệ thống';
       avatarBg = 'bg-blue-600';
+    } else if (newUserForm.role === 'tech_manager') {
+      defaultTitle = defaultTitle || 'Quản lý kỹ thuật';
+      avatarBg = 'bg-teal-600';
     } else if (newUserForm.role === 'technician') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên phần cứng';
       avatarBg = 'bg-emerald-600';
     } else if (newUserForm.role === 'outsourced') {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
+    } else if (newUserForm.role === 'sales_manager') {
+      defaultTitle = defaultTitle || 'Quản lý bán hàng';
+      avatarBg = 'bg-indigo-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -161,12 +173,16 @@ export default function MemberManagementPage() {
       avatarBg,
       status: 'active',
       permissions: {
-        can_edit_stock: newUserForm.role === 'admin',
+        can_edit_stock: newUserForm.role === 'admin' || newUserForm.role === 'tech_manager',
         can_update_repair_status:
           newUserForm.role === 'admin' ||
+          newUserForm.role === 'tech_manager' ||
           newUserForm.role === 'technician' ||
           newUserForm.role === 'outsourced',
-        can_access_payroll: newUserForm.role === 'admin',
+        can_access_payroll:
+          newUserForm.role === 'admin' ||
+          newUserForm.role === 'tech_manager' ||
+          newUserForm.role === 'sales_manager',
         can_manage_users: newUserForm.role === 'admin',
       },
     });
@@ -306,7 +322,7 @@ export default function MemberManagementPage() {
 
         {/* Role Tabs */}
         <div className="flex items-center gap-1 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
-          {(['all', 'admin', 'technician', 'outsourced', 'sales'] as const).map((tab) => (
+          {(['all', 'admin', 'tech_manager', 'technician', 'outsourced', 'sales_manager', 'sales'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setRoleFilter(tab)}
@@ -316,15 +332,17 @@ export default function MemberManagementPage() {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {tab === 'all'
-                ? 'Tất cả'
-                : tab === 'admin'
-                ? 'Admin'
-                : tab === 'technician'
-                ? 'KTV Nội bộ'
-                : tab === 'outsourced'
-                ? 'Thuê ngoài'
-                : 'Kinh doanh'}
+              {(
+                {
+                  all: 'Tất cả',
+                  admin: 'Admin',
+                  tech_manager: 'QL Kỹ thuật',
+                  technician: 'KTV Nội bộ',
+                  outsourced: 'Thuê ngoài',
+                  sales_manager: 'QL Bán hàng',
+                  sales: 'Kinh doanh',
+                } as const
+              )[tab]}
             </button>
           ))}
         </div>
@@ -366,22 +384,28 @@ export default function MemberManagementPage() {
                   {/* Role Badge */}
                   <span
                     className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider shrink-0 ${
-                      member.role === 'admin'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : member.role === 'technician'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : member.role === 'outsourced'
-                        ? 'bg-amber-50 text-amber-800 border border-amber-200 font-semibold'
-                        : 'bg-purple-50 text-purple-700 border border-purple-200'
+                      (
+                        {
+                          admin: 'bg-blue-50 text-blue-700 border border-blue-200',
+                          tech_manager: 'bg-teal-50 text-teal-700 border border-teal-200',
+                          technician: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                          outsourced: 'bg-amber-50 text-amber-800 border border-amber-200 font-semibold',
+                          sales_manager: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+                          sales: 'bg-purple-50 text-purple-700 border border-purple-200',
+                        } as const
+                      )[member.role]
                     }`}
                   >
-                    {member.role === 'admin'
-                      ? 'Admin'
-                      : member.role === 'technician'
-                      ? 'Kỹ Thuật'
-                      : member.role === 'outsourced'
-                      ? 'Thuê Ngoài'
-                      : 'Kinh Doanh'}
+                    {(
+                      {
+                        admin: 'Admin',
+                        tech_manager: 'QL Kỹ Thuật',
+                        technician: 'Kỹ Thuật',
+                        outsourced: 'Thuê Ngoài',
+                        sales_manager: 'QL Bán Hàng',
+                        sales: 'Kinh Doanh',
+                      } as const
+                    )[member.role]}
                   </span>
                 </div>
 
@@ -644,6 +668,8 @@ export default function MemberManagementPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { id: 'admin', label: 'Admin', desc: 'Toàn quyền quản trị' },
+                    { id: 'tech_manager', label: 'QL Kỹ Thuật', desc: 'Điều phối & kho máy' },
+                    { id: 'sales_manager', label: 'QL Bán Hàng', desc: 'CRM & doanh số' },
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Chẩn đoán & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV sửa chữa' },
                     { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & Lập phiếu' },
@@ -835,6 +861,8 @@ export default function MemberManagementPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { id: 'admin', label: 'Admin', desc: 'Quản trị hệ thống' },
+                    { id: 'tech_manager', label: 'QL Kỹ Thuật', desc: 'Điều phối & báo cáo' },
+                    { id: 'sales_manager', label: 'QL Bán Hàng', desc: 'CRM & doanh số' },
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Sửa chữa & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV ngoài' },
                     { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & CSKH' },

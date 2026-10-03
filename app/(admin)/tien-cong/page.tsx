@@ -16,7 +16,7 @@ export default function TienCongPage() {
   } = useStore();
 
   const availableTechnicians = React.useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+    return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'admin');
   }, [users]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

@@ -8,7 +8,7 @@ type Action = 'create' | 'update' | 'password' | 'delete';
 function requireAdmin(request: NextRequest) {
   const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) return { error: NextResponse.json({ success: false, message: 'Phiên đăng nhập không tồn tại.' }, { status: 401 }) };
-  if (session.role !== 'admin') {
+  if (session.role !== 'admin' && session.canManageUsers !== true) {
     return { error: NextResponse.json({ success: false, message: 'Chỉ Quản trị viên mới được quản lý tài khoản.' }, { status: 403 }) };
   }
   return { session };

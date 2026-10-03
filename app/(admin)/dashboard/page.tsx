@@ -444,7 +444,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   // Technician Workload Data
   const technicianWorkloadData = useMemo(() => {
-    const techs = users.filter((u) => u.role === 'technician' || u.role === 'outsourced');
+    const techs = users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced');
     return techs.map((u) => {
       const techTickets = tickets.filter((t) => t.technician_name === u.name);
       const completed = techTickets.filter((t) => t.status === 'completed' || t.status === 'delivered').length;

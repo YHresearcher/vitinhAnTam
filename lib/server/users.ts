@@ -21,7 +21,9 @@ let memoryStore: StoredUser[] | null = null;
 
 const ROLE_DEFAULT_PASSWORDS: Record<string, string> = {
   admin: 'admin123',
+  tech_manager: 'techmgr123',
   technician: 'tech123',
+  sales_manager: 'salesmgr123',
   sales: 'sales123',
   outsourced: '123456',
 };

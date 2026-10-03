@@ -1389,23 +1389,29 @@ export default function CaiDatPage() {
                             <span className="font-bold text-xs sm:text-sm text-slate-900">{u.name}</span>
                             <Tag
                               color={
-                                u.role === 'admin'
-                                  ? 'blue'
-                                  : u.role === 'technician'
-                                  ? 'green'
-                                  : u.role === 'outsourced'
-                                  ? 'orange'
-                                  : 'purple'
+                                (
+                                  {
+                                    admin: 'blue',
+                                    tech_manager: 'cyan',
+                                    technician: 'green',
+                                    outsourced: 'orange',
+                                    sales_manager: 'geekblue',
+                                    sales: 'purple',
+                                  } as const
+                                )[u.role]
                               }
                               className="text-[10px] m-0 font-bold"
                             >
-                              {u.role === 'admin'
-                                ? 'ADMIN'
-                                : u.role === 'technician'
-                                ? 'KỸ THUẬT'
-                                : u.role === 'outsourced'
-                                ? 'THUÊ NGOÀI'
-                                : 'KINH DOANH'}
+                              {(
+                                {
+                                  admin: 'ADMIN',
+                                  tech_manager: 'QL KỸ THUẬT',
+                                  technician: 'KỸ THUẬT',
+                                  outsourced: 'THUÊ NGOÀI',
+                                  sales_manager: 'QL BÁN HÀNG',
+                                  sales: 'KINH DOANH',
+                                } as const
+                              )[u.role]}
                             </Tag>
                           </div>
                           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">

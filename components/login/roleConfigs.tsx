@@ -1,7 +1,8 @@
 import React from 'react';
+import { UserRole } from '@/lib/supabase';
 
 export interface RoleCardConfig {
-  role: 'admin' | 'technician' | 'sales';
+  role: UserRole;
   label: string;
   subLabel: string;
   badge: string;
@@ -39,6 +40,50 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
       accentBtn: 'bg-red-600 hover:bg-red-700 text-white',
       activeRing: 'focus:ring-red-500',
       glowColor: 'from-red-600 to-rose-700',
+    },
+  },
+  {
+    role: 'tech_manager',
+    label: 'Quản Lý Kỹ Thuật',
+    subLabel: 'Điều phối KTV, kho máy & báo cáo',
+    badge: 'Quản lý',
+    defaultPass: 'techmgr123',
+    iconSvg: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
+    colorScheme: {
+      borderHover: 'hover:border-teal-500 border-slate-200',
+      bgHover: 'hover:bg-teal-50/40',
+      badgeBg: 'bg-teal-50 border-teal-200',
+      badgeText: 'text-teal-700',
+      accentBtn: 'bg-teal-600 hover:bg-teal-700 text-white',
+      activeRing: 'focus:ring-teal-500',
+      glowColor: 'from-teal-600 to-emerald-700',
+    },
+  },
+  {
+    role: 'sales_manager',
+    label: 'Quản Lý Bán Hàng',
+    subLabel: 'CRM, doanh số & duyệt bán hàng',
+    badge: 'Quản lý',
+    defaultPass: 'salesmgr123',
+    iconSvg: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+    colorScheme: {
+      borderHover: 'hover:border-indigo-500 border-slate-200',
+      bgHover: 'hover:bg-indigo-50/40',
+      badgeBg: 'bg-indigo-50 border-indigo-200',
+      badgeText: 'text-indigo-700',
+      accentBtn: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+      activeRing: 'focus:ring-indigo-500',
+      glowColor: 'from-indigo-600 to-purple-700',
     },
   },
   {

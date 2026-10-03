@@ -402,19 +402,34 @@ export function StoreProvider({
   }, [isLoggingOut, logoutCountdown]);
 
   // Role permissions
-  const canEditStock = () => currentUser.role === 'admin' || currentUser.permissions?.can_edit_stock === true;
+  const canEditStock = () =>
+    currentUser.role === 'admin' ||
+    currentUser.role === 'tech_manager' ||
+    currentUser.permissions?.can_edit_stock === true;
   const canUpdateRepairStatus = () =>
     currentUser.role === 'admin' ||
+    currentUser.role === 'tech_manager' ||
     currentUser.role === 'technician' ||
     currentUser.role === 'outsourced' ||
     currentUser.permissions?.can_update_repair_status === true;
-  const canAccessPayroll = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
-  const canAccessFinancials = () => currentUser.role === 'admin' || currentUser.permissions?.can_access_payroll === true;
+  const canAccessPayroll = () =>
+    currentUser.role === 'admin' ||
+    currentUser.role === 'tech_manager' ||
+    currentUser.role === 'sales_manager' ||
+    currentUser.permissions?.can_access_payroll === true;
+  const canAccessFinancials = () =>
+    currentUser.role === 'admin' ||
+    currentUser.role === 'tech_manager' ||
+    currentUser.role === 'sales_manager' ||
+    currentUser.permissions?.can_access_payroll === true;
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
-  const canAssignTasks = () => currentUser.role === 'admin' || currentUser.role === 'technician';
-  const canSellAndEditWarranty = () => currentUser.role === 'admin' || currentUser.role === 'sales';
-  const canAccessCRM = () => currentUser.role === 'admin' || currentUser.role === 'sales';
+  const canAssignTasks = () =>
+    currentUser.role === 'admin' || currentUser.role === 'tech_manager' || currentUser.role === 'technician';
+  const canSellAndEditWarranty = () =>
+    currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
+  const canAccessCRM = () =>
+    currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
 
   /**
    * Đăng nhập: xác thực SERVER-SIDE qua /api/auth/login.
@@ -563,10 +578,13 @@ export function StoreProvider({
       id: `u-${Date.now()}`,
       created_at: new Date().toISOString(),
       permissions: rest.permissions || {
-        can_edit_stock: rest.role === 'admin',
+        can_edit_stock: rest.role === 'admin' || rest.role === 'tech_manager',
         can_update_repair_status:
-          rest.role === 'admin' || rest.role === 'technician' || rest.role === 'outsourced',
-        can_access_payroll: rest.role === 'admin',
+          rest.role === 'admin' ||
+          rest.role === 'tech_manager' ||
+          rest.role === 'technician' ||
+          rest.role === 'outsourced',
+        can_access_payroll: rest.role === 'admin' || rest.role === 'tech_manager' || rest.role === 'sales_manager',
         can_manage_users: rest.role === 'admin',
       },
     };

@@ -25,7 +25,7 @@ type OrderPayload = {
 
 const VALID_PAYMENT = ['qr', 'cash'];
 const VALID_DELIVERY = ['pickup', 'delivery'];
-const STAFF_ROLES = ['admin', 'sales', 'technician'];
+const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
 
 /** Chỉ staff (admin/sales/technician) đã đăng nhập mới được xem danh sách đơn. */
 function isStaff(request: NextRequest): boolean {

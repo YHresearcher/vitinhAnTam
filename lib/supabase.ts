@@ -23,7 +23,7 @@ export const supabase = isSupabaseConfigured()
 // ==========================================
 // RBAC (ROLE-BASED ACCESS CONTROL)
 // ==========================================
-export type UserRole = 'admin' | 'technician' | 'sales' | 'outsourced';
+export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'sales' | 'outsourced';
 
 export interface UserPermissions {
   can_edit_stock: boolean;
@@ -79,6 +79,26 @@ export const isUuid = (value: string): boolean => UUID_PATTERN.test(value);
 
 
 export const MOCK_USERS: Record<UserRole, UserProfile> = {
+  tech_manager: {
+    id: 'u-techmgr-1',
+    username: 'qlkythuat',
+    name: 'Quản Lý Kỹ Thuật',
+    role: 'tech_manager',
+    roleTitle: 'Quản lý kỹ thuật',
+    avatarBg: 'bg-teal-600',
+    email: 'qlkythuat@vitinhantham.vn',
+    phone: '0909.053.058',
+  },
+  sales_manager: {
+    id: 'u-salesmgr-1',
+    username: 'qlbanhang',
+    name: 'Quản Lý Bán Hàng',
+    role: 'sales_manager',
+    roleTitle: 'Quản lý bán hàng',
+    avatarBg: 'bg-indigo-600',
+    email: 'qlbanhang@vitinhantham.vn',
+    phone: '0909.053.058',
+  },
   admin: {
     id: 'u-admin-1',
     username: 'thanhphan',

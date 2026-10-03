@@ -34,7 +34,7 @@ export default function CuuHoOnsitePage() {
   const [convertingDispatch, setConvertingDispatch] = useState<OnsiteDispatch | null>(null);
 
   const availableTechnicians = useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+    return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'admin');
   }, [users]);
 
   const filteredDispatches = onsiteDispatches.filter((d) =>
