@@ -628,8 +628,8 @@ export function StoreProvider({
       return next;
     });
 
-    // Đồng bộ cấu hình lên máy chủ (.data/settings.json) — await để đảm bảo đã lưu
-    // xong trước khi handler gọi tiếp API (tránh race làm mất cấu hình Bot).
+    // Đồng bộ cấu hình lên máy chủ & Supabase qua API server (/api/settings)
+    // await để đảm bảo đã lưu xong trước khi handler gọi tiếp API (tránh race làm mất cấu hình Bot).
     try {
       const res = await fetch('/api/settings', {
         method: 'POST',
@@ -641,17 +641,6 @@ export function StoreProvider({
       }
     } catch (err) {
       console.warn('Không thể đồng bộ settings lên server:', err);
-    }
-
-    // Đồng bộ Supabase nếu đã cấu hình
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        await supabase
-          .from('system_settings')
-          .upsert({ id: 1, ...data, updated_at: new Date().toISOString() });
-      } catch (err) {
-        console.warn('Lỗi lưu cấu hình lên Supabase:', err);
-      }
     }
 
     return true;

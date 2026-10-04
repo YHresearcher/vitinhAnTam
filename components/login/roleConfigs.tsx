@@ -6,7 +6,6 @@ export interface RoleCardConfig {
   label: string;
   subLabel: string;
   badge: string;
-  defaultPass: string;
   iconSvg: React.ReactNode;
   colorScheme: {
     borderHover: string;
@@ -25,7 +24,6 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     label: 'Quản Trị Viên',
     subLabel: 'Kho máy, duyệt key & tài chính',
     badge: 'Toàn quyền',
-    defaultPass: 'admin123',
     iconSvg: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -47,7 +45,6 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     label: 'Quản Lý Kỹ Thuật',
     subLabel: 'Điều phối KTV, kho máy & báo cáo',
     badge: 'Quản lý',
-    defaultPass: 'techmgr123',
     iconSvg: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
@@ -68,7 +65,6 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     label: 'Quản Lý Bán Hàng',
     subLabel: 'CRM, doanh số & duyệt bán hàng',
     badge: 'Quản lý',
-    defaultPass: 'salesmgr123',
     iconSvg: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
@@ -91,7 +87,6 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     label: 'Kỹ Thuật Viên',
     subLabel: 'Tiếp nhận máy, sửa chữa & test key',
     badge: 'Kỹ thuật',
-    defaultPass: 'tech123',
     iconSvg: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
@@ -112,7 +107,6 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     label: 'Kinh Doanh & Sales',
     subLabel: 'Bán hàng, CRM & yêu cầu cấp key',
     badge: 'Bán hàng',
-    defaultPass: 'sales123',
     iconSvg: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
@@ -131,4 +125,5 @@ export const ROLE_CONFIGS: RoleCardConfig[] = [
     },
   },
 ];
+
 

@@ -41,12 +41,6 @@ export default function LoginPage() {
     setErrorMessage('');
   };
 
-  const handleQuickFillPassword = () => {
-    if (activeModalRole) {
-      setPasswordInput(activeModalRole.defaultPass);
-    }
-  };
-
   const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -130,7 +124,6 @@ export default function LoginPage() {
           onIdentifierChange={setIdentifierInput}
           onPasswordChange={setPasswordInput}
           onToggleShowPassword={() => setShowPassword((prev) => !prev)}
-          onQuickFillPassword={handleQuickFillPassword}
           onSubmit={handleFormLogin}
           onClose={handleCloseModal}
         />

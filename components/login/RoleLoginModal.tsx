@@ -18,7 +18,6 @@ export interface RoleLoginModalProps {
   onIdentifierChange: (val: string) => void;
   onPasswordChange: (val: string) => void;
   onToggleShowPassword: () => void;
-  onQuickFillPassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
 }
@@ -37,7 +36,6 @@ export function RoleLoginModal({
   onIdentifierChange,
   onPasswordChange,
   onToggleShowPassword,
-  onQuickFillPassword,
   onSubmit,
   onClose,
 }: RoleLoginModalProps) {
@@ -136,13 +134,6 @@ export function RoleLoginModal({
               <label className="block text-xs font-bold text-slate-700">
                 Mật khẩu
               </label>
-              <button
-                type="button"
-                onClick={onQuickFillPassword}
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
-              >
-                Điền mẫu ({activeRole.defaultPass})
-              </button>
             </div>
             <div className="relative">
               <input

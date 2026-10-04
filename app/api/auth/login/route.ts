@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, sessionCookieOptions, signSession } from '@/lib/session';
-import { authenticate, stripSecrets } from '@/lib/server/users';
+import { authenticateAsync, stripSecrets } from '@/lib/server/users';
 
 export async function POST(request: NextRequest) {
   let body: { identifier?: unknown; password?: unknown };
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const user = authenticate(identifier, password);
+  const user = await authenticateAsync(identifier, password);
   if (!user) {
     return NextResponse.json(
       { success: false, message: 'Tên đăng nhập hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại!' },
@@ -53,3 +53,4 @@ export async function POST(request: NextRequest) {
   );
   return response;
 }
+

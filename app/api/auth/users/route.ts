@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
-import { findUserById, removeUser, setPassword, upsertUser } from '@/lib/server/users';
+import {
+  findUserByIdAsync,
+  loadUsersAsync,
+  removeUserAsync,
+  setPasswordAsync,
+  stripSecrets,
+  upsertUserAsync,
+} from '@/lib/server/users';
 import type { UserAccount } from '@/lib/supabase';
 
 type Action = 'create' | 'update' | 'password' | 'delete';
@@ -17,6 +24,18 @@ function requireAdmin(request: NextRequest) {
 function serverError(err: unknown): NextResponse {
   const message = err instanceof Error ? err.message : 'Lỗi máy chủ khi lưu tài khoản.';
   return NextResponse.json({ success: false, message }, { status: 500 });
+}
+
+export async function GET(request: NextRequest) {
+  const guard = requireAdmin(request);
+  if ('error' in guard) return guard.error;
+
+  try {
+    const users = await loadUsersAsync();
+    return NextResponse.json({ success: true, data: users.map(stripSecrets) });
+  } catch (err) {
+    return serverError(err);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -43,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
     let created;
     try {
-      created = upsertUser({ ...user, password });
+      created = await upsertUserAsync({ ...user, password });
     } catch (err) {
       return serverError(err);
     }
@@ -53,7 +72,8 @@ export async function POST(request: NextRequest) {
   if (action === 'update') {
     const id = typeof body.id === 'string' ? body.id : '';
     const patch = (body.patch ?? {}) as Partial<UserAccount>;
-    if (!id || !findUserById(id)) {
+    const existing = await findUserByIdAsync(id);
+    if (!id || !existing) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản.' }, { status: 404 });
     }
     const password = typeof body.password === 'string' && body.password ? body.password : undefined;
@@ -64,7 +84,7 @@ export async function POST(request: NextRequest) {
     delete safePatch.password;
     let updated;
     try {
-      updated = upsertUser({ ...safePatch, password }, { id });
+      updated = await upsertUserAsync({ ...safePatch, password }, { id });
     } catch (err) {
       return serverError(err);
     }
@@ -79,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
     let updated;
     try {
-      updated = setPassword(id, password);
+      updated = await setPasswordAsync(id, password);
     } catch (err) {
       return serverError(err);
     }
@@ -97,10 +117,10 @@ export async function POST(request: NextRequest) {
     if (id === guard.session?.sub) {
       return NextResponse.json({ success: false, message: 'Bạn không thể xóa chính mình.' }, { status: 400 });
     }
-    const removed = removeUser(id);
+    const removed = await removeUserAsync(id);
     if (!removed) {
       return NextResponse.json(
-        { success: false, message: 'Không xóa được tài khoản (không tìm thấy hoặc không ghi được file).' },
+        { success: false, message: 'Không xóa được tài khoản (không tìm thấy hoặc không ghi được).' },
         { status: 400 }
       );
     }
@@ -109,3 +129,4 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: false, message: 'Hành động không hợp lệ.' }, { status: 400 });
 }
+

@@ -138,7 +138,11 @@ export default function MemberManagementPage() {
       return;
     }
 
-    const pwd = newUserForm.password.trim() || '123456';
+    const pwd = newUserForm.password.trim();
+    if (!pwd || pwd.length < 4) {
+      showToast('Vui lòng nhập mật khẩu khởi tạo tối thiểu 4 ký tự!');
+      return;
+    }
     let defaultTitle = newUserForm.roleTitle.trim();
     let avatarBg = 'bg-blue-600';
 
@@ -886,13 +890,14 @@ export default function MemberManagementPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Mật Khẩu Khởi Tạo (Mặc định: 123456)
+                  Mật Khẩu Khởi Tạo * (Tối thiểu 4 ký tự)
                 </label>
                 <input
                   type="text"
+                  required
                   value={newUserForm.password}
                   onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                  placeholder="123456"
+                  placeholder="Nhập mật khẩu khởi tạo..."
                   className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
                 />
               </div>

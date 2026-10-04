@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 import { dispatchSystemEvent } from '@/lib/server/zaloBot';
 
@@ -68,15 +69,16 @@ async function notifyStaffByEmail(order: Record<string, unknown>): Promise<void>
     'sales01@vitinhantam.com',
     'tech01@vitinhantam.com',
   ];
-  if (isSupabaseConfigured() && supabase) {
+  const serverSb = getServerSupabase();
+  if (serverSb) {
     try {
-      const { data } = await supabase
+      const { data } = await serverSb
         .from('users')
         .select('email')
         .in('role', STAFF_ROLES)
         .eq('status', 'active');
       if (data && data.length > 0) {
-        recipients = data.map((u) => u.email).filter(Boolean);
+        recipients = data.map((u: { email: string }) => u.email).filter(Boolean);
       }
     } catch {
       // Giữ danh sách fallback

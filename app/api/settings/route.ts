@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStoredSettings, saveStoredSettings } from '@/lib/server/settings';
+import { getStoredSettingsAsync, saveStoredSettingsAsync } from '@/lib/server/settings';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 
 export async function GET() {
-  const settings = getStoredSettings();
+  const settings = await getStoredSettingsAsync();
   return NextResponse.json({ success: true, data: settings });
 }
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Dữ liệu không hợp lệ.' }, { status: 400 });
     }
 
-    const saved = saveStoredSettings(body);
+    const saved = await saveStoredSettingsAsync(body);
     return NextResponse.json({
       success: true,
       data: saved,
@@ -33,3 +33,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'Lỗi xử lý yêu cầu phía máy chủ.' }, { status: 500 });
   }
 }
+
