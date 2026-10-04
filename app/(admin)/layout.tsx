@@ -111,10 +111,10 @@ export default function AdminLayout({
   // Màn hình chờ đang tải dữ liệu / kiểm tra phiên
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] flex flex-col items-center justify-center p-6 text-center font-sans">
-        <div className="w-12 h-12 border-3 border-red-200 border-t-red-600 rounded-full animate-spin mb-4" />
-        <h2 className="text-sm font-bold text-slate-800 mb-1">Đang tải trung tâm điều phối Vi Tính An Tâm...</h2>
-        <p className="text-xs text-slate-500">Đang đồng bộ quyền hạn và dữ liệu hệ thống</p>
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-12 h-12 border-3 border-red-200 dark:border-red-900 border-t-red-600 rounded-full animate-spin mb-4" />
+        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">Đang tải trung tâm điều phối Vi Tính An Tâm...</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Đang đồng bộ quyền hạn và dữ liệu hệ thống</p>
       </div>
     );
   }
@@ -122,12 +122,12 @@ export default function AdminLayout({
   // Màn hình yêu cầu đăng nhập nếu chưa có phiên
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-bold mb-3 border border-amber-200">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center font-sans">
+        <span className="px-3 py-1 bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 rounded-full text-xs font-bold mb-3 border border-amber-200 dark:border-amber-800">
           Bảo Mật Nội Bộ
         </span>
-        <h2 className="text-base font-bold text-slate-900 mb-1">Yêu cầu xác thực tài khoản</h2>
-        <p className="text-xs text-slate-500 mb-4 max-w-sm">
+        <h2 className="text-base font-bold text-slate-900 dark:text-white mb-1">Yêu cầu xác thực tài khoản</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 max-w-sm">
           Bạn cần đăng nhập bằng tài khoản nội bộ (Admin, Kỹ thuật hoặc Sales) để truy cập hệ thống quản trị.
         </p>
         <Link
@@ -157,10 +157,10 @@ export default function AdminLayout({
             <button
               type="button"
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-slate-200 text-slate-700 hover:text-blue-700 hover:bg-slate-50 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+              className="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shrink-0 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
               aria-label="Mở menu quản trị"
             >
-              <Menu className="w-4 h-4 text-slate-600" />
+              <Menu className="w-4 h-4 text-slate-600 dark:text-slate-400" />
               <span>Menu</span>
             </button>
 
@@ -168,30 +168,30 @@ export default function AdminLayout({
             <button
               type="button"
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 text-slate-500 hover:text-slate-800 transition-all text-xs cursor-pointer w-48 md:w-64"
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-all text-xs cursor-pointer w-48 md:w-64"
             >
-              <Search className="w-3.5 h-3.5 text-slate-400" />
+              <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               <span className="flex-1 text-left truncate">Tìm trang, S/N, SĐT...</span>
-              <kbd className="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded border border-slate-200 text-slate-400 shadow-2xs">⌘K</kbd>
+              <kbd className="text-[10px] font-mono bg-white dark:bg-slate-700 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-300 shadow-2xs">⌘K</kbd>
             </button>
           </div>
 
           {/* Right Header Actions */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Current User Role Badge */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-slate-700">{currentUser.roleTitle}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser.roleTitle}</span>
             </div>
 
             {/* Quick Key Navigation */}
             <Link
               href="/quan-ly-key"
               prefetch={true}
-              className="flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] text-[#2B1810] border-[#E8E2D9] hover:border-[#C0392B] hover:bg-red-50/30 shrink-0"
+              className="flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] dark:bg-slate-800 text-[#2B1810] dark:text-slate-200 border-[#E8E2D9] dark:border-slate-700 hover:border-[#C0392B] dark:hover:border-red-500 hover:bg-red-50/30 dark:hover:bg-red-950/30 shrink-0"
               title="Kho Key Bản Quyền"
             >
-              <KeyRound className="w-3.5 h-3.5 text-[#C0392B]" />
+              <KeyRound className="w-3.5 h-3.5 text-[#C0392B] dark:text-red-400" />
               <span className="hidden xs:inline font-mono">KHO KEY</span>
             </Link>
 
@@ -237,7 +237,7 @@ export default function AdminLayout({
             </Link>
 
             {/* User Profile & Logout */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
               <div
                 className={`w-7.5 h-7.5 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs`}
                 title={currentUser.name}
@@ -245,13 +245,13 @@ export default function AdminLayout({
                 {currentUser.name.charAt(0)}
               </div>
               <div className="hidden md:flex flex-col leading-tight text-left">
-                <span className="text-xs font-bold text-slate-800">{currentUser.name}</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</span>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
                 title="Đăng xuất khỏi hệ thống"
-                className="px-2 py-1 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded text-xs font-semibold transition-colors cursor-pointer"
+                className="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded text-xs font-semibold transition-colors cursor-pointer"
               >
                 Thoát
               </button>

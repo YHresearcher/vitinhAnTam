@@ -18,25 +18,35 @@ export function ThemeToggle({ variant = 'icon', className = '' }: ThemeTogglePro
 
   if (variant === 'pill') {
     return (
-      <Tooltip title={titleText} placement="bottom">
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
-            isDark
-              ? 'bg-[#1C2541] border-[#2D3A66] text-[#F1F5F9] hover:bg-[#232F52] hover:border-[#3A4B7C] shadow-xs'
-              : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-slate-900 shadow-2xs'
-          } ${className}`}
-          aria-label={titleText}
-        >
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
+          isDark
+            ? 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600'
+            : 'bg-slate-100/80 border-slate-200 text-slate-700 hover:bg-slate-200/70 hover:text-slate-900'
+        } ${className}`}
+        aria-label={titleText}
+        title={titleText}
+      >
+        <div className="flex items-center gap-2">
           {isDark ? (
-            <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
+            <Moon className="w-4 h-4 text-indigo-400" />
           ) : (
-            <Moon className="w-4 h-4 text-slate-600" />
+            <Sun className="w-4 h-4 text-amber-500" />
           )}
           <span>{isDark ? 'Giao diện Tối' : 'Giao diện Sáng'}</span>
-        </button>
-      </Tooltip>
+        </div>
+        <span
+          className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+            isDark
+              ? 'bg-indigo-950 text-indigo-300 border border-indigo-800/60'
+              : 'bg-amber-100 text-amber-800 border border-amber-200'
+          }`}
+        >
+          {isDark ? 'Dark' : 'Light'}
+        </span>
+      </button>
     );
   }
 

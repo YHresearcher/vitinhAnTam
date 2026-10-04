@@ -149,15 +149,21 @@ export default function RootLayout({
   const initialSettings = getStoredSettings();
 
   return (
-    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`}>
+    <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`} suppressHydrationWarning>
       <head>
+        {/* Anti-FOUC Instant Theme Initialization */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('vtat_theme_v1');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
         {/* Schema.org Structured Data for Local SEO */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-[#FAF7F2] text-[#2B1810] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
+      <body className="min-h-screen bg-[#FAF7F2] dark:bg-[#090E1A] text-[#2B1810] dark:text-[#E2E8F0] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
         <AntdRegistry>
           <ClientProvider initialSettings={initialSettings}>{children}</ClientProvider>
         </AntdRegistry>

@@ -2,19 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { User, Lock, Eye, EyeOff, LogIn, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { UserAccount } from '@/lib/supabase';
 import { Logo } from '@/components/Logo';
-import { RoleLoginModal } from '@/components/login/RoleLoginModal';
-import { RoleCardConfig } from '@/components/login/roleConfigs';
-import { RoleCardGrid } from '@/components/login/RoleCardGrid';
 import { FirstTimePasswordModal } from '@/components/login/FirstTimePasswordModal';
 
 export default function LoginPage() {
-  const { users, loginWithCredentials } = useViTinhAnTamStore();
+  const { loginWithCredentials } = useViTinhAnTamStore();
 
-  const [activeModalRole, setActiveModalRole] = useState<RoleCardConfig | null>(null);
-  const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
   const [identifierInput, setIdentifierInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,59 +25,46 @@ export default function LoginPage() {
     name?: string;
   } | null>(null);
 
-  const handleOpenRoleModal = (roleConfig: RoleCardConfig) => {
-    const roleUsers = users.filter((u) => u.role === roleConfig.role);
-    const targetUser = roleUsers[0] || users.find((u) => u.role === 'admin') || users[0];
-
-    setActiveModalRole(roleConfig);
-    setSelectedUser(targetUser);
-    setIdentifierInput(targetUser?.username || targetUser?.email || '');
-    setPasswordInput('');
-    setShowPassword(false);
-    setErrorMessage('');
-    setSuccessMessage('');
-  };
-
-  const handleSelectUserAccount = (user: UserAccount) => {
-    setSelectedUser(user);
-    setIdentifierInput(user.username || user.email);
-    setPasswordInput('');
-    setErrorMessage('');
-  };
-
   const handleFormLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!identifierInput.trim()) {
+      setErrorMessage('Vui lòng nhập tên đăng nhập hoặc email.');
+      return;
+    }
+
+    if (!passwordInput) {
+      setErrorMessage('Vui lòng nhập mật khẩu.');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    const res = await loginWithCredentials(identifierInput, passwordInput);
+    const res = await loginWithCredentials(identifierInput.trim(), passwordInput);
     setIsSubmitting(false);
 
     if (res.success && res.user) {
       if (res.mustChangePassword) {
         // Must change password first
         const account = {
-          identifier: identifierInput,
+          identifier: identifierInput.trim(),
           currentPassword: passwordInput,
           name: res.user.name,
         };
-        setActiveModalRole(null);
         setMustChangePasswordAccount(account);
         return;
       }
 
-      setSuccessMessage(res.message);
+      setSuccessMessage(res.message || 'Đăng nhập thành công! Đang chuyển hướng...');
       // Chuyển hướng ngay lập tức đến trang quản trị
-      window.location.replace('/dashboard');
+      setTimeout(() => {
+        window.location.replace('/dashboard');
+      }, 300);
     } else {
-      setErrorMessage(res.message || 'Mật khẩu không chính xác!');
+      setErrorMessage(res.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
     }
-  };
-
-  const handleCloseModal = () => {
-    setActiveModalRole(null);
-    setErrorMessage('');
-    setSuccessMessage('');
   };
 
   const handlePasswordChangedSuccess = (message: string) => {
@@ -92,84 +74,170 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans">
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-slate-950 flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-200">
       {/* Top Header */}
-      <div className="w-full max-w-4xl mx-auto flex items-center justify-between py-2">
+      <div className="w-full max-w-md mx-auto flex items-center justify-between py-2">
         <Link href="/" className="inline-block transition-transform hover:scale-102">
           <Logo />
         </Link>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] hover:text-[#C0392B] font-semibold px-3 py-1.5 rounded-lg hover:bg-white/80 transition-all"
+          className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] dark:text-slate-400 hover:text-[#C0392B] dark:hover:text-rose-400 font-semibold px-3 py-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-900 transition-all"
         >
-          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m12 19-7-7 7-7" />
-            <path d="M19 12H5" />
-          </svg>
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>Về trang chủ</span>
         </Link>
       </div>
 
-      {/* Main Content Area */}
-      <div className="w-full max-w-3xl mx-auto my-auto py-6 sm:py-10">
+      {/* Main Login Card */}
+      <div className="w-full max-w-md mx-auto my-auto py-8">
         {pageNotification && (
-          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+          <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{pageNotification}</span>
             </div>
             <button
               type="button"
               onClick={() => setPageNotification('')}
-              className="text-emerald-600 hover:text-emerald-900 font-bold text-xs cursor-pointer p-1"
+              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-900 font-bold text-xs cursor-pointer p-1"
             >
               ✕
             </button>
           </div>
         )}
 
-        {/* Title & Badge */}
-        <div className="text-center mb-8 sm:mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100/70 border border-red-200 text-[#C0392B] text-[11px] font-bold tracking-wider uppercase mb-3 shadow-2xs">
-            <span className="w-2 h-2 rounded-full bg-[#C0392B] animate-pulse" />
-            <span>Cổng Đăng Nhập Nội Bộ</span>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 p-6 sm:p-8">
+          {/* Title & Badge */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100/70 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-[#C0392B] dark:text-rose-400 text-[11px] font-bold tracking-wider uppercase mb-3 shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-[#C0392B] dark:bg-rose-400 animate-pulse" />
+              <span>Cổng Quản Trị Nội Bộ</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#2B1810] dark:text-slate-100 tracking-tight">
+              Đăng Nhập
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+              Nhập thông tin tài khoản để truy cập hệ thống
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
-            Chọn Vai Trò Để Đăng Nhập
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-2 max-w-md mx-auto">
-            Nhấp vào vai trò tương ứng để mở bảng đăng nhập nhanh
-          </p>
-        </div>
 
-        {/* Role Selection Cards */}
-        <RoleCardGrid users={users} onSelectRole={handleOpenRoleModal} />
+          {/* Form */}
+          <form onSubmit={handleFormLogin} className="space-y-4">
+            {/* Input 1: Tên đăng nhập / Email */}
+            <div>
+              <label
+                htmlFor="identifier"
+                className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
+              >
+                Tên đăng nhập hoặc Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <User className="w-4 h-4" />
+                </div>
+                <input
+                  id="identifier"
+                  type="text"
+                  required
+                  autoComplete="username"
+                  value={identifierInput}
+                  onChange={(e) => {
+                    setIdentifierInput(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
+                  placeholder="admin hoặc email@vitinhantam.com"
+                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C0392B] dark:focus:ring-rose-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+
+            {/* Input 2: Mật khẩu */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide"
+                >
+                  Mật khẩu
+                </label>
+                <Link
+                  href="/quen-mat-khau"
+                  className="text-xs font-semibold text-[#C0392B] dark:text-rose-400 hover:underline"
+                >
+                  Quên mật khẩu?
+                </Link>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
+                  <Lock className="w-4 h-4" />
+                </div>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (errorMessage) setErrorMessage('');
+                  }}
+                  placeholder="Nhập mật khẩu"
+                  className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C0392B] dark:focus:ring-rose-500 focus:border-transparent transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {errorMessage && (
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+
+            {/* Success Message */}
+            {successMessage && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl flex items-center gap-2 text-xs text-emerald-700 dark:text-emerald-300">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full mt-2 py-3 px-4 bg-[#C0392B] hover:bg-[#A93226] active:bg-[#922B21] text-white font-bold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Đang đăng nhập...</span>
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>Đăng Nhập</span>
+                </>
+              )}
+            </button>
+          </form>
+        </div>
       </div>
 
       {/* Footer */}
-      <div className="w-full max-w-4xl mx-auto text-center py-4 text-xs text-slate-400 font-medium">
-        © {new Date().getFullYear()} Vi Tính An Tâm — Hệ Thống Quản Trị & Điều Phối Doanh Nghiệp
+      <div className="w-full max-w-md mx-auto text-center py-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
+        © {new Date().getFullYear()} Vi Tính An Tâm — Hệ Thống Quản Trị Doanh Nghiệp
       </div>
-
-      {/* FAST LOGIN POPUP MODAL */}
-      {activeModalRole && (
-        <RoleLoginModal
-          activeRole={activeModalRole}
-          users={users}
-          selectedUser={selectedUser}
-          identifierInput={identifierInput}
-          passwordInput={passwordInput}
-          showPassword={showPassword}
-          isSubmitting={isSubmitting}
-          errorMessage={errorMessage}
-          successMessage={successMessage}
-          onSelectUser={handleSelectUserAccount}
-          onIdentifierChange={setIdentifierInput}
-          onPasswordChange={setPasswordInput}
-          onToggleShowPassword={() => setShowPassword((prev) => !prev)}
-          onSubmit={handleFormLogin}
-          onClose={handleCloseModal}
-        />
-      )}
 
       {/* FIRST TIME CHANGE PASSWORD MODAL */}
       {mustChangePasswordAccount && (
