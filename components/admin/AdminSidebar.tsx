@@ -172,10 +172,10 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
   ]);
 
   const sidebarContent = (
-    <div className="flex flex-col justify-between h-full bg-white font-sans select-none">
+    <div className="flex flex-col justify-between h-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans select-none transition-colors duration-200">
       <div className="flex flex-col">
         {/* Header Branding */}
-        <div className="min-h-[68px] py-2 px-4 flex items-center justify-between border-b border-slate-100">
+        <div className="min-h-[68px] py-2 px-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <Link
             href="/dashboard"
             prefetch={true}
@@ -197,7 +197,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
 
         {/* Navigation links */}
         <nav className="flex flex-col gap-0.5 px-3 mt-3 overflow-y-auto max-h-[calc(100vh-210px)] scrollbar-thin">
-          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Phân hệ nghiệp vụ
           </div>
           {navItems.map((item) => {
@@ -212,14 +212,14 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
                 onClick={handleNavClick}
                 className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 ${
                   isActive
-                    ? 'bg-blue-50/90 text-blue-700 font-bold border border-blue-200/80 shadow-xs'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+                    ? 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-medium'
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <IconComponent
                     className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-700'
+                      isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                     }`}
                   />
                   <span className="text-xs sm:text-[13px] truncate">{item.label}</span>
@@ -235,10 +235,10 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             );
           })}
 
-          <div className="my-2 border-t border-slate-100" />
+          <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
 
           {/* Quick links */}
-          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Tiện ích nhanh
           </div>
 
@@ -246,9 +246,9 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             href="/tra-cuu-bao-hanh"
             prefetch={true}
             onClick={handleNavClick}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors text-xs font-medium"
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Tra cứu bảo hành</span>
           </Link>
 
@@ -256,13 +256,13 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             href="/"
             prefetch={true}
             onClick={handleNavClick}
-            className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors text-xs font-medium"
+            className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors text-xs font-medium"
           >
             <div className="flex items-center gap-2.5">
-              <ExternalLink className="w-4 h-4 text-slate-400 shrink-0" />
+              <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
               <span>Xem trang chủ khách</span>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono">Web</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Web</span>
           </Link>
 
           <button
@@ -271,7 +271,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
               handleNavClick();
               logout();
             }}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition-colors text-xs font-semibold w-full text-left mt-1 cursor-pointer"
+            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-300 transition-colors text-xs font-semibold w-full text-left mt-1 cursor-pointer"
           >
             <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
             <span>Đăng xuất</span>
@@ -280,8 +280,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       </div>
 
       {/* Footer Info */}
-      <div className="p-3.5 border-t border-slate-100 text-center bg-slate-50/50">
-        <div className="text-[10px] text-slate-400 font-medium">
+      <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
           Vi Tính An Tâm • Portal v2.6
         </div>
       </div>
@@ -291,7 +291,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
   return (
     <>
       {/* Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-white border-r border-slate-200 z-50 flex-col justify-between shadow-xs">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-full w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 z-50 flex-col justify-between shadow-xs transition-colors duration-200">
         {sidebarContent}
       </aside>
 

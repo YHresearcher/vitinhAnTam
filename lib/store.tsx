@@ -76,6 +76,13 @@ export interface SystemSettings {
   footerCopyright: string;
   storeName: string;
 
+  // Cấu hình QR Code Thanh Toán & Ngân Hàng (Hiển thị khi mua hàng)
+  paymentQrUrl?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
+  paymentQrNote?: string;
+
   // Cấu hình Tích hợp Zalo Bot API (bot-api.zapps.me)
   botApiBaseUrl?: string;
   zaloBotToken?: string;
@@ -112,6 +119,13 @@ export const initialSystemSettings: SystemSettings = {
   footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
   footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
+
+  // Mặc định cấu hình QR Code Thanh Toán & Ngân Hàng
+  paymentQrUrl: '',
+  bankName: 'MB Bank (Ngân hàng Quân Đội)',
+  bankAccountNumber: '0909053058',
+  bankAccountName: 'VI TINH AN TAM',
+  paymentQrNote: 'Vui lòng quét mã QR hoặc chuyển khoản với nội dung: [Mã đơn hàng] - [Số điện thoại].',
 
   // Mặc định cấu hình Zalo Bot & Webhook
   botApiBaseUrl: '',
@@ -706,13 +720,22 @@ export function StoreProvider({
         body: JSON.stringify(data),
       });
       if (!res.ok) {
-        console.warn('Máy chủ từ chối lưu cấu hình:', res.status);
+        const errJson = await res.json().catch(() => null);
+        console.warn('Máy chủ từ chối lưu cấu hình:', res.status, errJson?.message);
+        return false;
       }
+      const resData = await res.json().catch(() => null);
+      if (resData?.data) {
+        setSystemSettings(resData.data);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('vtat_system_settings_v2', JSON.stringify(resData.data));
+        }
+      }
+      return true;
     } catch (err) {
       console.warn('Không thể đồng bộ settings lên server:', err);
+      return false;
     }
-
-    return true;
   };
 
   const setLang = (lang: 'vi' | 'en') => {

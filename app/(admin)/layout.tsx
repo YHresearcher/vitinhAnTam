@@ -42,8 +42,10 @@ export default function AdminLayout({
     if (typeof document !== 'undefined') {
       if (themeMode === 'dark') {
         document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
       }
     }
   }, [themeMode]);
@@ -139,7 +141,7 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="admin-scope min-h-screen bg-white text-slate-900 flex font-sans">
+    <div className="admin-scope min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans transition-colors duration-200">
       {/* Sidebar (Desktop Persistent + Mobile Drawer) */}
       <AdminSidebar
         mobileOpen={isMobileSidebarOpen}
@@ -149,7 +151,7 @@ export default function AdminLayout({
       {/* Main Content Area */}
       <div className="pl-0 lg:pl-72 flex flex-col min-h-screen w-full">
         {/* Topbar */}
-        <header className="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 flex items-center justify-between px-3 sm:px-6 lg:px-8 shadow-xs">
+        <header className="fixed top-0 left-0 lg:left-72 right-0 h-16 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 z-40 flex items-center justify-between px-3 sm:px-6 lg:px-8 shadow-xs transition-colors duration-200">
           <div className="flex items-center gap-3">
             {/* Mobile Toggle */}
             <button
@@ -197,12 +199,14 @@ export default function AdminLayout({
             <ThemeToggle variant="icon" />
 
             {/* Language Switcher */}
-            <div className="inline-flex items-center rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-[11px] font-bold">
+            <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
               <button
                 type="button"
                 onClick={() => setLang('vi')}
-                className={`px-1.5 py-0.5 rounded transition-all ${
-                  currentLang === 'vi' ? 'bg-white text-blue-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                  currentLang === 'vi'
+                    ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-2xs font-black'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                 }`}
                 title="Tiếng Việt"
               >
@@ -211,8 +215,10 @@ export default function AdminLayout({
               <button
                 type="button"
                 onClick={() => setLang('en')}
-                className={`px-1.5 py-0.5 rounded transition-all ${
-                  currentLang === 'en' ? 'bg-white text-blue-700 shadow-2xs font-black' : 'text-slate-500 hover:text-slate-800'
+                className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                  currentLang === 'en'
+                    ? 'bg-white dark:bg-slate-700 text-blue-700 dark:text-blue-300 shadow-2xs font-black'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'
                 }`}
                 title="English"
               >
@@ -254,18 +260,18 @@ export default function AdminLayout({
         </header>
 
         {/* Page Body */}
-        <main className="mt-16 p-4 sm:p-6 lg:p-8 flex-1 bg-white">{children}</main>
+        <main className="mt-16 p-4 sm:p-6 lg:p-8 flex-1 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">{children}</main>
       </div>
 
       {/* COMMAND PALETTE MODAL (Ctrl + K) */}
       {isCommandPaletteOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-start justify-center p-4 pt-20">
           <div
-            className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-fade-in"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-xl overflow-hidden animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Input Header */}
-            <form onSubmit={handlePaletteSubmit} className="p-3 border-b border-slate-200 flex items-center gap-2">
+            <form onSubmit={handlePaletteSubmit} className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
               <input
                 type="text"
                 autoFocus
@@ -275,15 +281,15 @@ export default function AdminLayout({
                   setSelectedIndex(0);
                 }}
                 placeholder="Tìm trang, tra cứu S/N hoặc SĐT..."
-                className="flex-1 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none bg-transparent"
+                className="flex-1 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none bg-transparent"
               />
-              <span className="text-xs text-slate-400 px-2 font-mono">ESC để đóng</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 px-2 font-mono">ESC để đóng</span>
             </form>
 
             {/* Results / Navigation List */}
             <div className="max-h-80 overflow-y-auto p-2 space-y-1">
               {filteredNavItems.length === 0 ? (
-                <div className="p-4 text-center text-xs text-slate-500">
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
                   Không tìm thấy tính năng nào. Bấm <strong>Enter</strong> để tra cứu toàn bộ kho máy với từ khóa &quot;{paletteQuery}&quot;.
                 </div>
               ) : (
@@ -292,14 +298,14 @@ export default function AdminLayout({
                     key={item.path}
                     type="button"
                     onClick={() => handleSelectNav(item.path)}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between text-xs transition-colors ${
+                    className={`w-full text-left px-3 py-2.5 rounded-lg flex items-center justify-between text-xs transition-colors cursor-pointer ${
                       idx === selectedIndex
-                        ? 'bg-blue-50 text-blue-900 font-semibold'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 font-semibold'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <span>{item.title}</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-mono">
                       {item.category}
                     </span>
                   </button>
@@ -308,9 +314,9 @@ export default function AdminLayout({
             </div>
 
             {/* Footer Tip */}
-            <div className="p-2.5 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between px-4">
+            <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between px-4">
               <span>Điều hướng phím tắt nhanh toàn hệ thống</span>
-              <span className="font-mono text-slate-400">Vi Tính An Tâm</span>
+              <span className="font-mono text-slate-400 dark:text-slate-500">Vi Tính An Tâm</span>
             </div>
           </div>
         </div>

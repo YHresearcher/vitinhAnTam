@@ -28,6 +28,11 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['footerAbout', 'footer_about'],
   ['footerCopyright', 'footer_copyright'],
   ['storeName', 'store_name'],
+  ['paymentQrUrl', 'payment_qr_url'],
+  ['bankName', 'bank_name'],
+  ['bankAccountNumber', 'bank_account_number'],
+  ['bankAccountName', 'bank_account_name'],
+  ['paymentQrNote', 'payment_qr_note'],
   ['botApiBaseUrl', 'bot_api_base_url'],
   ['zaloBotToken', 'zalo_bot_token'],
   ['zaloBotSecretToken', 'zalo_bot_secret_token'],
@@ -44,6 +49,24 @@ export function rowToSettings(row: Record<string, unknown>): SystemSettings {
   for (const [camel, snake] of FIELD_MAP) {
     if (row[snake] !== undefined && row[snake] !== null) {
       res[camel] = row[snake];
+    }
+  }
+  return res as unknown as SystemSettings;
+}
+
+export function mergeRowIntoSettings(base: SystemSettings, row: Record<string, unknown>): SystemSettings {
+  const res: Record<string, unknown> = { ...(base as unknown as Record<string, unknown>) };
+  const baseRecord = base as unknown as Record<string, unknown>;
+  for (const [camel, snake] of FIELD_MAP) {
+    if (row[snake] !== undefined && row[snake] !== null) {
+      if (typeof row[snake] === 'string') {
+        const str = (row[snake] as string).trim();
+        if (str !== '' || baseRecord[camel] === undefined) {
+          res[camel] = str;
+        }
+      } else {
+        res[camel] = row[snake];
+      }
     }
   }
   return res as unknown as SystemSettings;
@@ -77,29 +100,23 @@ function writeToFile(settings: SystemSettings): void {
 }
 
 export async function getStoredSettingsAsync(): Promise<SystemSettings> {
+  const base = memorySettings || readFromFile() || { ...initialSystemSettings };
   const sb = getServerSupabase();
   if (sb) {
     try {
       const { data, error } = await sb.from('system_settings').select('*').eq('id', 1).maybeSingle();
       if (!error && data) {
-        const fromDb = rowToSettings(data);
-        memorySettings = fromDb;
-        writeToFile(fromDb);
-        return fromDb;
+        const merged = mergeRowIntoSettings(base, data);
+        memorySettings = merged;
+        writeToFile(merged);
+        return merged;
       }
     } catch (err) {
       console.warn('Lỗi đọc system_settings từ Supabase:', err);
     }
   }
-  if (memorySettings) return memorySettings;
-  const fileSettings = readFromFile();
-  if (fileSettings) {
-    memorySettings = fileSettings;
-    return fileSettings;
-  }
-  const fallback = { ...initialSystemSettings };
-  memorySettings = fallback;
-  return fallback;
+  memorySettings = base;
+  return base;
 }
 
 export function getStoredSettings(): SystemSettings {
@@ -114,6 +131,50 @@ export function getStoredSettings(): SystemSettings {
   return fallback;
 }
 
+async function upsertSupabaseSettingsSafely(sb: ReturnType<typeof getServerSupabase>, payload: Record<string, unknown>): Promise<void> {
+  if (!sb) return;
+  try {
+    const rowPayload = { ...payload };
+    const { error } = await sb.from('system_settings').upsert({ id: 1, ...rowPayload });
+    if (!error) return;
+
+    // Nếu lỗi do cột mới chưa tồn tại trong schema cache Supabase (mã PGRST204)
+    if (error.code === 'PGRST204') {
+      const missingMatch = error.message.match(/Could not find the '([^']+)' column/);
+      if (missingMatch && missingMatch[1]) {
+        delete rowPayload[missingMatch[1]];
+      }
+
+      // Danh sách các cột lõi chắc chắn đã có trong DB
+      const CORE_DB_COLUMNS = new Set([
+        'brand_slogan', 'hotline', 'zalo_number', 'zalo_link', 'zalo_contacts',
+        'whatsapp_number', 'whatsapp_link', 'email', 'address', 'street_address',
+        'district', 'city', 'service_areas', 'working_hours_weekday', 'working_hours_weekend',
+        'prime_hours', 'footer_about', 'footer_copyright', 'store_name',
+        'bot_api_base_url', 'zalo_bot_token', 'zalo_bot_secret_token', 'zalo_default_chat_id',
+        'custom_webhook_url', 'notify_on_new_booking', 'notify_on_new_order',
+        'notify_on_new_ticket', 'notify_on_key_request'
+      ]);
+
+      const sanitized: Record<string, unknown> = { id: 1, updated_at: new Date().toISOString() };
+      for (const [k, v] of Object.entries(rowPayload)) {
+        if (CORE_DB_COLUMNS.has(k)) {
+          sanitized[k] = v;
+        }
+      }
+
+      const retryRes = await sb.from('system_settings').upsert(sanitized);
+      if (retryRes.error) {
+        console.error('Lỗi khi retry upsert system_settings:', retryRes.error.message);
+      }
+    } else {
+      console.error('Lỗi khi upsert system_settings lên Supabase:', error.message);
+    }
+  } catch (err) {
+    console.error('Lỗi kết nối Supabase khi lưu settings:', err);
+  }
+}
+
 export async function saveStoredSettingsAsync(data: Partial<SystemSettings>): Promise<SystemSettings> {
   const current = await getStoredSettingsAsync();
   const updated: SystemSettings = { ...current, ...data };
@@ -122,13 +183,8 @@ export async function saveStoredSettingsAsync(data: Partial<SystemSettings>): Pr
 
   const sb = getServerSupabase();
   if (sb) {
-    try {
-      const rowPayload = settingsToRow(updated);
-      const { error } = await sb.from('system_settings').upsert({ id: 1, ...rowPayload });
-      if (error) console.error('Lỗi khi upsert system_settings lên Supabase:', error.message);
-    } catch (err) {
-      console.error('Lỗi kết nối Supabase khi lưu settings:', err);
-    }
+    const rowPayload = settingsToRow(updated);
+    await upsertSupabaseSettingsSafely(sb, rowPayload);
   }
   return updated;
 }
@@ -142,11 +198,9 @@ export function saveStoredSettings(data: Partial<SystemSettings>): SystemSetting
   const sb = getServerSupabase();
   if (sb) {
     const rowPayload = settingsToRow(updated);
-    Promise.resolve(sb.from('system_settings').upsert({ id: 1, ...rowPayload }))
-      .then((res) => {
-        if (res.error) console.error('Lỗi background save Supabase settings:', res.error.message);
-      })
-      .catch((err: unknown) => console.error('Lỗi kết nối background Supabase settings:', err));
+    Promise.resolve(upsertSupabaseSettingsSafely(sb, rowPayload)).catch((err: unknown) =>
+      console.error('Lỗi background save Supabase settings:', err)
+    );
   }
   return updated;
 }

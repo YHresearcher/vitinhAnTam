@@ -63,6 +63,11 @@ CREATE TABLE IF NOT EXISTS system_settings (
   footer_about TEXT,
   footer_copyright TEXT,
   store_name TEXT,
+  payment_qr_url TEXT,
+  bank_name TEXT,
+  bank_account_number TEXT,
+  bank_account_name TEXT,
+  payment_qr_note TEXT,
   bot_api_base_url TEXT,
   zalo_bot_token TEXT,
   zalo_bot_secret_token TEXT,
@@ -76,6 +81,11 @@ CREATE TABLE IF NOT EXISTS system_settings (
 );
 
 -- Thêm các cột còn thiếu vào system_settings
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS payment_qr_url TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS bank_name TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS bank_account_number TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS bank_account_name TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS payment_qr_note TEXT;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS bot_api_base_url TEXT;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS zalo_bot_token TEXT;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS zalo_bot_secret_token TEXT;

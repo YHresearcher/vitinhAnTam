@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
+import { OrderSuccessQrCard } from '@/components/public/OrderSuccessQrCard';
 import {
   Check,
   ChevronRight,
@@ -16,6 +17,9 @@ import {
   ArrowLeft,
   Phone,
   ShieldCheck,
+  Copy,
+  Sparkles,
+  Building,
 } from 'lucide-react';
 
 // ------------------------------------------------------------------
@@ -53,6 +57,28 @@ export default function MuaHangClient() {
   const [orderCode] = useState(() => `#AT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, fieldId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldId);
+    setTimeout(() => {
+      setCopiedField(null);
+    }, 2000);
+  };
+
+  // QR Code Image Helper
+  const getQrImageUrl = () => {
+    if (systemSettings.paymentQrUrl?.trim()) {
+      return systemSettings.paymentQrUrl.trim();
+    }
+    const acc = systemSettings.bankAccountNumber?.trim() || '0909053058';
+    const bank = systemSettings.bankName?.trim() || 'MB Bank';
+    const name = systemSettings.bankAccountName?.trim() || 'VI TINH AN TAM';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(
+      `STK:${acc}|NH:${bank}|TEN:${name}|TIEN:${devicePrice}`
+    )}`;
+  };
 
   // Scroll to top on step change
   useEffect(() => {
@@ -188,10 +214,51 @@ export default function MuaHangClient() {
                     : 'Quét mã VietQR qua app ngân hàng, ví MoMo, ZaloPay. Xác nhận tức thì.'}
                 </p>
                 <div className="flex flex-wrap gap-1.5 mt-2">
-                  {['VietQR', 'MoMo', 'ZaloPay', 'BIDV', 'Vietcombank'].map((b) => (
+                  {['VietQR', 'MoMo', 'ZaloPay', 'BIDV', 'Vietcombank', 'MB Bank'].map((b) => (
                     <span key={b} className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium border border-slate-200">{b}</span>
                   ))}
                 </div>
+
+                {/* Thông tin tài khoản & QR Preview khi chọn QR */}
+                {paymentMethod === 'qr' && (
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 bg-[#FAF7F2] p-3 rounded-lg border border-[#E8E2D9] space-y-2.5">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1 bg-white rounded-lg border border-slate-200 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getQrImageUrl()}
+                          alt="QR Code Thanh toán"
+                          className="w-16 h-16 object-contain rounded"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 text-xs space-y-0.5">
+                        <div className="font-bold text-[#2B1810] flex items-center gap-1.5">
+                          <span>{systemSettings.bankName || 'MB Bank'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 font-mono font-bold text-[#C0392B]">
+                          <span>{systemSettings.bankAccountNumber || '0909053058'}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(systemSettings.bankAccountNumber || '0909053058', 'acc_step1');
+                            }}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-0.5 font-sans"
+                          >
+                            <Copy className="w-2.5 h-2.5" />
+                            <span>{copiedField === 'acc_step1' ? 'Đã chép' : 'Sao chép'}</span>
+                          </button>
+                        </div>
+                        <div className="text-[11px] text-[#6E5D53] font-semibold uppercase truncate">
+                          {systemSettings.bankAccountName || 'VI TINH AN TAM'}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-[#6E5D53] italic leading-tight">
+                      {systemSettings.paymentQrNote || 'Quét mã QR qua app ngân hàng để chuyển khoản thanh toán nhanh chóng.'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -263,7 +330,7 @@ export default function MuaHangClient() {
                   {deliveryMethod === 'pickup' && <Check className="w-4 h-4 text-[#C0392B]" />}
                 </div>
                 <p className="text-xs text-[#6E5D53] mt-1 leading-snug">
-                  {isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, p. Long An, tỉnh Tây Ninh'}
+                  {systemSettings.address || (isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, p. Long An, tỉnh Tây Ninh')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
@@ -429,7 +496,7 @@ export default function MuaHangClient() {
                     {isEn ? 'Payment' : 'Thanh toán'}
                   </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
-                    {paymentMethod === 'qr' && (isEn ? 'VietQR Code / Bank Transfer' : 'QR Code / Chuyển khoản')}
+                    {paymentMethod === 'qr' && (isEn ? `VietQR Code / Bank Transfer (${systemSettings.bankName || 'Bank'} - ${systemSettings.bankAccountNumber || ''})` : `QR Code / Chuyển khoản (${systemSettings.bankName || 'Ngân hàng'} - STK: ${systemSettings.bankAccountNumber || ''})`)}
                     {paymentMethod === 'cash' && (isEn ? 'Cash at Showroom' : 'Tiền mặt tại cửa hàng')}
                   </div>
                 </div>
@@ -445,7 +512,7 @@ export default function MuaHangClient() {
                     {isEn ? 'Delivery' : 'Nhận hàng'}
                   </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
-                    {deliveryMethod === 'pickup' && (isEn ? 'Showroom Pickup — 52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : 'Mua tại cửa hàng — 52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh')}
+                    {deliveryMethod === 'pickup' && (isEn ? `Showroom Pickup — ${systemSettings.address || '52 Nguyen Cuu Van, Long An Ward, Tay Ninh'}` : `Mua tại cửa hàng — ${systemSettings.address || '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh'}`)}
                     {deliveryMethod === 'delivery' && (
                       <>
                         <span>{isEn ? 'Doorstep Delivery' : 'Giao hàng tận nơi'}</span>
@@ -550,6 +617,20 @@ export default function MuaHangClient() {
                 )}
               </p>
             </div>
+
+            {/* Hiển thị mã QR thanh toán nếu chọn hình thức QR Code */}
+            {paymentMethod === 'qr' && (
+              <OrderSuccessQrCard
+                systemSettings={systemSettings}
+                devicePrice={devicePrice}
+                orderCode={orderCode}
+                customerPhone={customerPhone}
+                isEn={isEn}
+                copiedField={copiedField}
+                copyToClipboard={copyToClipboard}
+                getQrImageUrl={getQrImageUrl}
+              />
+            )}
 
             <div className="bg-[#FAF7F2] rounded-xl p-4 text-xs text-left space-y-2.5 border border-[#E8E2D9]">
               <div className="flex justify-between items-center border-b border-[#E8E2D9] pb-2">

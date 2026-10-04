@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { UserAccount } from '@/lib/supabase';
+import { PaymentQrSettingsSection } from '@/components/admin/PaymentQrSettingsSection';
 import Link from 'next/link';
 import {
   Tabs,
@@ -35,6 +36,10 @@ import {
   Copy,
   Bell,
   Zap,
+  QrCode,
+  Upload,
+  CreditCard,
+  Check,
 } from 'lucide-react';
 
 const { TextArea } = Input;
@@ -94,6 +99,42 @@ export default function CaiDatPage() {
   const [memberForPassword, setMemberForPassword] = useState<UserAccount | null>(null);
   const [memberNewPassword, setMemberNewPassword] = useState('');
   const [isChangingMemberPassword, setIsChangingMemberPassword] = useState(false);
+
+  // QR Code Upload State
+  const [isUploadingQr, setIsUploadingQr] = useState(false);
+
+  const handleUploadQrImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const bodyData = new FormData();
+    bodyData.append('file', file);
+    bodyData.append('folder', 'payment');
+    if (formData.paymentQrUrl) {
+      bodyData.append('oldUrl', formData.paymentQrUrl);
+    }
+
+    setIsUploadingQr(true);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: bodyData,
+      });
+      const json = await res.json();
+      if (json.success && json.url) {
+        handleChange('paymentQrUrl', json.url);
+        message.success('Đã tải lên ảnh mã QR thanh toán thành công!');
+      } else {
+        message.error(json.message || 'Không thể tải lên hình ảnh.');
+      }
+    } catch (err) {
+      console.error(err);
+      message.error('Lỗi khi tải ảnh lên máy chủ.');
+    } finally {
+      setIsUploadingQr(false);
+      e.target.value = '';
+    }
+  };
 
   // Webhook & Zalo Bot states
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
@@ -319,9 +360,14 @@ export default function CaiDatPage() {
         : formData.whatsappLink,
     };
 
-    await updateSystemSettings(payload);
+    const success = await updateSystemSettings(payload);
     setIsSaving(false);
-    message.success('Đã lưu cấu hình hệ thống thành công!');
+    if (success) {
+      setFormDataOverride(null);
+      message.success('Đã lưu cấu hình hệ thống & Zalo Bot thành công!');
+    } else {
+      message.error('Lỗi khi lưu cấu hình lên máy chủ/Supabase. Vui lòng kiểm tra lại quyền truy cập!');
+    }
   };
 
   const handleResetDefaults = () => {
@@ -946,6 +992,14 @@ export default function CaiDatPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Nhóm 4: Mã QR Thanh Toán & Tài Khoản Ngân Hàng */}
+                  <PaymentQrSettingsSection
+                    formData={formData}
+                    handleChange={handleChange}
+                    isUploadingQr={isUploadingQr}
+                    handleUploadQrImage={handleUploadQrImage}
+                  />
 
                   {/* Nút lưu */}
                   <div className="pt-4 border-t border-slate-200 flex justify-end">
