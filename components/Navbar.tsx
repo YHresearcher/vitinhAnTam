@@ -84,6 +84,17 @@ export function Navbar() {
             {t.services}
           </Link>
           <Link
+            href="/tin-tuc"
+            aria-current={pathname.startsWith('/tin-tuc') ? 'page' : undefined}
+            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
+              pathname.startsWith('/tin-tuc')
+                ? 'bg-[#FBE8DE] text-[#C0392B]'
+                : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
+            }`}
+          >
+            {isEn ? 'Tech Blog' : 'Tin tức'}
+          </Link>
+          <Link
             href="/#chinh-sach"
             onClick={(e) => handleScrollToAnchor(e, 'chinh-sach')}
             className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
@@ -236,6 +247,15 @@ export function Navbar() {
             className="block px-3.5 py-2.5 text-base font-bold text-[#2B1810] hover:bg-[#F4EFEA] rounded-lg"
           >
             {t.services}
+          </Link>
+          <Link
+            href="/tin-tuc"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`block px-3.5 py-2.5 text-base font-bold rounded-lg ${
+              pathname.startsWith('/tin-tuc') ? 'bg-[#FBE8DE] text-[#C0392B]' : 'text-[#2B1810] hover:bg-[#F4EFEA]'
+            }`}
+          >
+            {isEn ? 'Tech Blog' : 'Tin tức & Thủ thuật'}
           </Link>
           <Link
             href="/#chinh-sach"

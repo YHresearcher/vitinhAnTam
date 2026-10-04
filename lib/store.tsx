@@ -20,6 +20,10 @@ import {
   KeyReleaseRequest,
   KeyEmailTemplateConfig,
   WarrantyProvision,
+  BlogPost,
+  BlogCategory,
+  MOCK_BLOG_POSTS,
+  MOCK_BLOG_CATEGORIES,
   createId,
   isUuid,
 } from './supabase';
@@ -290,6 +294,16 @@ interface StoreContextType {
   unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
   settleUnlockedWarrantyProvisionsYearEnd: () => Promise<{ settledCount: number; settledTotal: number }>;
 
+  // Blog & SEO Content System
+  blogPosts: BlogPost[];
+  blogCategories: BlogCategory[];
+  addBlogPost: (post: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>) => Promise<BlogPost>;
+  updateBlogPost: (id: string, data: Partial<BlogPost>) => Promise<boolean>;
+  deleteBlogPost: (id: string) => Promise<boolean>;
+  addBlogCategory: (cat: Omit<BlogCategory, 'id' | 'created_at'>) => Promise<BlogCategory>;
+  updateBlogCategory: (id: string, data: Partial<BlogCategory>) => Promise<boolean>;
+  deleteBlogCategory: (id: string) => Promise<boolean>;
+
   // Reset
   resetToDefault: () => void;
 }
@@ -315,6 +329,8 @@ const STORAGE_KEYS = {
   keyReleaseRequests: 'vtat_key_release_requests_v3',
   keyEmailTemplate: 'vtat_key_email_template_v3',
   warrantyProvisions: 'vtat_warranty_provisions_v3',
+  blogPosts: 'vtat_blog_posts_v3',
+  blogCategories: 'vtat_blog_categories_v3',
 };
 
 export function StoreProvider({
@@ -339,6 +355,8 @@ export function StoreProvider({
   const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>(initialSoftwareLicenses);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(MOCK_BLOG_CATEGORIES);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
     if (initialSettings && typeof initialSettings === 'object') {
       return { ...initialSystemSettings, ...initialSettings };
@@ -896,6 +914,8 @@ export function StoreProvider({
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
         readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
+        readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, setBlogPosts);
+        readJson<BlogCategory[]>(STORAGE_KEYS.blogCategories, setBlogCategories);
 
         readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
           setSystemSettings((prev) => ({ ...prev, ...parsed }));
@@ -994,6 +1014,8 @@ export function StoreProvider({
         spResult,
         onsResult,
         shfResult,
+        blogPostResult,
+        blogCatResult,
       ] = await Promise.all([
         supabase.from('inventory_items').select('*'),
         supabase.from('customers').select('*'),
@@ -1001,6 +1023,8 @@ export function StoreProvider({
         supabase.from('spare_parts').select('*'),
         supabase.from('onsite_dispatches').select('*'),
         supabase.from('shift_logs').select('*'),
+        supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
+        supabase.from('blog_categories').select('*'),
       ]);
 
       const failures = [invResult, cusResult, tckResult, spResult, onsResult, shfResult].flatMap(
@@ -1023,6 +1047,12 @@ export function StoreProvider({
       if (spData.length > 0) setSpareParts(spData as SparePart[]);
       if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
       if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
+      if (blogPostResult.data && blogPostResult.data.length > 0) {
+        setBlogPosts(blogPostResult.data as BlogPost[]);
+      }
+      if (blogCatResult.data && blogCatResult.data.length > 0) {
+        setBlogCategories(blogCatResult.data as BlogCategory[]);
+      }
 
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
       setSyncStatus('synced');
@@ -2486,6 +2516,133 @@ export function StoreProvider({
     return true;
   };
 
+  // Blog Posts & Categories CRUD
+  const addBlogPost = async (postData: Omit<BlogPost, 'id' | 'created_at' | 'updated_at'>): Promise<BlogPost> => {
+    const newPost: BlogPost = {
+      ...postData,
+      id: createId(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    setBlogPosts((prev) => {
+      const next = [newPost, ...prev];
+      saveToLocal(STORAGE_KEYS.blogPosts, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_posts').insert(newPost);
+      } catch (err) {
+        console.error('Failed to sync new blog post to Supabase:', err);
+      }
+    }
+
+    return newPost;
+  };
+
+  const updateBlogPost = async (id: string, data: Partial<BlogPost>): Promise<boolean> => {
+    const updatedFields = {
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
+
+    setBlogPosts((prev) => {
+      const next = prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p));
+      saveToLocal(STORAGE_KEYS.blogPosts, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_posts').update(updatedFields).eq('id', id);
+      } catch (err) {
+        console.error('Failed to update blog post on Supabase:', err);
+      }
+    }
+
+    return true;
+  };
+
+  const deleteBlogPost = async (id: string): Promise<boolean> => {
+    setBlogPosts((prev) => {
+      const next = prev.filter((p) => p.id !== id);
+      saveToLocal(STORAGE_KEYS.blogPosts, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_posts').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete blog post on Supabase:', err);
+      }
+    }
+
+    return true;
+  };
+
+  const addBlogCategory = async (catData: Omit<BlogCategory, 'id' | 'created_at'>): Promise<BlogCategory> => {
+    const newCat: BlogCategory = {
+      ...catData,
+      id: createId(),
+      created_at: new Date().toISOString(),
+    };
+
+    setBlogCategories((prev) => {
+      const next = [...prev, newCat];
+      saveToLocal(STORAGE_KEYS.blogCategories, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_categories').insert(newCat);
+      } catch (err) {
+        console.error('Failed to insert blog category into Supabase:', err);
+      }
+    }
+
+    return newCat;
+  };
+
+  const updateBlogCategory = async (id: string, data: Partial<BlogCategory>): Promise<boolean> => {
+    setBlogCategories((prev) => {
+      const next = prev.map((c) => (c.id === id ? { ...c, ...data } : c));
+      saveToLocal(STORAGE_KEYS.blogCategories, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_categories').update(data).eq('id', id);
+      } catch (err) {
+        console.error('Failed to update blog category on Supabase:', err);
+      }
+    }
+
+    return true;
+  };
+
+  const deleteBlogCategory = async (id: string): Promise<boolean> => {
+    setBlogCategories((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      saveToLocal(STORAGE_KEYS.blogCategories, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('blog_categories').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete blog category from Supabase:', err);
+      }
+    }
+
+    return true;
+  };
+
   const resetToDefault = () => {
     setUsers(initialUsers);
     setCurrentUser(initialUsers[0]);
@@ -2499,6 +2656,8 @@ export function StoreProvider({
     setFaqs(initialFaqs);
     setReviews(initialCustomerReviews);
     setWarrantyProvisions(initialWarrantyProvisions);
+    setBlogPosts(MOCK_BLOG_POSTS);
+    setBlogCategories(MOCK_BLOG_CATEGORIES);
     if (typeof window !== 'undefined') {
       localStorage.removeItem(STORAGE_KEYS.users);
       localStorage.removeItem(STORAGE_KEYS.userId);
@@ -2512,6 +2671,8 @@ export function StoreProvider({
       localStorage.removeItem(STORAGE_KEYS.faqs);
       localStorage.removeItem(STORAGE_KEYS.reviews);
       localStorage.removeItem(STORAGE_KEYS.warrantyProvisions);
+      localStorage.removeItem(STORAGE_KEYS.blogPosts);
+      localStorage.removeItem(STORAGE_KEYS.blogCategories);
     }
   };
 
@@ -2596,6 +2757,14 @@ export function StoreProvider({
       reviews,
       addReview,
       deleteReview,
+      blogPosts,
+      blogCategories,
+      addBlogPost,
+      updateBlogPost,
+      deleteBlogPost,
+      addBlogCategory,
+      updateBlogCategory,
+      deleteBlogCategory,
       isUsingSupabase,
       isLoading,
       syncStatus,
@@ -2639,6 +2808,8 @@ export function StoreProvider({
       shiftLogs,
       faqs,
       reviews,
+      blogPosts,
+      blogCategories,
       isUsingSupabase,
       isLoading,
       syncStatus,

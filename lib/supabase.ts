@@ -523,3 +523,118 @@ export const formatDateVN = (dateInput: string | Date | undefined | null): strin
   const year = d.getFullYear();
   return day + '/' + month + '/' + year;
 };
+
+// ==========================================
+// BLOG & AGENTIC AI CONTENT TYPES
+// ==========================================
+
+export interface BlogCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at?: string;
+}
+
+export interface FaqSchemaItem {
+  question: string;
+  answer: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt?: string;
+  content: string; // Clean HTML
+  content_json?: Record<string, unknown>; // Tiptap JSON AST
+  cover_image?: string;
+  category_id?: string;
+  category?: BlogCategory;
+  tags: string[];
+  author_id?: string;
+  author_name: string;
+  status: 'draft' | 'published' | 'archived';
+  
+  // SEO & Schema
+  meta_title?: string;
+  meta_description?: string;
+  focus_keyword?: string;
+  faq_schema?: FaqSchemaItem[];
+  
+  // Reading metrics
+  reading_time_minutes: number;
+  word_count: number;
+  
+  // Business Grounding & CRO
+  related_inventory_ids?: string[];
+  service_cta_type?: 'spa_laptop' | 'cai_win' | 'cuu_du_lieu' | 'none' | string;
+  
+  view_count: number;
+  published_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const MOCK_BLOG_CATEGORIES: BlogCategory[] = [
+  {
+    id: 'cat-1',
+    name: 'Thủ thuật & Hướng dẫn',
+    slug: 'thu-thuat-huong-dan',
+    description: 'Mẹo sử dụng máy tính, khắc phục lỗi hệ điều hành và tối ưu hiệu suất',
+  },
+  {
+    id: 'cat-2',
+    name: 'Đánh giá phần cứng & Laptop',
+    slug: 'danh-gia-phan-cung',
+    description: 'Phân tích chi tiết các dòng máy tính xách tay, linh kiện PC và phụ kiện',
+  },
+  {
+    id: 'cat-3',
+    name: 'Kinh nghiệm sửa chữa',
+    slug: 'kinh-nghiem-sua-chua',
+    description: 'Chia sẻ kỹ thuật chẩn đoán và khắc phục sự cố phần cứng, cứu hộ dữ liệu',
+  },
+  {
+    id: 'cat-4',
+    name: 'Tin tức công nghệ',
+    slug: 'tin-tuc-cong-nghe',
+    description: 'Cập nhật xu hướng công nghệ mới, bảo mật thông tin và giải pháp doanh nghiệp',
+  },
+];
+
+export const MOCK_BLOG_POSTS: BlogPost[] = [
+  {
+    id: 'post-1',
+    title: '5 Dấu hiệu Laptop cần vệ sinh tra keo tản nhiệt gấp trước khi hỏng mainboard',
+    slug: '5-dau-hieu-laptop-can-ve-sinh-tra-keo-tan-nhiet',
+    excerpt: 'Laptop quá nhiệt, quạt kêu to, sập nguồn đột ngột là những dấu hiệu cảnh báo laptop của bạn đang bị khô keo tản nhiệt và nghẽn bụi bẩn.',
+    content: `<h2>Vì sao laptop cần được vệ sinh và tra keo tản nhiệt định kỳ?</h2><p>Sau 6 - 12 tháng sử dụng, bụi bẩn trong không khí sẽ bám dày đặc vào các khe tản nhiệt và cánh quạt của laptop. Đồng thời lớp keo tản nhiệt dẫn nhiệt từ CPU/GPU ra ống đồng sẽ bị khô cứng, mất khả năng truyền nhiệt.</p><h3>1. Máy nóng ran vùng bàn phím và chiếu nghỉ tay</h3><p>Khi bạn chạm vào phần chiếu nghỉ tay hoặc đáy máy và cảm thấy nóng rát bất thường chỉ sau 15-20 phút mở máy, nhiệt độ CPU lúc này có thể đã vượt quá 85°C.</p><h3>2. Quạt tản nhiệt quay rú to liên tục</h3><p>Hệ thống điều khiển quạt tự động tăng tốc độ vòng quay tối đa để đẩy nhiệt lượng ra ngoài. Nếu quạt kêu to mà luồng gió thổi ra ở khe thoát gió lại rất yếu hoặc lạnh ngắt, chứng tỏ khe tản nhiệt đã bị bít kín bởi lớp "thảm bụi".</p><h3>3. Máy bị đơ giật (Thermal Throttling) và sập nguồn đột ngột</h3><p>Để bảo vệ chip xử lý không bị cháy, CPU/GPU sẽ tự động hạ xung nhịp (Thermal Throttling) khiến máy giật lag. Nếu nhiệt độ vượt ngưỡng an toàn (thường là 95°C - 100°C), máy tính sẽ tự tắt ngóm để chống cháy mạch.</p><h2>Quy trình Spa Laptop 12 bước chuyên sâu tại Vi Tính An Tâm</h2><p>Tại <strong>Vi Tính An Tâm</strong>, quy trình vệ sinh laptop được thực hiện công khai, sử dụng keo tản nhiệt cao cấp (Noctua NT-H1 / MX-4 / Thermal Grizzly) giúp giảm từ 15°C đến 25°C ngay sau khi hoàn thành.</p>`,
+    category_id: 'cat-1',
+    tags: ['Vệ sinh laptop', 'Keo tản nhiệt', 'Thủ thuật máy tính'],
+    author_id: 'u-tech-1',
+    author_name: 'Kỹ thuật viên Vi Tính An Tâm',
+    status: 'published',
+    meta_title: '5 Dấu hiệu Laptop cần vệ sinh tra keo tản nhiệt gấp | Vi Tính An Tâm',
+    meta_description: 'Laptop quá nhiệt, quạt kêu to, tự sập nguồn? Xem ngay 5 dấu hiệu cần vệ sinh tra keo tản nhiệt cho laptop và quy trình chuẩn kỹ thuật tại Vi Tính An Tâm.',
+    focus_keyword: 'vệ sinh laptop',
+    faq_schema: [
+      {
+        question: 'Bao lâu thì nên vệ sinh laptop một lần?',
+        answer: 'Thời gian lý tưởng là từ 6 đến 9 tháng/lần đối với người dùng văn phòng, và 4 đến 6 tháng/lần đối với người làm đồ họa, chơi game hoặc làm việc trong môi trường nhiều bụi.',
+      },
+      {
+        question: 'Vi Tính An Tâm sử dụng loại keo tản nhiệt nào?',
+        answer: 'Chúng tôi sử dụng 100% keo tản nhiệt chính hãng cao cấp như Arctic MX-4, Noctua NT-H1 hoặc Thermal Grizzly Kryonaut cho hiệu năng dẫn nhiệt tối ưu.',
+      },
+    ],
+    reading_time_minutes: 4,
+    word_count: 850,
+    service_cta_type: 'spa_laptop',
+    view_count: 1420,
+    published_at: '2026-03-15T08:00:00Z',
+    created_at: '2026-03-15T08:00:00Z',
+    updated_at: '2026-03-15T08:00:00Z',
+  },
+];
+

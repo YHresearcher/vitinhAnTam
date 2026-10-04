@@ -16,6 +16,7 @@ import {
   FileSpreadsheet,
   UserCog,
   Sliders,
+  FileText,
   ExternalLink,
   ShieldCheck,
   LogOut,
@@ -123,6 +124,14 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: Truck,
         badge: pendingDispatchesCount > 0 ? `${pendingDispatchesCount}` : null,
         badgeColor: 'bg-amber-100 text-amber-900 font-mono font-bold',
+        visible: true,
+      },
+      {
+        label: 'Bài viết & SEO',
+        href: '/bai-viet',
+        icon: FileText,
+        badge: null,
+        badgeColor: '',
         visible: true,
       },
       {
