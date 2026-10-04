@@ -12,7 +12,7 @@ export default function MemberManagementPage() {
     currentUser,
     users,
     updateUser,
-    changeUserPassword,
+    resetUserPassword,
     addUser,
     deleteUser,
     canManageUsers,
@@ -24,61 +24,64 @@ export default function MemberManagementPage() {
 
   // Modal States
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null);
-  const [editUserPassword, setEditUserPassword] = useState('');
-  const [passwordModalUser, setPasswordModalUser] = useState<UserAccount | null>(null);
-  const [newPassword, setNewPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [resetModalUser, setResetModalUser] = useState<UserAccount | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
 
   // New User Form State
   const [newUserForm, setNewUserForm] = useState({
     name: '',
+    username: '',
     email: '',
     phone: '',
     role: 'technician' as UserRole,
-    password: '',
     roleTitle: '',
   });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Generate random secure password
-  const handleGeneratePassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
-    let res = '';
-    for (let i = 0; i < 8; i++) {
-      res += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setNewPassword(res);
-    setShowPassword(true);
-  };
-
-  // Save Password Change
-  const handleSavePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!passwordModalUser) return;
-    if (!newPassword.trim() || newPassword.trim().length < 4) {
-      showToast('Mật khẩu phải có tối thiểu 4 ký tự!');
-      return;
-    }
-
-    const result = await changeUserPassword(passwordModalUser.id, newPassword.trim());
-    if (result.ok) {
-      showToast(`Đã cập nhật mật khẩu thành công cho ${passwordModalUser.name}!`);
-      setPasswordModalUser(null);
-      setNewPassword('');
-    } else {
-      showToast(result.message || 'Có lỗi xảy ra khi cập nhật mật khẩu.');
+  // Trigger Reset Password to Default 'Antam@2026'
+  const handleConfirmResetPassword = async () => {
+    if (!resetModalUser) return;
+    setIsResetting(true);
+    try {
+      const res = await resetUserPassword(resetModalUser.id);
+      if (res.ok) {
+        showToast(
+          res.message ||
+            `Đã reset mật khẩu của ${resetModalUser.name} về mặc định "Antam@2026" (yêu cầu đổi mật khẩu ở lần đăng nhập tới)!`
+        );
+        setResetModalUser(null);
+      } else {
+        showToast(res.message || 'Không thể reset mật khẩu.');
+      }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Lỗi khi reset mật khẩu.');
+    } finally {
+      setIsResetting(false);
     }
   };
 
-  // Save Member Profile & Role
+  // Save Member Profile & Role (including Username)
   const handleSaveEditUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
+
+    const cleanUsername = (editingUser.username || '').trim().toLowerCase();
+    if (cleanUsername && !/^[a-z0-9_.-]+$/.test(cleanUsername)) {
+      showToast('Tên đăng nhập chỉ gồm chữ cái viết thường, số, dấu gạch dưới hoặc gạch ngang!');
+      return;
+    }
+
+    if (!editingUser.email.trim()) {
+      showToast('Vui lòng nhập email hợp lệ!');
+      return;
+    }
 
     let defaultTitle = editingUser.roleTitle;
     let avatarBg = editingUser.avatarBg;
@@ -103,9 +106,10 @@ export default function MemberManagementPage() {
     }
 
     const updatePayload: Partial<UserAccount> = {
-      name: editingUser.name,
-      email: editingUser.email.trim(),
-      phone: editingUser.phone,
+      name: editingUser.name.trim(),
+      username: cleanUsername || undefined,
+      email: editingUser.email.trim().toLowerCase(),
+      phone: editingUser.phone?.trim() || '',
       role: editingUser.role,
       roleTitle: defaultTitle,
       avatarBg,
@@ -113,20 +117,19 @@ export default function MemberManagementPage() {
       permissions: editingUser.permissions,
     };
 
-    if (editUserPassword.trim()) {
-      if (editUserPassword.trim().length < 4) {
-        showToast('Mật khẩu mới phải có tối thiểu 4 ký tự!');
-        return;
+    setIsSubmittingEdit(true);
+    try {
+      const ok = await updateUser(editingUser.id, updatePayload);
+      if (ok) {
+        showToast(`Đã lưu thay đổi thông tin thành viên ${editingUser.name}!`);
+        setEditingUser(null);
+      } else {
+        showToast('Không thể cập nhật thành viên. Vui lòng kiểm tra lại tên đăng nhập hoặc email!');
       }
-      updatePayload.password = editUserPassword.trim();
-    }
-
-    const ok = await updateUser(editingUser.id, updatePayload);
-
-    if (ok) {
-      showToast(`Đã lưu thay đổi thông tin thành viên ${editingUser.name}!`);
-      setEditingUser(null);
-      setEditUserPassword('');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Lỗi khi cập nhật thành viên.');
+    } finally {
+      setIsSubmittingEdit(false);
     }
   };
 
@@ -138,11 +141,16 @@ export default function MemberManagementPage() {
       return;
     }
 
-    const pwd = newUserForm.password.trim();
-    if (!pwd || pwd.length < 4) {
-      showToast('Vui lòng nhập mật khẩu khởi tạo tối thiểu 4 ký tự!');
+    let finalUsername = newUserForm.username.trim().toLowerCase();
+    if (!finalUsername) {
+      finalUsername = newUserForm.email.split('@')[0].trim().toLowerCase();
+    }
+
+    if (!/^[a-z0-9_.-]+$/.test(finalUsername)) {
+      showToast('Tên đăng nhập chỉ gồm chữ cái, số, dấu gạch nối!');
       return;
     }
+
     let defaultTitle = newUserForm.roleTitle.trim();
     let avatarBg = 'bg-blue-600';
 
@@ -166,49 +174,56 @@ export default function MemberManagementPage() {
       avatarBg = 'bg-purple-600';
     }
 
-    await addUser({
-      username: newUserForm.email.trim().split('@')[0],
-      name: newUserForm.name.trim(),
-      email: newUserForm.email.trim(),
-      phone: newUserForm.phone.trim() || '0909.053.058',
-      role: newUserForm.role,
-      roleTitle: defaultTitle,
-      password: pwd,
-      avatarBg,
-      status: 'active',
-      permissions: {
-        can_edit_stock: newUserForm.role === 'admin' || newUserForm.role === 'tech_manager',
-        can_update_repair_status:
-          newUserForm.role === 'admin' ||
-          newUserForm.role === 'tech_manager' ||
-          newUserForm.role === 'technician' ||
-          newUserForm.role === 'outsourced',
-        can_access_payroll:
-          newUserForm.role === 'admin' ||
-          newUserForm.role === 'tech_manager' ||
-          newUserForm.role === 'sales_manager',
-        can_manage_users: newUserForm.role === 'admin',
-      },
-    });
+    setIsSubmittingAdd(true);
+    try {
+      await addUser({
+        username: finalUsername,
+        name: newUserForm.name.trim(),
+        email: newUserForm.email.trim().toLowerCase(),
+        phone: newUserForm.phone.trim() || '0909.053.058',
+        role: newUserForm.role,
+        roleTitle: defaultTitle,
+        avatarBg,
+        status: 'active',
+        password_changed: false,
+        permissions: {
+          can_edit_stock: newUserForm.role === 'admin' || newUserForm.role === 'tech_manager',
+          can_update_repair_status:
+            newUserForm.role === 'admin' ||
+            newUserForm.role === 'tech_manager' ||
+            newUserForm.role === 'technician' ||
+            newUserForm.role === 'outsourced',
+          can_access_payroll:
+            newUserForm.role === 'admin' ||
+            newUserForm.role === 'tech_manager' ||
+            newUserForm.role === 'sales_manager',
+          can_manage_users: newUserForm.role === 'admin',
+        },
+      });
 
-    showToast(`Đã thêm thành viên mới: ${newUserForm.name.trim()} (${defaultTitle})!`);
-    setIsAddingUser(false);
-    setNewUserForm({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'technician',
-      password: '',
-      roleTitle: '',
-    });
+      showToast(`Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mật khẩu mặc định: Antam@2026)!`);
+      setIsAddingUser(false);
+      setNewUserForm({
+        name: '',
+        username: '',
+        email: '',
+        phone: '',
+        role: 'technician',
+        roleTitle: '',
+      });
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Có lỗi khi tạo thành viên mới.');
+    } finally {
+      setIsSubmittingAdd(false);
+    }
   };
 
   // Delete User
   const handleDeleteUser = async (id: string, name: string) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa thành viên ${name} khỏi hệ thống không?`)) {
+    if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${name}" khỏi hệ thống không?`)) {
       const ok = await deleteUser(id);
       if (ok) {
-        showToast(`Đã xóa thành viên ${name} thành công!`);
+        showToast(`Đã xóa thành viên "${name}" thành công!`);
       } else {
         showToast('Không thể xóa tài khoản của chính bạn!');
       }
@@ -219,8 +234,9 @@ export default function MemberManagementPage() {
   const filteredUsers = users.filter((u) => {
     const matchesSearch =
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (u.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.phone.includes(searchQuery);
+      (u.phone || '').includes(searchQuery);
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
     return matchesSearch && matchesRole;
   });
@@ -228,7 +244,7 @@ export default function MemberManagementPage() {
   const adminCount = users.filter((u) => u.role === 'admin').length;
   const techCount = users.filter((u) => u.role === 'technician').length;
   const outsourcedCount = users.filter((u) => u.role === 'outsourced').length;
-  const salesCount = users.filter((u) => u.role === 'sales').length;
+  const salesCount = users.filter((u) => u.role === 'sales' || u.role === 'sales_manager').length;
 
   // Access check
   if (!canManageUsers()) {
@@ -413,106 +429,103 @@ export default function MemberManagementPage() {
                   </span>
                 </div>
 
-                {/* Contact & Status details */}
-                <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Tài khoản:</span>
-                    <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.2 rounded">@{member.username || member.email.split('@')[0]}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Email:</span>
-                    <span className="font-mono font-medium text-slate-900">{member.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Số điện thoại:</span>
-                    <span className="font-medium text-slate-900">{member.phone}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Mật khẩu:</span>
-                    <span className="font-mono font-bold text-blue-600">••••••</span>
-                  </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                    <span className="text-slate-400">Trạng thái:</span>
-                    <span
-                      className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
-                        member.status === 'active' ? 'text-emerald-600' : 'text-slate-400'
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          member.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'
-                        }`}
-                      />
-                      {member.status === 'active' ? 'Đang hoạt động' : 'Tạm khóa'}
+                {/* Account Details: Username & Email separate */}
+                <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
+                  {/* Separate Username */}
+                  <div className="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                    <span className="text-slate-500 text-[11px] font-medium">Tên đăng nhập:</span>
+                    <span className="font-mono font-bold text-blue-700">
+                      @{member.username || member.email.split('@')[0]}
                     </span>
+                  </div>
+
+                  {/* Separate Email */}
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-slate-500 text-[11px]">Email liên hệ:</span>
+                    <span className="font-mono text-slate-700 truncate max-w-[180px]" title={member.email}>
+                      {member.email}
+                    </span>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-slate-500 text-[11px]">Số điện thoại:</span>
+                    <span className="font-mono text-slate-700">{member.phone || 'Chưa cập nhật'}</span>
+                  </div>
+
+                  {/* Password Status Banner */}
+                  <div className="pt-1">
+                    {member.password_changed === false ? (
+                      <div className="px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium flex items-center justify-between">
+                        <span>⚠️ Mật khẩu: Antam@2026</span>
+                        <span className="font-bold text-[10px] text-amber-900 uppercase">Chưa đổi</span>
+                      </div>
+                    ) : (
+                      <div className="px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-medium flex items-center justify-between">
+                        <span>🔒 Mật khẩu cá nhân</span>
+                        <span className="font-bold text-[10px] text-emerald-900 uppercase">Đã kích hoạt</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Permissions pills */}
-                <div className="flex flex-wrap gap-1 text-[10px]">
+                {/* Permissions Indicators */}
+                <div className="mt-3 flex flex-wrap gap-1">
                   {member.permissions?.can_edit_stock && (
-                    <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-medium border border-blue-100">
-                      ✓ Sửa tồn kho
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold">
+                      Kho hàng
                     </span>
                   )}
                   {member.permissions?.can_update_repair_status && (
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-medium border border-emerald-100">
-                      ✓ Đổi trạng thái phiếu
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold">
+                      Phiếu sửa
                     </span>
                   )}
                   {member.permissions?.can_access_payroll && (
-                    <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-medium border border-amber-100">
-                      ✓ Xem tiền công
+                    <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-semibold">
+                      Lương &amp; Báo cáo
                     </span>
                   )}
                   {member.permissions?.can_manage_users && (
-                    <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-medium border border-indigo-100">
-                      ✓ Quản lý thành viên
+                    <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold">
+                      Quản lý tài khoản
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 flex-1">
-                  {/* Edit Profile & Role */}
+              <div className="mt-5 pt-3 border-t border-slate-100 space-y-2">
+                <div className="flex items-center gap-2">
+                  {/* Edit Profile & Username */}
                   <button
-                    onClick={() => {
-                      setEditingUser(member);
-                      setEditUserPassword('');
-                    }}
-                    className="flex-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold flex items-center justify-center border border-blue-200 transition-colors"
+                    onClick={() => setEditingUser(member)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center border border-blue-200 transition-colors"
                   >
-                    <span>Sửa thông tin</span>
+                    Sửa thông tin
                   </button>
 
-                  {/* Change Password */}
+                  {/* Reset Password to Default Antam@2026 */}
                   <button
-                    onClick={() => {
-                      setPasswordModalUser(member);
-                      setNewPassword('');
-                      setShowPassword(false);
-                    }}
-                    className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 text-slate-700 text-xs font-semibold flex items-center justify-center border border-slate-200 transition-colors"
-                    title="Đổi mật khẩu cho thành viên này"
+                    onClick={() => setResetModalUser(member)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold flex items-center justify-center border border-amber-200 transition-colors"
+                    title="Reset mật khẩu về mặc định Antam@2026"
                   >
-                    <span>Mật khẩu</span>
+                    Reset Mật Khẩu
                   </button>
                 </div>
 
-                {/* Đã gỡ nút "Chuyển ca": chuyển phiên sang tài khoản khác mà không cần mật khẩu
-                    là lỗ hổng leo thang quyền (escalation). Muốn đổi vai trò -> đăng xuất, đăng nhập lại. */}
-
                 {/* Delete button (cannot delete self) */}
                 {!isMe && (
-                  <button
-                    onClick={() => handleDeleteUser(member.id, member.name)}
-                    className="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium rounded transition-colors"
-                    title="Xóa thành viên"
-                  >
-                    Xóa
-                  </button>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleDeleteUser(member.id, member.name)}
+                      className="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium rounded transition-colors"
+                      title="Xóa tài khoản"
+                    >
+                      Xóa tài khoản
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -520,84 +533,72 @@ export default function MemberManagementPage() {
         })}
       </div>
 
-      {/* MODAL 1: CHANGE / RESET PASSWORD */}
-      {passwordModalUser && (
+      {/* MODAL 1: RESET PASSWORD CONFIRMATION */}
+      {resetModalUser && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-5 animate-scale-up">
             <div className="flex items-start justify-between pb-3 border-b border-slate-100">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Đổi / Đặt Lại Mật Khẩu</h2>
+                <h2 className="text-base font-bold text-slate-900">Reset Mật Khẩu Thành Viên</h2>
                 <p className="text-xs text-slate-500">
-                  Áp dụng cho: <strong className="text-slate-900">{passwordModalUser.name}</strong>
+                  Tài khoản: <strong className="text-slate-900">{resetModalUser.name}</strong>
                 </p>
               </div>
               <button
-                onClick={() => setPasswordModalUser(null)}
+                onClick={() => setResetModalUser(null)}
                 className="text-slate-400 hover:text-slate-600 px-2 py-1 text-xs font-semibold rounded-lg hover:bg-slate-100"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSavePassword} className="space-y-4">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
-                <div className="flex justify-between text-slate-500">
-                  <span>Email đăng nhập:</span>
-                  <span className="font-mono font-bold text-slate-900">{passwordModalUser.email}</span>
+            <div className="space-y-3 text-xs">
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Tên đăng nhập:</span>
+                  <span className="font-mono font-bold text-blue-700">
+                    @{resetModalUser.username || resetModalUser.email.split('@')[0]}
+                  </span>
                 </div>
-                <div className="flex justify-between text-slate-500">
-                  <span>Vai trò tài khoản:</span>
-                  <span className="font-semibold text-blue-700 uppercase">{passwordModalUser.role}</span>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Email:</span>
+                  <span className="font-mono text-slate-800">{resetModalUser.email}</span>
                 </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-bold text-slate-700">Mật Khẩu Mới</label>
-                  <button
-                    type="button"
-                    onClick={handleGeneratePassword}
-                    className="text-[11px] text-blue-600 hover:text-blue-800 font-bold hover:underline"
-                  >
-                    Tạo ngẫu nhiên
-                  </button>
-                </div>
-
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)..."
-                    className="w-full pl-3.5 pr-12 py-2.5 text-xs sm:text-sm rounded-xl bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-semibold"
-                  >
-                    {showPassword ? 'Ẩn' : 'Hiện'}
-                  </button>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Vai trò:</span>
+                  <span className="font-bold text-slate-800 uppercase">{resetModalUser.role}</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setPasswordModalUser(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
-                >
-                  Hủy Bỏ
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all"
-                >
-                  Lưu Mật Khẩu
-                </button>
+              <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
+                <div className="font-bold flex items-center gap-1.5">
+                  <span>⚠️</span> Mật khẩu sẽ được đặt lại về:
+                </div>
+                <div className="font-mono text-base font-black text-amber-950 py-1 tracking-wider bg-white/70 px-2.5 rounded-lg border border-amber-300">
+                  Antam@2026
+                </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed pt-1">
+                  Nhân viên bắt buộc phải đổi mật khẩu cá nhân mới ngay trong lần đăng nhập đầu tiên tiếp theo.
+                </p>
               </div>
-            </form>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setResetModalUser(null)}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResetPassword}
+                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-md shadow-amber-600/20 transition-all"
+              >
+                Xác Nhận Reset
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -621,7 +622,7 @@ export default function MemberManagementPage() {
 
             <form onSubmit={handleSaveEditUser} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Họ và Tên Nhân Sự</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Họ và Tên Nhân Sự *</label>
                 <input
                   type="text"
                   required
@@ -633,7 +634,26 @@ export default function MemberManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Tên Đăng Nhập (Email)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Tên Đăng Nhập (@username) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editingUser.username || ''}
+                    onChange={(e) =>
+                      setEditingUser({
+                        ...editingUser,
+                        username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''),
+                      })
+                    }
+                    placeholder="VD: nam.hoang"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Dùng để đăng nhập vào hệ thống</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Liên Hệ *</label>
                   <input
                     type="email"
                     required
@@ -641,28 +661,18 @@ export default function MemberManagementPage() {
                     onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                   />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
-                  <input
-                    type="text"
-                    value={editingUser.phone}
-                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Nhận thông báo &amp; có thể dùng đăng nhập</p>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Đổi Mật Khẩu Đăng Nhập <span className="font-normal text-slate-400">(Bỏ trống nếu giữ nguyên mật khẩu cũ)</span>
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
                 <input
                   type="text"
-                  value={editUserPassword}
-                  onChange={(e) => setEditUserPassword(e.target.value)}
-                  placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)..."
-                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                  value={editingUser.phone || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                  placeholder="0912.345.678"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                 />
               </div>
 
@@ -838,26 +848,55 @@ export default function MemberManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Đăng Nhập *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Tên Đăng Nhập (@username) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newUserForm.username}
+                    onChange={(e) =>
+                      setNewUserForm({
+                        ...newUserForm,
+                        username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''),
+                      })
+                    }
+                    placeholder="VD: nam.hoang"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Dùng để đăng nhập</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Liên Hệ *</label>
                   <input
                     type="email"
                     required
                     value={newUserForm.email}
-                    onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                    onChange={(e) => {
+                      const newEmail = e.target.value;
+                      const autoUsername = newUserForm.username || newEmail.split('@')[0].toLowerCase().replace(/[^a-z0-9_.-]/g, '');
+                      setNewUserForm({
+                        ...newUserForm,
+                        email: newEmail,
+                        username: newUserForm.username || autoUsername,
+                      });
+                    }}
                     placeholder="nam.hoang@vitinhantam.com"
                     className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                   />
+                  <p className="text-[10px] text-slate-400 mt-0.5">Nhận thông báo hệ thống</p>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
-                  <input
-                    type="text"
-                    value={newUserForm.phone}
-                    onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
-                    placeholder="0912.345.678"
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Số Điện Thoại</label>
+                <input
+                  type="text"
+                  value={newUserForm.phone}
+                  onChange={(e) => setNewUserForm({ ...newUserForm, phone: e.target.value })}
+                  placeholder="0912.345.678"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                />
               </div>
 
               <div>
@@ -888,18 +927,16 @@ export default function MemberManagementPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Mật Khẩu Khởi Tạo * (Tối thiểu 4 ký tự)
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newUserForm.password}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                  placeholder="Nhập mật khẩu khởi tạo..."
-                  className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                />
+              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
+                <div className="flex items-center gap-2 font-bold">
+                  <span>🔒 Mật khẩu mặc định khởi tạo:</span>
+                  <span className="font-mono bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-950">
+                    Antam@2026
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800">
+                  Thành viên sẽ được yêu cầu đổi mật khẩu cá nhân ngay trong lần đăng nhập đầu tiên.
+                </p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">

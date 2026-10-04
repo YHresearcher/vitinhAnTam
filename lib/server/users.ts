@@ -7,6 +7,8 @@ import { initialUsers } from '@/lib/mockData';
 import type { UserAccount } from '@/lib/supabase';
 import { getServerSupabase } from './supabaseAdmin';
 
+export const DEFAULT_TEMPORARY_PASSWORD = 'Antam@2026';
+
 export type SafeUser = Omit<UserAccount, 'password'>;
 
 export interface StoredUser extends SafeUser {
@@ -52,9 +54,9 @@ export function stripSecrets(user: StoredUser): SafeUser {
 export function rowToUser(row: Record<string, unknown>): StoredUser {
   return {
     id: String(row.id),
-    username: row.username ? String(row.username) : undefined,
+    username: row.username ? String(row.username).trim().toLowerCase() : undefined,
     name: String(row.name || ''),
-    email: String(row.email || ''),
+    email: String(row.email || '').trim().toLowerCase(),
     phone: String(row.phone || ''),
     role: (row.role as UserAccount['role']) || 'technician',
     roleTitle: String(row.role_title || 'Thành viên'),
@@ -71,16 +73,16 @@ export function rowToUser(row: Record<string, unknown>): StoredUser {
           can_manage_users: false,
         },
     password_hash: String(row.password_hash || ''),
-    password_changed: row.password_changed !== false,
+    password_changed: row.password_changed === false ? false : true,
   };
 }
 
 export function userToRow(user: StoredUser): Record<string, unknown> {
   return {
     id: user.id,
-    username: user.username || null,
+    username: user.username ? user.username.trim().toLowerCase() : null,
     name: user.name,
-    email: user.email,
+    email: user.email ? user.email.trim().toLowerCase() : '',
     phone: user.phone || null,
     role: user.role,
     role_title: user.roleTitle,
@@ -88,7 +90,7 @@ export function userToRow(user: StoredUser): Record<string, unknown> {
     status: user.status,
     permissions: user.permissions,
     password_hash: user.password_hash,
-    password_changed: user.password_changed ?? true,
+    password_changed: user.password_changed === false ? false : true,
     created_at: user.created_at,
     last_login: user.last_login || null,
   };
@@ -116,8 +118,9 @@ function readFromFile(): StoredUser[] | null {
   return null;
 }
 
-const matchesIdentifier = (user: StoredUser, identifier: string): boolean => {
-  const needle = identifier.toLowerCase();
+export const matchesIdentifier = (user: StoredUser, identifier: string): boolean => {
+  const needle = identifier.trim().toLowerCase();
+  if (!needle) return false;
   return (
     user.id.toLowerCase() === needle ||
     (user.username ?? '').toLowerCase() === needle ||
@@ -222,17 +225,53 @@ export async function upsertUserAsync(
   const { password, ...rest } = input;
   const base: StoredUser = index >= 0 ? users[index] : ({} as StoredUser);
 
+  const cleanUsername = rest.username !== undefined ? (rest.username ? rest.username.trim().toLowerCase() : undefined) : base.username;
+  const cleanEmail = rest.email !== undefined ? (rest.email ? rest.email.trim().toLowerCase() : '') : base.email;
+
+  // Kiểm tra trùng username (nếu có username)
+  if (cleanUsername) {
+    const duplicateUsername = users.find(
+      (u) => u.id !== id && u.username && u.username.toLowerCase() === cleanUsername
+    );
+    if (duplicateUsername) {
+      throw new Error(`Tên đăng nhập "${cleanUsername}" đã được sử dụng bởi ${duplicateUsername.name}. Vui lòng chọn tên khác!`);
+    }
+  }
+
+  // Kiểm tra trùng email
+  if (cleanEmail) {
+    const duplicateEmail = users.find(
+      (u) => u.id !== id && u.email && u.email.toLowerCase() === cleanEmail
+    );
+    if (duplicateEmail) {
+      throw new Error(`Email "${cleanEmail}" đã được sử dụng bởi ${duplicateEmail.name}. Vui lòng chọn email khác!`);
+    }
+  }
+
   let pHash = base.password_hash;
-  if (password) {
-    pHash = hashPassword(password);
-  } else if (!pHash) {
-    pHash = hashPassword(seedPassword());
+  let pChanged = base.password_changed;
+
+  if (index < 0) {
+    // Tạo mới tài khoản: mặc định 'Antam@2026', password_changed = false (bắt buộc đổi MK lần đầu)
+    pHash = hashPassword(password || DEFAULT_TEMPORARY_PASSWORD);
+    pChanged = false;
+  } else {
+    // Cập nhật tài khoản cũ
+    if (password) {
+      pHash = hashPassword(password);
+      pChanged = false;
+    }
+    if (typeof rest.password_changed === 'boolean') {
+      pChanged = rest.password_changed;
+    }
   }
 
   const next: StoredUser = {
     ...base,
     ...rest,
     id,
+    username: cleanUsername,
+    email: cleanEmail,
     role: rest.role ?? base.role ?? 'technician',
     roleTitle: rest.roleTitle ?? base.roleTitle ?? 'Thành viên',
     avatarBg: rest.avatarBg ?? base.avatarBg ?? 'bg-slate-600',
@@ -244,8 +283,8 @@ export async function upsertUserAsync(
     },
     status: rest.status ?? base.status ?? 'active',
     created_at: base.created_at ?? new Date().toISOString(),
-    password_hash: pHash,
-    password_changed: true,
+    password_hash: pHash || hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_changed: pChanged === false ? false : true,
   };
 
   const updated = [...users];
@@ -258,7 +297,10 @@ export async function upsertUserAsync(
   if (sb) {
     const row = userToRow(next);
     const { error } = await sb.from('users').upsert(row);
-    if (error) console.error('Lỗi khi lưu user lên Supabase:', error.message);
+    if (error) {
+      console.error('Lỗi khi lưu user lên Supabase:', error.message);
+      throw new Error(`Lỗi Supabase khi lưu tài khoản: ${error.message}`);
+    }
   }
 
   return stripSecrets(next);
@@ -274,17 +316,31 @@ export function upsertUser(
   const { password, ...rest } = input;
   const base: StoredUser = index >= 0 ? users[index] : ({} as StoredUser);
 
+  const cleanUsername = rest.username !== undefined ? (rest.username ? rest.username.trim().toLowerCase() : undefined) : base.username;
+  const cleanEmail = rest.email !== undefined ? (rest.email ? rest.email.trim().toLowerCase() : '') : base.email;
+
   let pHash = base.password_hash;
-  if (password) {
-    pHash = hashPassword(password);
-  } else if (!pHash) {
-    pHash = hashPassword(seedPassword());
+  let pChanged = base.password_changed;
+
+  if (index < 0) {
+    pHash = hashPassword(password || DEFAULT_TEMPORARY_PASSWORD);
+    pChanged = false;
+  } else {
+    if (password) {
+      pHash = hashPassword(password);
+      pChanged = false;
+    }
+    if (typeof rest.password_changed === 'boolean') {
+      pChanged = rest.password_changed;
+    }
   }
 
   const next: StoredUser = {
     ...base,
     ...rest,
     id,
+    username: cleanUsername,
+    email: cleanEmail,
     role: rest.role ?? base.role ?? 'technician',
     roleTitle: rest.roleTitle ?? base.roleTitle ?? 'Thành viên',
     avatarBg: rest.avatarBg ?? base.avatarBg ?? 'bg-slate-600',
@@ -296,8 +352,8 @@ export function upsertUser(
     },
     status: rest.status ?? base.status ?? 'active',
     created_at: base.created_at ?? new Date().toISOString(),
-    password_hash: pHash,
-    password_changed: true,
+    password_hash: pHash || hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_changed: pChanged === false ? false : true,
   };
 
   const updated = [...users];
@@ -314,6 +370,94 @@ export function upsertUser(
   }
 
   return stripSecrets(next);
+}
+
+/** Admin đặt lại mật khẩu về mặc định 'Antam@2026' và yêu cầu đổi mật khẩu ở lần đăng nhập tới */
+export async function resetUserPasswordAsync(id: string): Promise<SafeUser | null> {
+  const users = await loadUsersAsync();
+  const index = users.findIndex((u) => u.id === id);
+  if (index < 0) return null;
+
+  const next: StoredUser = {
+    ...users[index],
+    password_hash: hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_changed: false,
+  };
+  const updated = [...users];
+  updated[index] = next;
+  memoryStore = updated;
+  saveToFile(updated);
+
+  const sb = getServerSupabase();
+  if (sb) {
+    const { error } = await sb.from('users').update({
+      password_hash: next.password_hash,
+      password_changed: false,
+    }).eq('id', id);
+    if (error) console.error('Lỗi khi reset mật khẩu trên Supabase:', error.message);
+  }
+
+  return stripSecrets(next);
+}
+
+/** Người dùng đổi mật khẩu (lần đầu hoặc chủ động) có kiểm tra xác thực mật khẩu cũ */
+export async function changePasswordWithVerificationAsync(
+  identifierOrId: string,
+  currentPlain: string,
+  newPlain: string
+): Promise<{ success: boolean; message: string; user?: SafeUser }> {
+  const users = await loadUsersAsync();
+  const user = users.find((u) => matchesIdentifier(u, identifierOrId));
+  if (!user) {
+    return { success: false, message: 'Không tìm thấy tài khoản người dùng.' };
+  }
+
+  if (!verifyPassword(currentPlain, user.password_hash)) {
+    return { success: false, message: 'Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại!' };
+  }
+
+  if (!newPlain || newPlain.length < 6) {
+    return { success: false, message: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' };
+  }
+
+  if (newPlain === currentPlain) {
+    return { success: false, message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại!' };
+  }
+
+  if (newPlain === DEFAULT_TEMPORARY_PASSWORD) {
+    return { success: false, message: 'Mật khẩu mới không được trùng mật khẩu mặc định (Antam@2026)!' };
+  }
+
+  const nextHash = hashPassword(newPlain);
+  const index = users.findIndex((u) => u.id === user.id);
+  const next: StoredUser = {
+    ...user,
+    password_hash: nextHash,
+    password_changed: true,
+  };
+
+  const updated = [...users];
+  updated[index] = next;
+  memoryStore = updated;
+  saveToFile(updated);
+
+  const sb = getServerSupabase();
+  if (sb) {
+    const { error } = await sb.from('users').update({
+      password_hash: nextHash,
+      password_changed: true,
+    }).eq('id', user.id);
+    if (error) {
+      console.error('Lỗi khi cập nhật mật khẩu mới trên Supabase:', error.message);
+      return { success: false, message: `Lỗi máy chủ lưu mật khẩu: ${error.message}` };
+    }
+  }
+
+  return {
+    success: true,
+    message: 'Đổi mật khẩu thành công! Vui lòng đăng nhập lại bằng mật khẩu mới.',
+    user: stripSecrets(next),
+  };
 }
 
 export async function setPasswordAsync(id: string, plain: string): Promise<SafeUser | null> {

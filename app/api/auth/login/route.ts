@@ -35,8 +35,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Nếu tài khoản chưa đổi mật khẩu mặc định (lần đầu hoặc sau khi admin reset)
+  if (user.password_changed === false) {
+    return NextResponse.json({
+      success: true,
+      mustChangePassword: true,
+      message: 'Tài khoản đang sử dụng mật khẩu mặc định. Vui lòng thiết lập mật khẩu mới!',
+      user: stripSecrets(user),
+    });
+  }
+
   const response = NextResponse.json({
     success: true,
+    mustChangePassword: false,
     message: `Đăng nhập thành công: ${user.roleTitle} (${user.name})!`,
     user: stripSecrets(user),
   });

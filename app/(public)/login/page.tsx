@@ -8,6 +8,7 @@ import { Logo } from '@/components/Logo';
 import { RoleLoginModal } from '@/components/login/RoleLoginModal';
 import { RoleCardConfig } from '@/components/login/roleConfigs';
 import { RoleCardGrid } from '@/components/login/RoleCardGrid';
+import { FirstTimePasswordModal } from '@/components/login/FirstTimePasswordModal';
 
 export default function LoginPage() {
   const { users, loginWithCredentials } = useViTinhAnTamStore();
@@ -20,6 +21,14 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [pageNotification, setPageNotification] = useState('');
+
+  // First-time change password state
+  const [mustChangePasswordAccount, setMustChangePasswordAccount] = useState<{
+    identifier: string;
+    currentPassword?: string;
+    name?: string;
+  } | null>(null);
 
   const handleOpenRoleModal = (roleConfig: RoleCardConfig) => {
     const roleUsers = users.filter((u) => u.role === roleConfig.role);
@@ -50,6 +59,18 @@ export default function LoginPage() {
     setIsSubmitting(false);
 
     if (res.success && res.user) {
+      if (res.mustChangePassword) {
+        // Must change password first
+        const account = {
+          identifier: identifierInput,
+          currentPassword: passwordInput,
+          name: res.user.name,
+        };
+        setActiveModalRole(null);
+        setMustChangePasswordAccount(account);
+        return;
+      }
+
       setSuccessMessage(res.message);
       // Chuyển hướng ngay lập tức đến trang quản trị
       window.location.replace('/dashboard');
@@ -62,6 +83,12 @@ export default function LoginPage() {
     setActiveModalRole(null);
     setErrorMessage('');
     setSuccessMessage('');
+  };
+
+  const handlePasswordChangedSuccess = (message: string) => {
+    setMustChangePasswordAccount(null);
+    setPasswordInput('');
+    setPageNotification(`✅ ${message}`);
   };
 
   return (
@@ -85,6 +112,21 @@ export default function LoginPage() {
 
       {/* Main Content Area */}
       <div className="w-full max-w-3xl mx-auto my-auto py-6 sm:py-10">
+        {pageNotification && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <span>{pageNotification}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPageNotification('')}
+              className="text-emerald-600 hover:text-emerald-900 font-bold text-xs cursor-pointer p-1"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Title & Badge */}
         <div className="text-center mb-8 sm:mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100/70 border border-red-200 text-[#C0392B] text-[11px] font-bold tracking-wider uppercase mb-3 shadow-2xs">
@@ -126,6 +168,15 @@ export default function LoginPage() {
           onToggleShowPassword={() => setShowPassword((prev) => !prev)}
           onSubmit={handleFormLogin}
           onClose={handleCloseModal}
+        />
+      )}
+
+      {/* FIRST TIME CHANGE PASSWORD MODAL */}
+      {mustChangePasswordAccount && (
+        <FirstTimePasswordModal
+          userAccount={mustChangePasswordAccount}
+          onSuccess={handlePasswordChangedSuccess}
+          onCancel={() => setMustChangePasswordAccount(null)}
         />
       )}
     </div>

@@ -116,7 +116,7 @@ export function RoleLoginModal({
           {/* Identifier Input */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Tên đăng nhập / Email
+              Tên đăng nhập (@username) hoặc Email
             </label>
             <input
               type="text"
@@ -192,7 +192,7 @@ export function RoleLoginModal({
               {isSubmitting ? (
                 <span>Đang xử lý...</span>
               ) : (
-                <span>Đăng Nhập Nhanh →</span>
+                <span>Đăng Nhập →</span>
               )}
             </button>
           </div>

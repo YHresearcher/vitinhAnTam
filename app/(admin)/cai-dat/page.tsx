@@ -59,7 +59,7 @@ export default function CaiDatPage() {
     updateSystemSettings,
     canAccessSettings,
     users,
-    changeUserPassword,
+    resetUserPassword,
     faqs,
     addFaq,
     updateFaq,
@@ -418,21 +418,17 @@ export default function CaiDatPage() {
   };
 
 
-  const handleSaveMemberPassword = async () => {
+  const handleResetMemberPassword = async () => {
     if (!memberForPassword) return;
-    if (!memberNewPassword.trim() || memberNewPassword.trim().length < 4) {
-      message.error('Mật khẩu phải có tối thiểu 4 ký tự!');
-      return;
-    }
     setIsChangingMemberPassword(true);
-    const result = await changeUserPassword(memberForPassword.id, memberNewPassword.trim());
+    const result = await resetUserPassword(memberForPassword.id);
     setIsChangingMemberPassword(false);
     if (result.ok) {
-      message.success(`Đã đổi mật khẩu thành công cho ${memberForPassword.name}!`);
+      message.success(`Đã reset mật khẩu cho ${memberForPassword.name} về mặc định "Antam@2026"!`);
       setMemberForPassword(null);
       setMemberNewPassword('');
     } else {
-      message.error(result.message || 'Không thể cập nhật mật khẩu.');
+      message.error(result.message || 'Không thể reset mật khẩu.');
     }
   };
 
@@ -1417,15 +1413,22 @@ export default function CaiDatPage() {
                           <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
                             <span>
                               Tên đăng nhập:{' '}
-                              <strong className="font-mono text-slate-800">{u.email}</strong>
+                              <strong className="font-mono text-blue-700 font-bold">@{u.username || u.email.split('@')[0]}</strong>
                             </span>
                             <span>•</span>
                             <span>
-                              SĐT: <span className="font-mono text-slate-700">{u.phone}</span>
+                              Email: <span className="font-mono text-slate-700">{u.email}</span>
                             </span>
                             <span>•</span>
                             <span>
-                              Mật khẩu: <span className="font-mono text-blue-600 font-bold">••••••</span>
+                              Mật khẩu:{' '}
+                              {u.password_changed === false ? (
+                                <span className="font-mono text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                  Antam@2026 (Chưa đổi)
+                                </span>
+                              ) : (
+                                <span className="font-mono text-emerald-700 font-bold">Cá nhân (Đã đổi)</span>
+                              )}
                             </span>
                           </div>
                         </div>
@@ -1435,11 +1438,10 @@ export default function CaiDatPage() {
                         <Button
                           onClick={() => {
                             setMemberForPassword(u);
-                            setMemberNewPassword('');
                           }}
                           className="text-xs font-semibold hover:border-amber-500 hover:text-amber-600"
                         >
-                          Đổi Mật Khẩu
+                          Reset Mật Khẩu
                         </Button>
                       </div>
                     </div>
@@ -1578,33 +1580,35 @@ export default function CaiDatPage() {
         </Form>
       </Modal>
 
-      {/* Modal Đổi Mật Khẩu Thành Viên */}
+      {/* Modal Đổi / Reset Mật Khẩu Thành Viên */}
       <Modal
-        title="Đổi Mật Khẩu Thành Viên"
+        title="Reset Mật Khẩu Thành Viên"
         open={Boolean(memberForPassword)}
         onCancel={() => {
           setMemberForPassword(null);
           setMemberNewPassword('');
         }}
-        onOk={handleSaveMemberPassword}
+        onOk={handleResetMemberPassword}
         confirmLoading={isChangingMemberPassword}
-        okText="Lưu Mật Khẩu Mới"
+        okText="Xác Nhận Reset Mật Khẩu"
         cancelText="Hủy"
       >
         {memberForPassword && (
           <div className="space-y-4 pt-2">
             <div className="p-3 bg-slate-50 rounded-lg text-xs space-y-1">
               <div>Thành viên: <strong className="text-slate-900">{memberForPassword.name}</strong></div>
-              <div>Tên đăng nhập: <strong className="font-mono text-slate-900">{memberForPassword.email}</strong></div>
+              <div>Tên đăng nhập: <strong className="font-mono text-blue-700">@{memberForPassword.username || memberForPassword.email.split('@')[0]}</strong></div>
+              <div>Email: <strong className="font-mono text-slate-800">{memberForPassword.email}</strong></div>
               <div>Vai trò: <strong className="text-blue-700 uppercase">{memberForPassword.role}</strong></div>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
-              <Input.Password
-                value={memberNewPassword}
-                onChange={(e) => setMemberNewPassword(e.target.value)}
-                placeholder="Nhập mật khẩu mới (tối thiểu 4 ký tự)"
-              />
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-900 space-y-1">
+              <div className="font-bold">⚠️ Mật khẩu sẽ được đặt lại về:</div>
+              <div className="font-mono font-bold text-sm text-amber-950 bg-white px-2 py-1 rounded border border-amber-300">
+                Antam@2026
+              </div>
+              <div className="text-[11px] text-amber-800">
+                Thành viên bắt buộc phải đổi mật khẩu cá nhân mới ngay trong lần đăng nhập đầu tiên tiếp theo.
+              </div>
             </div>
           </div>
         )}

@@ -4,13 +4,14 @@ import {
   findUserByIdAsync,
   loadUsersAsync,
   removeUserAsync,
+  resetUserPasswordAsync,
   setPasswordAsync,
   stripSecrets,
   upsertUserAsync,
 } from '@/lib/server/users';
 import type { UserAccount } from '@/lib/supabase';
 
-type Action = 'create' | 'update' | 'password' | 'delete';
+type Action = 'create' | 'update' | 'password' | 'reset_password' | 'delete';
 
 function requireAdmin(request: NextRequest) {
   const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
@@ -53,20 +54,21 @@ export async function POST(request: NextRequest) {
 
   if (action === 'create') {
     const user = body.user as Omit<UserAccount, 'id' | 'created_at'> | undefined;
-    const password = typeof body.password === 'string' ? body.password : '';
     if (!user?.email || !user.name) {
       return NextResponse.json({ success: false, message: 'Thiếu họ tên hoặc email tài khoản.' }, { status: 400 });
     }
-    if (password.length < 4) {
-      return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
-    }
     let created;
     try {
-      created = await upsertUserAsync({ ...user, password });
+      // Mật khẩu được khởi tạo tự động là 'Antam@2026', password_changed = false
+      created = await upsertUserAsync(user);
     } catch (err) {
       return serverError(err);
     }
-    return NextResponse.json({ success: true, user: created }, { status: 201 });
+    return NextResponse.json({
+      success: true,
+      user: created,
+      message: 'Tạo tài khoản thành công! Mật khẩu khởi tạo là Antam@2026 (yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên).',
+    }, { status: 201 });
   }
 
   if (action === 'update') {
@@ -76,19 +78,36 @@ export async function POST(request: NextRequest) {
     if (!id || !existing) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản.' }, { status: 404 });
     }
-    const password = typeof body.password === 'string' && body.password ? body.password : undefined;
-    if (password && password.length < 4) {
-      return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
-    }
     const safePatch: Partial<UserAccount> = { ...patch };
-    delete safePatch.password;
+    delete safePatch.password; // Admin không nhập mật khẩu bằng tay
     let updated;
     try {
-      updated = await upsertUserAsync({ ...safePatch, password }, { id });
+      updated = await upsertUserAsync(safePatch, { id });
     } catch (err) {
       return serverError(err);
     }
-    return NextResponse.json({ success: true, user: updated });
+    return NextResponse.json({ success: true, user: updated, message: 'Cập nhật thông tin thành công!' });
+  }
+
+  if (action === 'reset_password') {
+    const id = typeof body.id === 'string' ? body.id : '';
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Thiếu id tài khoản.' }, { status: 400 });
+    }
+    let updated;
+    try {
+      updated = await resetUserPasswordAsync(id);
+    } catch (err) {
+      return serverError(err);
+    }
+    if (!updated) {
+      return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản để reset mật khẩu.' }, { status: 404 });
+    }
+    return NextResponse.json({
+      success: true,
+      user: updated,
+      message: 'Đã reset mật khẩu về mặc định "Antam@2026". Thành viên sẽ được yêu cầu đổi mật khẩu khi đăng nhập!',
+    });
   }
 
   if (action === 'password') {
@@ -129,4 +148,5 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: false, message: 'Hành động không hợp lệ.' }, { status: 400 });
 }
+
 

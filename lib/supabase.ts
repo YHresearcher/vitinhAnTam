@@ -49,6 +49,7 @@ export interface UserAccount extends UserProfile {
   phone: string;
   /** Mật khẩu KHÔNG bao giờ lưu plaintext ở client. Server giữ hash trong .data/users.json. */
   password?: string;
+  password_changed?: boolean;
   status: 'active' | 'suspended';
   created_at: string;
   last_login?: string;

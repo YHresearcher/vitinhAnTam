@@ -142,7 +142,12 @@ interface StoreContextType {
   loginWithCredentials: (
     email: string,
     password: string
-  ) => Promise<{ success: boolean; message: string; user?: UserAccount }>;
+  ) => Promise<{
+    success: boolean;
+    mustChangePassword?: boolean;
+    message: string;
+    user?: UserAccount;
+  }>;
   logout: () => void;
   canEditStock: () => boolean;
   canUpdateRepairStatus: () => boolean;
@@ -179,6 +184,7 @@ interface StoreContextType {
   // Member management actions (Admin)
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
   changeUserPassword: (id: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
+  resetUserPassword: (id: string) => Promise<{ ok: boolean; message?: string }>;
   addUser: (user: Omit<UserAccount, 'id' | 'created_at'>) => Promise<UserAccount>;
   deleteUser: (id: string) => Promise<boolean>;
 
@@ -439,7 +445,12 @@ export function StoreProvider({
   const loginWithCredentials = async (
     identifier: string,
     password: string
-  ): Promise<{ success: boolean; message: string; user?: UserAccount }> => {
+  ): Promise<{
+    success: boolean;
+    mustChangePassword?: boolean;
+    message: string;
+    user?: UserAccount;
+  }> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -448,6 +459,7 @@ export function StoreProvider({
       });
       const data = (await response.json().catch(() => null)) as {
         success?: boolean;
+        mustChangePassword?: boolean;
         message?: string;
         user?: UserAccount;
       } | null;
@@ -456,6 +468,15 @@ export function StoreProvider({
         return {
           success: false,
           message: data?.message || 'Đăng nhập thất bại. Vui lòng thử lại!',
+        };
+      }
+
+      if (data.mustChangePassword) {
+        return {
+          success: true,
+          mustChangePassword: true,
+          message: data.message || 'Tài khoản cần đổi mật khẩu mặc định trước khi sử dụng.',
+          user: data.user,
         };
       }
 
@@ -570,11 +591,37 @@ export function StoreProvider({
     return { ok: true };
   };
 
+  const resetUserPassword = async (id: string): Promise<{ ok: boolean; message?: string }> => {
+    const response = await callUsersApi({ action: 'reset_password', id });
+    if (!response) {
+      return { ok: false, message: 'Không gọi được máy chủ — chưa thể reset mật khẩu.' };
+    }
+    const data = (await response.json().catch(() => null)) as {
+      success?: boolean;
+      message?: string;
+      user?: UserAccount;
+    } | null;
+    if (!response.ok || !data?.success) {
+      return {
+        ok: false,
+        message: data?.message || 'Máy chủ từ chối reset mật khẩu.',
+      };
+    }
+    if (data.user) {
+      const next = users.map((u) => (u.id === id ? { ...u, ...data.user, password_changed: false } : u));
+      setUsers(next);
+      persistUsersLocally(next);
+    }
+    return { ok: true, message: data.message };
+  };
+
   const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {
     const { password, ...rest } = userData;
+    const cleanUsername = rest.username ? rest.username.trim().toLowerCase() : rest.email.split('@')[0].toLowerCase();
     const newUser: UserAccount = {
       ...rest,
-      username: rest.username || rest.email.split('@')[0],
+      username: cleanUsername,
+      password_changed: false,
       id: `u-${Date.now()}`,
       created_at: new Date().toISOString(),
       permissions: rest.permissions || {
@@ -589,12 +636,16 @@ export function StoreProvider({
       },
     };
 
-    const response = await callUsersApi({ action: 'create', user: newUser, password });
+    const response = await callUsersApi({ action: 'create', user: newUser });
     if (response?.ok) {
       const created = (await response.json().catch(() => null)) as { user?: UserAccount } | null;
       if (created?.user) Object.assign(newUser, created.user);
     } else {
-      console.warn('Máy chủ chưa ghi nhận tài khoản mới — thành viên sẽ không đăng nhập được.');
+      const errData = (await response?.json().catch(() => null)) as { message?: string } | null;
+      console.warn('Lỗi thêm tài khoản:', errData?.message);
+      if (errData?.message) {
+        throw new Error(errData.message);
+      }
     }
 
     const next = [newUser, ...users];
@@ -2492,6 +2543,7 @@ export function StoreProvider({
       sellInventoryItem,
       updateUser,
       changeUserPassword,
+      resetUserPassword,
       addUser,
       deleteUser,
       addCustomer,
