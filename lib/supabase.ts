@@ -414,6 +414,16 @@ export interface ServiceTicket {
   created_at?: string;
 }
 
+export type OnsiteDispatchStatus =
+  | 'pending'
+  | 'dispatched'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+  | 'preparing'
+  | 'on_the_way'
+  | 'arrived';
+
 export interface OnsiteDispatch {
   id: string;
   ticket_code?: string;
@@ -426,7 +436,7 @@ export interface OnsiteDispatch {
   distance_km?: number;
   estimated_arrival_minutes?: number;
   urgency?: 'normal' | 'urgent';
-  status: 'pending' | 'preparing' | 'dispatched' | 'on_the_way' | 'arrived' | 'in_progress' | 'completed' | 'cancelled';
+  status: OnsiteDispatchStatus;
   issue_summary?: string;
   issue_description?: string;
   technician_name: string;

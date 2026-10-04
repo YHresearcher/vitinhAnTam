@@ -458,17 +458,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     });
   }, [users, tickets]);
 
-  // Xử lý ca cứu hộ
+  // Xử lý ca cứu hộ (Tối giản 4 bước: pending -> dispatched -> in_progress -> completed)
   const handleUpdateDispatch = async (id: string, currentStatus: OnsiteDispatch['status']) => {
     const nextStatus: Record<string, OnsiteDispatch['status']> = {
       pending: 'dispatched',
-      preparing: 'on_the_way',
       dispatched: 'in_progress',
-      on_the_way: 'arrived',
-      arrived: 'in_progress',
       in_progress: 'completed',
       completed: 'completed',
       cancelled: 'cancelled',
+      // Legacy fallback
+      preparing: 'dispatched',
+      on_the_way: 'in_progress',
+      arrived: 'in_progress',
     };
     await updateDispatchStatus(id, nextStatus[currentStatus] || 'completed');
   };
@@ -1040,14 +1041,22 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : disp.status === 'in_progress'
                           ? 'bg-purple-50 text-purple-700 border border-purple-200'
-                          : 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : disp.status === 'dispatched'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : disp.status === 'cancelled'
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
                       }`}
                     >
                       {disp.status === 'completed'
-                        ? 'Hoàn tất'
+                        ? '4. Hoàn tất'
                         : disp.status === 'in_progress'
-                        ? 'Đang xử lý'
-                        : 'Di chuyển'}
+                        ? '3. Đang xử lý'
+                        : disp.status === 'dispatched'
+                        ? '2. Đang di chuyển'
+                        : disp.status === 'cancelled'
+                        ? 'Đã hủy'
+                        : '1. Chờ điều phối'}
                     </span>
 
                     {tel && (
@@ -1059,12 +1068,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       </a>
                     )}
 
-                    <button
-                      onClick={() => handleUpdateDispatch(disp.id, disp.status)}
-                      className="px-2 py-1 text-[11px] font-semibold rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
-                    >
-                      Tiến độ
-                    </button>
+                    {disp.status !== 'completed' && disp.status !== 'cancelled' && (
+                      <button
+                        onClick={() => handleUpdateDispatch(disp.id, disp.status)}
+                        className="px-2 py-1 text-[11px] font-semibold rounded bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors border border-blue-200"
+                        title="Chuyển sang bước tiếp theo"
+                      >
+                        Tiến độ ➔
+                      </button>
+                    )}
                   </div>
                 </div>
               );
