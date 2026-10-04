@@ -177,24 +177,28 @@ function AppointmentBookingContent() {
         estimated_completion: `${timeSlot} - ${appointmentDate}`,
       });
 
-      // Gửi thông báo Webhook / Zalo Bot tự động
-      fetch('/api/webhook/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          eventType: 'new_booking',
-          payload: {
-            ticketCode,
-            customerName: customerName.trim(),
-            customerPhone: customerPhone.trim(),
-            address: fullAddr,
-            deviceType: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
-            serviceNeeded,
-            bookingDate: appointmentDate,
-            bookingTime: timeSlot,
-          },
-        }),
-      }).catch(() => undefined);
+      // Gửi thông báo Webhook / Zalo Bot tự động đến Kỹ thuật & Quản trị viên
+      try {
+        await fetch('/api/webhook/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'new_booking',
+            payload: {
+              ticketCode,
+              customerName: customerName.trim(),
+              customerPhone: customerPhone.trim(),
+              address: fullAddr,
+              deviceType: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
+              serviceNeeded,
+              bookingDate: appointmentDate,
+              bookingTime: timeSlot,
+            },
+          }),
+        });
+      } catch (notifyErr) {
+        console.warn('Lỗi gửi thông báo Webhook / Zalo Bot:', notifyErr);
+      }
 
       setBookingSuccess({
         code: ticketCode,

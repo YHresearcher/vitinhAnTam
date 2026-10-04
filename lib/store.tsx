@@ -1667,6 +1667,22 @@ export function StoreProvider({
       return next;
     });
 
+    // Gửi thông báo Webhook & Zalo Bot cho Admin
+    if (typeof window !== 'undefined') {
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'key_request',
+          payload: {
+            requesterName: currentUser.name,
+            keyCategory: cat.name,
+            reason: `Yêu cầu cấp cho khách hàng ${data.customer_name.trim()} (${data.customer_phone.trim()})${availableCount === 0 ? ' [Kho hết key]' : ''}`,
+          },
+        }),
+      }).catch(() => undefined);
+    }
+
     if (availableCount === 0) {
       return {
         success: true,

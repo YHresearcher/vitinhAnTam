@@ -214,16 +214,21 @@ export async function POST(request: NextRequest) {
       // Vẫn cố gắng gửi email thông báo
       notifyStaffByEmail(fallbackOrder).catch(() => undefined);
     }
-    // Gửi thông báo Webhook & Zalo Bot (bất đồng bộ không chặn response)
-    dispatchSystemEvent('new_order', {
-      orderCode,
-      customerName,
-      customerPhone,
-      shippingAddress: (body.customer_address || '').trim() || (order.delivery_method === 'pickup' ? 'Nhận tại quầy' : 'Giao tận nơi'),
-      totalAmount: Number(body.device_price) || 0,
-      paymentMethod: order.payment_method === 'qr' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng',
-      deviceName,
-    }).catch((err) => console.warn('Zalo Bot / Webhook order notification error:', err));
+    // Gửi thông báo Webhook & Zalo Bot tự động
+    try {
+      await dispatchSystemEvent('new_order', {
+        orderCode,
+        customerName,
+        customerPhone,
+        shippingAddress: (body.customer_address || '').trim() || (order.delivery_method === 'pickup' ? 'Nhận tại quầy' : 'Giao tận nơi'),
+        totalAmount: Number(body.device_price) || 0,
+        paymentMethod: order.payment_method === 'qr' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng',
+        deviceName,
+        note: (body.note || '').trim(),
+      });
+    } catch (err) {
+      console.warn('Zalo Bot / Webhook order notification error:', err);
+    }
 
 
     return NextResponse.json({
