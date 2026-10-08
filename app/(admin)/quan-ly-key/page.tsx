@@ -451,27 +451,27 @@ export default function QuanLyKeyPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-12">
+    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-12 px-2 sm:px-0">
       {/* Toast Feedback */}
       {statusFeedback && (
-        <div className="fixed top-20 right-6 z-50 bg-[#2B1810] text-white px-5 py-3 rounded-xl shadow-xl border border-[#E8E2D9] text-xs font-bold animate-fade-in">
+        <div className="fixed top-20 right-4 sm:right-6 z-50 bg-[#2B1810] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl shadow-xl border border-[#E8E2D9] text-xs font-bold animate-fade-in max-w-[90vw]">
           {statusFeedback}
         </div>
       )}
 
       {copyFeedback && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0F4C5C] text-white px-4 py-2.5 rounded-lg shadow-lg text-xs font-bold font-mono">
+        <div className="fixed bottom-6 right-4 sm:right-6 z-50 bg-[#0F4C5C] text-white px-4 py-2.5 rounded-lg shadow-lg text-xs font-bold font-mono">
           {copyFeedback}
         </div>
       )}
 
       {/* HEADER SECTION */}
-      <div className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#E8E2D9] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FFFDF9] p-4 sm:p-6 rounded-2xl border border-[#E8E2D9] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#C0392B] mb-1">
+          <div className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-[#C0392B] mb-1">
             {isAdmin ? 'QUẢN LÝ KHO KEY & PHÊ DUYỆT XUẤT KHO' : 'YÊU CẦU CẤP KEY BẢN QUYỀN GỬI ADMIN DUYỆT'}
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
+          <h1 className="text-lg sm:text-2xl font-black text-[#2B1810] tracking-tight">
             QUẢN LÝ KHO KEY BẢN QUYỀN WINDOWS &amp; OFFICE
           </h1>
           <p className="text-xs text-[#6E5D53] mt-1 max-w-2xl">
@@ -481,33 +481,33 @@ export default function QuanLyKeyPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
           <button
             type="button"
             onClick={() => setIsTakeKeyModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs text-center"
           >
             {isAdmin ? 'XUẤT / CẤP KEY' : '+ YÊU CẦU CẤP KEY'}
           </button>
 
           {/* Admin shortcuts */}
           {isAdmin && (
-            <>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setIsAddKeyModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-[#2B1810] hover:bg-black text-white text-xs font-bold transition-all"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#2B1810] hover:bg-black text-white text-xs font-bold transition-all text-center"
               >
                 + NHẬP THÊM KEY VÀO KHO
               </button>
               <button
                 type="button"
                 onClick={() => setIsAddCategoryModalOpen(true)}
-                className="px-3.5 py-2.5 rounded-xl bg-white border border-[#E8E2D9] text-[#2B1810] hover:border-[#C0392B] text-xs font-bold transition-all"
+                className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-white border border-[#E8E2D9] text-[#2B1810] hover:border-[#C0392B] text-xs font-bold transition-all text-center"
               >
                 + QUẢN LÝ PHÂN LOẠI
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -563,12 +563,12 @@ export default function QuanLyKeyPage() {
         </div>
       </div>
 
-      {/* NAVIGATION TABS */}
-      <div className="border-b border-[#E8E2D9] flex items-center gap-2">
+      {/* NAVIGATION TABS - HORIZONTAL SCROLL ON MOBILE */}
+      <div className="border-b border-[#E8E2D9] flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar flex-nowrap pb-1">
         <button
           type="button"
           onClick={() => setActiveTab('requests')}
-          className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+          className={`px-3.5 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
             activeTab === 'requests'
               ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
               : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
@@ -581,7 +581,7 @@ export default function QuanLyKeyPage() {
           <button
             type="button"
             onClick={() => setActiveTab('inventory')}
-            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+            className={`px-3.5 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
               activeTab === 'inventory'
                 ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
                 : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
@@ -595,7 +595,7 @@ export default function QuanLyKeyPage() {
           <button
             type="button"
             onClick={() => setActiveTab('reports')}
-            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+            className={`px-3.5 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
               activeTab === 'reports'
                 ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
                 : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
@@ -609,7 +609,7 @@ export default function QuanLyKeyPage() {
           <button
             type="button"
             onClick={() => setActiveTab('email')}
-            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
+            className={`px-3.5 sm:px-5 py-2.5 sm:py-3 text-[11px] sm:text-xs font-bold uppercase tracking-wider transition-all border-b-2 whitespace-nowrap shrink-0 ${
               activeTab === 'email'
                 ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
                 : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
@@ -626,12 +626,12 @@ export default function QuanLyKeyPage() {
       {activeTab === 'requests' && (
         <div className="space-y-4">
           {/* Request Filters & Search */}
-          <div className="bg-[#FFFDF9] p-4 rounded-xl border border-[#E8E2D9] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
+          <div className="bg-[#FFFDF9] p-3 sm:p-4 rounded-xl border border-[#E8E2D9] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap pb-1 sm:pb-0">
               <button
                 type="button"
                 onClick={() => setRequestFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   requestFilter === 'all'
                     ? 'bg-[#2B1810] text-white'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
@@ -642,7 +642,7 @@ export default function QuanLyKeyPage() {
               <button
                 type="button"
                 onClick={() => setRequestFilter('pending')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   requestFilter === 'pending'
                     ? 'bg-[#C0392B] text-white'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#C0392B]'
@@ -659,7 +659,7 @@ export default function QuanLyKeyPage() {
               <button
                 type="button"
                 onClick={() => setRequestFilter('approved')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   requestFilter === 'approved'
                     ? 'bg-blue-700 text-white'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-blue-700'
@@ -671,7 +671,7 @@ export default function QuanLyKeyPage() {
               <button
                 type="button"
                 onClick={() => setRequestFilter('activated')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   requestFilter === 'activated'
                     ? 'bg-emerald-700 text-white'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-emerald-700'
@@ -1599,7 +1599,7 @@ export default function QuanLyKeyPage() {
       {/* ========================================================================= */}
       {isTakeKeyModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-fade-in font-sans">
             <div className="p-4 bg-[#C0392B] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
                 {isAdmin ? 'XUẤT / CẤP KEY CHO KHÁCH HÀNG' : 'TẠO YÊU CẦU CẤP KEY (CHỜ ADMIN DUYỆT)'}
@@ -1771,7 +1771,7 @@ export default function QuanLyKeyPage() {
       {/* ========================================================================= */}
       {isAddKeyModalOpen && isAdmin && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-fade-in font-sans">
             <div className="p-4 bg-[#2B1810] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
                 NHẬP KEY VÀO KHO BẢN QUYỀN
@@ -1918,7 +1918,7 @@ export default function QuanLyKeyPage() {
       {/* ========================================================================= */}
       {isAddCategoryModalOpen && isAdmin && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg overflow-hidden animate-fade-in font-sans">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-lg max-h-[92vh] overflow-y-auto animate-fade-in font-sans">
             <div className="p-4 bg-[#2B1810] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
                 THÊM PHÂN LOẠI BẢN QUYỀN MỚI
@@ -2063,7 +2063,7 @@ export default function QuanLyKeyPage() {
       {/* ========================================================================= */}
       {faultyModalReq && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border-2 border-[#C0392B] w-full max-w-md overflow-hidden animate-fade-in font-sans">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border-2 border-[#C0392B] w-full max-w-md max-h-[92vh] overflow-y-auto animate-fade-in font-sans">
             <div className="p-4 bg-[#C0392B] text-white flex items-center justify-between">
               <h3 className="text-sm font-black tracking-tight text-white uppercase">
                 XÁC NHẬN KEY KHÔNG HOẠT ĐỘNG

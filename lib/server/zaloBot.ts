@@ -289,6 +289,7 @@ export type WebhookEventType =
   | 'sale_success' // Bán laptop/pc thành công -> bot chúc mừng đến nhóm đã cài đặt sẵn
   | 'key_release_success' // Phát hành/bán key bản quyền thành công -> bot chúc mừng đến nhóm
   | 'customer_zalo_order' // Gửi xác nhận đơn hàng đến Zalo khách hàng
+  | 'delivery_dispatch' // Phân công nhân viên giao hàng tận nơi
   | 'test_notification'; // Thông báo test từ admin
 
 /**
@@ -309,6 +310,7 @@ export async function dispatchSystemEvent(
     if (eventType === 'sale_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'key_release_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'customer_zalo_order') shouldNotifyZalo = true;
+    if (eventType === 'delivery_dispatch') shouldNotifyZalo = true;
     if (eventType === 'test_notification') shouldNotifyZalo = true;
   }
 
@@ -413,8 +415,24 @@ export async function dispatchSystemEvent(
         `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản QR'}\n` +
         `🛡️ Bảo hành: Máy chuẩn A, nguyên bản, hỗ trợ nhanh chóng.\n` +
         `⏰ Thời gian đặt: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n`;
+    } else if (eventType === 'delivery_dispatch') {
+      const priceStr = typeof payload.devicePrice === 'number'
+        ? payload.devicePrice.toLocaleString('vi-VN') + ' đ'
+        : (payload.devicePrice || '0 đ');
+      formattedText = `🚚 [PHÂN CÔNG GIAO HÀNG ĐƠN MỚI]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} để chuẩn bị máy chu đáo cho bạn. Trân trọng cảm ơn!`;
+        `🛵 Nhân viên giao hàng: ${payload.shipperName || 'Chưa rõ'}${payload.shipperPhone ? ` (${payload.shipperPhone})` : ''}\n` +
+        `📦 Mã đơn: ${payload.orderCode || 'N/A'}\n` +
+        `💻 Thiết bị: ${payload.deviceName || 'N/A'}\n` +
+        `💰 Tiền cần thu: ${priceStr} (${payload.paymentMethod === 'cash' ? 'Thu tiền mặt khi giao' : 'Đã thanh toán QR'})\n` +
+        `👤 Khách nhận: ${payload.customerName || 'N/A'}\n` +
+        `📞 SĐT khách: ${payload.customerPhone || 'N/A'}\n` +
+        `📍 Địa chỉ giao hàng: ${payload.shippingAddress || 'Theo thông tin đơn'}\n` +
+        (payload.note ? `📝 Ghi chú: ${payload.note}\n` : '') +
+        `⏰ Phân bổ lúc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 Người được phân bổ vui lòng liên hệ khách để sắp xếp đi giao hàng chu đáo nhé! 🚀`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

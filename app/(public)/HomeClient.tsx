@@ -531,21 +531,13 @@ export default function HomePage() {
                         </div>
                       </div>
 
-                      <div className="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">
+                      <div className="pt-5 mt-4 border-t border-slate-100 flex items-center">
                         <Link
                           href={`/mua-hang?device=${encodeURIComponent(cat.name)}&price=${cat.price}&tag=${encodeURIComponent(cat.type || 'KEY')}`}
-                          className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
+                          className="w-full py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
                         >
                           MUA KEY TRỰC TIẾP
                         </Link>
-                        <a
-                          href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ' + cat.name)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="py-2.5 px-3.5 rounded-xl border border-[#E8E2D9] hover:bg-slate-50 text-[#2B1810] font-semibold text-xs transition-colors"
-                        >
-                          Zalo
-                        </a>
                       </div>
                     </div>
                   ))}

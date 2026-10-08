@@ -764,7 +764,20 @@ export function StoreProvider({
     setThemeMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
       if (typeof window !== 'undefined') {
-        localStorage.setItem('vtat_theme_v1', next);
+        try {
+          localStorage.setItem('vtat_theme_v1', next);
+          if (next === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {
+          console.warn('Cannot update theme to DOM/storage:', e);
+        }
       }
       return next;
     });

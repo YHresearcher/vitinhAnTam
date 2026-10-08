@@ -36,6 +36,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
   const {
     tickets,
     customers,
+    inventory,
     onsiteDispatches,
     keyReleaseRequests,
     canAccessPayroll,
@@ -51,6 +52,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     }
   };
 
+  const reservedMachinesCount = inventory.filter((i) => i.qc_status === 'reserved').length;
   const pendingTicketsCount = tickets.filter(
     (t) => t.status === 'processing' || t.status === 'in_progress' || t.status === 'received'
   ).length;
@@ -105,10 +107,10 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       },
       {
         label: 'Kho máy & Linh kiện',
-        href: '/kho-may',
+        href: reservedMachinesCount > 0 ? '/kho-may?status=reserved' : '/kho-may',
         icon: Boxes,
-        badge: null,
-        badgeColor: '',
+        badge: reservedMachinesCount > 0 ? `${reservedMachinesCount} đợi bán` : null,
+        badgeColor: 'bg-purple-100 text-purple-800 font-bold border border-purple-200 text-[10px]',
         visible: true,
       },
       {
