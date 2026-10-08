@@ -372,7 +372,16 @@ export async function PATCH(request: NextRequest) {
           })
           .eq('id', body.id);
 
-        if (!error) {
+                if (!error) {
+          // Xóa notification khi đơn hàng được xác nhận/hủy/hoàn tất (không còn pending)
+          if (['confirmed', 'processing', 'completed', 'cancelled'].includes(body.status)) {
+            try {
+              await db.from('notifications').delete().eq('reference_id', body.id).eq('type', 'order');
+            } catch {
+              // Không chặn nếu xóa notification thất bại
+            }
+          }
+
           // Tự động đồng bộ trạng thái máy trong kho
           const deviceTag = body.matched_device_tag || orderData?.device_tag;
           if (deviceTag) {
