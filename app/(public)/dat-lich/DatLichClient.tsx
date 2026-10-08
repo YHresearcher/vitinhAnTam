@@ -11,10 +11,13 @@ import {
   Store,
   CheckCircle2,
   AlertCircle,
-  MessageCircle,
   Bike,
   Sparkles,
   MapPin,
+  Home,
+  Search,
+  RotateCcw,
+  Check,
 } from 'lucide-react';
 
 function AppointmentBookingContent() {
@@ -216,14 +219,6 @@ function AppointmentBookingContent() {
     }
   };
 
-  const getZaloShareUrl = () => {
-    if (!bookingSuccess) return systemSettings.zaloLink;
-    const msg = currentLang === 'en'
-      ? `Hello Vi Tinh An Tam, I just scheduled an appointment on the website:\n- Ticket: ${bookingSuccess.code}\n- Customer: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Device: ${deviceType}\n- Service: ${bookingSuccess.service}\n- Scheduled Time: ${bookingSuccess.slot} on ${bookingSuccess.date}\n- Location: ${bookingSuccess.location}\nPlease confirm!`
-      : `Xin chào Vi Tính An Tâm, tôi vừa đặt lịch hẹn trên website:\n- Mã phiếu: ${bookingSuccess.code}\n- Khách hàng: ${bookingSuccess.name} (${bookingSuccess.phone})\n- Thiết bị: ${deviceType}\n- Nhu cầu: ${bookingSuccess.service}\n- Thời gian: ${bookingSuccess.slot} ngày ${bookingSuccess.date}\n- Địa điểm: ${bookingSuccess.location}\nNhờ kỹ thuật viên xác nhận giúp tôi!`;
-    return `https://zalo.me/${systemSettings.zaloNumber}?text=${encodeURIComponent(msg)}`;
-  };
-
   return (
     <div className="min-h-screen bg-[#FAF7F2] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
@@ -260,13 +255,19 @@ function AppointmentBookingContent() {
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                 {t.successTitle}
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600">
+              <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto leading-relaxed">
                 {currentLang === 'en' ? (
                   <>Thank you <strong>{bookingSuccess.name}</strong>, {t.successMsg}</>
                 ) : (
                   <>Cảm ơn <strong>{bookingSuccess.name}</strong>, {t.successMsg}</>
                 )}
               </p>
+            </div>
+
+            {/* Auto-dispatched Notification Status */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+              <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>{t.autoSentNote || 'Hệ thống đã tự động gửi thông tin lịch hẹn đến bộ phận kỹ thuật.'}</span>
             </div>
 
             <div className="bg-[#FAF7F2] rounded-2xl p-5 text-xs text-left max-w-md mx-auto space-y-2.5 border border-[#E8E2D9]">
@@ -300,28 +301,29 @@ function AppointmentBookingContent() {
               </div>
             </div>
 
+            {/* Action Buttons: Kết thúc quy trình đặt lịch */}
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <a
-                href={getZaloShareUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-3 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white text-xs font-bold shadow-md shadow-[#0068FF]/20 transition-all flex items-center gap-2"
-              >
-                <MessageCircle className="w-4 h-4" />
-                <span>{t.btnZaloConfirm}</span>
-              </a>
-              <button
-                onClick={() => setBookingSuccess(null)}
-                className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors"
-              >
-                {t.btnBookAnother}
-              </button>
               <Link
                 href="/"
-                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors"
+                className="px-6 py-3 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold shadow-md shadow-[#C0392B]/20 transition-all flex items-center gap-2"
               >
-                {t.btnBackHome}
+                <Home className="w-4 h-4" />
+                <span>{t.btnBackHome}</span>
               </Link>
+              <Link
+                href={`/tra-cuu-bao-hanh?ticket=${bookingSuccess.code}`}
+                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors flex items-center gap-2"
+              >
+                <Search className="w-4 h-4 text-slate-600" />
+                <span>{t.btnTrackTicket || 'Tra cứu tiến độ phiếu'}</span>
+              </Link>
+              <button
+                onClick={() => setBookingSuccess(null)}
+                className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors flex items-center gap-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                <span>{t.btnBookAnother}</span>
+              </button>
             </div>
           </div>
         ) : (
