@@ -172,6 +172,8 @@ export async function POST(request: NextRequest) {
 
     const orderCode = body.order_code?.trim() || `#AT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
     const useZalo = Boolean(body.use_zalo);
+    // Chỉ include các cột tồn tại trong schema bảng orders của Supabase
+    // (loại bỏ use_zalo vì không có column này trong DB)
     const order: Record<string, unknown> = {
       order_code: orderCode,
       customer_name: customerName,
@@ -183,7 +185,6 @@ export async function POST(request: NextRequest) {
       payment_method: body.payment_method,
       delivery_method: body.delivery_method,
       note: (body.note || '').trim(),
-      use_zalo: useZalo,
       status: 'pending',
     };
 

@@ -375,7 +375,7 @@ export default function HomePage() {
                       <span>{t.products.inStockBadge || 'SẴN KHO'}</span>
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
-                      {prod.badge}
+                      {prod.isSold ? t.products.soldBadge : `Còn ${prod.stockCount} máy`}
                     </span>
                   </div>
                 </div>
@@ -946,7 +946,7 @@ export default function HomePage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold mb-1.5 border border-emerald-200">
                   <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
-                  <span>{t.qcModal.badge}</span>
+                  <span>{selectedProduct.isSold ? t.products.soldBadge : `Còn ${selectedProduct.stockCount} máy`}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
                 <div className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
