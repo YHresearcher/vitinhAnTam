@@ -106,7 +106,12 @@ export function DeadlineTrackingWidget() {
   }
 
   return (
-    <aside aria-label="Cảnh Báo Hạn Trả" className="fixed bottom-6 right-4 z-50 font-sans">
+    <aside
+      aria-label="Cảnh Báo Hạn Trả"
+      className={`fixed bottom-6 right-4 font-sans transition-all duration-200 ${
+        isOpen ? 'z-[70]' : 'z-40'
+      }`}
+    >
       {/* 1. MÀN HÌNH CHI TIẾT (KHI MỞ RỘNG) */}
       {isOpen ? (
         <div className="w-[360px] sm:w-[420px] bg-white rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-bottom-5 duration-200">

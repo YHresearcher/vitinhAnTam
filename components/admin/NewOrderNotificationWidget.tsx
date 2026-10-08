@@ -154,7 +154,12 @@ export function NewOrderNotificationWidget() {
 
 
   return (
-    <aside className="fixed bottom-4 right-4 z-[60] print:hidden">
+    <aside
+      aria-label="Đơn Hàng Mới Cần Xác Nhận"
+      className={`fixed right-4 print:hidden transition-all duration-200 ${
+        isOpen ? 'bottom-6 z-[70]' : 'bottom-[232px] z-40'
+      }`}
+    >
       {isOpen ? (
         <div className="w-[340px] sm:w-[380px] rounded-xl overflow-hidden shadow-2xl border border-red-200 bg-white">
           {/* Header */}

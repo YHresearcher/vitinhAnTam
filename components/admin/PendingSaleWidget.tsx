@@ -95,7 +95,12 @@ export function PendingSaleWidget() {
   };
 
   return (
-    <aside aria-label="Máy Đợi Bán" className="fixed bottom-24 right-4 z-40 font-sans print:hidden">
+    <aside
+      aria-label="Máy Đợi Bán"
+      className={`fixed right-4 font-sans print:hidden transition-all duration-200 ${
+        isOpen ? 'bottom-6 z-[70]' : 'bottom-[140px] z-40'
+      }`}
+    >
       {isOpen ? (
         <div className="w-[350px] sm:w-[410px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-purple-200 dark:border-purple-900 overflow-hidden flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
