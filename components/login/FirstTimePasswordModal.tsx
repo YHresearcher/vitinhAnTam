@@ -57,6 +57,7 @@ export function FirstTimePasswordModal({
           identifier: userAccount.identifier,
           currentPassword: currentPassword.trim(),
           newPassword: newPassword.trim(),
+          confirmPassword: confirmPassword.trim(),
         }),
       });
 

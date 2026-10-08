@@ -34,6 +34,17 @@ function isStaff(request: NextRequest): boolean {
   return Boolean(session && STAFF_ROLES.includes(session.role));
 }
 
+/**
+ * Ưu tiên service-role client (bỏ qua RLS) để ghi/đọc đơn hàng luôn thành công;
+ * fallback về anon client nếu chưa cấu hình server key.
+ */
+function getDb() {
+  const serverSb = getServerSupabase();
+  if (serverSb) return serverSb;
+  if (isSupabaseConfigured() && supabase) return supabase;
+  return null;
+}
+
 /** Fallback khi Supabase chưa cấu hình: lưu đơn vào file .data/orders.json */
 function readFallbackOrders(): Array<Record<string, unknown>> {
   try {
@@ -176,9 +187,10 @@ export async function POST(request: NextRequest) {
     let savedId: string | null = null;
     let source = 'fallback';
 
-    if (isSupabaseConfigured() && supabase) {
+    const db = getDb();
+    if (db) {
       try {
-        const { data, error } = await supabase.from('orders').insert([order]).select('id').single();
+        const { data, error } = await db.from('orders').insert([order]).select('id').single();
         if (!error && data) {
           savedId = data.id;
           source = 'supabase';
@@ -194,13 +206,15 @@ export async function POST(request: NextRequest) {
             read: false,
           };
           try {
-            await supabase.from('notifications').insert([notification]);
+            await db.from('notifications').insert([notification]);
           } catch {
             // Không chặn đơn hàng nếu thông báo DB lỗi
           }
 
           // Gửi email nội bộ (best-effort)
           notifyStaffByEmail({ ...order, id: data.id }).catch(() => undefined);
+        } else if (error) {
+          console.warn('Supabase order insert error:', error.message);
         }
       } catch (err) {
         console.warn('Supabase order insert failed, using fallback:', err);
@@ -260,23 +274,39 @@ export async function GET(request: NextRequest) {
   }
 
   const status = request.nextUrl.searchParams.get('status');
+  let rows: Array<Record<string, unknown>> = [];
 
-  if (isSupabaseConfigured() && supabase) {
+  const db = getDb();
+  if (db) {
     try {
-      let query = supabase.from('orders').select('*').order('created_at', { ascending: false });
+      let query = db.from('orders').select('*').order('created_at', { ascending: false });
       if (status) query = query.eq('status', status);
       const { data, error } = await query.limit(100);
       if (!error && data) {
-        return NextResponse.json({ success: true, total: data.length, data, source: 'supabase' });
+        rows = data as Array<Record<string, unknown>>;
+      } else if (error) {
+        console.warn('Supabase orders select error:', error.message);
       }
-    } catch {
-      // Fallback
+    } catch (err) {
+      console.warn('Supabase orders select failed:', err);
     }
   }
 
-  let fallback = readFallbackOrders();
-  if (status) fallback = fallback.filter((o) => o.status === status);
-  return NextResponse.json({ success: true, total: fallback.length, data: fallback, source: 'fallback' });
+  // Merge đơn còn nằm trong file fallback (id bắt đầu bằng 'local-') để không bỏ sót
+  const seenCodes = new Set(rows.map((o) => String(o.order_code || '')));
+  for (const o of readFallbackOrders()) {
+    if (seenCodes.has(String(o.order_code || ''))) continue;
+    if (status && o.status !== status) continue;
+    rows.push(o);
+  }
+  rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+
+  return NextResponse.json({
+    success: true,
+    total: rows.length,
+    data: rows,
+    source: db ? 'supabase+fallback' : 'fallback',
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -300,10 +330,11 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    if (isSupabaseConfigured() && supabase) {
+    const db = getDb();
+    if (db) {
       try {
         const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-        const { error } = await supabase
+        const { error } = await db
           .from('orders')
           .update({
             status: body.status,

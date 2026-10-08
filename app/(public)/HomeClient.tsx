@@ -448,8 +448,7 @@ export default function HomePage() {
           {/* Nút Xem Toàn Bộ Kho Máy Tính Có Sẵn (Chỉ đếm máy tính bàn / laptop) đặt TRƯỚC danh sách key */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href="#san-pham"
-              onClick={(e) => scrollToSection(e, 'san-pham')}
+              href="/danh-muc-san-pham"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center cursor-pointer"
             >
               <span>
