@@ -7,6 +7,7 @@ import { Search, Plus, KeyRound, Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
+import { PendingSaleWidget } from '@/components/admin/PendingSaleWidget';
 import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
 import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -177,29 +178,20 @@ export default function AdminLayout({
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Current User Role Badge */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-slate-700 dark:text-slate-300">{currentUser.roleTitle}</span>
-            </div>
-
-            {/* Quick Key Navigation */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* Quick Key Navigation - Desktop / Tablet */}
             <Link
               href="/quan-ly-key"
               prefetch={true}
-              className="flex items-center gap-1.5 h-8.5 px-2.5 sm:px-3 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] dark:bg-slate-800 text-[#2B1810] dark:text-slate-200 border-[#E8E2D9] dark:border-slate-700 hover:border-[#C0392B] dark:hover:border-red-500 hover:bg-red-50/30 dark:hover:bg-red-950/30 shrink-0"
+              className="hidden lg:flex items-center gap-1.5 h-8.5 px-2.5 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] dark:bg-slate-800 text-[#2B1810] dark:text-slate-200 border-[#E8E2D9] dark:border-slate-700 hover:border-[#C0392B] dark:hover:border-red-500 hover:bg-red-50/30 dark:hover:bg-red-950/30 shrink-0"
               title="Kho Key Bản Quyền"
             >
               <KeyRound className="w-3.5 h-3.5 text-[#C0392B] dark:text-red-400" />
-              <span className="hidden xs:inline font-mono">KHO KEY</span>
+              <span className="font-mono">KHO KEY</span>
             </Link>
 
-            {/* Theme Toggle Icon Button (Dark / Light) */}
-            <ThemeToggle variant="icon" />
-
-            {/* Language Switcher */}
-            <div className="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+            {/* Language Switcher - Hide on very small screens to preserve user space */}
+            <div className="hidden sm:inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
               <button
                 type="button"
                 onClick={() => setLang('vi')}
@@ -226,32 +218,41 @@ export default function AdminLayout({
               </button>
             </div>
 
-            {/* Create Ticket Button */}
+            {/* Theme Toggle Icon Button (Dark / Light) */}
+            <ThemeToggle variant="icon" />
+
+            {/* Create Ticket Button (Icon only on mobile, text on sm+) */}
             <Link
               href="/phieu-sua-chua/tao-moi"
               prefetch={true}
-              className="flex items-center gap-1 h-8.5 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
+              className="flex items-center gap-1 h-8 sm:h-8.5 px-2 sm:px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
+              title="Tạo phiếu tiếp nhận máy mới"
             >
               <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>Tạo phiếu</span>
+              <span className="hidden sm:inline">Tạo phiếu</span>
             </Link>
 
-            {/* User Profile & Logout */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-700">
+            {/* User Profile & Logout - FULLY OPTIMIZED FOR MOBILE */}
+            <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 dark:border-slate-700 min-w-0">
               <div
-                className={`w-7.5 h-7.5 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs`}
-                title={currentUser.name}
+                className={`w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0`}
+                title={`${currentUser.name} (${currentUser.roleTitle})`}
               >
                 {currentUser.name.charAt(0)}
               </div>
-              <div className="hidden md:flex flex-col leading-tight text-left">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{currentUser.name}</span>
+              <div className="flex flex-col leading-tight text-left min-w-0 max-w-[85px] xs:max-w-[120px] sm:max-w-[160px] md:max-w-none">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                  {currentUser.name}
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">
+                  {currentUser.roleTitle}
+                </span>
               </div>
               <button
                 type="button"
                 onClick={handleLogout}
                 title="Đăng xuất khỏi hệ thống"
-                className="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded text-xs font-semibold transition-colors cursor-pointer"
+                className="px-1.5 sm:px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded text-xs font-semibold transition-colors cursor-pointer shrink-0"
               >
                 Thoát
               </button>
@@ -327,6 +328,9 @@ export default function AdminLayout({
 
       {/* NEW ORDER NOTIFICATION WIDGET (Đơn hàng mới từ website — sales/admin/ktv xác nhận) */}
       <NewOrderNotificationWidget />
+
+      {/* PENDING SALE WIDGET (Máy đợi bán do khách đặt hàng — nhận tại kho / giao hàng) */}
+      <PendingSaleWidget />
 
       {/* ADMIN KEY RELEASE POPUP (Thông báo & duyệt cấp key thời gian thực) */}
       <AdminKeyReleasePopup />

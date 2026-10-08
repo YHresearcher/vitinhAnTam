@@ -46,11 +46,16 @@ const STATUSES = [
 ];
 
 export default function OrderManagementPage() {
-  const { inventory, sellInventoryItem } = useViTinhAnTamStore();
+  const { currentUser, inventory, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [executingOrder, setExecutingOrder] = useState<Order | null>(null);
+
+  // Chỉ 1 trong 3 người: admin, sales_manager, tech_manager có quyền xác nhận đơn hàng
+  const canConfirmOrder = Boolean(
+    currentUser && ['admin', 'sales_manager', 'tech_manager'].includes(currentUser.role)
+  );
 
   const fetchOrders = useCallback(async (showLoading = false) => {
     try {
@@ -74,11 +79,62 @@ export default function OrderManagementPage() {
   }, [fetchOrders]);
 
   const changeStatus = async (orderId: string, newStatus: string) => {
+    if (newStatus === 'confirmed' && !canConfirmOrder) {
+      message.warning('Chỉ Admin, Sales Manager hoặc Technical Manager mới có quyền xác nhận đơn hàng!');
+      return;
+    }
     try {
+      const targetOrder = orders.find((o) => o.id === orderId);
+      let matchedTag = targetOrder?.device_tag;
+
+      // 1. Tự động liên kết và chuyển trạng thái máy trong kho sang "Đang đợi bán" khi xác nhận đơn
+      if (newStatus === 'confirmed' && targetOrder) {
+        let matched = targetOrder.device_tag
+          ? inventory.find((i) => i.service_tag === targetOrder.device_tag && i.qc_status !== 'sold')
+          : null;
+        if (!matched && targetOrder.device_name) {
+          matched = inventory.find(
+            (i) =>
+              i.qc_status === 'ready_to_sell' &&
+              (targetOrder.device_name.toLowerCase().includes((i.device_model || i.model || '').toLowerCase()) ||
+                (i.device_model || i.model || '').toLowerCase().includes(targetOrder.device_name.toLowerCase()))
+          );
+        }
+
+        if (matched) {
+          matchedTag = matched.service_tag;
+          await reserveInventoryItem({
+            itemId: matched.id,
+            customerName: targetOrder.customer_name,
+            customerPhone: targetOrder.customer_phone,
+            orderCode: targetOrder.order_code,
+            orderId: targetOrder.id,
+            deliveryMethod: targetOrder.delivery_method,
+            note: targetOrder.note,
+          });
+          message.info(
+            `Đã ghi nhận máy ${matched.service_tag} trong kho chuyển sang [Đang đợi bán] cho khách ${targetOrder.customer_name}!`
+          );
+        }
+      } else if (newStatus === 'cancelled' && targetOrder) {
+        // Nếu hủy đơn, giải phóng máy trong kho về lại lưu kho sẵn bán
+        const reservedItem = inventory.find(
+          (i) => i.reserved_order_id === targetOrder.id || i.reserved_order_code === targetOrder.order_code
+        );
+        if (reservedItem) {
+          await cancelReservationItem(reservedItem.id);
+          message.info(`Đã hủy giữ máy ${reservedItem.service_tag} và đưa về lưu kho sẵn bán.`);
+        }
+      }
+
       const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: orderId, status: newStatus }),
+        body: JSON.stringify({
+          id: orderId,
+          status: newStatus,
+          matched_device_tag: matchedTag,
+        }),
       });
       if (res.ok) {
         message.success('Cập nhật trạng thái đơn hàng thành công!');
@@ -268,14 +324,20 @@ export default function OrderManagementPage() {
 
                         <div className="pt-2 border-t border-slate-100 flex flex-col gap-1">
                           {order.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={() => changeStatus(order.id, 'confirmed')}
-                              className="w-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
-                            >
-                              <span>Xác nhận đơn</span>
-                              <ArrowRight className="w-3 h-3" />
-                            </button>
+                            canConfirmOrder ? (
+                              <button
+                                type="button"
+                                onClick={() => changeStatus(order.id, 'confirmed')}
+                                className="w-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                              >
+                                <span>Xác nhận đơn</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            ) : (
+                              <div className="w-full text-[11px] font-semibold bg-slate-100 text-slate-500 py-1.5 rounded-lg text-center border border-slate-200">
+                                ⏳ Chờ Admin / Quản lý duyệt
+                              </div>
+                            )
                           )}
                           {order.status === 'confirmed' && (
                             <button

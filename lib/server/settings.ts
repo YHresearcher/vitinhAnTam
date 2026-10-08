@@ -42,6 +42,7 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['notifyOnNewOrder', 'notify_on_new_order'],
   ['notifyOnNewTicket', 'notify_on_new_ticket'],
   ['notifyOnKeyRequest', 'notify_on_key_request'],
+  ['notifyOnSaleSuccess', 'notify_on_sale_success'],
 ];
 
 export function rowToSettings(row: Record<string, unknown>): SystemSettings {

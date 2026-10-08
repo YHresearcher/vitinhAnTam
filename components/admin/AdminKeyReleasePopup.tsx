@@ -407,7 +407,7 @@ export function AdminKeyReleasePopup() {
       {pendingRequests.length > 0 && !isOpen && (
         <aside
           aria-label="Widget Nhắc Nhở Duyệt Key Admin"
-          className="fixed bottom-[136px] sm:bottom-[142px] right-4 sm:right-6 lg:right-8 z-40 font-sans"
+          className="fixed bottom-[324px] right-4 z-40 font-sans"
         >
           <button
             type="button"
@@ -440,7 +440,7 @@ export function AdminKeyReleasePopup() {
       {isOpen && (
         <aside
           aria-label="Thông báo yêu cầu xuất key"
-          className="fixed bottom-6 right-4 sm:right-6 lg:right-8 z-[60] w-[calc(100vw-32px)] sm:w-[420px] max-w-full font-sans animate-fade-in shadow-2xl"
+          className="fixed bottom-6 right-4 sm:right-6 lg:right-8 z-[70] w-[calc(100vw-32px)] sm:w-[420px] max-w-full font-sans animate-fade-in shadow-2xl"
         >
           <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border-2 border-red-500 overflow-hidden flex flex-col text-[#2B1810] ring-2 ring-black/10">
             <div className="bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white p-3.5 flex items-center justify-between shadow-xs">

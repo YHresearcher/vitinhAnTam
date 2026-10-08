@@ -286,6 +286,9 @@ export type WebhookEventType =
   | 'new_order' // Khách đặt đơn mua hàng / thanh toán VietQR
   | 'new_ticket' // Tạo phiếu sửa chữa mới
   | 'key_request' // Yêu cầu xuất/cấp License Key
+  | 'sale_success' // Bán laptop/pc thành công -> bot chúc mừng đến nhóm đã cài đặt sẵn
+  | 'key_release_success' // Phát hành/bán key bản quyền thành công -> bot chúc mừng đến nhóm
+  | 'customer_zalo_order' // Gửi xác nhận đơn hàng đến Zalo khách hàng
   | 'test_notification'; // Thông báo test từ admin
 
 /**
@@ -303,6 +306,9 @@ export async function dispatchSystemEvent(
     if (eventType === 'new_order' && settings.notifyOnNewOrder !== false) shouldNotifyZalo = true;
     if (eventType === 'new_ticket' && settings.notifyOnNewTicket !== false) shouldNotifyZalo = true;
     if (eventType === 'key_request' && settings.notifyOnKeyRequest !== false) shouldNotifyZalo = true;
+    if (eventType === 'sale_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
+    if (eventType === 'key_release_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
+    if (eventType === 'customer_zalo_order') shouldNotifyZalo = true;
     if (eventType === 'test_notification') shouldNotifyZalo = true;
   }
 
@@ -338,6 +344,7 @@ export async function dispatchSystemEvent(
         `📍 Giao đến: ${payload.shippingAddress || 'Nhận tại cửa hàng'}\n` +
         `💰 Tổng tiền: ${typeof payload.totalAmount === 'number' ? payload.totalAmount.toLocaleString('vi-VN') + ' đ' : payload.totalAmount || '0 đ'}\n` +
         `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản VietQR'}\n` +
+        (payload.useZalo ? `📱 Khách dùng Zalo: Có xác nhận qua SĐT này\n` : '') +
         (payload.note ? `📝 Ghi chú: ${payload.note}\n` : '') +
         `⏱️ Tạo lúc: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
@@ -361,6 +368,53 @@ export async function dispatchSystemEvent(
         `⏱️ Lúc: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `👉 Vui lòng duyệt cấp key trên phần mềm!`;
+    } else if (eventType === 'sale_success') {
+      const soldPriceStr = typeof payload.soldPrice === 'number'
+        ? payload.soldPrice.toLocaleString('vi-VN') + ' đ'
+        : (payload.soldPrice || '0 đ');
+      formattedText = `🎉 [CHÚC MỪNG BÁN HÀNG THÀNH CÔNG!]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `🏆 Người chốt đơn: ${payload.sellerName || 'Admin'}\n` +
+        `💻 Thiết bị: ${payload.deviceName || 'Máy tính'}\n` +
+        `🏷️ Service Tag: ${payload.serviceTag || payload.serialNumber || 'N/A'}\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 SĐT: ${payload.customerPhone || 'N/A'}\n` +
+        (payload.customerCode ? `🎫 Mã khách hàng: ${payload.customerCode}\n` : '') +
+        `💰 Giá trị: ${soldPriceStr}\n` +
+        `🛡️ Bảo hành: ${payload.warrantyMonths || 12} tháng\n` +
+        (payload.shelfLocation ? `📍 Kệ xuất kho: ${payload.shelfLocation}\n` : '') +
+        `⏱️ Hoàn tất lúc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `🚀 Vi Tính An Tâm chúc mừng toàn đội ngũ! Cùng nhau bứt phá doanh số nhé! 💪✨`;
+    } else if (eventType === 'key_release_success') {
+      formattedText = `🔑 [PHÁT HÀNH KEY BẢN QUYỀN THÀNH CÔNG!]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `🏷️ Phần mềm: ${payload.categoryName || payload.softwareName || 'Bản quyền phần mềm'}\n` +
+        (payload.keyCode ? `🔐 Mã Key: ${payload.keyCode}\n` : '') +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 SĐT: ${payload.customerPhone || 'N/A'}\n` +
+        (payload.ticketCode ? `🎫 Mã phiếu / Đơn: ${payload.ticketCode}\n` : '') +
+        `👨‍💻 Người xuất / cấp: ${payload.issuerName || payload.adminName || 'Admin'}\n` +
+        `⏱️ Hoàn tất lúc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `🚀 Key đã được phát hành và kích hoạt thành công cho khách hàng! ✨`;
+    } else if (eventType === 'customer_zalo_order') {
+      const amountStr = typeof payload.totalAmount === 'number'
+        ? payload.totalAmount.toLocaleString('vi-VN') + ' đ'
+        : (payload.totalAmount || '0 đ');
+      formattedText = `📱 [XÁC NHẬN ĐƠN HÀNG QUA ZALO KHÁCH HÀNG]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `Chào bạn ${payload.customerName || 'quý khách'},\n` +
+        `Vi Tính An Tâm xin gửi xác nhận đơn đặt hàng của bạn:\n` +
+        `📦 Mã đơn: ${payload.orderCode || 'N/A'}\n` +
+        `💻 Sản phẩm: ${payload.deviceName || 'N/A'}\n` +
+        `💰 Tổng tiền: ${amountStr}\n` +
+        `📍 Nhận hàng: ${payload.deliveryMethod === 'pickup' ? 'Nhận trực tiếp tại cửa hàng' : `Giao tận nơi — ${payload.shippingAddress || ''}`}\n` +
+        `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản QR'}\n` +
+        `🛡️ Bảo hành: Máy chuẩn A, nguyên bản, hỗ trợ nhanh chóng.\n` +
+        `⏰ Thời gian đặt: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} để chuẩn bị máy chu đáo cho bạn. Trân trọng cảm ơn!`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

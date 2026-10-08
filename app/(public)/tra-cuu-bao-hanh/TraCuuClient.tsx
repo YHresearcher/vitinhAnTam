@@ -26,7 +26,12 @@ interface SearchResultData {
 
 function WarrantyLookupContent() {
   const searchParams = useSearchParams();
-  const urlTag = searchParams.get('tag') || '';
+  const urlTag =
+    searchParams.get('tag') ||
+    searchParams.get('ticket') ||
+    searchParams.get('code') ||
+    searchParams.get('q') ||
+    '';
 
   const { findWarrantyByTagOrPhone, systemSettings, currentLang } = useViTinhAnTamStore();
   const t = TRANSLATIONS[currentLang || 'vi'].warrantyLookup;

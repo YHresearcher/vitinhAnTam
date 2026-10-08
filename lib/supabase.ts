@@ -204,6 +204,11 @@ export interface InventoryItem {
   sold_by?: string;
   handover_date?: string;
   created_at?: string;
+  reserved_order_code?: string;
+  reserved_order_id?: string;
+  reserved_delivery_method?: 'pickup' | 'delivery' | string;
+  reserved_at?: string;
+  reserved_note?: string;
 }
 
 export interface WarrantyProvision {
