@@ -44,7 +44,7 @@ function ResetPasswordForm() {
   return (
     <>
       <h1 className="text-2xl font-black text-[#2B1810]">Đặt lại mật khẩu</h1>
-      <p className="text-sm text-slate-500 mt-2">Mật khẩu mới cần có từ 8 đến 128 ký tự.</p>
+      <p className="text-sm text-slate-500 mt-2">Mật khẩu mới phải: 8-15 ký tự, bao gồm chữ, số, và ký tự đặc biệt (!@#$%^&*...)</p>
       <form onSubmit={submit} className="mt-6 space-y-4">
         <input type="password" required minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mật khẩu mới" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-200" />
         <input type="password" required minLength={8} maxLength={128} value={confirm} onChange={(event) => setConfirm(event.target.value)} placeholder="Nhập lại mật khẩu mới" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-200" />

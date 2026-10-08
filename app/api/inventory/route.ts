@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initialInventory } from '@/lib/mockData';
+// import { initialInventory } from '@/lib/mockData'; // Disabled - Supabase only
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // Protected API.
@@ -35,13 +35,14 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Fallback
   return NextResponse.json({
-    success: true,
-    total: initialInventory.length,
-    data: initialInventory,
-    source: 'fallback',
-  });
+    success: false,
+    error: 'Supabase unavailable - service temporarily disabled',
+    message: 'Hệ thống đang bảo trì, không thể truy cập dữ liệu.',
+  }, { status: 500 });
 }
+
 
 export async function POST(request: NextRequest) {
   if (!isAuthorized(request)) {

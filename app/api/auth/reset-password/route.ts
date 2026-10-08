@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { consumeRecoveryToken } from '@/lib/server/password-recovery';
 import { setPassword } from '@/lib/server/users';
+import { validatePassword } from '@/lib/server/password-validator';
 
 export async function POST(request: NextRequest) {
   let body: { token?: unknown; password?: unknown };
@@ -12,8 +13,10 @@ export async function POST(request: NextRequest) {
 
   const token = typeof body.token === 'string' ? body.token : '';
   const password = typeof body.password === 'string' ? body.password : '';
-  if (password.length < 8 || password.length > 128) {
-    return NextResponse.json({ success: false, message: 'Mật khẩu phải có từ 8 đến 128 ký tự.' }, { status: 400 });
+  
+  const validation = validatePassword(password, []);
+  if (!validation.valid) {
+    return NextResponse.json({ success: false, message: validation.errors.join(' ') }, { status: 400 });
   }
 
   const userId = consumeRecoveryToken(token);

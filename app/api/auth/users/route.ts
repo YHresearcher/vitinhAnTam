@@ -113,9 +113,14 @@ export async function POST(request: NextRequest) {
   if (action === 'password') {
     const id = typeof body.id === 'string' ? body.id : '';
     const password = typeof body.password === 'string' ? body.password : '';
-    if (password.length < 4) {
-      return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
+    
+    // Validate mật khẩu với nguyên tắc bảo mật
+    const { validatePassword } = await import('@/lib/server/password-validator');
+    const validation = validatePassword(password, []);
+    if (!validation.valid) {
+      return NextResponse.json({ success: false, message: validation.errors.join(' ') }, { status: 400 });
     }
+    
     let updated;
     try {
       updated = await setPasswordAsync(id, password);

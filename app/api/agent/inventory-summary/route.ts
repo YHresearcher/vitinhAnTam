@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { initialInventory } from '@/lib/mockData';
+// import { initialInventory } from '@/lib/mockData'; // Disabled - Supabase only
 
 export async function GET(req: NextRequest) {
   try {
@@ -33,12 +33,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Fallback to initial mock inventory
-    const readyItems = initialInventory.filter((i) => i.qc_status === 'ready_to_sell');
     return NextResponse.json({
-      success: true,
-      count: readyItems.length,
-      items: readyItems,
-    });
+      success: false,
+      error: 'Supabase unavailable - service temporarily disabled',
+      message: 'Hệ thống đang bảo trì, không thể truy cập dữ liệu kho.',
+    }, { status: 500 });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown server error';
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });

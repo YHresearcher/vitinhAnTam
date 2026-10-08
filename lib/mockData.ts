@@ -32,56 +32,11 @@ const getMockBirthday = (daysFromNow: number, birthYear = 1990): string => {
   return `${birthYear}-${mm}-${dd}`;
 };
 
-export const initialCustomers: Customer[] = [
-  {
-    id: 'c1',
-    customer_code: '26094891',
-    full_name: 'Cty TNHH Vận Tải Long An - Tây Ninh (Anh Tuấn)',
-    birth_date: getMockBirthday(2, 1985), // Sinh nhật trong 2 ngày tới
-    phone: '0918234891',
-    address: 'KCN Lợi Bình Nhơn, Long An - Tây Ninh',
-    area_zone: 'Long An - Tây Ninh',
-    customer_tier: 'VIP',
-    notes: 'Hợp đồng bảo trì 10 máy OptiPlex đồng bộ. Đã mua máy cách đây 6 tháng.',
-    created_at: getMockIsoAgo(190),
-  },
-  {
-    id: 'c2',
-    customer_code: '15054567',
-    full_name: 'Nguyễn Văn Bảy (Chú Bảy Tân An)',
-    birth_date: getMockBirthday(1, 1968), // Sinh nhật ngày mai (trong 1 ngày)
-    phone: '0918234567',
-    address: 'Số 15 Huỳnh Văn Nhất, P.3, Long An - Tây Ninh',
-    area_zone: 'Long An - Tây Ninh',
-    customer_tier: 'Thân thiết',
-    notes: 'Khách quen • Cài Win & bảo dưỡng máy định kỳ. Mua dàn PC Gaming hơn 6 tháng.',
-    created_at: getMockIsoAgo(185),
-  },
-  {
-    id: 'c3',
-    customer_code: '20112233',
-    full_name: 'Cty Thiết Kế Hoàng Quân (Anh Quân)',
-    birth_date: '1988-11-20',
-    phone: '0909112233',
-    address: 'Số 88 Hùng Vương, P.2, Long An - Tây Ninh',
-    area_zone: 'Long An - Tây Ninh',
-    customer_tier: 'Standard',
-    notes: 'Dàn máy đồ họa Dell Vostro i7',
-    created_at: getMockIsoAgo(45),
-  },
-  {
-    id: 'c4',
-    customer_code: '28099977',
-    full_name: 'Chị Lan - Tạp hoá Tân Tây',
-    birth_date: getMockBirthday(3, 1993), // Sinh nhật trong 3 ngày tới
-    phone: '0908889977',
-    address: 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa, Long An - Tây Ninh',
-    area_zone: 'Huyện Thủ Thừa',
-    customer_tier: 'Standard',
-    notes: 'Máy tính tiền Mini PC POS',
-    created_at: getMockIsoAgo(60),
-  },
-];
+// ==========================================
+// DISABLED: Mock customers removed to prevent data conflicts with Supabase
+// All customer data now comes exclusively from the database
+// ==========================================
+export const initialCustomers: Customer[] = [];
 
 export const initialInventory: InventoryItem[] = [
   {

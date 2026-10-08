@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, sessionCookieOptions } from '@/lib/session';
 import { changePasswordWithVerificationAsync } from '@/lib/server/users';
+import { validatePassword } from '@/lib/server/password-validator';
 
 export async function POST(request: NextRequest) {
   let body: {
@@ -29,10 +30,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'Vui lòng nhập mật khẩu hiện tại.' }, { status: 400 });
   }
 
-  if (!newPassword || newPassword.length < 6) {
-    return NextResponse.json({ success: false, message: 'Mật khẩu mới phải có tối thiểu 6 ký tự.' }, { status: 400 });
-  }
-
   if (newPassword !== confirmPassword) {
     return NextResponse.json({ success: false, message: 'Mật khẩu mới và xác nhận mật khẩu không khớp.' }, { status: 400 });
   }
@@ -40,6 +37,15 @@ export async function POST(request: NextRequest) {
   if (newPassword === currentPassword) {
     return NextResponse.json(
       { success: false, message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại.' },
+      { status: 400 }
+    );
+  }
+
+  // Validate mật khẩu mới theo nguyên tắc bảo mật
+  const validation = validatePassword(newPassword, [currentPassword]);
+  if (!validation.valid) {
+    return NextResponse.json(
+      { success: false, message: validation.errors.join(' ') },
       { status: 400 }
     );
   }
