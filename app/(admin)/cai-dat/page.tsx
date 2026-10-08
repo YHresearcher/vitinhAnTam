@@ -152,29 +152,9 @@ export default function CaiDatPage() {
   };
 
   // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <id>:<secret>)
+  // Token hiện tại đọc từ ENV var ZALO_BOT_TOKEN (bảo mật), không lưu DB
   const validateBotTokenFormat = (): string | null => {
-    const raw = formData.zaloBotToken || '';
-    const token = raw.trim();
-    if (!token) return null;
-    if (/^https?:\/\//i.test(token)) {
-      return 'Bạn đang dán cả URL vào ô Token — hãy chỉ dán Token dạng <id>:<secret> (xem tại bot.zapps.vn/docs/create-bot/).';
-    }
-    if (token.startsWith('bot') && token.slice(3).includes(':')) {
-      return 'Token có tiền tố "bot" ở đầu — hãy bỏ phần "bot", chỉ giữ <id>:<secret>.';
-    }
-    if (!token.includes(':')) {
-      return `Token thiếu dấu ":" (chuỗi ${token.length} ký tự, không có dấu ":") — cần dạng <id>:<secret>. Copy lại toàn bộ Token từ trang tạo bot.`;
-    }
-    const pre = token.split(':', 1)[0];
-    if (!/^\d+$/.test(pre)) {
-      return `Phần trước dấu ":" phải là SỐ (id bot) — hiện tại là "${pre.slice(0, 24)}". Copy lại đúng Token từ trang tạo bot.`;
-    }
-    if (/\s/.test(token)) {
-      return 'Token có khoảng trắng ở giữa — hãy copy lại cả chuỗi liền mạch.';
-    }
-    if (/[/?#]/.test(token)) {
-      return 'Token chứa ký tự / ? # — sẽ làm hỏng URL gọi API. Hãy lấy lại Token từ trang tạo bot.';
-    }
+    // Token được cấu hình qua ENV, không cho phép sửa từ UI
     return null;
   };
 
@@ -185,17 +165,8 @@ export default function CaiDatPage() {
   };
 
   const handleTestWebhook = async () => {
-    if (!formData.zaloBotToken?.trim()) {
-      message.error('Vui lòng nhập Zalo Bot Token trước khi gửi thử nghiệm!');
-      return;
-    }
     if (!formData.zaloDefaultChatId?.trim()) {
       message.error('Vui lòng nhập Chat ID nhận tin nhắn!');
-      return;
-    }
-    const tokenFormatError = validateBotTokenFormat();
-    if (tokenFormatError) {
-      message.error(tokenFormatError);
       return;
     }
 
@@ -208,7 +179,6 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chatId: formData.zaloDefaultChatId?.trim(),
-          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -216,7 +186,7 @@ export default function CaiDatPage() {
       if (data.ok) {
         message.success('Đã gửi tin nhắn thử nghiệm thành công! Vui lòng kiểm tra tin nhắn Bot.');
       } else {
-        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại Token & Chat ID'}`);
+        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại ZALO_BOT_TOKEN env var & Chat ID'}`);
       }
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
@@ -227,15 +197,6 @@ export default function CaiDatPage() {
   };
 
   const handleSetWebhook = async () => {
-    if (!formData.zaloBotToken?.trim()) {
-      message.error('Vui lòng nhập Bot Token!');
-      return;
-    }
-    const tokenFormatError = validateBotTokenFormat();
-    if (tokenFormatError) {
-      message.error(tokenFormatError);
-      return;
-    }
     setIsSettingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -246,8 +207,6 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           action: 'set',
           webhookUrl,
-          secretToken: formData.zaloBotSecretToken?.trim(),
-          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -266,15 +225,6 @@ export default function CaiDatPage() {
   };
 
   const handleGetWebhookInfo = async () => {
-    if (!formData.zaloBotToken?.trim()) {
-      message.error('Vui lòng nhập Bot Token!');
-      return;
-    }
-    const tokenFormatError = validateBotTokenFormat();
-    if (tokenFormatError) {
-      message.error(tokenFormatError);
-      return;
-    }
     setIsCheckingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -283,7 +233,6 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'info',
-          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -303,15 +252,6 @@ export default function CaiDatPage() {
   };
 
   const handleDeleteWebhook = async () => {
-    if (!formData.zaloBotToken?.trim()) {
-      message.error('Vui lòng nhập Bot Token!');
-      return;
-    }
-    const tokenFormatError = validateBotTokenFormat();
-    if (tokenFormatError) {
-      message.error(tokenFormatError);
-      return;
-    }
     setIsDeletingWebhook(true);
     try {
       const res = await fetch('/api/webhook/setup', {
@@ -319,7 +259,6 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'delete',
-          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -1088,23 +1027,7 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-                      {/* Bot Token / Access Token */}
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Zalo Bot Token *
-                        </label>
-                        <Input.Password
-                          value={formData.zaloBotToken || ''}
-                          onChange={(e) => handleChange('zaloBotToken', e.target.value)}
-                          placeholder="VD: 1234567890123:AbCdEf..."
-                          className="w-full rounded-lg text-xs font-mono"
-                        />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          Lấy Zalo Bot Token tại https://bot.zapps.vn/docs/create-bot/ — định dạng &lt;id&gt;:&lt;secret&gt;.
-                        </span>
-                      </div>
-
-                      {/* Chat ID / User ID */}
+{/* Chat ID / User ID */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Chat ID nhận tin nhắn *
@@ -1136,19 +1059,19 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-                      {/* Secret Token */}
+                      {/* Chat ID / User ID */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Secret Token Bảo Vệ Webhook
+                          Chat ID nhận tin nhắn *
                         </label>
                         <Input
-                          value={formData.zaloBotSecretToken || ''}
-                          onChange={(e) => handleChange('zaloBotSecretToken', e.target.value)}
-                          placeholder="VD: an_tam_secret_key_2026"
+                          value={formData.zaloDefaultChatId || ''}
+                          onChange={(e) => handleChange('zaloDefaultChatId', e.target.value)}
+                          placeholder="VD: 1234567890123"
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          Khớp với header bảo mật <code>X-Telegram-Bot-Api-Secret-Token</code> (hoặc <code>X-Bot-Token</code>) khi Zalo gửi webhook.
+                          ID người/nhóm nhận thông báo — lấy từ update.message.chat.id khi nhắn cho bot, hoặc lệnh /id.
                         </span>
                       </div>
 
@@ -1166,6 +1089,16 @@ export default function CaiDatPage() {
                         <span className="text-[11px] text-slate-500 mt-1 block">
                           Tự động bắn JSON sự kiện đến hệ thống thứ 2 nếu có.
                         </span>
+                      </div>
+
+                      {/* Secret Token & Bot Token (đọc từ ENV) */}
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <div className="flex items-center gap-2 text-[11px] text-amber-800">
+                          <HelpCircle className="w-4 h-4 shrink-0" />
+                          <span>
+                            <strong>Secret Token & Bot Token:</strong> Cấu hình qua biến môi trường <code>ZALO_BOT_TOKEN</code> và <code>ZALO_BOT_SECRET_TOKEN</code> trong <code>.env.local</code> (không lưu DB, không hiển thị trên UI).
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>

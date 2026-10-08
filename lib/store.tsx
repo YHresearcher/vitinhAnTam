@@ -84,9 +84,8 @@ export interface SystemSettings {
   paymentQrNote?: string;
 
   // Cấu hình Tích hợp Zalo Bot API (bot-api.zapps.me)
+  // Lưu ý: Token & Secret Token CHỈ đọc từ env vars (bảo mật), không lưu DB/client
   botApiBaseUrl?: string;
-  zaloBotToken?: string;
-  zaloBotSecretToken?: string;
   zaloDefaultChatId?: string;
   customWebhookUrl?: string;
   notifyOnNewBooking?: boolean;
@@ -129,9 +128,8 @@ export const initialSystemSettings: SystemSettings = {
   paymentQrNote: 'Vui lòng quét mã QR hoặc chuyển khoản với nội dung: [Mã đơn hàng] - [Số điện thoại].',
 
   // Mặc định cấu hình Zalo Bot & Webhook
+  // Lưu ý: Token & Secret Token CHỈ cấu hình qua env vars (ZALO_BOT_TOKEN, ZALO_BOT_SECRET_TOKEN)
   botApiBaseUrl: '',
-  zaloBotToken: '',
-  zaloBotSecretToken: '',
   zaloDefaultChatId: '',
   customWebhookUrl: '',
   notifyOnNewBooking: true,

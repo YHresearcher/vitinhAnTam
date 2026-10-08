@@ -34,8 +34,6 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['bankAccountName', 'bank_account_name'],
   ['paymentQrNote', 'payment_qr_note'],
   ['botApiBaseUrl', 'bot_api_base_url'],
-  ['zaloBotToken', 'zalo_bot_token'],
-  ['zaloBotSecretToken', 'zalo_bot_secret_token'],
   ['zaloDefaultChatId', 'zalo_default_chat_id'],
   ['customWebhookUrl', 'custom_webhook_url'],
   ['notifyOnNewBooking', 'notify_on_new_booking'],
@@ -152,7 +150,7 @@ async function upsertSupabaseSettingsSafely(sb: ReturnType<typeof getServerSupab
         'whatsapp_number', 'whatsapp_link', 'email', 'address', 'street_address',
         'district', 'city', 'service_areas', 'working_hours_weekday', 'working_hours_weekend',
         'prime_hours', 'footer_about', 'footer_copyright', 'store_name',
-        'bot_api_base_url', 'zalo_bot_token', 'zalo_bot_secret_token', 'zalo_default_chat_id',
+        'bot_api_base_url', 'zalo_default_chat_id',
         'custom_webhook_url', 'notify_on_new_booking', 'notify_on_new_order',
         'notify_on_new_ticket', 'notify_on_key_request'
       ]);
