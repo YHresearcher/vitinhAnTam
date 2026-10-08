@@ -93,6 +93,7 @@ export interface SystemSettings {
   notifyOnNewOrder?: boolean;
   notifyOnNewTicket?: boolean;
   notifyOnKeyRequest?: boolean;
+  notifyOnSaleSuccess?: boolean;
 }
 
 export const initialSystemSettings: SystemSettings = {
@@ -137,6 +138,7 @@ export const initialSystemSettings: SystemSettings = {
   notifyOnNewOrder: true,
   notifyOnNewTicket: true,
   notifyOnKeyRequest: true,
+  notifyOnSaleSuccess: true,
 };
 
 interface StoreContextType {
@@ -236,6 +238,16 @@ interface StoreContextType {
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
   updateQcStatus: (id: string, status: InventoryItem['qc_status']) => Promise<void>; // Tech & Admin
   deleteInventoryItem: (id: string) => Promise<boolean>; // Restricted to Admin
+  reserveInventoryItem: (params: {
+    itemId: string;
+    customerName: string;
+    customerPhone: string;
+    orderCode?: string;
+    orderId?: string;
+    deliveryMethod?: 'pickup' | 'delivery' | string;
+    note?: string;
+  }) => Promise<boolean>;
+  cancelReservationItem: (itemId: string, orderId?: string) => Promise<boolean>;
 
   // Spare parts actions (Linh kiện mới & cũ)
   addSparePart: (part: Omit<SparePart, 'id'>) => Promise<SparePart>;
@@ -1188,7 +1200,34 @@ export function StoreProvider({
     if (!canUpdateRepairStatus()) {
       return;
     }
+    const item = inventory.find((i) => i.id === id);
     await updateInventoryItem(id, { qc_status: status });
+
+    if (status === 'sold' && item && item.qc_status !== 'sold') {
+      try {
+        fetch('/api/webhook/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventType: 'sale_success',
+            payload: {
+              sellerName: currentUser.name,
+              deviceName: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+              serviceTag: item.service_tag,
+              serialNumber: item.serial_number || item.service_tag,
+              customerName: item.customer_name || 'Khách mua tại kho',
+              customerPhone: item.customer_phone || '---',
+              customerCode: item.customer_code,
+              soldPrice: item.price || item.retail_price || 0,
+              warrantyMonths: item.warranty_months || 12,
+              shelfLocation: item.shelf_location,
+            },
+          }),
+        }).catch((err) => console.warn('Bot sale notification error:', err));
+      } catch {
+        // Silently ignore
+      }
+    }
   };
 
   const deleteInventoryItem = async (id: string): Promise<boolean> => {
@@ -1206,6 +1245,66 @@ export function StoreProvider({
         () => client.from('inventory_items').delete().eq('id', id),
         'Xóa thiết bị'
       );
+    }
+    return true;
+  };
+
+  const reserveInventoryItem = async (params: {
+    itemId: string;
+    customerName: string;
+    customerPhone: string;
+    orderCode?: string;
+    orderId?: string;
+    deliveryMethod?: 'pickup' | 'delivery' | string;
+    note?: string;
+  }): Promise<boolean> => {
+    const item = inventory.find((i) => i.id === params.itemId || i.service_tag === params.itemId);
+    if (!item) return false;
+
+    const updatedData: Partial<InventoryItem> = {
+      qc_status: 'reserved',
+      customer_name: params.customerName.trim(),
+      customer_phone: params.customerPhone.trim(),
+      reserved_order_code: params.orderCode?.trim() || '',
+      reserved_order_id: params.orderId || '',
+      reserved_delivery_method: params.deliveryMethod || 'pickup',
+      reserved_at: new Date().toISOString(),
+      reserved_note: params.note || '',
+    };
+
+    await updateInventoryItem(item.id, updatedData);
+    return true;
+  };
+
+  const cancelReservationItem = async (itemId: string, orderId?: string): Promise<boolean> => {
+    const item = inventory.find((i) => i.id === itemId || i.service_tag === itemId);
+    if (!item) return false;
+
+    const updatedData: Partial<InventoryItem> = {
+      qc_status: 'ready_to_sell',
+      customer_name: '',
+      customer_phone: '',
+      customer_code: '',
+      reserved_order_code: '',
+      reserved_order_id: '',
+      reserved_delivery_method: undefined,
+      reserved_at: '',
+      reserved_note: '',
+    };
+
+    await updateInventoryItem(item.id, updatedData);
+
+    const targetOrderId = orderId || item.reserved_order_id;
+    if (targetOrderId) {
+      try {
+        await fetch('/api/orders', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: targetOrderId, status: 'cancelled' }),
+        });
+      } catch (e) {
+        console.warn('Sync cancel order error:', e);
+      }
     }
     return true;
   };
@@ -1362,6 +1461,31 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.softwareLicenses, next);
       return next;
     });
+
+    // Tự động gửi thông báo phát hành Key thành công qua Bot đến nhóm đã cài đặt
+    const targetSw = softwareLicenses.find((s) => s.id === softwareId);
+    const targetKey = targetSw?.license_keys?.find((k) => k.id === keyId);
+    try {
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'key_release_success',
+          payload: {
+            categoryName: targetSw?.software_name || 'Bản quyền phần mềm',
+            softwareName: targetSw?.software_name,
+            keyCode: targetKey?.key_code,
+            customerName: info.customerName,
+            customerPhone: info.notes || '---',
+            ticketCode: info.ticketCode,
+            issuerName: currentUser.name,
+          },
+        }),
+      }).catch((err) => console.warn('Bot key notification error:', err));
+    } catch {
+      // Silently ignore
+    }
+
     return true;
   };
 
@@ -1878,6 +2002,27 @@ export function StoreProvider({
       return next;
     });
 
+    // 4. Gửi thông báo phát hành Key thành công qua Bot đến nhóm đã cài đặt sẵn
+    try {
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'key_release_success',
+          payload: {
+            categoryName: req.category_name,
+            keyCode: req.released_key_code || req.assigned_key_code,
+            customerName: req.customer_name,
+            customerPhone: req.customer_phone,
+            ticketCode: req.request_code || `#YC-${req.id.slice(-4)}`,
+            issuerName: currentUser.name,
+          },
+        }),
+      }).catch((err) => console.warn('Bot key notification error:', err));
+    } catch {
+      // Silently ignore
+    }
+
     return {
       success: true,
       message: `Key đã được xác nhận HOẠT ĐỘNG! Hệ thống đã gửi email bàn giao key bản quyền đến [${req.customer_email}].`,
@@ -2336,6 +2481,31 @@ export function StoreProvider({
         saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
         return next;
       });
+    }
+
+    // 5. Tự động gửi tin nhắn chúc mừng bán hàng qua Bot đến nhóm cài đặt sẵn
+    try {
+      fetch('/api/webhook/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventType: 'sale_success',
+          payload: {
+            sellerName: currentUser.name,
+            deviceName: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+            serviceTag: item.service_tag,
+            serialNumber: params.serialNumber.trim() || item.serial_number || item.service_tag,
+            customerName: params.customerName.trim(),
+            customerPhone: params.customerPhone.trim(),
+            customerCode,
+            soldPrice: finalSoldPrice,
+            warrantyMonths: params.warrantyMonths,
+            shelfLocation: item.shelf_location,
+          },
+        }),
+      }).catch((err) => console.warn('Bot sale notification error:', err));
+    } catch {
+      // Best-effort
     }
 
     return {
@@ -2816,6 +2986,8 @@ export function StoreProvider({
       updateInventoryStock,
       updateQcStatus,
       deleteInventoryItem,
+      reserveInventoryItem,
+      cancelReservationItem,
       addServiceTicket,
       updateTicketStatus,
       updateTicketDetails,

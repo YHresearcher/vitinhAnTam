@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   InventoryItem,
@@ -14,9 +15,12 @@ import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import { SoldInventoryTab } from '@/components/admin/SoldInventoryTab';
 import { PricePreview } from '@/components/PricePreview';
 import Link from 'next/link';
+import { message, Modal } from 'antd';
+import { User, Ban, ShieldCheck, AlertCircle } from 'lucide-react';
 
 
 export default function KhoMayPage() {
+  const searchParams = useSearchParams();
   const {
     inventory,
     spareParts,
@@ -36,6 +40,8 @@ export default function KhoMayPage() {
     updateInventoryStock,
     updateQcStatus,
     deleteInventoryItem,
+    reserveInventoryItem,
+    cancelReservationItem,
     canSellAndEditWarranty,
     sellInventoryItem,
     customers,
@@ -57,7 +63,19 @@ export default function KhoMayPage() {
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
-  const [selectedStatus, setSelectedStatus] = useState<'all' | 'ready_to_sell' | 'testing' | 'sold' | 'aging_warning'>('all');
+  const [selectedStatus, setSelectedStatus] = useState<
+    'all' | 'ready_to_sell' | 'testing' | 'sold' | 'reserved' | 'aging_warning'
+  >('all');
+
+  // Đồng bộ URL params (khi bấm từ Widget "Xem trong kho")
+  useEffect(() => {
+    const q = searchParams.get('search');
+    const s = searchParams.get('status');
+    if (q) setSearchQuery(q);
+    if (s && ['ready_to_sell', 'testing', 'sold', 'reserved', 'aging_warning'].includes(s)) {
+      setSelectedStatus(s as any);
+    }
+  }, [searchParams]);
 
   // Filter & Search states - Components (Linh kiện)
   const [partSearchQuery, setPartSearchQuery] = useState('');
@@ -372,6 +390,45 @@ export default function KhoMayPage() {
     }
   };
 
+  const handleCancelReservation = (item: InventoryItem) => {
+    Modal.confirm({
+      title: 'Xác nhận khách không mua?',
+      icon: <AlertCircle className="w-5 h-5 text-amber-500 inline-block mr-2" />,
+      content: (
+        <div className="text-xs space-y-1.5 text-slate-600">
+          <p>
+            Bạn có chắc chắn muốn hủy giữ máy{' '}
+            <strong>
+              {item.device_model || item.model || item.brand} ({item.service_tag})
+            </strong>{' '}
+            cho khách hàng <strong>{item.customer_name || 'chưa có tên'}</strong>?
+          </p>
+          <p className="text-slate-500 italic">
+            Thông tin khách hàng đặt trước sẽ được xóa và máy được đưa về lại trạng thái{' '}
+            <span className="text-emerald-600 font-bold">Lưu kho (Sẵn bán)</span>.
+          </p>
+        </div>
+      ),
+      okText: 'Xác nhận Không Mua',
+      okType: 'danger',
+      cancelText: 'Đóng',
+      async onOk() {
+        try {
+          const ok = await cancelReservationItem(item.id, item.reserved_order_id);
+          if (ok) {
+            message.success(
+              `Đã hủy giữ máy ${item.service_tag} và đưa thiết bị về lưu kho sẵn sàng bán!`
+            );
+          } else {
+            message.error('Không thể hủy giữ máy, vui lòng thử lại.');
+          }
+        } catch {
+          message.error('Đã xảy ra lỗi khi hủy giữ máy.');
+        }
+      },
+    });
+  };
+
   // New Machine Form State
   const [newItem, setNewItem] = useState({
     brand: 'Dell',
@@ -484,10 +541,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     }).length;
     const agingTotal = agingYellow + agingRed;
     const sold = inventory.filter((i) => i.qc_status === 'sold' || Boolean(i.handover_date)).length;
+    const reserved = inventory.filter((i) => i.qc_status === 'reserved').length;
 
     return {
       total,
       ready,
+      reserved,
       testing,
       sold,
       agingYellow,
@@ -1125,7 +1184,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           {(
             [
               { id: 'all', label: 'Tất cả' },
-              { id: 'ready_to_sell', label: 'RTS' },
+              { id: 'ready_to_sell', label: 'RTS (Sẵn bán)' },
+              { id: 'reserved', label: `Đang đợi bán (${stats.reserved})` },
               { id: 'testing', label: 'QC' },
               { id: 'sold', label: 'Sold' },
             ] as const
@@ -1133,9 +1193,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             <button
               key={s.id}
               onClick={() => setSelectedStatus(s.id)}
-              className={`px-2.5 py-1 rounded-full font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
                 selectedStatus === s.id
-                  ? 'bg-blue-600 text-white'
+                  ? s.id === 'reserved'
+                    ? 'bg-purple-600 text-white shadow-xs font-bold'
+                    : 'bg-blue-600 text-white'
+                  : s.id === 'reserved' && stats.reserved > 0
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 font-bold'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -1192,15 +1256,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 filteredInventory.map((item) => {
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
+                  const isReserved = item.qc_status === 'reserved';
                   const daysInStock = calculateDaysInStock(item, nowTimestamp);
-                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold';
-                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold';
+                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved;
+                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved;
 
                   return (
                     <tr
                       key={item.id}
                       className={`transition-colors ${
-                        isRedAging
+                        isReserved
+                          ? 'bg-purple-50/50 hover:bg-purple-50/80'
+                          : isRedAging
                           ? 'bg-rose-50/40 hover:bg-rose-50/70'
                           : isYellowAging
                           ? 'bg-amber-50/40 hover:bg-amber-50/70'
@@ -1217,6 +1284,24 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             {item.form_factor}
                           </span>
                         </div>
+                        {isReserved && (
+                          <div className="mt-1.5 p-1.5 bg-purple-100/70 border border-purple-200 rounded-md text-[11px] text-purple-900 max-w-xs">
+                            <div className="font-semibold flex items-center gap-1 text-purple-800">
+                              <User className="w-3 h-3 flex-shrink-0" />
+                              <span>Đợi khách: <span className="font-bold">{item.customer_name || 'Khách đặt online'}</span></span>
+                            </div>
+                            {item.customer_phone && (
+                              <div className="text-[10px] text-purple-700 font-mono mt-0.5 pl-4">
+                                SĐT: {item.customer_phone}
+                              </div>
+                            )}
+                            {item.reserved_order_code && (
+                              <div className="text-[10px] text-slate-600 font-mono pl-4">
+                                Đơn: #{item.reserved_order_code}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </td>
 
                       {/* Serial Number (Clickable to view detailed specs) */}
@@ -1275,7 +1360,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                               updateQcStatus(item.id, e.target.value as InventoryItem['qc_status'])
                             }
                             className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer focus:outline-none focus:ring-1 ${
-                              isReady
+                              isReserved
+                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : isReady
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isTesting
                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
@@ -1283,20 +1370,23 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             }`}
                           >
                             <option value="ready_to_sell">Sẵn bán (RTS)</option>
+                            <option value="reserved">Đang đợi bán</option>
                             <option value="testing">Đang QC</option>
                             <option value="sold">Đã bán</option>
                           </select>
                         ) : (
                           <span
                             className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
-                              isReady
+                              isReserved
+                                ? 'bg-purple-100 text-purple-800'
+                                : isReady
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : isTesting
                                 ? 'bg-amber-100 text-amber-800'
                                 : 'bg-slate-100 text-slate-700'
                             }`}
                           >
-                            {isReady ? 'Sẵn sàng bán' : isTesting ? 'Đang kiểm tra' : 'Đã bán'}
+                            {isReserved ? 'Đang đợi bán' : isReady ? 'Sẵn sàng bán' : isTesting ? 'Đang kiểm tra' : 'Đã bán'}
                           </span>
                         )}
                       </td>
@@ -1373,6 +1463,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       {/* Actions */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center justify-center gap-1.5">
+                          {/* Khách không mua - Huỷ đặt trước & trả máy về kho */}
+                          {isReserved && (
+                            <button
+                              onClick={() => handleCancelReservation(item)}
+                              title="Khách không mua: Huỷ giữ máy và trả về kho"
+                              className="px-2 py-1 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-bold transition-colors border border-rose-300 bg-rose-50 flex items-center gap-1 shadow-2xs"
+                            >
+                              <Ban className="w-3.5 h-3.5" />
+                              Không mua
+                            </button>
+                          )}
+
                           {/* Sale Handover Button (Admin & Sales) */}
                           {canSellAndEditWarranty() && (
                             <button
@@ -1381,10 +1483,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                                 item.qc_status === 'sold'
                                   ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                  : isReserved
+                                  ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
                                   : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
                               }`}
                             >
-                              {item.qc_status === 'sold' ? 'Đã bán' : 'Bán máy'}
+                              {item.qc_status === 'sold' ? 'Đã bán' : isReserved ? 'Bán máy' : 'Bán máy'}
                             </button>
                           )}
 
@@ -3006,6 +3110,61 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
               </div>
 
+              {/* Reserved Customer Details Card */}
+              {viewingSpecsItem.qc_status === 'reserved' && (
+                <div className="p-4 bg-purple-50 rounded-xl border border-purple-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-purple-600" />
+                      Thông Tin Khách Hàng Đặt Mua (Đang Đợi Bán)
+                    </div>
+                    <span className="text-[10px] bg-purple-200 text-purple-800 font-bold px-2 py-0.5 rounded-full">
+                      Đang giữ máy
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1 text-xs">
+                    <div>
+                      <span className="text-[10px] text-purple-700">Tên khách hàng:</span>
+                      <div className="font-bold text-slate-800 mt-0.5">{viewingSpecsItem.customer_name || 'Khách đặt online'}</div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-purple-700">Số điện thoại:</span>
+                      <div className="font-bold text-slate-800 mt-0.5 font-mono">{viewingSpecsItem.customer_phone || '---'}</div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-purple-700">Mã đơn hàng:</span>
+                      <div className="font-bold text-slate-800 mt-0.5 font-mono">
+                        {viewingSpecsItem.reserved_order_code ? `#${viewingSpecsItem.reserved_order_code}` : '---'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-purple-700">Hình thức nhận:</span>
+                      <div className="font-semibold text-slate-700 mt-0.5">
+                        {viewingSpecsItem.reserved_delivery_method === 'pickup'
+                          ? 'Nhận tại cửa hàng/kho'
+                          : viewingSpecsItem.reserved_delivery_method === 'delivery'
+                          ? 'Giao hàng tận nơi'
+                          : viewingSpecsItem.reserved_delivery_method || 'Nhận tại kho'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-purple-700">Thời gian giữ máy:</span>
+                      <div className="font-semibold text-slate-700 mt-0.5">
+                        {viewingSpecsItem.reserved_at
+                          ? new Date(viewingSpecsItem.reserved_at).toLocaleString('vi-VN')
+                          : '---'}
+                      </div>
+                    </div>
+                    {viewingSpecsItem.reserved_note && (
+                      <div className="col-span-2 sm:col-span-3">
+                        <span className="text-[10px] text-purple-700">Ghi chú đặt:</span>
+                        <div className="text-slate-700 mt-0.5 italic">{viewingSpecsItem.reserved_note}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* QC & Inventory Details */}
               <div className="p-4 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
                 <div className="text-xs font-bold text-blue-900">Tình Trạng Kho &amp; Tiêu Chuẩn Xuất Xưởng</div>
@@ -3013,7 +3172,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   <div>
                     <span className="text-[10px] text-slate-500">Trạng thái:</span>
                     <div className="font-bold text-slate-800 mt-0.5">
-                      {viewingSpecsItem.qc_status === 'ready_to_sell'
+                      {viewingSpecsItem.qc_status === 'reserved'
+                        ? 'Đang đợi bán (Khách đặt)'
+                        : viewingSpecsItem.qc_status === 'ready_to_sell'
                         ? 'Sẵn bán (RTS)'
                         : viewingSpecsItem.qc_status === 'testing'
                         ? 'Đang QC / Test'
@@ -3096,6 +3257,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               </button>
 
               <div className="flex items-center gap-2">
+                {viewingSpecsItem.qc_status === 'reserved' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = viewingSpecsItem;
+                      setViewingSpecsItem(null);
+                      handleCancelReservation(target);
+                    }}
+                    className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 text-xs font-bold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    Không mua (Trả về kho)
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -3113,9 +3288,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     handleOpenSellModal(viewingSpecsItem);
                     setViewingSpecsItem(null);
                   }}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95"
+                  className={`px-4 py-2 text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95 ${
+                    viewingSpecsItem.qc_status === 'reserved'
+                      ? 'bg-purple-600 hover:bg-purple-700'
+                      : 'bg-emerald-600 hover:bg-emerald-700'
+                  }`}
                 >
-                  Bán Máy / Đổi Trạng Thái
+                  {viewingSpecsItem.qc_status === 'reserved' ? 'Bán máy cho khách này' : 'Bán Máy / Đổi Trạng Thái'}
                 </button>
               </div>
             </div>

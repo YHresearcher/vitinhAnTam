@@ -11,6 +11,7 @@ interface Order {
   customer_address?: string;
   device_name: string;
   device_price: number;
+  device_tag?: string;
   payment_method: 'qr' | 'cash';
   delivery_method: 'pickup' | 'delivery';
   status: string;
@@ -31,9 +32,16 @@ const STATUS_LABEL: Record<string, string> = {
  * Chỉ hiển thị cho admin / sales / technician.
  */
 export function NewOrderNotificationWidget() {
-  const { currentUser, isLoggedIn } = useViTinhAnTamStore();
+  const { currentUser, isLoggedIn, inventory, reserveInventoryItem } = useViTinhAnTamStore();
   const canView = Boolean(
-    isLoggedIn && currentUser && ['admin', 'sales', 'technician'].includes(currentUser.role)
+    isLoggedIn &&
+      currentUser &&
+      ['admin', 'sales_manager', 'tech_manager', 'sales', 'technician'].includes(currentUser.role)
+  );
+
+  // Chỉ cần 1 trong 3 người: admin, sales_manager, tech_manager xác nhận đơn hàng
+  const canConfirm = Boolean(
+    currentUser && ['admin', 'sales_manager', 'tech_manager'].includes(currentUser.role)
   );
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -92,12 +100,44 @@ export function NewOrderNotificationWidget() {
   }, [canView, fetchOrders]);
 
   const handleConfirm = async (order: Order) => {
+    if (!canConfirm) {
+      alert('Chỉ Admin, Sales Manager hoặc Technical Manager mới có quyền xác nhận đơn hàng!');
+      return;
+    }
     setIsConfirming(order.id);
     try {
+      // Tìm máy trong kho để chuyển sang trạng thái "Đang đợi bán" (reserved)
+      let matched = inventory.find(
+        (i) => i.service_tag === order.device_tag && i.qc_status !== 'sold'
+      );
+      if (!matched && order.device_name) {
+        matched = inventory.find(
+          (i) =>
+            i.qc_status === 'ready_to_sell' &&
+            (order.device_name.toLowerCase().includes((i.device_model || i.model || '').toLowerCase()) ||
+              (i.device_model || i.model || '').toLowerCase().includes(order.device_name.toLowerCase()))
+        );
+      }
+
+      if (matched) {
+        await reserveInventoryItem({
+          itemId: matched.id,
+          customerName: order.customer_name,
+          customerPhone: order.customer_phone,
+          orderCode: order.order_code,
+          orderId: order.id,
+          deliveryMethod: order.delivery_method,
+        });
+      }
+
       const res = await fetch('/api/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: order.id, status: 'confirmed' }),
+        body: JSON.stringify({
+          id: order.id,
+          status: 'confirmed',
+          matched_device_tag: matched?.service_tag,
+        }),
       });
       if (res.ok) {
         setOrders((prev) => prev.filter((o) => o.id !== order.id));
@@ -168,14 +208,20 @@ export function NewOrderNotificationWidget() {
                     </span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleConfirm(order)}
-                  disabled={isConfirming === order.id}
-                  className="mt-1 w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-colors"
-                >
-                  {isConfirming === order.id ? 'Đang xác nhận...' : '✓ Xác nhận đơn hàng'}
-                </button>
+                {canConfirm ? (
+                  <button
+                    type="button"
+                    onClick={() => handleConfirm(order)}
+                    disabled={isConfirming === order.id}
+                    className="mt-1 w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    {isConfirming === order.id ? 'Đang xác nhận...' : '✓ Xác nhận đơn hàng'}
+                  </button>
+                ) : (
+                  <div className="mt-1 w-full py-1.5 px-2 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-semibold text-center border border-slate-200">
+                    ⏳ Chờ Admin / Quản lý xác nhận
+                  </div>
+                )}
               </div>
             ))}
           </div>

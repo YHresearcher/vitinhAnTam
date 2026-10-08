@@ -22,6 +22,7 @@ type OrderPayload = {
   delivery_method?: string;
   note?: string;
   status?: string;
+  use_zalo?: boolean;
 };
 
 const VALID_PAYMENT = ['qr', 'cash'];
@@ -159,6 +160,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orderCode = body.order_code?.trim() || `#AT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+    const useZalo = Boolean(body.use_zalo);
     const order: Record<string, unknown> = {
       order_code: orderCode,
       customer_name: customerName,
@@ -170,6 +172,7 @@ export async function POST(request: NextRequest) {
       payment_method: body.payment_method,
       delivery_method: body.delivery_method,
       note: (body.note || '').trim(),
+      use_zalo: useZalo,
       status: 'pending',
     };
 
@@ -186,10 +189,10 @@ export async function POST(request: NextRequest) {
           // Thông báo đồng thời đến sales / admin / kỹ thuật
           const notification = {
             type: 'order',
-            title: `Đơn hàng mới ${orderCode}`,
+            title: `Đơn hàng mới ${orderCode}${useZalo ? ' (Zalo)' : ''}`,
             body: `${customerName} (${customerPhone}) đặt ${deviceName} — ${
               order.delivery_method === 'delivery' ? 'giao tận nơi' : 'nhận tại cửa hàng'
-            }. Cần xác nhận.`,
+            }.${useZalo ? ' Khách có dùng Zalo.' : ''} Cần xác nhận.`,
             reference_id: data.id,
             read: false,
           };
@@ -214,7 +217,7 @@ export async function POST(request: NextRequest) {
       // Vẫn cố gắng gửi email thông báo
       notifyStaffByEmail(fallbackOrder).catch(() => undefined);
     }
-    // Gửi thông báo Webhook & Zalo Bot tự động
+    // Gửi thông báo Webhook & Zalo Bot tự động đến nhóm nội bộ
     try {
       await dispatchSystemEvent('new_order', {
         orderCode,
@@ -224,12 +227,31 @@ export async function POST(request: NextRequest) {
         totalAmount: Number(body.device_price) || 0,
         paymentMethod: order.payment_method === 'qr' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng',
         deviceName,
+        useZalo,
         note: (body.note || '').trim(),
       });
     } catch (err) {
       console.warn('Zalo Bot / Webhook order notification error:', err);
     }
 
+    // Nếu khách chọn dùng Zalo, kích hoạt sự kiện gửi xác nhận đơn hàng qua Zalo đến khách hàng
+    if (useZalo) {
+      try {
+        await dispatchSystemEvent('customer_zalo_order', {
+          orderCode,
+          customerName,
+          customerPhone,
+          deviceName,
+          totalAmount: Number(body.device_price) || 0,
+          paymentMethod: order.payment_method === 'qr' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng',
+          deliveryMethod: order.delivery_method,
+          shippingAddress: (body.customer_address || '').trim() || (order.delivery_method === 'pickup' ? 'Nhận tại quầy' : 'Giao tận nơi'),
+          note: (body.note || '').trim(),
+        });
+      } catch (err) {
+        console.warn('Customer Zalo order notification error:', err);
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -291,7 +313,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as { id?: string; status?: string };
+    const body = (await request.json()) as { id?: string; status?: string; matched_device_tag?: string };
     const allowed = ['confirmed', 'processing', 'completed', 'cancelled'];
     if (!body.id || !body.status || !allowed.includes(body.status)) {
       return NextResponse.json(
@@ -303,6 +325,12 @@ export async function PATCH(request: NextRequest) {
     if (isSupabaseConfigured() && supabase) {
       try {
         const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+        const { data: orderData } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('id', body.id)
+          .single();
+
         const { error } = await supabase
           .from('orders')
           .update({
@@ -311,7 +339,37 @@ export async function PATCH(request: NextRequest) {
             confirmed_at: new Date().toISOString(),
           })
           .eq('id', body.id);
+
         if (!error) {
+          // Tự động đồng bộ trạng thái máy trong kho
+          const deviceTag = body.matched_device_tag || orderData?.device_tag;
+          if (deviceTag) {
+            if (body.status === 'confirmed' || body.status === 'processing') {
+              await supabase
+                .from('inventory_items')
+                .update({
+                  qc_status: 'reserved',
+                  customer_name: orderData?.customer_name,
+                  customer_phone: orderData?.customer_phone,
+                  reserved_order_code: orderData?.order_code,
+                  reserved_order_id: body.id,
+                  reserved_delivery_method: orderData?.delivery_method,
+                  reserved_at: new Date().toISOString(),
+                })
+                .eq('service_tag', deviceTag);
+            } else if (body.status === 'cancelled') {
+              await supabase
+                .from('inventory_items')
+                .update({
+                  qc_status: 'ready_to_sell',
+                  customer_name: null,
+                  customer_phone: null,
+                  reserved_order_code: null,
+                  reserved_order_id: null,
+                })
+                .eq('service_tag', deviceTag);
+            }
+          }
           return NextResponse.json({ success: true, source: 'supabase' });
         }
       } catch {

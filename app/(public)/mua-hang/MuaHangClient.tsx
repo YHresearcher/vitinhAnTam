@@ -20,6 +20,7 @@ import {
   Copy,
   Sparkles,
   Building,
+  MessageCircle,
 } from 'lucide-react';
 
 // ------------------------------------------------------------------
@@ -53,11 +54,47 @@ export default function MuaHangClient() {
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerNote, setCustomerNote] = useState('');
 
-  // Order submission
+  // Order submission & Zalo modal
   const [orderCode] = useState(() => `#AT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showZaloModal, setShowZaloModal] = useState(false);
+  const [customerUsedZalo, setCustomerUsedZalo] = useState(false);
+
+  const submitOrder = async (useZalo: boolean) => {
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setShowZaloModal(false);
+    setCustomerUsedZalo(useZalo);
+
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order_code: orderCode,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_address: customerAddress,
+          device_name: deviceName,
+          device_price: devicePrice,
+          device_tag: deviceTag,
+          payment_method: paymentMethod,
+          delivery_method: deliveryMethod,
+          note: customerNote,
+          status: 'pending',
+          use_zalo: useZalo,
+        }),
+      });
+      if (!response.ok) throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
+      setStep('success');
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : 'Đặt hàng thất bại');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const copyToClipboard = (text: string, fieldId: string) => {
     navigator.clipboard.writeText(text);
@@ -545,34 +582,8 @@ export default function MuaHangClient() {
             </div>
 
             <button
-              onClick={async () => {
-                setIsSubmitting(true);
-                setSubmitError(null);
-                try {
-                  const response = await fetch('/api/orders', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      order_code: orderCode,
-                      customer_name: customerName,
-                      customer_phone: customerPhone,
-                      customer_address: customerAddress,
-                      device_name: deviceName,
-                      device_price: devicePrice,
-                      device_tag: deviceTag,
-                      payment_method: paymentMethod,
-                      delivery_method: deliveryMethod,
-                      note: customerNote,
-                      status: 'pending',
-                    }),
-                  });
-                  if (!response.ok) throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
-                  setStep('success');
-                } catch (err: unknown) {
-                  setSubmitError(err instanceof Error ? err.message : 'Đặt hàng thất bại');
-                } finally {
-                  setIsSubmitting(false);
-                }
+              onClick={() => {
+                setShowZaloModal(true);
               }}
               disabled={isSubmitting}
               className="w-full py-4 rounded-xl bg-[#C0392B] hover:bg-[#A93226] disabled:opacity-50 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 active:scale-[0.99]"
@@ -598,6 +609,50 @@ export default function MuaHangClient() {
         )}
 
         {/* ============================================================ */}
+        {/* ZALO CONFIRMATION MODAL */}
+        {/* ============================================================ */}
+        {showZaloModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+              <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto border border-blue-100 shadow-sm">
+                <MessageCircle className="w-7 h-7" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-base font-bold text-slate-900">
+                  Bạn có dùng Zalo cho số điện thoại này chứ?
+                </h3>
+                <p className="text-xs text-slate-600">
+                  Số điện thoại: <strong className="font-mono text-blue-700 font-bold">{customerPhone}</strong>
+                </p>
+                <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                  Nếu chọn <strong>Có</strong>, hệ thống Bot của Vi Tính An Tâm sẽ tự động gửi thông tin chi tiết đơn hàng đến Zalo của bạn để tiện theo dõi và lưu bảo hành.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => submitOrder(false)}
+                  disabled={isSubmitting}
+                  className="py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 active:scale-95 transition-all"
+                >
+                  Không
+                </button>
+                <button
+                  type="button"
+                  onClick={() => submitOrder(true)}
+                  disabled={isSubmitting}
+                  className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Có'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ============================================================ */}
         {/* SUCCESS */}
         {/* ============================================================ */}
         {step === 'success' && (
@@ -617,6 +672,21 @@ export default function MuaHangClient() {
                 )}
               </p>
             </div>
+
+            {/* Thông báo gửi qua Zalo nếu khách chọn Có */}
+            {customerUsedZalo && (
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-left flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  Zalo
+                </div>
+                <div className="text-xs">
+                  <div className="font-bold text-blue-900">Đã gửi thông tin đơn hàng qua Zalo</div>
+                  <div className="text-blue-700 mt-0.5 leading-relaxed">
+                    Hệ thống Bot đã tự động gửi biên nhận đơn hàng <strong className="font-mono text-blue-950 font-bold">{orderCode}</strong> tới số Zalo <strong className="font-mono text-blue-950 font-bold">{customerPhone}</strong>. Bạn vui lòng kiểm tra Zalo nhé!
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Hiển thị mã QR thanh toán nếu chọn hình thức QR Code */}
             {paymentMethod === 'qr' && (
