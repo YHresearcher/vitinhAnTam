@@ -6,13 +6,14 @@ const ZALO_BOT_BASE_URL = 'https://bot-api.zapps.me';
 
 /**
  * Định dạng cấu hình Bot & Webhook lấy từ settings (bất đồng bộ từ Supabase/File)
- * Lưu ý: Token & Secret Token CHỈ đọc từ env vars (bảo mật), không lưu DB
+ * Bảo mật: Token & Secret Token ưu tiên env vars, fallback về settings (đã giải mã)
  */
 export async function getZaloBotConfigAsync() {
   const settings = await getStoredSettingsAsync();
   const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
-  const token = (process.env.ZALO_BOT_TOKEN || '').trim();
-  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
+  // Ưu tiên env vars (bảo mật nhất), fallback về settings (đã decrypt khi đọc từ DB)
+  const token = (process.env.ZALO_BOT_TOKEN || settings.zaloBotToken || '').trim();
+  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || settings.zaloBotSecretToken || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
   const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
@@ -28,13 +29,13 @@ export async function getZaloBotConfigAsync() {
 
 /**
  * Định dạng cấu hình Bot & Webhook lấy từ settings (đồng bộ)
- * Lưu ý: Token & Secret Token CHỈ đọc từ env vars (bảo mật), không lưu DB
+ * Bảo mật: Token & Secret Token ưu tiên env vars, fallback về settings (đã giải mã)
  */
 export function getZaloBotConfig() {
   const settings = getStoredSettings();
   const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
-  const token = (process.env.ZALO_BOT_TOKEN || '').trim();
-  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
+  const token = (process.env.ZALO_BOT_TOKEN || settings.zaloBotToken || '').trim();
+  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || settings.zaloBotSecretToken || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
   const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 

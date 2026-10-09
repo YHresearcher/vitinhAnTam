@@ -155,7 +155,7 @@ export default function CaiDatPage() {
     return 'https://vitinhantham.vn/api/webhook/zalo';
   };
 
-  // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <id>:<secret>)
+  // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <span className="font-mono">id:secret</span>)
   // Token hiện tại đọc từ ENV var ZALO_BOT_TOKEN (bảo mật), không lưu DB
   const validateBotTokenFormat = (): string | null => {
     // Token được cấu hình qua ENV, không cho phép sửa từ UI
@@ -1109,47 +1109,52 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-                      {/* Chat ID / User ID */}
-                      <div>
+{/* Bot Token / Access Token */}
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Chat ID nhận tin nhắn *
+                          Zalo Bot Token *
                         </label>
-                        <Input
-                          value={formData.zaloDefaultChatId || ''}
-                          onChange={(e) => handleChange('zaloDefaultChatId', e.target.value)}
-                          placeholder="VD: 1234567890123"
+                        <Input.Password
+                          value={formData.zaloBotToken || ''}
+                          onChange={(e) => handleChange('zaloBotToken', e.target.value)}
+                          placeholder="VD: 1234567890123:AbCdEf... (để trống = dùng env var)"
                           className="w-full rounded-lg text-xs font-mono"
                         />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          ID người/nhóm nhận thông báo — lấy từ update.message.chat.id khi nhắn cho bot, hoặc lệnh /id.
-                        </span>
+                        <div className="text-[11px] text-slate-500 mt-1 whitespace-pre-line">
+                          Lấy Zalo Bot Token tại https://bot.zapps.vn/docs/create-bot/ — định dạng <span className="font-mono">id:secret</span>.
+                          Ưu tiên biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_TOKEN</span>. Để trống để dùng env var.
+                        </div>
                       </div>
 
-                      {/* Custom Webhook URL */}
+                      {/* Secret Token */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Custom Webhook Song Song (n8n, Zapier, Discord, Make)
+                          Secret Token Bảo Vệ Webhook
                         </label>
-                        <Input
-                          value={formData.customWebhookUrl || ''}
-                          onChange={(e) => handleChange('customWebhookUrl', e.target.value)}
-                          placeholder="VD: https://n8n.example.com/webhook/vitinh-antam"
+                        <Input.Password
+                          value={formData.zaloBotSecretToken || ''}
+                          onChange={(e) => handleChange('zaloBotSecretToken', e.target.value)}
+                          placeholder="VD: an_tam_secret_2026 (để trống = dùng env var)"
                           className="w-full rounded-lg text-xs font-mono"
                         />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          Tự động bắn JSON sự kiện đến hệ thống thứ 2 nếu có.
-                        </span>
+                        <div className="text-[11px] text-slate-500 mt-1 whitespace-pre-line">
+                          Khớp với header bảo mật khi Zalo gửi webhook.
+                          Ưu tiên biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_SECRET_TOKEN</span>. Để trống để dùng env var.
+                        </div>
                       </div>
 
-                      {/* Secret Token & Bot Token (đọc từ ENV) */}
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                        <div className="flex items-center gap-2 text-[11px] text-amber-800">
+                      {/* Security Notice */}
+                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <div className="flex items-center gap-2 text-[11px] text-emerald-800">
                           <HelpCircle className="w-4 h-4 shrink-0" />
                           <span>
-                            <strong>Secret Token & Bot Token:</strong> Cấu hình qua biến môi trường <code>ZALO_BOT_TOKEN</code> và <code>ZALO_BOT_SECRET_TOKEN</code> trong <code>.env.local</code> (không lưu DB, không hiển thị trên UI).
+                            <strong>Bảo mật:</strong> Token & Secret Token được <strong>mã hóa AES-256</strong> trước khi lưu DB.
+                            Biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_TOKEN</span> / <span className="font-mono text-blue-700">ZALO_BOT_SECRET_TOKEN</span> (file <span className="font-mono text-blue-700">.env.local</span>) luôn có độ ưu tiên cao hơn.
                           </span>
                         </div>
                       </div>
+
+                      {/* Custom Webhook URL */}
                     </div>
                   </div>
 
@@ -1781,7 +1786,7 @@ export default function CaiDatPage() {
       >
         <div className="pt-2 space-y-3">
           <p className="text-xs text-slate-600">
-            Dữ liệu phản hồi trực tiếp từ Zalo Bot Platform API (<code>getWebhookInfo</code>):
+            Dữ liệu phản hồi trực tiếp từ Zalo Bot Platform API (<span className="font-mono text-emerald-400">getWebhookInfo</span>):
           </p>
           <pre className="p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl overflow-x-auto max-h-72 whitespace-pre-wrap">
             {JSON.stringify(webhookInfoData, null, 2)}
