@@ -151,10 +151,10 @@ export default function RootLayout({
   return (
     <html lang="vi" className={`${beVietnamPro.variable} ${inter.variable} scroll-smooth`} suppressHydrationWarning>
       <head>
-        {/* Anti-FOUC Instant Theme Initialization */}
+        {/* Anti-FOUC Theme Initialization (Only applies to Admin Portal) */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('vtat_theme_v1');if(t==='dark'){document.documentElement.classList.add('dark');}else if(t==='light'){document.documentElement.classList.remove('dark');}}catch(e){}})();`,
+            __html: `(function(){try{var p=window.location.pathname;var adminPrefixes=['/dashboard','/tai-chinh','/quan-ly-key','/phieu-sua-chua','/kho-may','/khach-hang','/cuu-ho-onsite','/tien-cong','/thanh-vien','/cai-dat','/quan-ly-don-hang','/bai-viet'];var isAdmin=adminPrefixes.some(function(a){return p===a||p.indexOf(a+'/')===0;});if(isAdmin){var t=localStorage.getItem('vtat_admin_theme_v1')||localStorage.getItem('vtat_theme_v1');if(t==='dark'){document.documentElement.classList.add('dark');}else{document.documentElement.classList.remove('dark');}}else{document.documentElement.classList.remove('dark');}}catch(e){}})();`,
           }}
         />
         {/* Schema.org Structured Data for Local SEO */}
@@ -163,7 +163,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-[#FAF7F2] dark:bg-[#090E1A] text-[#2B1810] dark:text-[#E2E8F0] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
+      <body className="min-h-screen bg-[#FAF7F2] text-[#2B1810] font-sans antialiased flex flex-col selection:bg-[#FDE8DF] selection:text-[#C0392B]">
         <AntdRegistry>
           <ClientProvider initialSettings={initialSettings}>{children}</ClientProvider>
         </AntdRegistry>

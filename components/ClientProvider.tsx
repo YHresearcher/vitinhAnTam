@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { ConfigProvider, theme as antdTheme } from 'antd';
 import viVN from 'antd/locale/vi_VN';
 import { StoreProvider, useViTinhAnTamStore, SystemSettings } from '@/lib/store';
@@ -8,9 +9,30 @@ import { LogoutCountdownModal } from '@/components/LogoutCountdownModal';
 
 const DEFAULT_TITLE = 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm';
 
+const ADMIN_PREFIXES = [
+  '/dashboard',
+  '/tai-chinh',
+  '/quan-ly-key',
+  '/quan-ly-don-hang',
+  '/phieu-sua-chua',
+  '/kho-may',
+  '/khach-hang',
+  '/cuu-ho-onsite',
+  '/tien-cong',
+  '/thanh-vien',
+  '/cai-dat',
+  '/bai-viet',
+];
+
 function ThemedAppContainer({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const { themeMode } = useViTinhAnTamStore();
-  const isDark = themeMode === 'dark';
+
+  // Chỉ cho phép dark mode ở các trang quản trị (Admin), trang chủ khách luôn là theme sáng
+  const isAdminRoute = Boolean(
+    pathname && ADMIN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(prefix + '/'))
+  );
+  const isDark = isAdminRoute && themeMode === 'dark';
 
   useEffect(() => {
     if (typeof document !== 'undefined') {

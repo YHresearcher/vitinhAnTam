@@ -49,6 +49,13 @@ export default function AdminLayout({
         document.body.classList.remove('dark');
       }
     }
+    return () => {
+      // Khi rời khỏi khu vực quản trị về trang khách, luôn trả về theme sáng
+      if (typeof document !== 'undefined') {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+      }
+    };
   }, [themeMode]);
 
   // Command palette navigation items filtered by permissions

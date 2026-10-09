@@ -422,8 +422,24 @@ export function StoreProvider({
       const saved = localStorage.getItem('vtat_theme_v1');
       if (saved === 'dark' || saved === 'light') {
         setThemeMode(saved);
-        if (typeof document !== 'undefined') {
-          if (saved === 'dark') {
+        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+          const p = window.location.pathname;
+          const adminPrefixes = [
+            '/dashboard',
+            '/tai-chinh',
+            '/quan-ly-key',
+            '/quan-ly-don-hang',
+            '/phieu-sua-chua',
+            '/kho-may',
+            '/khach-hang',
+            '/cuu-ho-onsite',
+            '/tien-cong',
+            '/thanh-vien',
+            '/cai-dat',
+            '/bai-viet',
+          ];
+          const isAdmin = adminPrefixes.some((a) => p === a || p.startsWith(a + '/'));
+          if (isAdmin && saved === 'dark') {
             document.documentElement.classList.add('dark');
             document.body.classList.add('dark');
           } else {
@@ -789,8 +805,25 @@ export function StoreProvider({
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem('vtat_theme_v1', next);
+          localStorage.setItem('vtat_admin_theme_v1', next);
           if (typeof document !== 'undefined') {
-            if (next === 'dark') {
+            const p = window.location.pathname;
+            const adminPrefixes = [
+              '/dashboard',
+              '/tai-chinh',
+              '/quan-ly-key',
+              '/quan-ly-don-hang',
+              '/phieu-sua-chua',
+              '/kho-may',
+              '/khach-hang',
+              '/cuu-ho-onsite',
+              '/tien-cong',
+              '/thanh-vien',
+              '/cai-dat',
+              '/bai-viet',
+            ];
+            const isAdmin = adminPrefixes.some((a) => p === a || p.startsWith(a + '/'));
+            if (isAdmin && next === 'dark') {
               document.documentElement.classList.add('dark');
               document.body.classList.add('dark');
             } else {
