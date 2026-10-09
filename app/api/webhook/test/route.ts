@@ -14,10 +14,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const targetChatId = body.chatId;
+    const token = body.token;
     const apiBaseUrl = body.apiBaseUrl;
 
     const res = await sendZaloBotMessage({
       chatId: targetChatId,
+      token,
       apiBaseUrl,
       text: `🧪 [THỬ NGHIỆM KẾT NỐI ZALO BOT THÀNH CÔNG]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

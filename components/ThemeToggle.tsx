@@ -52,25 +52,23 @@ export function ThemeToggle({ variant = 'icon', className = '' }: ThemeTogglePro
 
   // Default 'icon' variant for header / navigation bar
   return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        toggleTheme();
-      }}
-      className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer border ${
-        isDark
-          ? 'bg-[#1C2541] border-[#2D3A66] text-amber-400 hover:bg-[#232F52] hover:text-amber-300 shadow-xs'
-          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
-      } ${className}`}
-      aria-label={titleText}
-      title={titleText}
-    >
-      {isDark ? (
-        <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-45" />
-      ) : (
-        <Moon className="w-4 h-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" />
-      )}
-    </button>
+    <Tooltip title={titleText} placement="bottom">
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className={`relative w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer border ${
+          isDark
+            ? 'bg-[#1C2541] border-[#2D3A66] text-amber-400 hover:bg-[#232F52] hover:text-amber-300 shadow-xs'
+            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-2xs'
+        } ${className}`}
+        aria-label={titleText}
+      >
+        {isDark ? (
+          <Sun className="w-4 h-4 text-amber-400 transition-transform duration-300 hover:rotate-45" />
+        ) : (
+          <Moon className="w-4 h-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" />
+        )}
+      </button>
+    </Tooltip>
   );
 }

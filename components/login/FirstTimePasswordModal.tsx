@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { validatePassword, getPasswordStrength, DEFAULT_TEMPORARY_PASSWORD } from '@/lib/client/password-validator';
 
 export interface FirstTimePasswordModalProps {
   userAccount: {
@@ -18,33 +17,34 @@ export function FirstTimePasswordModal({
   onSuccess,
   onCancel,
 }: FirstTimePasswordModalProps) {
-  const [currentPassword, setCurrentPassword] = useState(userAccount.currentPassword || DEFAULT_TEMPORARY_PASSWORD);
+  const [currentPassword, setCurrentPassword] = useState(userAccount.currentPassword || 'Antam@2026');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const passwordStrength = getPasswordStrength(newPassword);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
     if (!currentPassword.trim()) {
-      setErrorMessage(`Vui lòng nhập mật khẩu hiện tại (mặc định: ${DEFAULT_TEMPORARY_PASSWORD}).`);
+      setErrorMessage('Vui lòng nhập mật khẩu hiện tại (mặc định: Antam@2026).');
+      return;
+    }
+
+    if (!newPassword.trim() || newPassword.trim().length < 6) {
+      setErrorMessage('Mật khẩu mới phải có tối thiểu 6 ký tự.');
+      return;
+    }
+
+    if (newPassword.trim() === 'Antam@2026') {
+      setErrorMessage('Mật khẩu mới không được trùng với mật khẩu mặc định (Antam@2026).');
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setErrorMessage('Xác nhận mật khẩu mới không khớp.');
-      return;
-    }
-
-    // Validate mật khẩu với nguyên tắc bảo mật
-    const validation = validatePassword(newPassword, [currentPassword]);
-    if (!validation.valid) {
-      setErrorMessage(validation.errors.join(' '));
       return;
     }
 
@@ -138,7 +138,7 @@ export function FirstTimePasswordModal({
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="block text-xs font-bold text-slate-700">
-                Mật Khẩu Mới (8-15 ký tự, chữ+số+đặc biệt) *
+                Mật Khẩu Mới (Tối thiểu 6 ký tự) *
               </label>
               <button
                 type="button"
@@ -172,31 +172,6 @@ export function FirstTimePasswordModal({
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition-all"
             />
           </div>
-
-          {/* Password Strength Indicator */}
-          {newPassword && (
-            <div className="mt-2 text-xs bg-slate-50 p-2 rounded-lg border border-slate-100">
-              <div className="font-semibold text-slate-700 mb-1">Yêu cầu bảo mật:</div>
-              <ul className="space-y-1">
-                <li className={`flex items-center gap-1.5 ${passwordStrength.hasLength ? 'text-emerald-600' : 'text-slate-500'}`}>
-                  <span>{passwordStrength.hasLength ? '✓' : '○'}</span>
-                  <span>Từ 8 đến 15 ký tự</span>
-                </li>
-                <li className={`flex items-center gap-1.5 ${passwordStrength.hasLetters ? 'text-emerald-600' : 'text-slate-500'}`}>
-                  <span>{passwordStrength.hasLetters ? '✓' : '○'}</span>
-                  <span>Có chứa chữ cái</span>
-                </li>
-                <li className={`flex items-center gap-1.5 ${passwordStrength.hasNumbers ? 'text-emerald-600' : 'text-slate-500'}`}>
-                  <span>{passwordStrength.hasNumbers ? '✓' : '○'}</span>
-                  <span>Có chứa số</span>
-                </li>
-                <li className={`flex items-center gap-1.5 ${passwordStrength.hasSpecialChars ? 'text-emerald-600' : 'text-slate-500'}`}>
-                  <span>{passwordStrength.hasSpecialChars ? '✓' : '○'}</span>
-                  <span>Có chứa ký tự đặc biệt</span>
-                </li>
-              </ul>
-            </div>
-          )}
 
           {/* Error Message */}
           {errorMessage && (

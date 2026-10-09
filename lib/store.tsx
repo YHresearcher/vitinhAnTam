@@ -84,26 +84,16 @@ export interface SystemSettings {
   paymentQrNote?: string;
 
   // Cấu hình Tích hợp Zalo Bot API (bot-api.zapps.me)
-  // Bảo mật: Token & Secret Token được mã hóa trước khi lưu DB, env vars làm override
   botApiBaseUrl?: string;
+  zaloBotToken?: string;
+  zaloBotSecretToken?: string;
   zaloDefaultChatId?: string;
   customWebhookUrl?: string;
-  zaloBotToken?: string;           // Mã hóa khi lưu DB
-  zaloBotSecretToken?: string;     // Mã hóa khi lưu DB
   notifyOnNewBooking?: boolean;
   notifyOnNewOrder?: boolean;
   notifyOnNewTicket?: boolean;
   notifyOnKeyRequest?: boolean;
   notifyOnSaleSuccess?: boolean;
-
-  // Cấu hình Bảo hành mặc định cho bán hàng kho
-  defaultWarrantyMonths?: number; // 3 | 6 | 12 | 36 (default: 12)
-
-  // Cấu hình Nhắc nhở chăm sóc khách hàng (Customer Care Reminders)
-  enableCustomerCareReminders?: boolean;
-  customerCareReminderChatId?: string; // Zalo Group Chat ID nhận nhắc nhở
-  customerCareReminderIntervals?: number[]; // [1, 6, 12] tháng
-  customerCareReminderMessage?: string; // Template tin nhắn
 }
 
 export const initialSystemSettings: SystemSettings = {
@@ -139,26 +129,16 @@ export const initialSystemSettings: SystemSettings = {
   paymentQrNote: 'Vui lòng quét mã QR hoặc chuyển khoản với nội dung: [Mã đơn hàng] - [Số điện thoại].',
 
   // Mặc định cấu hình Zalo Bot & Webhook
-  // Bảo mật: Token & Secret Token được mã hóa khi lưu DB, ưu tiên env vars (ZALO_BOT_TOKEN, ZALO_BOT_SECRET_TOKEN)
   botApiBaseUrl: '',
-  zaloDefaultChatId: '',
-  customWebhookUrl: '',
   zaloBotToken: '',
   zaloBotSecretToken: '',
+  zaloDefaultChatId: '',
+  customWebhookUrl: '',
   notifyOnNewBooking: true,
   notifyOnNewOrder: true,
   notifyOnNewTicket: true,
   notifyOnKeyRequest: true,
   notifyOnSaleSuccess: true,
-
-  // Mặc định cấu hình Bảo hành cho bán hàng kho
-  defaultWarrantyMonths: 12,
-
-  // Mặc định cấu hình Nhắc nhở chăm sóc khách hàng
-  enableCustomerCareReminders: false,
-  customerCareReminderChatId: '',
-  customerCareReminderIntervals: [1, 6, 12],
-  customerCareReminderMessage: '🔔 [Nhắc nhở chăm sóc khách hàng]\nKhách: {{customer_name}} ({{customer_phone}})\nThiết bị: {{device_model}} - {{service_tag}}\nNgày bàn giao: {{sale_date}}\nBảo hành: {{warranty_months}} tháng\n⏰ Đã {{interval}} tháng kể từ ngày bán/bàn giao\n→ Hãy chủ động liên hệ hỏi thăm, chăm sóc khách hàng!',
 };
 
 interface StoreContextType {
@@ -784,20 +764,7 @@ export function StoreProvider({
     setThemeMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
       if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('vtat_theme_v1', next);
-          if (next === 'dark') {
-            document.documentElement.classList.add('dark');
-            document.body.classList.add('dark');
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.body.classList.remove('dark');
-            document.documentElement.setAttribute('data-theme', 'light');
-          }
-        } catch (e) {
-          console.warn('Cannot update theme to DOM/storage:', e);
-        }
+        localStorage.setItem('vtat_theme_v1', next);
       }
       return next;
     });

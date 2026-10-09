@@ -19,7 +19,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import type { InventoryItem, UserAccount } from '@/lib/supabase';
+import type { InventoryItem } from '@/lib/supabase';
 
 interface Order {
   id: string;
@@ -35,9 +35,6 @@ interface Order {
   note?: string;
   status: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   created_at?: string;
-  shipper_name?: string;
-  shipper_id?: string;
-  shipper_phone?: string;
 }
 
 const STATUSES = [
@@ -49,16 +46,15 @@ const STATUSES = [
 ];
 
 export default function OrderManagementPage() {
-  const { currentUser, users, inventory, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
+  const { currentUser, inventory, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [executingOrder, setExecutingOrder] = useState<Order | null>(null);
-  const [confirmingOrder, setConfirmingOrder] = useState<Order | null>(null);
 
-  // Admin, Sales Manager, Technical Manager hoặc Sales có quyền duyệt/xác nhận đơn hàng
+  // Chỉ 1 trong 3 người: admin, sales_manager, tech_manager có quyền xác nhận đơn hàng
   const canConfirmOrder = Boolean(
-    currentUser && ['admin', 'sales_manager', 'tech_manager', 'sales'].includes(currentUser.role)
+    currentUser && ['admin', 'sales_manager', 'tech_manager'].includes(currentUser.role)
   );
 
   const fetchOrders = useCallback(async (showLoading = false) => {
@@ -82,19 +78,9 @@ export default function OrderManagementPage() {
     return () => clearInterval(tm);
   }, [fetchOrders]);
 
-  const changeStatus = async (
-    orderId: string,
-    newStatus: string,
-    deliveryOptions?: {
-      delivery_method?: 'pickup' | 'delivery';
-      customer_address?: string;
-      shipper_name?: string;
-      shipper_id?: string;
-      shipper_phone?: string;
-    }
-  ) => {
+  const changeStatus = async (orderId: string, newStatus: string) => {
     if (newStatus === 'confirmed' && !canConfirmOrder) {
-      message.warning('Chỉ Admin, Quản lý hoặc Sales mới có quyền xác nhận đơn hàng!');
+      message.warning('Chỉ Admin, Sales Manager hoặc Technical Manager mới có quyền xác nhận đơn hàng!');
       return;
     }
     try {
@@ -123,7 +109,7 @@ export default function OrderManagementPage() {
             customerPhone: targetOrder.customer_phone,
             orderCode: targetOrder.order_code,
             orderId: targetOrder.id,
-            deliveryMethod: deliveryOptions?.delivery_method || targetOrder.delivery_method,
+            deliveryMethod: targetOrder.delivery_method,
             note: targetOrder.note,
           });
           message.info(
@@ -148,29 +134,12 @@ export default function OrderManagementPage() {
           id: orderId,
           status: newStatus,
           matched_device_tag: matchedTag,
-          ...deliveryOptions,
         }),
       });
       if (res.ok) {
-        message.success(
-          deliveryOptions?.shipper_name
-            ? `Đã xác nhận đơn hàng và phân bổ giao hàng cho ${deliveryOptions.shipper_name}!`
-            : 'Cập nhật trạng thái đơn hàng thành công!'
-        );
+        message.success('Cập nhật trạng thái đơn hàng thành công!');
         setOrders((prev) =>
-          prev.map((o) =>
-            o.id === orderId
-              ? {
-                  ...o,
-                  status: newStatus as Order['status'],
-                  ...(deliveryOptions?.delivery_method ? { delivery_method: deliveryOptions.delivery_method } : {}),
-                  ...(deliveryOptions?.customer_address !== undefined ? { customer_address: deliveryOptions.customer_address } : {}),
-                  ...(deliveryOptions?.shipper_name !== undefined ? { shipper_name: deliveryOptions.shipper_name } : {}),
-                  ...(deliveryOptions?.shipper_id !== undefined ? { shipper_id: deliveryOptions.shipper_id } : {}),
-                  ...(deliveryOptions?.shipper_phone !== undefined ? { shipper_phone: deliveryOptions.shipper_phone } : {}),
-                }
-              : o
-          )
+          prev.map((o) => (o.id === orderId ? { ...o, status: newStatus as Order['status'] } : o))
         );
       } else {
         message.error('Không thể cập nhật trạng thái đơn hàng!');
@@ -353,29 +322,12 @@ export default function OrderManagementPage() {
                           </div>
                         )}
 
-                        {/* Hiển thị phân bổ shipper nếu có */}
-                        {order.shipper_name && (
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50/80 border border-blue-200/80 text-[11px]">
-                            <div className="flex items-center gap-1.5 text-blue-900 font-medium truncate">
-                              <Truck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                              <span className="truncate">
-                                NV Giao: <strong className="font-bold text-blue-950">{order.shipper_name}</strong>
-                              </span>
-                            </div>
-                            {order.shipper_phone && (
-                              <a href={`tel:${order.shipper_phone}`} className="text-blue-700 font-mono hover:underline text-[10px] shrink-0 ml-1">
-                                {order.shipper_phone}
-                              </a>
-                            )}
-                          </div>
-                        )}
-
                         <div className="pt-2 border-t border-slate-100 flex flex-col gap-1">
                           {order.status === 'pending' && (
                             canConfirmOrder ? (
                               <button
                                 type="button"
-                                onClick={() => setConfirmingOrder(order)}
+                                onClick={() => changeStatus(order.id, 'confirmed')}
                                 className="w-full text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
                               >
                                 <span>Xác nhận đơn</span>
@@ -388,48 +340,24 @@ export default function OrderManagementPage() {
                             )
                           )}
                           {order.status === 'confirmed' && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => changeStatus(order.id, 'processing')}
-                                className="w-full text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
-                              >
-                                <span>Đóng gói &amp; QC</span>
-                                <ArrowRight className="w-3 h-3" />
-                              </button>
-                              {canConfirmOrder && (
-                                <button
-                                  type="button"
-                                  onClick={() => setConfirmingOrder(order)}
-                                  className="w-full text-[11px] text-blue-600 hover:bg-blue-50 py-1 rounded transition-colors text-center cursor-pointer font-medium flex items-center justify-center gap-1"
-                                >
-                                  <Truck className="w-3 h-3" />
-                                  <span>{order.shipper_name ? 'Đổi NV giao hàng' : 'Phân bổ NV giao hàng'}</span>
-                                </button>
-                              )}
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => changeStatus(order.id, 'processing')}
+                              className="w-full text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-2xs"
+                            >
+                              <span>Đóng gói &amp; QC</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
                           )}
                           {order.status === 'processing' && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setExecutingOrder(order)}
-                                className="w-full text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-xs"
-                              >
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                <span>Xuất kho &amp; Tạo BH</span>
-                              </button>
-                              {canConfirmOrder && (
-                                <button
-                                  type="button"
-                                  onClick={() => setConfirmingOrder(order)}
-                                  className="w-full text-[11px] text-blue-600 hover:bg-blue-50 py-1 rounded transition-colors text-center cursor-pointer font-medium flex items-center justify-center gap-1"
-                                >
-                                  <Truck className="w-3 h-3" />
-                                  <span>{order.shipper_name ? 'Đổi NV giao hàng' : 'Phân bổ NV giao hàng'}</span>
-                                </button>
-                              )}
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => setExecutingOrder(order)}
+                              className="w-full text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white py-1.5 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              <span>Xuất kho &amp; Tạo BH</span>
+                            </button>
                           )}
                           {order.status !== 'completed' && order.status !== 'cancelled' && (
                             <button
@@ -449,23 +377,6 @@ export default function OrderManagementPage() {
             );
           })}
         </div>
-      )}
-
-      {confirmingOrder && (
-        <ConfirmDeliveryModal
-          order={confirmingOrder}
-          users={users}
-          onClose={() => setConfirmingOrder(null)}
-          onConfirm={async (data) => {
-            await changeStatus(confirmingOrder.id, 'confirmed', {
-              delivery_method: data.delivery_method,
-              customer_address: data.customer_address,
-              shipper_name: data.shipper_name,
-              shipper_id: data.shipper_id,
-              shipper_phone: data.shipper_phone,
-            });
-          }}
-        />
       )}
 
       {executingOrder && (
@@ -597,229 +508,6 @@ function ExecuteOrderModal({
             <span>Xác nhận xuất kho &amp; Kích hoạt BH</span>
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmDeliveryModal({
-  order,
-  users,
-  onClose,
-  onConfirm,
-}: {
-  order: Order;
-  users: UserAccount[];
-  onClose: () => void;
-  onConfirm: (data: {
-    delivery_method: 'pickup' | 'delivery';
-    customer_address: string;
-    shipper_name?: string;
-    shipper_id?: string;
-    shipper_phone?: string;
-  }) => Promise<void>;
-}) {
-  const [needsDelivery, setNeedsDelivery] = useState<boolean>(
-    order.delivery_method === 'delivery' || Boolean(order.customer_address)
-  );
-  const [address, setAddress] = useState<string>(order.customer_address || '');
-  const [selectedUserId, setSelectedUserId] = useState<string>(order.shipper_id || '');
-  const [submitting, setSubmitting] = useState<boolean>(false);
-
-  // Danh sách nhân viên hoạt động (gồm Admin, Quản lý, Kỹ thuật, Sales)
-  const activeStaff = useMemo(() => {
-    return users.filter((u) => u.status !== 'suspended');
-  }, [users]);
-
-  const selectedUser = useMemo(() => {
-    return activeStaff.find((u) => u.id === selectedUserId);
-  }, [activeStaff, selectedUserId]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (needsDelivery) {
-      if (!address.trim()) {
-        message.warning('Vui lòng nhập địa chỉ nhận hàng của khách!');
-        return;
-      }
-      if (!selectedUserId) {
-        message.warning('Vui lòng chọn nhân viên phụ trách đi giao hàng!');
-        return;
-      }
-    }
-
-    try {
-      setSubmitting(true);
-      await onConfirm({
-        delivery_method: needsDelivery ? 'delivery' : 'pickup',
-        customer_address: address.trim(),
-        shipper_name: needsDelivery ? selectedUser?.name : undefined,
-        shipper_id: needsDelivery ? selectedUser?.id : undefined,
-        shipper_phone: needsDelivery ? selectedUser?.phone : undefined,
-      });
-      onClose();
-    } catch {
-      // Error is caught and shown by caller
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 p-6 animate-scale-up max-h-[92vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-start justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
-              <Truck className="w-5 h-5 text-blue-600" />
-              <span>Xác Nhận Đơn &amp; Điều Phối Giao Hàng</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Đơn: <strong className="font-mono text-slate-800">{order.order_code}</strong> • {order.device_name}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          {/* Thông tin khách hàng tóm tắt */}
-          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Khách hàng:</span>
-              <strong className="text-slate-900 font-bold">{order.customer_name}</strong>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Số điện thoại:</span>
-              <a href={`tel:${order.customer_phone}`} className="text-blue-600 font-mono font-bold hover:underline">
-                {order.customer_phone}
-              </a>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500">Giá bán:</span>
-              <strong className="text-[#C0392B] font-mono font-bold">
-                {Number(order.device_price || 0).toLocaleString('vi-VN')}₫
-              </strong>
-            </div>
-          </div>
-
-          {/* Câu hỏi popup: Có cần đi giao hàng không? */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-2">
-              Có cần đi giao hàng tận nơi không? (*)
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setNeedsDelivery(true)}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                  needsDelivery
-                    ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-2xs ring-1 ring-blue-500'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Truck className="w-4 h-4 text-blue-600" />
-                <span>Có, cần đi giao</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setNeedsDelivery(false)}
-                className={`flex items-center justify-center gap-2 p-3 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                  !needsDelivery
-                    ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-2xs ring-1 ring-emerald-500'
-                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Khách nhận tại kho</span>
-              </button>
-            </div>
-          </div>
-
-          {needsDelivery ? (
-            <div className="space-y-3.5 bg-blue-50/40 p-3.5 rounded-xl border border-blue-100">
-              {/* Địa chỉ giao hàng (dùng địa chỉ trước đó, cho phép sửa) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Địa chỉ giao hàng (Có thể chỉnh sửa nếu khách đổi địa chỉ) (*)
-                </label>
-                <div className="relative">
-                  <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <textarea
-                    rows={2}
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Nhập địa chỉ nhận hàng của khách..."
-                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-500 shadow-2xs"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Dropdown list tất cả nhân viên (gồm admin, quản lý, sales, tech) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Chọn nhân viên đi giao hàng (Gồm Admin, Quản lý &amp; Nhân viên) (*)
-                </label>
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:border-blue-500 shadow-2xs font-medium"
-                  required
-                >
-                  <option value="">-- Chọn nhân viên chịu trách nhiệm giao hàng --</option>
-                  {activeStaff.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} — {u.roleTitle || u.role} ({u.phone || 'Chưa có SĐT'})
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-blue-700 mt-1.5 flex items-center gap-1 font-medium">
-                  <span>🤖</span> Sau khi xác nhận, Bot Zalo sẽ tự động gửi tin nhắn phân bổ đến người được chọn kèm thông tin đơn hàng!
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600">
-              Khách hàng sẽ đến trực tiếp nhận máy tại cửa hàng. Thiết bị sẽ được chuyển sang trạng thái <strong>Đang đợi bán</strong> trong kho.
-            </div>
-          )}
-
-          {/* Nút hành động */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="px-4 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={submitting || (needsDelivery && (!address.trim() || !selectedUserId))}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-            >
-              {submitting ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Đang xử lý...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Xác Nhận &amp; Gửi Bot Zalo</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
   );

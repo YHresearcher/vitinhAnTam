@@ -355,7 +355,7 @@ export function RequesterKeyTestPopup() {
     return (
       <aside
         aria-label="Widget Nhắc Nhở Test Key"
-        className="fixed bottom-[232px] right-4 z-40 font-sans"
+        className="fixed bottom-[324px] right-4 z-40 font-sans"
       >
         {approvedCount > 0 ? (
           <button

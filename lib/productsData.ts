@@ -29,10 +29,6 @@ export interface ShowcaseItem {
   customerName?: string;
   customerArea?: string;
   handoverDate?: string;
-  isFeatured?: boolean;
-  testDuration?: number;
-  grade?: string;
-  warrantyMonths?: number;
 }
 
 export interface RawProduct {
@@ -47,9 +43,6 @@ export interface RawProduct {
   qcStatus: string;
   burnInDuration: number;
   isSold: boolean;
-  isFeatured?: boolean;
-  testDuration?: number;
-  grade?: string;
   customerName?: string;
   customerArea?: string;
   handoverDate?: string;
@@ -82,9 +75,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 30,
     isSold: false,
-    isFeatured: true,
-    testDuration: 30,
-    grade: 'Grade A >95%',
     vi: {
       name: 'HP ProDesk 400 G5 Mini (Siêu Nhỏ Gọn)',
       badge: 'TIẾT KIỆM ĐIỆN 65W',
@@ -111,9 +101,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 60,
     isSold: false,
-    isFeatured: true,
-    testDuration: 60,
-    grade: 'Grade A >95%',
     vi: {
       name: 'Lenovo ThinkPad T480s (Doanh Nhân Vỏ Carbon)',
       badge: 'CHUẨN ĐỘ BỀN QUÂN ĐỘI',
@@ -140,9 +127,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 40,
     isSold: false,
-    isFeatured: false,
-    testDuration: 40,
-    grade: 'Grade A >90%',
     vi: {
       name: 'Dell Latitude 7490 Nhôm Nguyên Khối',
       badge: 'VIỀN MÀN HÌNH SIÊU MỎNG',
@@ -169,9 +153,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 90,
     isSold: false,
-    isFeatured: true,
-    testDuration: 90,
-    grade: 'Grade A >95%',
     vi: {
       name: 'Dell Precision Tower 3620 Workstation',
       badge: 'ĐỒ HỌA CHUYÊN NGHIỆP',
@@ -198,9 +179,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 45,
     isSold: false,
-    isFeatured: false,
-    testDuration: 45,
-    grade: 'Grade A >90%',
     vi: {
       name: 'Dell Vostro 3670 MT (Core i7 Đa Nhiệm)',
       badge: 'HIỆU NĂNG CAO CẤP',
@@ -227,9 +205,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'ready_to_sell',
     burnInDuration: 45,
     isSold: false,
-    isFeatured: false,
-    testDuration: 45,
-    grade: 'Grade A 100%',
     vi: {
       name: 'Asus Zenbook 14 OLED UX3402',
       badge: 'MÀN HÌNH 2.8K OLED 90HZ',
@@ -258,9 +233,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'sold',
     burnInDuration: 45,
     isSold: true,
-    isFeatured: false,
-    testDuration: 45,
-    grade: 'Grade A >95%',
     customerName: 'Cty TNHH Vận Tải Long An (Anh Tuấn)',
     customerArea: 'KCN Lợi Bình Nhơn, Tân An',
     handoverDate: '15/05/2025',
@@ -290,9 +262,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'sold',
     burnInDuration: 60,
     isSold: true,
-    isFeatured: false,
-    testDuration: 60,
-    grade: 'Grade A 100%',
     customerName: 'Chú Bảy Tân An (Nguyễn Văn Bảy)',
     customerArea: 'Số 15 Huỳnh Văn Nhất, P.3, Tân An',
     handoverDate: '20/04/2025',
@@ -322,9 +291,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'sold',
     burnInDuration: 45,
     isSold: true,
-    isFeatured: false,
-    testDuration: 45,
-    grade: 'Grade A >95%',
     customerName: 'Cty Thiết Kế Hoàng Quân (Anh Quân)',
     customerArea: 'Số 88 Hùng Vương, P.2, Tân An',
     handoverDate: '02/05/2025',
@@ -354,9 +320,6 @@ export const RAW_PRODUCTS: RawProduct[] = [
     qcStatus: 'sold',
     burnInDuration: 30,
     isSold: true,
-    isFeatured: false,
-    testDuration: 30,
-    grade: 'Grade B >85%',
     customerName: 'Chị Lan - Tạp hoá Tân Tây',
     customerArea: 'Ngã 3 Thủ Thừa, Huyện Thủ Thừa',
     handoverDate: '18/05/2025',
@@ -417,10 +380,6 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         customerName: item.customer_name,
         customerArea: item.customer_phone ? 'Khu vực Tây Ninh' : undefined,
         handoverDate: item.handover_date,
-        isFeatured: rawMatch?.isFeatured ?? false,
-        testDuration: rawMatch?.testDuration ?? item.burn_in_duration ?? 60,
-        grade: rawMatch?.grade ?? 'Grade A >90%',
-        warrantyMonths: item.warranty_months || 12,
         name: isEn && en ? en.name : (item.device_model || item.model || `${item.brand} ${item.form_factor}`),
         badge: isEn && en ? en.badge : (rawMatch?.vi.badge || 'BO MẠCH NGUYÊN BẢN'),
         subBadge: isEn && en ? en.subBadge : (rawMatch?.vi.subBadge || 'Bảo hành 12 tháng'),
@@ -455,10 +414,6 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
       qcStatus: p.qcStatus,
       burnInDuration: p.burnInDuration,
       isSold: p.isSold,
-      isFeatured: p.isFeatured ?? false,
-      testDuration: p.testDuration ?? p.burnInDuration,
-      grade: p.grade ?? 'Grade A >90%',
-      warrantyMonths: 12,
       customerName: p.customerName,
       customerArea: p.customerArea,
       handoverDate: p.handoverDate,

@@ -6,14 +6,12 @@ const ZALO_BOT_BASE_URL = 'https://bot-api.zapps.me';
 
 /**
  * Định dạng cấu hình Bot & Webhook lấy từ settings (bất đồng bộ từ Supabase/File)
- * Bảo mật: Token & Secret Token ưu tiên env vars, fallback về settings (đã giải mã)
  */
 export async function getZaloBotConfigAsync() {
   const settings = await getStoredSettingsAsync();
   const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
-  // Ưu tiên env vars (bảo mật nhất), fallback về settings (đã decrypt khi đọc từ DB)
-  const token = (process.env.ZALO_BOT_TOKEN || settings.zaloBotToken || '').trim();
-  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || settings.zaloBotSecretToken || '').trim();
+  const token = (settings.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
+  const secretToken = (settings.zaloBotSecretToken || process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
   const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
@@ -29,13 +27,12 @@ export async function getZaloBotConfigAsync() {
 
 /**
  * Định dạng cấu hình Bot & Webhook lấy từ settings (đồng bộ)
- * Bảo mật: Token & Secret Token ưu tiên env vars, fallback về settings (đã giải mã)
  */
 export function getZaloBotConfig() {
   const settings = getStoredSettings();
   const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
-  const token = (process.env.ZALO_BOT_TOKEN || settings.zaloBotToken || '').trim();
-  const secretToken = (process.env.ZALO_BOT_SECRET_TOKEN || settings.zaloBotSecretToken || '').trim();
+  const token = (settings.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
+  const secretToken = (settings.zaloBotSecretToken || process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
   const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
@@ -292,7 +289,6 @@ export type WebhookEventType =
   | 'sale_success' // Bán laptop/pc thành công -> bot chúc mừng đến nhóm đã cài đặt sẵn
   | 'key_release_success' // Phát hành/bán key bản quyền thành công -> bot chúc mừng đến nhóm
   | 'customer_zalo_order' // Gửi xác nhận đơn hàng đến Zalo khách hàng
-  | 'delivery_dispatch' // Phân công nhân viên giao hàng tận nơi
   | 'test_notification'; // Thông báo test từ admin
 
 /**
@@ -313,7 +309,6 @@ export async function dispatchSystemEvent(
     if (eventType === 'sale_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'key_release_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'customer_zalo_order') shouldNotifyZalo = true;
-    if (eventType === 'delivery_dispatch') shouldNotifyZalo = true;
     if (eventType === 'test_notification') shouldNotifyZalo = true;
   }
 
@@ -418,24 +413,8 @@ export async function dispatchSystemEvent(
         `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản QR'}\n` +
         `🛡️ Bảo hành: Máy chuẩn A, nguyên bản, hỗ trợ nhanh chóng.\n` +
         `⏰ Thời gian đặt: ${nowStr}\n` +
-        `━━━━━━━━━━━━━━━━━━━\n`;
-    } else if (eventType === 'delivery_dispatch') {
-      const priceStr = typeof payload.devicePrice === 'number'
-        ? payload.devicePrice.toLocaleString('vi-VN') + ' đ'
-        : (payload.devicePrice || '0 đ');
-      formattedText = `🚚 [PHÂN CÔNG GIAO HÀNG ĐƠN MỚI]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `🛵 Nhân viên giao hàng: ${payload.shipperName || 'Chưa rõ'}${payload.shipperPhone ? ` (${payload.shipperPhone})` : ''}\n` +
-        `📦 Mã đơn: ${payload.orderCode || 'N/A'}\n` +
-        `💻 Thiết bị: ${payload.deviceName || 'N/A'}\n` +
-        `💰 Tiền cần thu: ${priceStr} (${payload.paymentMethod === 'cash' ? 'Thu tiền mặt khi giao' : 'Đã thanh toán QR'})\n` +
-        `👤 Khách nhận: ${payload.customerName || 'N/A'}\n` +
-        `📞 SĐT khách: ${payload.customerPhone || 'N/A'}\n` +
-        `📍 Địa chỉ giao hàng: ${payload.shippingAddress || 'Theo thông tin đơn'}\n` +
-        (payload.note ? `📝 Ghi chú: ${payload.note}\n` : '') +
-        `⏰ Phân bổ lúc: ${nowStr}\n` +
-        `━━━━━━━━━━━━━━━━━━━\n` +
-        `👉 Người được phân bổ vui lòng liên hệ khách để sắp xếp đi giao hàng chu đáo nhé! 🚀`;
+        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} để chuẩn bị máy chu đáo cho bạn. Trân trọng cảm ơn!`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

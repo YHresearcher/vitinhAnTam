@@ -41,18 +41,12 @@ export const TRANSLATIONS = {
       internalLogin: 'Đăng nhập nội bộ',
     },
     hero: {
-      brandTag: 'VI TÍNH AN TÂM • MÁY TÍNH DOANH NGHIỆP TUYỂN CHỌN',
-      mainTitle: 'MÁY TÍNH ĐỒNG BỘ DELL, HP, THINKPAD — BO MẠCH NGUYÊN BẢN, WINDOWS SẠCH, BẢO HÀNH THEO S/N',
+      brandTag: 'VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM',
+      mainTitle: 'CHỈ BÁN MÁY TUYỂN CHỌN, KHÔNG BÁN MÁY LOẠI 2',
       badgeWindows: 'WINDOWS BẢN QUYỀN SẠCH',
       badge2h: 'ỨNG PHÓ NHANH • HỖ TRỢ TẬN TÂM',
       description:
-        'Chuyên PC đồng bộ & laptop doanh nghiệp tuyển chọn. Mới báo mới, cũ báo cũ minh bạch; vệ sinh sạch sẽ, tra keo tản nhiệt và test tải thực tế FurMark/AIDA64 trước khi giao máy. Bảo hành chu đáo dựa trên số S/N của nhà sản xuất.',
-      trustBadges: [
-        '100% Bo mạch gốc nguyên bản',
-        'Windows bản quyền số theo máy',
-        'Test FurMark & AIDA64 thực tế',
-        'Bảo hành theo S/N nhà sản xuất',
-      ],
+        'Chuyên cung cấp máy tính đồng bộ và laptop tuyển chọn, kiểm tra cẩn thận, linh kiện rõ ràng và bảo hành chu đáo.',
       pillar1Title: 'CHUYÊN DELL, HP, THINKPAD DOANH NGHIỆP',
       pillar1Desc:
         'Tuyển chọn máy nguyên bản, phần cứng ổn định, sạch sẽ và chưa qua sửa chữa chắp vá.',
@@ -65,8 +59,8 @@ export const TRANSLATIONS = {
       quickSearchLabel: 'Tra cứu bảo hành/sửa chữa:',
       quickSearchPlaceholder: 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...',
       quickSearchBtn: 'Tra Cứu',
-      btnBrowseStock: 'Xem Máy Nổi Bật Sẵn Kho',
-      btnScheduleService: 'Đặt Lịch Kỹ Thuật Tận Nơi',
+      btnBrowseStock: 'XEM DANH MỤC MÁY SẴN HÀNG',
+      btnScheduleService: 'ĐẶT LỊCH KIỂM TRA/NÂNG CẤP',
     },
     products: {
       tag: 'SẢN PHẨM',
@@ -406,103 +400,6 @@ export const TRANSLATIONS = {
       btnHotline: 'Hotline / Zalo: 0909.053.058',
       btnBookOnsiteTech: 'Đặt Lịch Kỹ Thuật Tận Nơi',
     },
-    // NEW: Trust Evidence Section (3 columns after Hero)
-    trustEvidence: {
-      tag: 'CHỨNG MINH NIỀM TIN',
-      process: {
-        title: 'QUY TRÌNH KIỂM ĐỊNH 4 BƯỚC',
-        items: [
-          'Nguồn điện ổn định: Test thực tế điện áp, máy chạy ổn định giờ cao điểm',
-          'Tản nhiệt mát êm: Vệ sinh bụi, tra keo Arctic MX-4, quạt chạy êm',
-          'Linh kiện minh bạch: Mới báo mới, cũ báo cũ; check SSD/RAM trước khi giao',
-          'Hỗ trợ kịp thời: Bảo hành theo từng linh kiện, xử lý nhanh không gián đoạn công việc'
-        ],
-      },
-      components: {
-        title: 'MINH BẠCH LINH KIỆN',
-        items: [
-          'Mới: Linh kiện chính hãng, bảo hành hãng 36 tháng',
-          'Cũ: Bóc máy zin, test kỹ, bảo hành tại shop 12 tháng',
-          'Rõ ràng từng máy: Cấu hình, tình trạng, giá mới/giá cũ tách biệt',
-          'Không mập mờ: Không bán máy chắp vá, không gộm rác'
-        ],
-      },
-      warranty: {
-        title: 'BẢO HÀNH THEO S/N NHÀ SẢN XUẤT',
-        items: [
-          'Mỗi máy có số S/N của nhà sản xuất (Dell Service Tag, ThinkPad S/N, HP S/N)',
-          'Tôi bảo hành dựa trên số này — tra cứu bằng SĐT hoặc S/N dập trên máy',
-          '3 tầng bảo hành: Thân máy/Main/Nguồn (12T) • SSD/RAM (theo linh kiện) • Hỗ trợ kỹ thuật 30 ngày',
-          'Không cần hoá đơn giấy — hệ thống điện tử đối chiếu S/N chính xác'
-        ],
-        cta: 'Tra cứu bảo hành ngay',
-      },
-    },
-    // NEW: FAQ Objection-Handling (4 fears → evidence answers)
-    faqObjections: [
-      {
-        id: 1,
-        fear: 'MÁY CŨ HỎNG NHANH',
-        question: 'Máy có thật sự "nguyên bản" không?',
-        answer: '100% bo mạch chủ gốc. Chúng tôi TỪ CHỐI máy main đã sửa chắp. Mỗi máy test FurMark 30-90 phút, AIDA64 stress CPU/RAM, CrystalDiskInfo kiểm tra ổ cứng. Kết quả in tem dán trên máy.',
-      },
-      {
-        id: 2,
-        fear: 'WIN LẬU DÍNH VIRUS',
-        question: 'Windows bản quyền số là gì?',
-        answer: 'Kích hoạt Digital License gắn liền bo mạch từ Microsoft. Không dùng tool crack, không ghost. An toàn cho dữ liệu ngân hàng, hóa đơn điện tử, MISA.',
-      },
-      {
-        id: 3,
-        fear: 'BỊ TRÁO LINH KIỆN',
-        question: 'Quy trình sửa chữa như thế nào?',
-        answer: 'Kỹ thuật mở (Open Bench): Bạn đứng xem trực tiếp. Nâng cấp SSD/RAM, vệ sinh, tra keo — làm xong lấy ngay 20-30 phút. KHÔNG GIỮ MÁY QUA ĐÊM trừ hỏng phức tạp (báo trước).',
-      },
-      {
-        id: 4,
-        fear: 'BẢO HÀNH GIẤY DỄ MẤT',
-        question: 'Bảo hành theo S/N hoạt động sao?',
-        answer: 'Mọi máy xuất xưởng đều ĐĂNG KÝ S/N VÀO HỆ THỐNG. Tra cứu bằng SĐT hoặc S/N dập trên máy — xem được: hạn bảo hành main/SSD/RAM, cấu hình gốc, ngày bàn giao, KTV phụ trách. KHÔNG CẦN HOÁ ĐƠN GIẤY.',
-      },
-    ],
-    // NEW: Social Proof by Persona
-    socialProof: {
-      title: 'KHÁCH HÀNG CHIA SẺ',
-      segments: [
-        {
-          persona: 'HỘ KINH DOANH / DOANH NGHIỆP',
-          quote: '"Máy chạy ổn cho xuất hóa đơn, không lo đơ giữa ca"',
-          author: '— Chị H., Quán CF TP. Tân An',
-          model: 'Dell OptiPlex 7060 SFF',
-          warranty: '12T BH máy',
-        },
-        {
-          persona: 'HỌC SINH / SINH VIÊN',
-          quote: '"ThinkPad T480s gõ êm, pin 4h, rẻ 50% máy mới"',
-          author: '— Anh T., ĐH Tây Ninh',
-          model: 'ThinkPad T480s',
-          warranty: '12T BH máy',
-        },
-        {
-          persona: 'CÁN BỘ VĂN PHÒNG',
-          quote: '"KTV đến tận nhà lúc 19h, cài xong 20p qua UltraViewer"',
-          author: '— Chú N., UBND Châu Thành',
-          model: 'HP ProDesk 400 G5 Mini',
-          warranty: '12T BH máy',
-        },
-      ],
-    },
-    // NEW: Footer Trust Signals
-    footerTrust: {
-      signals: [
-        'Mới báo mới, cũ báo cũ',
-        'Windows sạch bản quyền số',
-        'Test thực tế FurMark/AIDA64',
-        'Hỗ trợ tận nơi & UltraViewer',
-        'Bảo hành 12 tháng máy',
-        'Tra cứu S/N điện tử'
-      ],
-    },
     login: {
       badge: 'CỔNG ĐĂNG NHẬP HỆ THỐNG NỘI BỘ',
       title: 'Xác Thực Quyền Truy Cập',
@@ -562,18 +459,12 @@ export const TRANSLATIONS = {
       internalLogin: 'Staff Portal',
     },
     hero: {
-      brandTag: 'VI TINH AN TAM • CERTIFIED ENTERPRISE COMPUTERS',
-      mainTitle: 'DELL, HP, THINKPAD ENTERPRISE DESKTOPS & LAPTOPS — ORIGINAL BOARDS, CLEAN WINDOWS, S/N WARRANTY',
+      brandTag: 'VI TINH AN TAM • PROFESSIONAL & DEDICATED',
+      mainTitle: 'QUALITY COMPUTERS & GENUINE SOFTWARE LICENSES',
       badgeWindows: 'GENUINE CLEAN WINDOWS',
       badge2h: 'RAPID RESPONSE • DEDICATED SUPPORT',
       description:
-        'Specializing in carefully selected enterprise PCs and laptops. New is new, used is used — fully transparent. Thoroughly cleaned, premium thermal paste applied, real-world FurMark/AIDA64 stress-tested before each handover. Attentive warranty keyed to the manufacturer S/N.',
-      trustBadges: [
-        '100% original factory motherboards',
-        'Genuine Windows digital license',
-        'FurMark & AIDA64 load tested',
-        'S/N-based manufacturer warranty',
-      ],
+        'Specializing in carefully selected enterprise PCs and laptops, meticulously inspected, clear hardware specifications, and attentive warranty.',
       pillar1Title: 'PRISTINE DELL, HP, THINKPAD',
       pillar1Desc:
         'Factory-original motherboards, stable hardware condition, thoroughly cleaned and never patched.',
@@ -586,8 +477,8 @@ export const TRANSLATIONS = {
       quickSearchLabel: 'Quick Lookup:',
       quickSearchPlaceholder: 'Enter phone number or warranty code...',
       quickSearchBtn: 'Lookup',
-      btnBrowseStock: 'BROWSE FEATURED INVENTORY',
-      btnScheduleService: 'SCHEDULE ON-SITE SERVICE',
+      btnBrowseStock: 'BROWSE READY INVENTORY',
+      btnScheduleService: 'SCHEDULE INSPECTION / UPGRADE',
     },
     products: {
       tag: 'PRODUCTS',
@@ -927,103 +818,6 @@ export const TRANSLATIONS = {
       btnBrowseInventory: 'Browse Certified Inventory',
       btnHotline: 'Hotline / Zalo: 0909.053.058',
       btnBookOnsiteTech: 'Schedule On-Site Technician',
-    },
-    // NEW: Trust Evidence Section (3 columns after Hero)
-    trustEvidence: {
-      tag: 'TRUST EVIDENCE',
-      process: {
-        title: '4-STEP QC INSPECTION PROCESS',
-        items: [
-          'Stable Power: Real voltage testing, stable during peak business hours',
-          'Cool & Quiet: Dust cleaning, Arctic MX-4 paste, fans run whisper-quiet',
-          'Transparent Components: New is new, used is used; SSD/RAM health checked before handover',
-          'Timely Support: Per-component warranty, rapid resolution so work never stalls'
-        ],
-      },
-      components: {
-        title: 'COMPONENT TRANSPARENCY',
-        items: [
-          'New: Genuine OEM parts, 36-month manufacturer warranty',
-          'Used: Original pulled units, tested, 12-month shop warranty',
-          'Clear per machine: Specs, condition, new/used pricing separated',
-          'No deception: No franken-PCs, no hidden defects'
-        ],
-      },
-      warranty: {
-        title: 'S/N-BASED WARRANTY (MANUFACTURER SERIAL)',
-        items: [
-          'Every machine has the manufacturer S/N (Dell Service Tag, ThinkPad S/N, HP S/N)',
-          'I warranty based on this number — lookup by phone or chassis S/N',
-          '3 warranty tiers: Chassis/Main/PSU (12M) • SSD/RAM (per component) • Tech support 30 days',
-          'No paper receipt needed — electronic registry validates S/N directly'
-        ],
-        cta: 'Check warranty now',
-      },
-    },
-    // NEW: FAQ Objection-Handling (4 fears → evidence answers)
-    faqObjections: [
-      {
-        id: 1,
-        fear: 'USED PCS FAIL FAST',
-        question: 'Are machines truly "factory-original"?',
-        answer: '100% original motherboards. We REFUSE patched/repaired boards. Every machine stress-tested: FurMark 30-90 min, AIDA64 CPU/RAM, CrystalDiskInfo drive health. Results printed on QC tag.',
-      },
-      {
-        id: 2,
-        fear: 'PIRATED WINDOWS = VIRUS',
-        question: 'What is "Digital License Windows"?',
-        answer: 'Microsoft Digital License tied to motherboard. No crack tools, no ghost images. Safe for banking, e-invoices, MISA ERP, tax tokens.',
-      },
-      {
-        id: 3,
-        fear: 'COMPONENT SWAPPING',
-        question: 'How does repair work?',
-        answer: 'Open Bench transparency: You watch live. SSD/RAM upgrades, cleaning, thermal paste — done in 20-30 min, take home same day. NO OVERNIGHT HOLD unless complex (disclosed upfront).',
-      },
-      {
-        id: 4,
-        fear: 'PAPER WARRANTY LOST',
-        question: 'How does S/N warranty work?',
-        answer: 'Every delivered unit is REGISTERED BY S/N in our system. Lookup by phone or chassis S/N — see: main/SSD/RAM warranty expiry, original specs, handover date, assigned engineer. NO PAPER RECEIPT REQUIRED.',
-      },
-    ],
-    // NEW: Social Proof by Persona
-    socialProof: {
-      title: 'CLIENT TESTIMONIALS',
-      segments: [
-        {
-          persona: 'SMES / ACCOUNTING FIRMS',
-          quote: '"Systems stable for e-invoicing — no mid-shift crashes"',
-          author: '— Mr. H., Cafe Chain, Tan An City',
-          model: 'Dell OptiPlex 7060 SFF',
-          warranty: '12M machine warranty',
-        },
-        {
-          persona: 'STUDENTS / PARENTS',
-          quote: '"ThinkPad T480s tactile keyboard, 4h battery, half the price of new"',
-          author: '— Mr. T., University Student, Tay Ninh',
-          model: 'ThinkPad T480s',
-          warranty: '12M machine warranty',
-        },
-        {
-          persona: 'CIVIL SERVANTS / OFFICE WORKERS',
-          quote: '"Engineer came at 7pm, fixed via UltraViewer in 20 min"',
-          author: '— Mr. N., District Office, Chau Thanh',
-          model: 'HP ProDesk 400 G5 Mini',
-          warranty: '12M machine warranty',
-        },
-      ],
-    },
-    // NEW: Footer Trust Signals
-    footerTrust: {
-      signals: [
-        'New is new, used is used',
-        'Clean Windows digital license',
-        'Real FurMark/AIDA64 testing',
-        'On-site & UltraViewer support',
-        '12-month machine warranty',
-        'Electronic S/N warranty lookup'
-      ],
     },
     login: {
       badge: 'INTERNAL ENTERPRISE STAFF PORTAL',

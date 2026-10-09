@@ -195,13 +195,6 @@ ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS distance_km NUMERIC;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS estimated_arrival_minutes INT;
 ALTER TABLE onsite_dispatches ADD COLUMN IF NOT EXISTS issue_summary TEXT;
 
--- New columns for SystemSettings (Warranty & Customer Care Reminders)
-ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS default_warranty_months INT DEFAULT 12;
-ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS enable_customer_care_reminders BOOLEAN DEFAULT false;
-ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_chat_id TEXT;
-ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_intervals INT[] DEFAULT ARRAY[1, 6, 12];
-ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_message TEXT;
-
 -- ==========================================
 -- 7. Bảng Đơn hàng (Orders) — khách đặt từ website
 -- ==========================================

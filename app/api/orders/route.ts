@@ -31,11 +31,7 @@ const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technic
 
 /** Chỉ staff (admin/sales/technician) đã đăng nhập mới được xem danh sách đơn. */
 function isStaff(request: NextRequest): boolean {
-  const token =
-    request.cookies.get(SESSION_COOKIE)?.value ||
-    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
-    request.headers.get('x-session-token');
-  const session = verifySession(token);
+  const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
   return Boolean(session && STAFF_ROLES.includes(session.role));
 }
 
@@ -176,50 +172,6 @@ export async function POST(request: NextRequest) {
 
     const orderCode = body.order_code?.trim() || `#AT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
     const useZalo = Boolean(body.use_zalo);
-    let deviceTag = (body.device_tag || '').trim();
-
-    let matchedItem: { id: string; service_tag: string } | null = null;
-    const db = getDb();
-
-    // 1. Tự động tìm máy trong kho: theo service_tag hoặc theo device_name đang sẵn bán
-    if (db) {
-      try {
-        if (deviceTag) {
-          const { data: itemByTag } = await db
-            .from('inventory_items')
-            .select('id, service_tag, device_model, qc_status')
-            .eq('service_tag', deviceTag)
-            .maybeSingle();
-          if (itemByTag) {
-            matchedItem = itemByTag;
-          }
-        }
-
-        if (!matchedItem && deviceName) {
-          const { data: readyItems } = await db
-            .from('inventory_items')
-            .select('id, service_tag, device_model, qc_status')
-            .eq('qc_status', 'ready_to_sell')
-            .limit(30);
-
-          if (readyItems && readyItems.length > 0) {
-            const devLower = deviceName.toLowerCase();
-            const found = readyItems.find((it: { device_model?: string }) => {
-              const modelLower = (it.device_model || '').toLowerCase();
-              return modelLower && (devLower.includes(modelLower) || modelLower.includes(devLower));
-            });
-            if (found) {
-              matchedItem = found;
-              deviceTag = found.service_tag;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Lookup inventory item error:', err);
-      }
-    }
-
-    // Chỉ include các cột tồn tại trong schema bảng orders của Supabase
     const order: Record<string, unknown> = {
       order_code: orderCode,
       customer_name: customerName,
@@ -227,43 +179,24 @@ export async function POST(request: NextRequest) {
       customer_address: (body.customer_address || '').trim(),
       device_name: deviceName,
       device_price: Number(body.device_price) || 0,
-      device_tag: deviceTag,
+      device_tag: (body.device_tag || '').trim(),
       payment_method: body.payment_method,
       delivery_method: body.delivery_method,
       note: (body.note || '').trim(),
+      use_zalo: useZalo,
       status: 'pending',
     };
 
     let savedId: string | null = null;
     let source = 'fallback';
 
+    const db = getDb();
     if (db) {
       try {
         const { data, error } = await db.from('orders').insert([order]).select('id').single();
         if (!error && data) {
           savedId = data.id;
           source = 'supabase';
-
-          // Tự động chuyển trạng thái máy trong kho sang "Đang đợi bán" (reserved)
-          if (matchedItem) {
-            try {
-              await db
-                .from('inventory_items')
-                .update({
-                  qc_status: 'reserved',
-                  customer_name: customerName,
-                  customer_phone: customerPhone,
-                  reserved_order_code: orderCode,
-                  reserved_order_id: data.id,
-                  reserved_delivery_method: body.delivery_method || 'pickup',
-                  reserved_at: new Date().toISOString(),
-                  reserved_note: (body.note || '').trim(),
-                })
-                .eq('id', matchedItem.id);
-            } catch (invErr) {
-              console.warn('Auto-reserve inventory item error:', invErr);
-            }
-          }
 
           // Thông báo đồng thời đến sales / admin / kỹ thuật
           const notification = {
@@ -410,16 +343,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as {
-      id?: string;
-      status?: string;
-      matched_device_tag?: string;
-      delivery_method?: 'pickup' | 'delivery';
-      customer_address?: string;
-      shipper_name?: string;
-      shipper_id?: string;
-      shipper_phone?: string;
-    };
+    const body = (await request.json()) as { id?: string; status?: string; matched_device_tag?: string };
     const allowed = ['confirmed', 'processing', 'completed', 'cancelled'];
     if (!body.id || !body.status || !allowed.includes(body.status)) {
       return NextResponse.json(
@@ -438,53 +362,16 @@ export async function PATCH(request: NextRequest) {
           .eq('id', body.id)
           .single();
 
-        const updatePayload: Record<string, unknown> = {
-          status: body.status,
-          confirmed_by: session?.name || 'staff',
-          confirmed_at: new Date().toISOString(),
-        };
-        if (body.delivery_method) updatePayload.delivery_method = body.delivery_method;
-        if (body.customer_address !== undefined) updatePayload.customer_address = body.customer_address;
-        if (body.shipper_name) updatePayload.shipper_name = body.shipper_name;
-        if (body.shipper_id) updatePayload.shipper_id = body.shipper_id;
-        if (body.shipper_phone) updatePayload.shipper_phone = body.shipper_phone;
-
         const { error } = await db
           .from('orders')
-          .update(updatePayload)
+          .update({
+            status: body.status,
+            confirmed_by: session?.name || 'staff',
+            confirmed_at: new Date().toISOString(),
+          })
           .eq('id', body.id);
 
         if (!error) {
-          // Gửi thông báo phân bổ shipper qua Zalo Bot nếu đơn xác nhận giao tận nơi
-          if (body.status === 'confirmed' && body.delivery_method === 'delivery' && body.shipper_name) {
-            try {
-              await dispatchSystemEvent('delivery_dispatch', {
-                orderCode: orderData?.order_code,
-                customerName: orderData?.customer_name,
-                customerPhone: orderData?.customer_phone,
-                deviceName: orderData?.device_name,
-                devicePrice: Number(orderData?.device_price) || 0,
-                paymentMethod: orderData?.payment_method,
-                shippingAddress: body.customer_address || orderData?.customer_address,
-                shipperName: body.shipper_name,
-                shipperId: body.shipper_id,
-                shipperPhone: body.shipper_phone,
-                note: orderData?.note,
-              });
-            } catch (zaloErr) {
-              console.warn('Delivery dispatch Zalo error:', zaloErr);
-            }
-          }
-
-          // Xóa notification khi đơn hàng được xác nhận/hủy/hoàn tất (không còn pending)
-          if (['confirmed', 'processing', 'completed', 'cancelled'].includes(body.status)) {
-            try {
-              await db.from('notifications').delete().eq('reference_id', body.id).eq('type', 'order');
-            } catch {
-              // Không chặn nếu xóa notification thất bại
-            }
-          }
-
           // Tự động đồng bộ trạng thái máy trong kho
           const deviceTag = body.matched_device_tag || orderData?.device_tag;
           if (deviceTag) {
@@ -501,31 +388,6 @@ export async function PATCH(request: NextRequest) {
                   reserved_at: new Date().toISOString(),
                 })
                 .eq('service_tag', deviceTag);
-            } else if (body.status === 'completed') {
-              await db
-                .from('inventory_items')
-                .update({
-                  qc_status: 'sold',
-                  customer_name: orderData?.customer_name,
-                  customer_phone: orderData?.customer_phone,
-                  handover_date: new Date().toISOString(),
-                })
-                .eq('service_tag', deviceTag);
-
-              // Tự động gửi thông báo chúc mừng bán máy thành công qua Zalo Bot
-              try {
-                await dispatchSystemEvent('sale_success', {
-                  deviceModel: orderData?.device_name || deviceTag,
-                  serviceTag: deviceTag,
-                  customerName: orderData?.customer_name || 'Khách đặt online',
-                  customerPhone: orderData?.customer_phone || '',
-                  salePrice: Number(orderData?.device_price) || 0,
-                  sellerName: session?.name || 'Admin',
-                  warrantyPeriod: 12,
-                });
-              } catch (zaloErr) {
-                console.warn('Zalo Bot sale_success notification error:', zaloErr);
-              }
             } else if (body.status === 'cancelled') {
               await db
                 .from('inventory_items')
@@ -535,9 +397,6 @@ export async function PATCH(request: NextRequest) {
                   customer_phone: null,
                   reserved_order_code: null,
                   reserved_order_id: null,
-                  reserved_delivery_method: null,
-                  reserved_at: null,
-                  reserved_note: null,
                 })
                 .eq('service_tag', deviceTag);
             }
@@ -560,32 +419,7 @@ export async function PATCH(request: NextRequest) {
           const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
           target.confirmed_by = session?.name || 'staff';
           target.confirmed_at = new Date().toISOString();
-          if (body.delivery_method) target.delivery_method = body.delivery_method;
-          if (body.customer_address !== undefined) target.customer_address = body.customer_address;
-          if (body.shipper_name) target.shipper_name = body.shipper_name;
-          if (body.shipper_id) target.shipper_id = body.shipper_id;
-          if (body.shipper_phone) target.shipper_phone = body.shipper_phone;
           writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
-
-          if (body.status === 'confirmed' && body.delivery_method === 'delivery' && body.shipper_name) {
-            try {
-              await dispatchSystemEvent('delivery_dispatch', {
-                orderCode: target.order_code,
-                customerName: target.customer_name,
-                customerPhone: target.customer_phone,
-                deviceName: target.device_name,
-                devicePrice: Number(target.device_price) || 0,
-                paymentMethod: target.payment_method,
-                shippingAddress: body.customer_address || target.customer_address,
-                shipperName: body.shipper_name,
-                shipperId: body.shipper_id,
-                shipperPhone: body.shipper_phone,
-                note: target.note,
-              });
-            } catch (dispatchErr) {
-              console.warn('Fallback delivery dispatch Zalo error:', dispatchErr);
-            }
-          }
         }
       }
     } catch (err) {

@@ -4,7 +4,44 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
-import { Plus, Trash2, Minus } from 'lucide-react';
+
+const COMMON_SERVICES = [
+  {
+    id: 'spa-tf7',
+    name: 'Gói Spa Máy Tính & Tra Keo Thermalright TF7',
+    price: 150000,
+    warrantyMonths: 1,
+    category: 'Vệ sinh & Bảo dưỡng',
+  },
+  {
+    id: 'os-install',
+    name: 'Cài Đặt Windows 11 Pro + Bộ Office Bản Quyền Chuẩn',
+    price: 100000,
+    warrantyMonths: 1,
+    category: 'Hệ điều hành',
+  },
+  {
+    id: 'ssd-500gb',
+    name: 'Nâng Cấp SSD Kingston NV2 500GB NVMe PCIe 4.0',
+    price: 890000,
+    warrantyMonths: 36,
+    category: 'Ổ cứng',
+  },
+  {
+    id: 'ram-16gb',
+    name: 'Nâng Cấp RAM DDR4 16GB Kingston Fury 3200MHz',
+    price: 750000,
+    warrantyMonths: 36,
+    category: 'Bộ nhớ RAM',
+  },
+  {
+    id: 'psu-500w',
+    name: 'Thay Nguồn Công Suất Thực 500W Chuẩn 80 Plus',
+    price: 650000,
+    warrantyMonths: 36,
+    category: 'Bộ nguồn',
+  },
+];
 
 function generateTicketCode(): string {
   return `TK-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -21,7 +58,7 @@ function getCompletionPresetDate(hoursToAdd: number): string {
 
 export default function TaoPhieuSuaChuaPage() {
   const router = useRouter();
-  const { currentUser, users, customers, addServiceTicket, systemSettings } = useStore();
+  const { currentUser, users, customers, addServiceTicket } = useStore();
 
   const availableTechnicians = useMemo(() => {
     return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
@@ -31,7 +68,7 @@ export default function TaoPhieuSuaChuaPage() {
   const [serviceCategory, setServiceCategory] = useState<'sua_chua' | 'bao_hanh'>('sua_chua');
   const [assignedTechnician, setAssignedTechnician] = useState<string>(() => currentUser.name);
   const [estimatedCompletion, setEstimatedCompletion] = useState<string>(() => getCompletionPresetDate(48));
-  const [warrantyMonths, setWarrantyMonths] = useState<number>(() => systemSettings.defaultWarrantyMonths || 12);
+  const [warrantyMonths, setWarrantyMonths] = useState<number>(3);
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('Long An - Tây Ninh');
@@ -39,19 +76,8 @@ export default function TaoPhieuSuaChuaPage() {
   const [serviceTag, setServiceTag] = useState('');
   const [windowsPin, setWindowsPin] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
-  // Custom services/parts list - user can add any service with custom name, price, quantity
-  const [customServices, setCustomServices] = useState<Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-    warrantyMonths: number;
-  }>>([]);
-  // Form state for adding new service
-  const [newServiceName, setNewServiceName] = useState('');
-  const [newServiceQty, setNewServiceQty] = useState(1);
-  const [newServicePrice, setNewServicePrice] = useState<number>(0);
-  const [newServiceWarranty, setNewServiceWarranty] = useState(() => systemSettings.defaultWarrantyMonths || 12);
+  const [selectedServices, setSelectedServices] = useState<string[]>(['spa-tf7']);
+  const [customCost, setCustomCost] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-fill customer if phone matches
@@ -64,42 +90,19 @@ export default function TaoPhieuSuaChuaPage() {
     }
   };
 
-  const handleAddService = () => {
-    if (!newServiceName.trim()) return;
-    setCustomServices((prev) => [
-      ...prev,
-      {
-        id: `svc-${Date.now()}`,
-        name: newServiceName.trim(),
-        quantity: Number(newServiceQty) || 1,
-        price: Number(newServicePrice) || 0,
-        warrantyMonths: Number(newServiceWarranty) || 1,
-      },
-    ]);
-    setNewServiceName('');
-    setNewServiceQty(1);
-    setNewServicePrice(0);
-    setNewServiceWarranty(1);
-  };
-
-  const handleRemoveService = (index: number) => {
-    setCustomServices((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUpdateService = (index: number, field: 'name' | 'quantity' | 'price' | 'warrantyMonths', value: string | number) => {
-    setCustomServices((prev) => {
-      const next = [...prev];
-      if (field === 'quantity' || field === 'price' || field === 'warrantyMonths') {
-        next[index] = { ...next[index], [field]: Number(value) || 0 };
-      } else {
-        next[index] = { ...next[index], [field]: String(value).trim() };
-      }
-      return next;
-    });
+  const toggleService = (id: string) => {
+    if (selectedServices.includes(id)) {
+      setSelectedServices(selectedServices.filter((s) => s !== id));
+    } else {
+      setSelectedServices([...selectedServices, id]);
+    }
   };
 
   // Calculate Total Cost
-  const totalCost = customServices.reduce((sum, s) => sum + s.price * s.quantity, 0);
+  const totalCost = selectedServices.reduce((sum, sId) => {
+    const s = COMMON_SERVICES.find((item) => item.id === sId);
+    return sum + (s ? s.price : 0);
+  }, customCost);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,12 +114,15 @@ export default function TaoPhieuSuaChuaPage() {
     setIsSubmitting(true);
     try {
       const code = generateTicketCode();
-      const parts = customServices.map((s) => ({
-        part_name: s.name,
-        quantity: s.quantity,
-        price: s.price,
-        warranty_months: s.warrantyMonths,
-      }));
+      const parts = selectedServices.map((sId) => {
+        const item = COMMON_SERVICES.find((s) => s.id === sId)!;
+        return {
+          part_name: item.name,
+          quantity: 1,
+          price: item.price,
+          warranty_months: item.warrantyMonths,
+        };
+      });
 
       // Calculate warranty date based on warrantyMonths
       const wDate = new Date();
@@ -136,7 +142,7 @@ export default function TaoPhieuSuaChuaPage() {
         status: 'received',
         issueDescription: issueDescription + (windowsPin ? ` (Mật khẩu Windows: ${windowsPin})` : ''),
         issue_description: issueDescription + (windowsPin ? ` (Mật khẩu Windows: ${windowsPin})` : ''),
-        estimated_cost: serviceCategory === 'bao_hanh' ? customServices.reduce((sum, s) => sum + s.price * s.quantity, 0) : totalCost,
+        estimated_cost: serviceCategory === 'bao_hanh' ? customCost : totalCost,
         parts_used: parts,
         warranty_until: wDate.toISOString().split('T')[0],
       });
@@ -480,10 +486,10 @@ export default function TaoPhieuSuaChuaPage() {
             </div>
           </div>
 
-{/* Phân Bổ Kỹ Thuật Viên Xử Lý */}
+          {/* Phân Bổ Kỹ Thuật Viên Xử Lý */}
           <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-1.5">
             <label className="block text-xs font-bold text-slate-800">
-              Phân Bổ Kỹ Thuật Viên Phụ Trách & Xử Lý Máy *
+              Phân Bổ Kỹ Thuật Viên Phụ Trách &amp; Xử Lý Máy *
             </label>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <select
@@ -516,7 +522,7 @@ export default function TaoPhieuSuaChuaPage() {
             </div>
           </div>
 
-          {/* Dịch Vụ & Linh Kiện Tự Do */}
+          {/* Checklist Gói Dịch Vụ */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-700">
@@ -524,126 +530,102 @@ export default function TaoPhieuSuaChuaPage() {
                   ? 'Linh kiện hoặc Dịch vụ bảo hành tiếp nhận:'
                   : 'Linh kiện thay thế & Dịch vụ đi kèm:'}
               </span>
-              <span className="text-xs text-slate-400">Thêm từng dòng, giá tự nhập</span>
+              <span className="text-xs text-slate-400">Tick chọn để cộng dồn</span>
             </div>
 
-            {/* Existing services list */}
-            {customServices.length > 0 && (
-              <div className="space-y-2 mb-3">
-                {customServices.map((s, idx) => (
-                  <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex flex-wrap items-center gap-3">
-                    <div className="flex-1 min-w-[180px]">
-                      <input
-                        type="text"
-                        value={s.name}
-                        onChange={(e) => handleUpdateService(idx, 'name', e.target.value)}
-                        placeholder="Tên dịch vụ / linh kiện..."
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs font-semibold text-slate-900 focus:ring-1 focus:ring-blue-500 focus:bg-white focus:outline-none"
-                      />
+            <div className="space-y-2">
+              {COMMON_SERVICES.map((s) => {
+                const isChecked = selectedServices.includes(s.id);
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => toggleService(s.id)}
+                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                      isChecked
+                        ? 'bg-blue-50/70 border-blue-300 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={`w-5 h-5 rounded border flex items-center justify-center text-xs font-bold font-mono transition-colors ${
+                        isChecked ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-transparent border-slate-300'
+                      }`}>
+                        ✓
+                      </span>
+                      <div>
+                        <div className="text-xs font-semibold text-slate-900">{s.name}</div>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                          <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600">
+                            {s.category}
+                          </span>
+                          <span>•</span>
+                          <span className="text-emerald-700 font-medium">
+                            Bảo hành {s.warrantyMonths} tháng
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="w-12">
-                      <input
-                        type="number"
-                        min="1"
-                        value={s.quantity}
-                        onChange={(e) => handleUpdateService(idx, 'quantity', Number(e.target.value))}
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 focus:bg-white focus:outline-none"
-                      />
+                    <div className="text-xs font-bold text-slate-900 font-mono">
+                      {serviceCategory === 'bao_hanh' ? 'Bảo Hành 0đ' : `+${s.price.toLocaleString('vi-VN')} đ`}
                     </div>
-                    <div className="w-24">
-                      <input
-                        type="number"
-                        step="10000"
-                        min="0"
-                        value={s.price}
-                        onChange={(e) => handleUpdateService(idx, 'price', Number(e.target.value))}
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs text-right font-mono focus:ring-1 focus:ring-blue-500 focus:bg-white focus:outline-none"
-                      />
-                    </div>
-                    <div className="w-16">
-                      <input
-                        type="number"
-                        min="1"
-                        max="36"
-                        value={s.warrantyMonths}
-                        onChange={(e) => handleUpdateService(idx, 'warrantyMonths', Number(e.target.value))}
-                        className="w-full px-2 py-1 bg-slate-50 border border-slate-300 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 focus:bg-white focus:outline-none"
-                      />
-                    </div>
-                    <span className="text-[10px] text-slate-500">tháng</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveService(idx)}
-                      className="text-rose-500 hover:text-rose-700 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Add new service form */}
-            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-wrap items-end gap-2 text-xs">
-              <div className="flex-1 min-w-[180px]">
-                <input
-                  type="text"
-                  value={newServiceName}
-                  onChange={(e) => setNewServiceName(e.target.value)}
-                  placeholder="Tên dịch vụ / linh kiện..."
-                  className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-              <div className="w-12">
-                <input
-                  type="number"
-                  min="1"
-                  value={newServiceQty}
-                  onChange={(e) => setNewServiceQty(Number(e.target.value))}
-                  placeholder="SL"
-                  className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-              <div className="w-24">
-                <input
-                  type="number"
-                  step="10000"
-                  min="0"
-                  value={newServicePrice}
-                  onChange={(e) => setNewServicePrice(Number(e.target.value))}
-                  placeholder="Đơn giá"
-                  className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-right font-mono focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-              <div className="w-16">
-                <input
-                  type="number"
-                  min="1"
-                  max="36"
-                  value={newServiceWarranty}
-                  onChange={(e) => setNewServiceWarranty(Number(e.target.value))}
-                  className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-center font-mono focus:ring-1 focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-              <span className="text-[10px] text-slate-500">tháng BH</span>
-              <button
-                type="button"
-                onClick={handleAddService}
-                className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold flex items-center gap-1 text-xs h-7"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Thêm</span>
-              </button>
+                );
+              })}
             </div>
+          </div>
 
-            {/* Total cost display */}
-            <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-end">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-700">Tổng chi phí dự kiến:</span>
-                <span className="text-lg font-black font-mono text-blue-700">
-                  {totalCost.toLocaleString('vi-VN')} đ
-                </span>
+          {/* Custom cost */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+            <label className="text-xs font-semibold text-slate-700">
+              {serviceCategory === 'bao_hanh'
+                ? 'Phụ thu phát sinh ngoài gói bảo hành (nếu có):'
+                : 'Chi phí phát sinh khác / Tiền công cứu hộ ngoài giờ:'}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                step={10000}
+                value={customCost}
+                onChange={(e) => setCustomCost(Number(e.target.value))}
+                className="w-32 px-3 py-1.5 border border-slate-300 rounded-lg text-sm text-right font-bold focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+              />
+              <span className="text-xs text-slate-500 font-medium">VNĐ</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Multi-tier Warranty Preview Card - WHITE & BLUE THEME */}
+        <div className="bg-gradient-to-br from-blue-50/90 to-indigo-50/70 text-slate-800 p-6 rounded-2xl shadow-xs border-2 border-blue-200">
+          <div className="flex items-center justify-between pb-4 border-b border-blue-200">
+            <div>
+              <span className="font-bold text-base text-slate-900">Cam Kết Bảo Hành Phân Tầng Điện Tử</span>
+            </div>
+            <div className="text-right">
+              <div className="text-xs text-slate-500 font-medium">Tổng chi phí ước tính:</div>
+              <div className="text-2xl font-black text-blue-700 font-mono">
+                {totalCost.toLocaleString('vi-VN')} đ
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-xs">
+            <div className="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-xs">
+              <div className="text-emerald-700 font-bold mb-1">Tầng 1: Linh Kiện Mới (36T)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
+                Đổi mới 1-đổi-1 cho SSD/RAM/Nguồn nếu phát sinh lỗi phần cứng theo serial nhà sản xuất.
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-xs">
+              <div className="text-blue-700 font-bold mb-1">Tầng 2: Keo TF7 &amp; Nhiệt Độ (30N)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
+                Bảo hành nhiệt độ CPU dưới 70°C khi làm việc văn phòng, miễn phí vệ sinh lại nếu quạt kêu.
+              </p>
+            </div>
+            <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs">
+              <div className="text-purple-700 font-bold mb-1">Tầng 3: Cài Đặt Hệ Thống (30N)</div>
+              <p className="text-slate-600 text-[11px] leading-relaxed">
+                Hỗ trợ UltraViewer / Anydesk từ xa miễn phí lỗi font chữ, máy in, mạng nội bộ.
+              </p>
             </div>
           </div>
         </div>

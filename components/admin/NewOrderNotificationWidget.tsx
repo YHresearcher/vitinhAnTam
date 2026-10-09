@@ -32,7 +32,7 @@ const STATUS_LABEL: Record<string, string> = {
  * Chỉ hiển thị cho admin / sales / technician.
  */
 export function NewOrderNotificationWidget() {
-  const { currentUser, isLoggedIn, inventory, reserveInventoryItem, syncWithSupabase } = useViTinhAnTamStore();
+  const { currentUser, isLoggedIn, inventory, reserveInventoryItem } = useViTinhAnTamStore();
   const canView = Boolean(
     isLoggedIn &&
       currentUser &&
@@ -61,7 +61,6 @@ export function NewOrderNotificationWidget() {
         // Phát âm thanh + mở popup khi có đơn mới
         if (initialized.current && list.length > prevPendingCount.current) {
           setIsOpen(true);
-          syncWithSupabase?.().catch(() => undefined);
           try {
             const AudioCtx =
               window.AudioContext ||
@@ -91,7 +90,7 @@ export function NewOrderNotificationWidget() {
     } catch {
       // Bỏ qua lỗi mạng
     }
-  }, [canView, syncWithSupabase]);
+  }, [canView]);
 
   useEffect(() => {
     if (!canView) return;
@@ -158,7 +157,7 @@ export function NewOrderNotificationWidget() {
     <aside
       aria-label="Đơn Hàng Mới Cần Xác Nhận"
       className={`fixed right-4 print:hidden transition-all duration-200 ${
-        isOpen ? 'bottom-6 z-[70]' : 'bottom-[140px] z-40'
+        isOpen ? 'bottom-6 z-[70]' : 'bottom-[232px] z-40'
       }`}
     >
       {isOpen ? (
