@@ -9,18 +9,15 @@ const ZALO_BOT_BASE_URL = 'https://bot-api.zapps.me';
  */
 export async function getZaloBotConfigAsync() {
   const settings = await getStoredSettingsAsync();
-  const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
   const token = (settings.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
   const secretToken = (settings.zaloBotSecretToken || process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
-  const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
   return {
-    apiBaseUrl,
+    apiBaseUrl: ZALO_BOT_BASE_URL,
     token,
     secretToken,
     defaultChatId,
-    customWebhookUrl,
     settings,
   };
 }
@@ -30,42 +27,38 @@ export async function getZaloBotConfigAsync() {
  */
 export function getZaloBotConfig() {
   const settings = getStoredSettings();
-  const apiBaseUrl = (settings.botApiBaseUrl || process.env.ZALO_BOT_API_BASE_URL || '').trim();
   const token = (settings.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
   const secretToken = (settings.zaloBotSecretToken || process.env.ZALO_BOT_SECRET_TOKEN || '').trim();
   const defaultChatId = (settings.zaloDefaultChatId || process.env.ZALO_BOT_CHAT_ID || '').trim();
-  const customWebhookUrl = (settings.customWebhookUrl || process.env.CUSTOM_WEBHOOK_URL || '').trim();
 
   return {
-    apiBaseUrl,
+    apiBaseUrl: ZALO_BOT_BASE_URL,
     token,
     secretToken,
     defaultChatId,
-    customWebhookUrl,
     settings,
   };
 }
 
 /**
- * Xây URL gọi Zalo Bot API: {base}/bot{token}/{method}
+ * Xây URL gọi Zalo Bot API chính thức: https://bot-api.zapps.me/bot{token}/{method}
+ * Luôn gọi trực tiếp máy chủ Zalo, không qua Cloudflare Worker hay bất kỳ proxy trung gian nào.
  */
-function buildZaloBotUrl(apiBaseUrl: string, token: string, method: string): string {
-  const base = (apiBaseUrl || ZALO_BOT_BASE_URL).replace(/\/+$/, '');
-  return `${base}/bot${token}/${method}`;
+function buildZaloBotUrl(token: string, method: string): string {
+  return `${ZALO_BOT_BASE_URL}/bot${token}/${method}`;
 }
 
 /**
- * Gửi tin nhắn thông báo qua Zalo Bot API (bot-api.zapps.me)
+ * Gửi tin nhắn thông báo qua Zalo Bot API chính thức (bot-api.zapps.me)
  */
 export async function sendZaloBotMessage(params: {
   chatId?: string;
   text: string;
   parseMode?: 'markdown' | 'HTML';
   token?: string;
-  apiBaseUrl?: string;
+  apiBaseUrl?: string; // Giữ để tương thích ngược, hệ thống luôn kết nối trực tiếp
 }): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const config = await getZaloBotConfigAsync();
-  const apiBaseUrl = (params.apiBaseUrl !== undefined && params.apiBaseUrl !== '' ? params.apiBaseUrl : config.apiBaseUrl).trim();
   const token = (params.token !== undefined && params.token !== '' ? params.token : config.token).trim();
   const targetChatId = (params.chatId !== undefined && params.chatId !== '' ? params.chatId : config.defaultChatId).trim();
 
@@ -77,8 +70,8 @@ export async function sendZaloBotMessage(params: {
   }
 
   try {
-    // ZALO BOT API (bot-api.zapps.me — contract theo SDK python-zalo-bot)
-    const url = buildZaloBotUrl(apiBaseUrl, token, 'sendMessage');
+    // Luôn gọi trực tiếp Zalo Bot API chính thức (bot-api.zapps.me)
+    const url = buildZaloBotUrl(token, 'sendMessage');
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -95,7 +88,7 @@ export async function sendZaloBotMessage(params: {
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi sendMessage (HTTP ${res.status})`, token, apiBaseUrl),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi sendMessage (HTTP ${res.status})`, token),
         result: data,
       };
     }
@@ -155,25 +148,24 @@ function humanizeBotApiError(rawError: unknown, token?: string, apiBaseUrl?: str
 }
 
 /**
- * Đăng ký Webhook với Bot Platform (setWebhook)
+ * Đăng ký Webhook với Zalo Bot Platform (setWebhook)
+ * Luôn gọi trực tiếp https://bot-api.zapps.me
  */
 export async function setZaloWebhook(
   webhookUrl: string,
   secretToken?: string,
-  tokenOverride?: string,
-  apiBaseUrlOverride?: string
+  tokenOverride?: string
 ): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const config = await getZaloBotConfigAsync();
   const token = (tokenOverride || config.token).trim();
   const secret = secretToken || config.secretToken;
-  const apiBaseUrl = (apiBaseUrlOverride !== undefined && apiBaseUrlOverride !== '' ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
     return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
   try {
-    const url = buildZaloBotUrl(apiBaseUrl, token, 'setWebhook');
+    const url = buildZaloBotUrl(token, 'setWebhook');
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -189,7 +181,7 @@ export async function setZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`, token, apiBaseUrl),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi setWebhook (HTTP ${res.status})`, token),
         result: data,
       };
     }
@@ -203,21 +195,20 @@ export async function setZaloWebhook(
 
 /**
  * Lấy thông tin trạng thái Webhook (getWebhookInfo)
+ * Luôn gọi trực tiếp https://bot-api.zapps.me
  */
 export async function getZaloWebhookInfo(
-  tokenOverride?: string,
-  apiBaseUrlOverride?: string
+  tokenOverride?: string
 ): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const config = await getZaloBotConfigAsync();
   const token = (tokenOverride || config.token).trim();
-  const apiBaseUrl = (apiBaseUrlOverride !== undefined && apiBaseUrlOverride !== '' ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
     return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
   try {
-    const url = buildZaloBotUrl(apiBaseUrl, token, 'getWebhookInfo');
+    const url = buildZaloBotUrl(token, 'getWebhookInfo');
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -228,7 +219,7 @@ export async function getZaloWebhookInfo(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`, token, apiBaseUrl),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi getWebhookInfo (HTTP ${res.status})`, token),
         result: data,
       };
     }
@@ -242,21 +233,20 @@ export async function getZaloWebhookInfo(
 
 /**
  * Hủy đăng ký Webhook (deleteWebhook)
+ * Luôn gọi trực tiếp https://bot-api.zapps.me
  */
 export async function deleteZaloWebhook(
-  tokenOverride?: string,
-  apiBaseUrlOverride?: string
+  tokenOverride?: string
 ): Promise<{ ok: boolean; result?: unknown; error?: string }> {
   const config = await getZaloBotConfigAsync();
   const token = (tokenOverride || config.token).trim();
-  const apiBaseUrl = (apiBaseUrlOverride !== undefined && apiBaseUrlOverride !== '' ? apiBaseUrlOverride : config.apiBaseUrl).trim();
 
   if (!token) {
     return { ok: false, error: 'Chưa cấu hình Bot Token.' };
   }
 
   try {
-    const url = buildZaloBotUrl(apiBaseUrl, token, 'deleteWebhook');
+    const url = buildZaloBotUrl(token, 'deleteWebhook');
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -269,7 +259,7 @@ export async function deleteZaloWebhook(
     if (!res.ok || data.ok === false) {
       return {
         ok: false,
-        error: humanizeBotApiError(data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`, token, apiBaseUrl),
+        error: humanizeBotApiError(data.description || data.message || `Lỗi deleteWebhook (HTTP ${res.status})`, token),
         result: data,
       };
     }
@@ -298,7 +288,7 @@ export async function dispatchSystemEvent(
   eventType: WebhookEventType,
   payload: Record<string, unknown>
 ): Promise<{ zaloSent: boolean; customSent: boolean; error?: string }> {
-  const { token, defaultChatId, customWebhookUrl, settings } = await getZaloBotConfigAsync();
+  const { token, defaultChatId, settings } = await getZaloBotConfigAsync();
 
   let shouldNotifyZalo = false;
   if (token && defaultChatId) {
@@ -442,30 +432,9 @@ export async function dispatchSystemEvent(
     }
   }
 
-  // 2. Gửi qua Custom Webhook (n8n, Zapier, Make, Telegram, Discord, CRM) nếu có
-  if (customWebhookUrl) {
-    try {
-      const resp = await fetch(customWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'ViTinhAnTam-Webhook/1.0',
-        },
-        body: JSON.stringify({
-          event: eventType,
-          timestamp: new Date().toISOString(),
-          data: payload,
-        }),
-      });
-      customSent = resp.ok;
-    } catch (err: unknown) {
-      console.error('Lỗi khi bắn Custom Webhook:', err);
-    }
-  }
-
   return {
     zaloSent,
-    customSent,
+    customSent: false,
     error: errorDetail,
   };
 }

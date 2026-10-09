@@ -13,13 +13,13 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { action, webhookUrl, secretToken, token, apiBaseUrl } = body;
+    const { action, webhookUrl, secretToken, token } = body;
 
     if (action === 'set') {
       if (!webhookUrl) {
         return NextResponse.json({ ok: false, error: 'Vui lòng cung cấp URL Webhook cần đăng ký.' }, { status: 400 });
       }
-      const res = await setZaloWebhook(webhookUrl, secretToken, token, apiBaseUrl);
+      const res = await setZaloWebhook(webhookUrl, secretToken, token);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'info') {
-      const res = await getZaloWebhookInfo(token, apiBaseUrl);
+      const res = await getZaloWebhookInfo(token);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'delete') {
-      const res = await deleteZaloWebhook(token, apiBaseUrl);
+      const res = await deleteZaloWebhook(token);
       if (!res.ok) {
         return NextResponse.json({ ok: false, error: res.error, result: res.result }, { status: 400 });
       }

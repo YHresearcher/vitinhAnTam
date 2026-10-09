@@ -209,7 +209,6 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           chatId: formData.zaloDefaultChatId?.trim(),
           token: formData.zaloBotToken?.trim(),
-          apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
       const data = await res.json();
@@ -248,7 +247,6 @@ export default function CaiDatPage() {
           webhookUrl,
           secretToken: formData.zaloBotSecretToken?.trim(),
           token: formData.zaloBotToken?.trim(),
-          apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
       const data = await res.json();
@@ -284,7 +282,6 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           action: 'info',
           token: formData.zaloBotToken?.trim(),
-          apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
       const data = await res.json();
@@ -320,7 +317,6 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           action: 'delete',
           token: formData.zaloBotToken?.trim(),
-          apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
       const data = await res.json();
@@ -1120,22 +1116,6 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-                      {/* Zalo Bot API Base URL */}
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Zalo Bot API Base URL (để trống = bot-api.zapps.me)
-                        </label>
-                        <Input
-                          value={formData.botApiBaseUrl || ''}
-                          onChange={(e) => handleChange('botApiBaseUrl', e.target.value)}
-                          placeholder="https://bot-api.zapps.me"
-                          className="w-full rounded-lg text-xs font-mono"
-                        />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          Chỉ chỉnh khi Zalo thay đổi endpoint hoặc bạn dùng proxy riêng.
-                        </span>
-                      </div>
-
                       {/* Secret Token */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -1148,23 +1128,7 @@ export default function CaiDatPage() {
                           className="w-full rounded-lg text-xs font-mono"
                         />
                         <span className="text-[11px] text-slate-500 mt-1 block">
-                          Khớp với header bảo mật <code>X-Telegram-Bot-Api-Secret-Token</code> (hoặc <code>X-Bot-Token</code>) khi Zalo gửi webhook.
-                        </span>
-                      </div>
-
-                      {/* Custom Webhook URL */}
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Custom Webhook Song Song (n8n, Zapier, Discord, Make)
-                        </label>
-                        <Input
-                          value={formData.customWebhookUrl || ''}
-                          onChange={(e) => handleChange('customWebhookUrl', e.target.value)}
-                          placeholder="VD: https://n8n.example.com/webhook/vitinh-antam"
-                          className="w-full rounded-lg text-xs font-mono"
-                        />
-                        <span className="text-[11px] text-slate-500 mt-1 block">
-                          Tự động bắn JSON sự kiện đến hệ thống thứ 2 nếu có.
+                          Khớp với header bảo mật <code>X-Telegram-Bot-Api-Secret-Token</code> (hoặc <code>X-Bot-Token</code>) khi Zalo gửi webhook trực tiếp.
                         </span>
                       </div>
                     </div>
