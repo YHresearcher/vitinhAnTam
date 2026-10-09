@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Logo } from './Logo';
+import { ThemeToggle } from './ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { TRANSLATIONS } from '@/lib/translations';
 import { User, LogOut, LogIn, Menu, X, Calendar } from 'lucide-react';
@@ -113,6 +114,9 @@ export function Navbar() {
             <Calendar className="w-3.5 h-3.5" />
             <span>{t.bookNow || (isEn ? 'Book Service' : 'Đặt Lịch Ngay')}</span>
           </Link>
+
+          {/* Nút chuyển đổi sáng/tối (Dark / Light Theme) */}
+          <ThemeToggle variant="icon" />
 
           {/* Language Switcher - SVG Flags */}
           <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
@@ -280,9 +284,15 @@ export function Navbar() {
             </Link>
           </div>
 
+          {/* Mobile Theme Switcher */}
+          <div className="pt-2 border-t border-[#E8E2D9] dark:border-slate-800 flex items-center justify-between px-3.5">
+            <span className="text-xs font-bold text-[#6E5D53] dark:text-slate-400">Giao diện / Theme:</span>
+            <ThemeToggle variant="pill" className="!w-auto" />
+          </div>
+
           {/* Mobile Language Switcher */}
-          <div className="pt-2 border-t border-[#E8E2D9] flex items-center justify-between px-3.5">
-            <span className="text-xs font-bold text-[#6E5D53]">Ngôn ngữ / Language:</span>
+          <div className="pt-2 border-t border-[#E8E2D9] dark:border-slate-800 flex items-center justify-between px-3.5">
+            <span className="text-xs font-bold text-[#6E5D53] dark:text-slate-400">Ngôn ngữ / Language:</span>
             <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
               <button
                 type="button"

@@ -154,7 +154,7 @@ export default function RootLayout({
         {/* Anti-FOUC Instant Theme Initialization */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('vtat_theme_v1');if(t==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('vtat_theme_v1');if(t==='dark'){document.documentElement.classList.add('dark');}else if(t==='light'){document.documentElement.classList.remove('dark');}}catch(e){}})();`,
           }}
         />
         {/* Schema.org Structured Data for Local SEO */}

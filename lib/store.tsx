@@ -408,11 +408,34 @@ export function StoreProvider({
   // Theme mode (light/dark) — đọc lựa chọn đã lưu, mặc định light
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('vtat_theme_v1');
-      if (saved === 'dark' || saved === 'light') return saved;
+      try {
+        const saved = localStorage.getItem('vtat_theme_v1');
+        if (saved === 'dark' || saved === 'light') return saved;
+      } catch (e) {}
     }
     return 'light';
   });
+
+  // Đồng bộ trạng thái theme từ localStorage và DOM ngay khi client mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('vtat_theme_v1');
+      if (saved === 'dark' || saved === 'light') {
+        setThemeMode(saved);
+        if (typeof document !== 'undefined') {
+          if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.body.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.body.classList.remove('dark');
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to sync theme from localStorage:', e);
+    }
+  }, []);
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
@@ -764,7 +787,20 @@ export function StoreProvider({
     setThemeMode((prev) => {
       const next = prev === 'dark' ? 'light' : 'dark';
       if (typeof window !== 'undefined') {
-        localStorage.setItem('vtat_theme_v1', next);
+        try {
+          localStorage.setItem('vtat_theme_v1', next);
+          if (typeof document !== 'undefined') {
+            if (next === 'dark') {
+              document.documentElement.classList.add('dark');
+              document.body.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+              document.body.classList.remove('dark');
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to persist theme preference:', e);
+        }
       }
       return next;
     });
