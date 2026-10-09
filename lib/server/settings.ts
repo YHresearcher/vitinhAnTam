@@ -41,6 +41,11 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['notifyOnNewTicket', 'notify_on_new_ticket'],
   ['notifyOnKeyRequest', 'notify_on_key_request'],
   ['notifyOnSaleSuccess', 'notify_on_sale_success'],
+  ['defaultWarrantyMonths', 'default_warranty_months'],
+  ['enableCustomerCareReminders', 'enable_customer_care_reminders'],
+  ['customerCareReminderChatId', 'customer_care_reminder_chat_id'],
+  ['customerCareReminderIntervals', 'customer_care_reminder_intervals'],
+  ['customerCareReminderMessage', 'customer_care_reminder_message'],
 ];
 
 export function rowToSettings(row: Record<string, unknown>): SystemSettings {

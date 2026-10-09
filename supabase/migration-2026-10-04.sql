@@ -77,6 +77,11 @@ CREATE TABLE IF NOT EXISTS system_settings (
   notify_on_new_order BOOLEAN DEFAULT true,
   notify_on_new_ticket BOOLEAN DEFAULT true,
   notify_on_key_request BOOLEAN DEFAULT true,
+  default_warranty_months INT DEFAULT 12,
+  enable_customer_care_reminders BOOLEAN DEFAULT false,
+  customer_care_reminder_chat_id TEXT,
+  customer_care_reminder_intervals INT[] DEFAULT ARRAY[1, 6, 12],
+  customer_care_reminder_message TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -95,6 +100,11 @@ ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS notify_on_new_booking BOOLE
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS notify_on_new_order BOOLEAN DEFAULT true;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS notify_on_new_ticket BOOLEAN DEFAULT true;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS notify_on_key_request BOOLEAN DEFAULT true;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS default_warranty_months INT DEFAULT 12;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS enable_customer_care_reminders BOOLEAN DEFAULT false;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_chat_id TEXT;
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_intervals INT[] DEFAULT ARRAY[1, 6, 12];
+ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS customer_care_reminder_message TEXT;
 ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
 -- 3. THIẾT LẬP ROW LEVEL SECURITY (RLS)

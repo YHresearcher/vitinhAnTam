@@ -93,6 +93,15 @@ export interface SystemSettings {
   notifyOnNewTicket?: boolean;
   notifyOnKeyRequest?: boolean;
   notifyOnSaleSuccess?: boolean;
+
+  // Cấu hình Bảo hành mặc định cho bán hàng kho
+  defaultWarrantyMonths?: number; // 3 | 6 | 12 | 36 (default: 12)
+
+  // Cấu hình Nhắc nhở chăm sóc khách hàng (Customer Care Reminders)
+  enableCustomerCareReminders?: boolean;
+  customerCareReminderChatId?: string; // Zalo Group Chat ID nhận nhắc nhở
+  customerCareReminderIntervals?: number[]; // [1, 6, 12] tháng
+  customerCareReminderMessage?: string; // Template tin nhắn
 }
 
 export const initialSystemSettings: SystemSettings = {
@@ -137,6 +146,15 @@ export const initialSystemSettings: SystemSettings = {
   notifyOnNewTicket: true,
   notifyOnKeyRequest: true,
   notifyOnSaleSuccess: true,
+
+  // Mặc định cấu hình Bảo hành cho bán hàng kho
+  defaultWarrantyMonths: 12,
+
+  // Mặc định cấu hình Nhắc nhở chăm sóc khách hàng
+  enableCustomerCareReminders: false,
+  customerCareReminderChatId: '',
+  customerCareReminderIntervals: [1, 6, 12],
+  customerCareReminderMessage: '🔔 [Nhắc nhở chăm sóc khách hàng]\nKhách: {{customer_name}} ({{customer_phone}})\nThiết bị: {{device_model}} - {{service_tag}}\nNgày bàn giao: {{sale_date}}\nBảo hành: {{warranty_months}} tháng\n⏰ Đã {{interval}} tháng kể từ ngày bán/bàn giao\n→ Hãy chủ động liên hệ hỏi thăm, chăm sóc khách hàng!',
 };
 
 interface StoreContextType {
