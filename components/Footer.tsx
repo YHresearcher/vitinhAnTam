@@ -108,6 +108,23 @@ export function Footer() {
                 <span>{t.privacyPolicy}</span>
               </li>
             </ul>
+            {/* Trust Signals */}
+            <div className="pt-2 border-t border-[#3E291F]">
+              <p className="text-[10px] font-bold text-[#8D7B73] uppercase tracking-wider mb-2">
+                {currentLang === 'en' ? 'AN TAM COMMITMENTS' : 'CAM KẾT AN TÂM'}
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(() => {
+                  const signals = TRANSLATIONS[currentLang || 'vi'].footerTrust?.signals;
+                  return signals ? signals.map((s, i) => (
+                    <span key={i} className="flex items-center gap-1 text-[10px] text-[#BCAAA4]">
+                      <CheckCircle className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
+                      <span>{s}</span>
+                    </span>
+                  )) : null;
+                })()}
+              </div>
+            </div>
           </div>
         </div>
 
