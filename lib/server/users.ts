@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { initialUsers } from '@/lib/mockData';
 import type { UserAccount } from '@/lib/supabase';
 import { getServerSupabase } from './supabaseAdmin';
-import { validatePassword, DEFAULT_TEMPORARY_PASSWORD } from './password-validator';
+
+export const DEFAULT_TEMPORARY_PASSWORD = 'Antam@2026';
 
 export type SafeUser = Omit<UserAccount, 'password'>;
 
@@ -423,9 +424,8 @@ export async function changePasswordWithVerificationAsync(
     return { success: false, message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại!' };
   }
 
-  const validation = validatePassword(newPlain, [currentPlain]);
-  if (!validation.valid) {
-    return { success: false, message: validation.errors.join(' ') };
+  if (newPlain === DEFAULT_TEMPORARY_PASSWORD) {
+    return { success: false, message: 'Mật khẩu mới không được trùng mật khẩu mặc định (Antam@2026)!' };
   }
 
   const nextHash = hashPassword(newPlain);

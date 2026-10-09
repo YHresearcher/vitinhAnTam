@@ -74,15 +74,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] dark:bg-slate-950 flex flex-col justify-center p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-200">
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-slate-950 flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans transition-colors duration-200">
+      {/* Top Header */}
+      <div className="w-full max-w-md mx-auto flex items-center justify-between py-2">
+        <Link href="/" className="inline-block transition-transform hover:scale-102">
+          <Logo />
+        </Link>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] dark:text-slate-400 hover:text-[#C0392B] dark:hover:text-rose-400 font-semibold px-3 py-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-900 transition-all"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Về trang chủ</span>
+        </Link>
+      </div>
+
       {/* Main Login Card */}
-      <div className="w-full max-w-md mx-auto">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block transition-transform hover:scale-102">
-            <Logo />
-          </Link>
-        </div>
+      <div className="w-full max-w-md mx-auto my-auto py-8">
         {pageNotification && (
           <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 rounded-2xl text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">

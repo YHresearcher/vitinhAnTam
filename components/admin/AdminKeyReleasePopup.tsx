@@ -407,7 +407,7 @@ export function AdminKeyReleasePopup() {
       {pendingRequests.length > 0 && !isOpen && (
         <aside
           aria-label="Widget Nhắc Nhở Duyệt Key Admin"
-          className="fixed bottom-[232px] right-4 z-40 font-sans"
+          className="fixed bottom-[324px] right-4 z-40 font-sans"
         >
           <button
             type="button"

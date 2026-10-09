@@ -948,10 +948,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             {activeTab === 'machines' && 'Kho Máy Bộ'}
             {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
+            {activeTab === 'software' && 'Kho Phần Mềm'}
             <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
               {activeTab === 'machines' && `${stats.ready + stats.testing} máy`}
               {activeTab === 'sold' && `${stats.sold} máy đã bán`}
               {activeTab === 'components' && `${spareParts.length} mục`}
+              {activeTab === 'software' && `${softwareLicenses.length} mục`}
             </span>
           </h1>
         </div>
@@ -964,26 +966,118 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           >
             Xuất Excel (CSV)
           </button>
-          {activeTab === 'components' ? (
-            canEditStock() && (
+          {activeTab === 'machines' && canEditStock() && (
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Nhập máy
+            </button>
+          )}
+          {activeTab === 'components' && canEditStock() && (
+            <button
+              onClick={() => setIsAddPartModalOpen(true)}
+              className="inline-flex items-center justify-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+            >
+              + Thêm linh kiện
+            </button>
+          )}
+          {activeTab === 'software' && canEditStock() && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setIsAddPartModalOpen(true)}
-                className="inline-flex items-center justify-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+                onClick={() => setIsAddKeyModalOpen(true)}
+                className="inline-flex items-center justify-center px-3.5 py-2 bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
               >
-                + Thêm linh kiện
+                + Nhập key bản quyền
               </button>
-            )
-          ) : (
-            canEditStock() && (
               <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+                onClick={() => setIsManageCatModalOpen(true)}
+                className="inline-flex items-center justify-center px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap shrink-0"
               >
-                + Nhập máy
+                Phân loại key
               </button>
-            )
+              <button
+                onClick={() => setIsEmailTemplateModalOpen(true)}
+                className="inline-flex items-center justify-center px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap shrink-0"
+              >
+                Mẫu email gửi khách
+              </button>
+              <Link
+                href="/quan-ly-key"
+                className="inline-flex items-center justify-center px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-all whitespace-nowrap shrink-0"
+              >
+                Duyệt cấp key →
+              </Link>
+            </div>
           )}
         </div>
+      </div>
+
+      {/* Category Tabs: Machines, Sold, Components, Software */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+        <button
+          onClick={() => setActiveTab('machines')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'machines'
+              ? 'bg-white text-blue-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Máy bộ tồn kho</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'machines' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.ready + stats.testing}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('sold')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'sold'
+              ? 'bg-white text-purple-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Máy đã bán</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'sold' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.sold}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('components')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'components'
+              ? 'bg-white text-emerald-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Linh kiện</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'components' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.componentsTotal}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('software')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'software'
+              ? 'bg-white text-[#C0392B] shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Key Win &amp; Office</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'software' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.keysAvailable} sẵn
+          </span>
+        </button>
       </div>
 
       {/* RBAC Notice (Compact) */}
@@ -993,8 +1087,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-      {/* KPI Stats Grid (Compact 4 columns - Key removed) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* KPI Stats Grid (Compact) - Clean Typography, No Empty Icon Boxes */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
           <div className="text-[11px] text-slate-500 truncate">Máy Tồn Kho</div>
           <div className="text-base font-bold text-slate-900 font-mono mt-0.5">{stats.total} máy</div>
@@ -1019,167 +1113,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
           </div>
         </div>
-      </div>
 
-      {/* Classification Sort/Filter Buttons Bar */}
-      <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-2">
-        <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
-          <span className="flex items-center gap-1.5">
-            <span>Phân loại &amp; Lọc nhanh:</span>
-            <span className="text-[11px] font-normal text-slate-500">(Bấm nút để lọc và phân loại hàng hóa)</span>
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          {/* 1. Máy bộ tồn kho */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('machines');
-              setSelectedStatus('all');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'machines' && selectedStatus === 'all'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Máy bộ tồn kho</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'machines' && selectedStatus === 'all' ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
-            }`}>
-              {stats.ready + stats.testing}
-            </span>
-          </button>
-
-          {/* 2. Sẵn bán (RTS) */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('machines');
-              setSelectedStatus('ready_to_sell');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'machines' && selectedStatus === 'ready_to_sell'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Sẵn bán (RTS)</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'machines' && selectedStatus === 'ready_to_sell' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800'
-            }`}>
-              {stats.ready}
-            </span>
-          </button>
-
-          {/* 3. Đang đợi bán */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('machines');
-              setSelectedStatus('reserved');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'machines' && selectedStatus === 'reserved'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : stats.reserved > 0
-                ? 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Đang đợi bán</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'machines' && selectedStatus === 'reserved' ? 'bg-white/25 text-white' : 'bg-purple-100 text-purple-800'
-            }`}>
-              {stats.reserved}
-            </span>
-          </button>
-
-          {/* 4. Đang QC */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('machines');
-              setSelectedStatus('testing');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'machines' && selectedStatus === 'testing'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Đang QC</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'machines' && selectedStatus === 'testing' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-800'
-            }`}>
-              {stats.testing}
-            </span>
-          </button>
-
-          {/* 5. Máy đã bán */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('sold');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'sold'
-                ? 'bg-purple-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Máy đã bán</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'sold' ? 'bg-white/25 text-white' : 'bg-purple-100 text-purple-800'
-            }`}>
-              {stats.sold}
-            </span>
-          </button>
-
-          {/* 6. Kho linh kiện */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('components');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'components'
-                ? 'bg-emerald-700 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <span>Linh kiện</span>
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-              activeTab === 'components' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-800'
-            }`}>
-              {stats.componentsTotal}
-            </span>
-          </button>
-
-          {/* 7. Cảnh báo thanh lý */}
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('machines');
-              setSelectedStatus('aging_warning');
-            }}
-            className={`px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'machines' && selectedStatus === 'aging_warning'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : stats.agingTotal > 0
-                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-            }`}
-          >
-            <span>⚠️ Cảnh báo thanh lý (50-60+ ngày)</span>
-            <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                activeTab === 'machines' && selectedStatus === 'aging_warning' ? 'bg-white text-rose-700' : 'bg-rose-600 text-white'
-              }`}
-            >
-              {stats.agingTotal}
-            </span>
-          </button>
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
+          activeTab === 'software' ? 'bg-[#FBE8DE]/50 border-[#C0392B]' : 'bg-white border-slate-200'
+        }`}>
+          <div className="text-[11px] text-slate-500 truncate">Key Windows &amp; Office</div>
+          <div className="text-base font-bold text-[#C0392B] font-mono mt-0.5">{stats.keysAvailable} sẵn sàng</div>
+          <div className="text-[10px] text-slate-500 font-medium">
+            {stats.keysUsed} đã cấp • {stats.keysFaulty} lỗi
+          </div>
         </div>
       </div>
 
@@ -1234,6 +1176,57 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Status Filter Pill Row */}
+        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+          <span className="text-slate-400 font-medium">Hàng hóa:</span>
+          {(
+            [
+              { id: 'all', label: 'Tất cả' },
+              { id: 'ready_to_sell', label: 'RTS (Sẵn bán)' },
+              { id: 'reserved', label: `Đang đợi bán (${stats.reserved})` },
+              { id: 'testing', label: 'QC' },
+              { id: 'sold', label: 'Sold' },
+            ] as const
+          ).map((s) => (
+            <button
+              key={s.id}
+              onClick={() => setSelectedStatus(s.id)}
+              className={`px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
+                selectedStatus === s.id
+                  ? s.id === 'reserved'
+                    ? 'bg-purple-600 text-white shadow-xs font-bold'
+                    : 'bg-blue-600 text-white'
+                  : s.id === 'reserved' && stats.reserved > 0
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 font-bold'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+
+          {/* Aging Liquidation Alert Filter Pill */}
+          <button
+            onClick={() => setSelectedStatus('aging_warning')}
+            className={`px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 transition-all ${
+              selectedStatus === 'aging_warning'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : stats.agingTotal > 0
+                ? 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
+          >
+            <span>⚠️ Cảnh báo thanh lý (50-60+ ngày)</span>
+            <span
+              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                selectedStatus === 'aging_warning' ? 'bg-white text-rose-700' : 'bg-rose-600 text-white'
+              }`}
+            >
+              {stats.agingTotal}
+            </span>
+          </button>
         </div>
       </div>
 

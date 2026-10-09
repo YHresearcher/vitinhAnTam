@@ -16,9 +16,11 @@ import {
   Gift,
   Check,
   ScanLine,
+  Search,
   Sparkles,
   Zap,
   Star,
+  Clock,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
@@ -29,8 +31,6 @@ import {
 } from '@/lib/translations';
 import { initialCustomerReviews } from '@/lib/mockData';
 import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
-import { TrustEvidenceSection } from '@/components/TrustEvidenceSection';
-import { FeaturedProductCard } from '@/components/FeaturedProductCard';
 
 export default function HomePage() {
   const router = useRouter();
@@ -38,12 +38,16 @@ export default function HomePage() {
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
+  // Search state for quick warranty lookup
+  const [searchInput, setSearchInput] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
+  // Modal for QC & S/N inspection
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
-  const [homeProductTab, setHomeProductTab] = useState<'hardware' | 'software'>('hardware');
+  const [homeProductTab, setHomeProductTab] = useState<'all' | 'hardware' | 'software'>('all');
 
+  // Handle smooth scroll on initial anchor load or hash change
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash) {
       const hash = window.location.hash.replace('#', '');
@@ -53,7 +57,10 @@ export default function HomePage() {
           const headerOffset = 75;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-          window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth',
+          });
         }, 150);
         return () => clearTimeout(timer);
       }
@@ -67,7 +74,10 @@ export default function HomePage() {
       const headerOffset = 75;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      });
       window.history.pushState(null, '', `/#${targetId}`);
     }
   };
@@ -77,15 +87,24 @@ export default function HomePage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchInput.trim();
+    if (!query) {
+      showToast(isEn ? 'Please enter a Service Tag or phone number!' : 'Vui lòng nhập Service Tag hoặc Số điện thoại!');
+      return;
+    }
+    router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
+  };
+
+  // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
   const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
-
-  // Admin-curated featured products (isFeatured flag) — fallback to first 3
-  const featuredProducts = useMemo(() => {
-    const featured = inStockProducts.filter((p) => p.isFeatured);
-    return featured.length >= 3 ? featured.slice(0, 3) : inStockProducts.slice(0, 3);
-  }, [inStockProducts]);
-
+  
+  // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
+  const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
+  
+  // Software products available in stock
   const availableSoftwareCategories = useMemo(() => {
     return (keyCategories || [])
       .map((cat) => {
@@ -107,10 +126,6 @@ export default function HomePage() {
   );
 
   const activeFaqs = useMemo(() => {
-    const objectionFaqs = t.faqObjections;
-    if (objectionFaqs && objectionFaqs.length > 0) {
-      return objectionFaqs.map((f) => ({ question: f.question, answer: f.answer }));
-    }
     if (isEn && ENGLISH_FAQS) return ENGLISH_FAQS;
     if (faqs && faqs.length > 0) {
       return faqs.map((f) => ({ question: f.question, answer: f.answer }));
@@ -118,18 +133,27 @@ export default function HomePage() {
     return [
       {
         question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
-        answer: 'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
+        answer:
+          'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
+      },
+      {
+        question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
+        answer:
+          'An Tâm áp dụng chính sách bảo hành chu đáo, đổi mới linh kiện nhanh chóng. Cửa hàng hỗ trợ xử lý kỹ thuật tận nơi hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của bạn luôn được thông suốt.',
       },
     ];
-  }, [isEn, faqs, t.faqObjections]);
+  }, [isEn, faqs]);
 
-  const socialProofSegments = useMemo(() => {
-    if (t.socialProof?.segments) return t.socialProof.segments;
-    return [];
-  }, [t.socialProof]);
+  // Danh sách đánh giá khách hàng (Được khôi phục và tối ưu hóa)
+  const displayReviews = useMemo(() => {
+    if (isEn) return ENGLISH_REVIEWS;
+    if (reviews && reviews.length > 0) return reviews;
+    return initialCustomerReviews;
+  }, [isEn, reviews]);
 
   return (
     <div className="w-full relative selection:bg-[#C0392B] selection:text-white">
+      {/* Toast Notification */}
       {toastMessage && (
         <div role="status" aria-live="polite" className="fixed top-20 right-6 z-50 px-4 py-2.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold shadow-xl border border-[#3E291F] flex items-center gap-2 animate-fade-in">
           <CheckCircle className="w-4 h-4 text-emerald-400" strokeWidth={1.5} />
@@ -138,72 +162,92 @@ export default function HomePage() {
       )}
 
       <main className="w-full">
-        {/* ================================================================ */}
-        {/* 1. HERO — Trust-First Headline + 4 Inline Badges + Image         */}
-        {/* ================================================================ */}
+        {/* 1. HERO SECTION — Professional Split Design with High-Res Showroom Image */}
         <section className="bg-gradient-to-b from-[#FDFBF7] via-white to-[#F8FAFC] border-b border-slate-200/80 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
+            {/* Top brand & store location status */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-6 pb-5 border-b border-slate-200/60 text-xs">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#FBE8DE] text-[#C0392B] text-[10px] font-extrabold uppercase tracking-wider border border-[#F2C4B2]">
-                {t.hero.brandTag}
-              </span>
-              <Link
-                href="/tra-cuu-bao-hanh"
-                className="text-[#6E5D53] hover:text-[#C0392B] font-semibold flex items-center gap-1"
-              >
-                <ShieldCheck className="w-3 h-3" />
-                <span>{isEn ? 'S/N Warranty Lookup' : 'Tra cứu bảo hành S/N'}</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#FBE8DE] text-[#C0392B] text-[10px] font-extrabold uppercase tracking-wider border border-[#F2C4B2]">
+                  {t.hero.brandTag || 'TIỆM VI TÍNH TỬ TẾ • TÂY NINH'}
+                </span>
+                
+              
+              </div>
+              
             </div>
 
+            {/* Main Hero: 2-column with content left & image showcase right */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 py-10 lg:py-16 items-center">
 
-              {/* Left: Headline + Trust Badges + CTA */}
-              <div className="lg:col-span-7 flex flex-col gap-5">
-                <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-[#1A0F0A] tracking-tight leading-[1.12]">
+              {/* Left Column: Headlines & Actions */}
+              <div className="lg:col-span-7 flex flex-col gap-6">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#1A0F0A] tracking-tight leading-[1.12]">
                   {t.hero.mainTitle}
                 </h1>
 
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl font-normal">
                   {t.hero.description}
                 </p>
 
-                {/* 4 Trust Badges — Inline, scannable */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {(t.hero.trustBadges || []).map((badge, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs font-semibold text-slate-800">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C0392B] flex-shrink-0" aria-hidden="true" />
-                      <span>{badge}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTAs — Single primary, one secondary */}
-                <div className="flex flex-wrap items-center gap-3 pt-2">
+                {/* Main CTA buttons - Tối ưu phần chọn lựa theo Hick's Law */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                   <a
                     href="#san-pham"
                     onClick={(e) => scrollToSection(e, 'san-pham')}
                     className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group cursor-pointer"
                   >
-                    <span>{t.hero.btnBrowseStock}</span>
+                    <span>{t.hero.btnBrowseStock || (isEn ? 'Browse Inventory' : 'Xem Máy Nổi Bật')}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </a>
                   <Link
                     href="/dat-lich"
                     className="px-6 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition-all shadow-2xs hover:-translate-y-0.5"
                   >
-                    {t.hero.btnScheduleService}
+                    {t.hero.btnScheduleService || (isEn ? 'Book Service' : 'Đặt Lịch Kỹ Thuật')}
                   </Link>
+                </div>
+
+                {/* Quick warranty search box */}
+                <div className="pt-2">
+                  <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{isEn ? 'Check warranty & service history by Phone Number / Warranty Code:' : 'Tra cứu bảo hành & lịch sử sửa chữa theo Số Điện Thoại / Mã Bảo Hành:'}</span>
+                  </div>
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    role="search"
+                    aria-label="Tra cứu bảo hành nhanh"
+                    className="flex items-stretch gap-2 max-w-lg"
+                  >
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder={t.hero.quickSearchPlaceholder || (isEn ? 'Enter phone number or warranty code...' : 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...')}
+                        aria-label="Nhập Số Điện Thoại hoặc Mã Bảo Hành"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-medium shadow-2xs"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center gap-1 shadow-2xs shrink-0"
+                    >
+                      <span>{t.hero.quickSearchBtn || (isEn ? 'Lookup' : 'Tra Cứu')}</span>
+                    </button>
+                  </form>
                 </div>
               </div>
 
-              {/* Right: Showroom Image + Trust Cards */}
+              {/* Right Column: Hero Showroom Image (Clean & Modern) */}
               <div className="lg:col-span-5 relative">
                 <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200/90 aspect-16/11 group bg-slate-100">
                   <Image
                     src="/images/hero-showroom.jpg"
-                    alt="Showroom Vi Tính An Tâm"
+                    alt="Showroom Vi Tính An Tâm - Máy Tính Doanh Nghiệp Tuyển Chọn"
                     fill
                     priority
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -211,6 +255,7 @@ export default function HomePage() {
                   />
                 </div>
 
+                {/* Sub-card trust badges underneath image */}
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
                     <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'System' : 'Hệ thống'}</div>
@@ -227,10 +272,12 @@ export default function HomePage() {
 
             </div>
 
-            {/* Bottom stats strip */}
+            {/* Bottom 2 Stats Strip */}
             <div className="border-t border-slate-200/80 py-6 grid grid-cols-2 divide-x divide-slate-200/80">
               <div className="px-2 sm:px-6 text-center sm:text-left">
-                <div className="text-2xl sm:text-3xl font-black text-[#C0392B] font-mono">100%</div>
+                <div className="text-2xl sm:text-3xl font-black text-[#C0392B] font-mono">
+                  100%
+                </div>
                 <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
                   {isEn ? 'Component transparency' : 'Minh bạch linh kiện'}
                 </div>
@@ -238,6 +285,7 @@ export default function HomePage() {
                   {isEn ? 'New is new, used is used — fully honest' : 'Mới báo mới, cũ báo cũ rõ ràng'}
                 </div>
               </div>
+
               <div className="px-2 sm:px-6 text-center sm:text-left">
                 <div className="text-2xl sm:text-3xl font-black text-[#1A0F0A] font-mono">
                   {isEn ? 'Dedicated' : 'Tận Tâm'}
@@ -254,109 +302,188 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ================================================================ */}
-        {/* 2. TRUST EVIDENCE SECTION (New)                                   */}
-        {/* ================================================================ */}
-        <TrustEvidenceSection />
-
-        {/* ================================================================ */}
-        {/* 3. FEATURED PRODUCTS (3 admin-curated, with trust badges)         */}
-        {/* ================================================================ */}
+        {/* 2. DANH MỤC SẢN PHẨM TRANG CHỦ — Card Grid Layout */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="san-pham">
           <span id="danh-muc-san-pham" className="sr-only" />
-
+          {/* Section Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-4 border-b border-slate-200">
             <div>
               <h2 className="text-2xl sm:text-4xl font-black text-[#1A0F0A] tracking-tight">
-                {isEn ? 'FEATURED INVENTORY' : 'MÁY NỔI BẬT TRONG KHO'}
+                {t.products.title}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl">
                 {isEn
-                  ? 'Curated enterprise desktops and laptops, tested and ready. Each unit includes its grade, burn-in duration, and warranty details.'
-                  : 'Máy tính để bàn và laptop doanh nghiệp tuyển chọn, đã kiểm tra sẵn sàng giao. Kèm thông tin cấp độ, thời gian test tải và bảo hành chi tiết.'}
+                  ? 'Showcasing featured enterprise computers in stock. Tested with deep hardware stress-tests and covered by attentive warranty.'
+                  : 'Danh mục máy tính và laptop tuyển chọn có sẵn tại cửa hàng. Kiểm định thực tế bằng phần mềm chuyên dụng, bảo hành chu đáo.'}
               </p>
             </div>
-            <Link
-              href="/danh-muc-san-pham"
-              className="text-xs font-bold text-[#C0392B] hover:underline shrink-0 hidden sm:block"
-            >
-              {isEn ? 'View All Inventory →' : 'Xem toàn bộ kho máy →'}
-            </Link>
           </div>
 
-          {/* Product tabs: Hardware / Software */}
-          <div className="flex items-center gap-2 mb-8 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
-            <button
-              type="button"
-              onClick={() => setHomeProductTab('hardware')}
-              className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${
-                homeProductTab === 'hardware'
-                  ? 'bg-[#2B1810] text-white shadow-xs'
-                  : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
-              }`}
-            >
-              {isEn ? 'COMPUTERS & LAPTOPS' : 'MÁY TÍNH & LAPTOP'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setHomeProductTab('software')}
-              className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                homeProductTab === 'software'
-                  ? 'bg-[#C0392B] text-white shadow-xs'
-                  : 'bg-white border border-[#E8E2D9] text-[#C0392B] hover:border-[#C0392B]'
-              }`}
-            >
-              <span>{isEn ? 'LICENSE KEYS' : 'KEY BẢN QUYỀN'}</span>
-              {availableSoftwareCategories.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
+          {/* Category Filter Tabs: Tất Cả, Máy Tính & Laptop, Phần Mềm & Key */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setHomeProductTab(homeProductTab === 'hardware' ? 'all' : 'hardware')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${
+                  homeProductTab === 'hardware'
+                    ? 'bg-[#2B1810] text-white shadow-xs'
+                    : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
+                }`}
+              >
+                {isEn ? 'Computers & Laptops' : 'MÁY TÍNH & LAPTOP'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHomeProductTab(homeProductTab === 'software' ? 'all' : 'software')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                  homeProductTab === 'software'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-white border border-[#E8E2D9] text-[#C0392B] hover:border-[#C0392B]'
+                }`}
+              >
+                <span>{isEn ? 'Software & License Keys' : 'PHẦN MỀM & KEY BẢN QUYỀN'}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
                   {availableSoftwareCategories.length}
                 </span>
-              )}
-            </button>
+              </button>
+            </div>
           </div>
 
-          {/* Hardware */}
-          {homeProductTab === 'hardware' && (
+          {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
+          {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
             <div className="space-y-6 mb-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredProducts.map((prod) => (
-                  <FeaturedProductCard
-                    key={prod.id}
-                    product={prod}
-                    onInspect={setSelectedProduct}
+            {featuredProducts.map((prod) => (
+              <div
+                key={prod.id}
+                className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+              >
+                {/* Image & Badges */}
+                <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                  <Image
+                    src={prod.img}
+                    alt={prod.name}
+                    fill
+                    unoptimized
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
-                ))}
-              </div>
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
+                    <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                      <span>{t.products.inStockBadge || 'SẴN KHO'}</span>
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
+                      {prod.badge}
+                    </span>
+                  </div>
+                </div>
 
-              <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/danh-muc-san-pham"
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center"
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#C0392B] transition-colors">
+                      {prod.name}
+                    </h3>
+                    <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
+                      {formatVND(prod.price)}
+                    </div>
+                    <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
+                      {prod.desc}
+                    </p>
+
+                    {/* Specs Grid */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                      <div className="flex items-center gap-2">
+                        <Cpu className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate font-mono">{prod.specs.cpu}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate font-mono">{prod.specs.ram}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <HardDrive className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate font-mono">{prod.specs.storage}</span>
+                      </div>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="truncate font-medium text-emerald-800">{prod.specs.highlight}</span>
+                      </div>
+                    </div>
+
+                    {/* Gift badge */}
+                    {prod.specs.gift && (
+                      <div className="mt-3.5 p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-1.5">
+                        <Gift className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                        <span className="leading-snug">{prod.specs.gift}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions: Thông tin thiết bị & Đặt Mua Máy */}
+                  <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProduct(prod)}
+                      className="flex-1 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                    >
+                      <ScanLine className="w-3.5 h-3.5 text-slate-500" />
+                      <span>{t.products.btnInspect}</span>
+                    </button>
+                    <Link
+                      href={`/mua-hang?device=${encodeURIComponent(prod.name)}&price=${prod.price}&tag=${encodeURIComponent(prod.serviceTag || '')}`}
+                      className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
+                    >
+                      <span>{t.products.btnOrder}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Nút Xem Toàn Bộ Kho Máy Tính Có Sẵn (Chỉ đếm máy tính bàn / laptop) đặt TRƯỚC danh sách key */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="/danh-muc-san-pham"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center cursor-pointer"
+            >
+              <span>
+                {isEn
+                  ? `View All ${totalReadyStock} Computers in Stock`
+                  : `Xem Toàn Bộ Kho Máy Tính Có Sẵn (${totalReadyStock} máy)`}
+              </span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+            </a>
+          </div>
+        </div>
+      )}
+
+          {/* 2. PHẦN MỀM & KEY BẢN QUYỀN WINDOWS / OFFICE */}
+          {(homeProductTab === 'all' || homeProductTab === 'software') && (
+            <div className="space-y-4 mb-8 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
+                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (LIFETIME ON MOTHERBOARD)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (VĨNH VIỄN THEO MAINBOARD)'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHomeProductTab('software')}
+                  className="text-xs font-bold text-[#C0392B] hover:underline uppercase cursor-pointer"
                 >
-                  <span>
-                    {isEn
-                      ? `View All ${totalReadyStock} Units in Stock`
-                      : `Xem Toàn Bộ Kho Máy (${totalReadyStock} máy)`}
-                  </span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Software & Keys */}
-          {homeProductTab === 'software' && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
-                  {isEn ? 'GENUINE DIGITAL LICENSE KEYS (LIFETIME ON MOTHERBOARD)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (VĨNH VIỄN THEO MAINBOARD)'}
-                </h3>
+                  {isEn ? 'All License Keys →' : 'Xem toàn bộ kho key →'}
+                </button>
               </div>
 
               {availableSoftwareCategories.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
-                  {isEn ? 'License keys are being replenished.' : 'Các phiên bản key bản quyền đang được cập nhật thêm vào kho.'}
+                  {isEn ? 'License keys are temporarily being replenished.' : 'Các phiên bản key bản quyền đang được cập nhật thêm vào kho.'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -368,11 +495,11 @@ export default function HomePage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FBE8DE] text-[#C0392B]">
-                            {cat.type === 'office' ? (isEn ? 'OFFICE APPS' : 'ỨNG DỤNG VĂN PHÒNG') : (isEn ? 'OS' : 'HỆ ĐIỀU HÀNH')}
+                            {cat.type === 'office' ? 'ỨNG DỤNG VĂN PHÒNG' : 'HỆ ĐIỀU HÀNH'}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>{isEn ? `${cat.availableStock} keys left` : `Còn ${cat.availableStock} key`}</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Còn {cat.availableStock} key</span>
                           </span>
                         </div>
 
@@ -383,32 +510,42 @@ export default function HomePage() {
                           <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
                             {formatVND(cat.price)}
                           </div>
-                          <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">{cat.description}</p>
+                          <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                            {cat.description}
+                          </p>
                         </div>
 
                         <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] text-[#6E5D53]">
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>{isEn ? 'Lifetime activation tied to motherboard' : 'Kích hoạt vĩnh viễn theo máy, không hết hạn'}</span>
+                            <span>Kích hoạt vĩnh viễn theo máy, không hết hạn</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>{isEn ? 'Official Windows/Office updates' : 'Cập nhật Windows / Office Update chính hãng'}</span>
+                            <span>Cập nhật Windows / Office Update chính hãng</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>{isEn ? 'Remote setup via UltraViewer / AnyDesk' : 'Hỗ trợ cài đặt từ xa qua UltraViewer / AnyDesk'}</span>
+                            <span>Hỗ trợ cài đặt từ xa qua UltraViewer / AnyDesk</span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="pt-5 mt-4 border-t border-slate-100">
+                      <div className="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">
                         <Link
                           href={`/mua-hang?device=${encodeURIComponent(cat.name)}&price=${cat.price}&tag=${encodeURIComponent(cat.type || 'KEY')}`}
-                          className="w-full py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
+                          className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
                         >
-                          {isEn ? 'BUY LICENSE KEY' : 'MUA KEY TRỰC TIẾP'}
+                          MUA KEY TRỰC TIẾP
                         </Link>
+                        <a
+                          href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ' + cat.name)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2.5 px-3.5 rounded-xl border border-[#E8E2D9] hover:bg-slate-50 text-[#2B1810] font-semibold text-xs transition-colors"
+                        >
+                          Zalo
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -418,17 +555,19 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ================================================================ */}
-        {/* 4. SERVICE PACKAGES (kept from original, minor trust tweaks)       */}
-        {/* ================================================================ */}
+        {/* 3. DỊCH VỤ KỸ THUẬT & PHÒNG LAB ĐO KIỂM PHẦN CỨNG (Có hình ảnh thực tế) */}
         <section className="bg-[#FAF7F2] border-y border-[#E8E2D9] py-16 scroll-mt-20" id="dich-vu-spa">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Split Feature: Hardware Testing Lab Image & Technical Standards */}
             <div className="bg-white rounded-2xl border border-[#E8E2D9] shadow-sm p-6 sm:p-10 mb-12">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                
+                {/* Tech Lab Image */}
                 <div className="lg:col-span-6 relative aspect-16/10 rounded-xl overflow-hidden shadow-md border border-slate-200 group">
                   <Image
                     src="/images/tech-service-lab.jpg"
-                    alt={isEn ? 'Hardware QC Lab' : 'Phòng Kỹ Thuật Kiểm Định Phần Cứng'}
+                    alt="Phòng Kỹ Thuật Kiểm Định Phần Cứng Vi Tính An Tâm"
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 768px) 100vw, 50vw"
@@ -439,11 +578,12 @@ export default function HomePage() {
                       {isEn ? 'TECHNICAL STANDARD' : 'TIÊU CHUẨN KỸ THUẬT'}
                     </span>
                     <p className="text-xs font-semibold mt-1">
-                      {isEn ? 'Sonic cleaning • Arctic MX-4 • FurMark / AIDA64' : 'Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64'}
+                      {isEn ? 'Sonic cleaning • Arctic MX-4 paste • FurMark / AIDA64 load testing' : 'Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64'}
                     </p>
                   </div>
                 </div>
 
+                {/* Technical Description */}
                 <div className="lg:col-span-6 space-y-4">
                   <div className="inline-flex items-center px-3 py-1 rounded-md bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
                     {t.services.tag}
@@ -460,107 +600,163 @@ export default function HomePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                     <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
                       <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Premium Thermal Compound' : 'Keo Tản Nhiệt Cao Cấp'}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Authentic Arctic MX-4, drops heat by 5-12°C.' : 'Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5-12°C.'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Authentic Arctic MX-4 paste, drops heat by 5 - 12°C.' : 'Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5 - 12°C.'}</div>
                     </div>
                     <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
                       <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Digital OEM License' : 'Bản Quyền Số OEM'}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows, safe for business data.' : 'Windows sạch vĩnh viễn theo mainboard.'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for business data.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho dữ liệu công việc.'}</div>
                     </div>
                   </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* 3 Service Packages Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              {/* Gói 1 */}
+              <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      01
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg1Time || '⏱️ Xử lý 30 - 45 phút • Xem trực tiếp'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg1Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg1Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg1Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg1Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg1Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
+                </div>
+              </div>
+
+              {/* Gói 2 - Nổi Bật */}
+              <div className="p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#C0392B] shadow-md flex flex-col justify-between transition-all group relative">
+                <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-md bg-[#C0392B] text-white font-bold text-[10px] tracking-wide shadow-xs">
+                  {t.services.pkg2Badge}
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#F2C4B2]">
+                      02
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 text-[11px] font-semibold border border-amber-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg2Time || '⏱️ Xử lý 45 - 60 phút • Lấy liền trong ngày'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg2Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg2Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg2Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg2Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg2Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
+                </div>
+              </div>
+
+              {/* Gói 3 */}
+              <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      03
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg3Time || '⏱️ Xử lý 20 - 40 phút • Bảo toàn dữ liệu'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg3Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg3Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg3Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg3Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg3Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
                 </div>
               </div>
             </div>
 
-            {/* Service Packages */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-              {[
-                {
-                  num: '01',
-                  title: t.services.pkg1Title,
-                  time: t.services.pkg1Time,
-                  desc: t.services.pkg1Desc,
-                  f1: t.services.pkg1F1, f2: t.services.pkg1F2, f3: t.services.pkg1F3,
-                  price: t.services.pkg1Price, sub: t.services.pkg1Sub,
-                  badge: null,
-                },
-                {
-                  num: '02',
-                  title: t.services.pkg2Title,
-                  time: t.services.pkg2Time,
-                  desc: t.services.pkg2Desc,
-                  f1: t.services.pkg2F1, f2: t.services.pkg2F2, f3: t.services.pkg2F3,
-                  price: t.services.pkg2Price, sub: t.services.pkg2Sub,
-                  badge: t.services.pkg2Badge,
-                  highlighted: true,
-                },
-                {
-                  num: '03',
-                  title: t.services.pkg3Title,
-                  time: t.services.pkg3Time,
-                  desc: t.services.pkg3Desc,
-                  f1: t.services.pkg3F1, f2: t.services.pkg3F2, f3: t.services.pkg3F3,
-                  price: t.services.pkg3Price, sub: t.services.pkg3Sub,
-                  badge: null,
-                },
-              ].map((pkg, idx) => (
-                <div
-                  key={idx}
-                  className={`p-6 rounded-2xl ${
-                    pkg.highlighted
-                      ? 'bg-[#FFFDF9] border-2 border-[#C0392B] shadow-md relative'
-                      : 'bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B]'
-                  } flex flex-col justify-between transition-all group`}
-                >
-                  {pkg.badge && (
-                    <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-md bg-[#C0392B] text-white font-bold text-[10px] tracking-wide shadow-xs">
-                      {pkg.badge}
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
-                        {pkg.num}
-                      </div>
-                      <span className="text-[11px] text-slate-500 font-semibold">{pkg.time}</span>
-                    </div>
-                    <h3 className="text-lg font-bold text-[#2B1810]">{pkg.title}</h3>
-                    <p className="text-xs text-[#6E5D53] leading-relaxed">{pkg.desc}</p>
-                    <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
-                      <div className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
-                        <span>{pkg.f1}</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
-                        <span>{pkg.f2}</span>
-                      </div>
-                      <div className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
-                        <span>{pkg.f3}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
-                    <div>
-                      <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
-                      <div className="text-lg font-bold text-[#C0392B]">{pkg.price}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{pkg.sub}</div>
-                    </div>
-                    <Link
-                      href={`/dat-lich?service=${encodeURIComponent(pkg.title)}`}
-                      className={`w-full py-2.5 rounded-lg ${
-                        pkg.highlighted
-                          ? 'bg-[#C0392B] hover:bg-[#A93226]'
-                          : 'bg-[#C0392B] hover:bg-[#A93226]'
-                      } text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs`}
-                    >
-                      {t.services.btnBookPkg}
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-
+            {/* Emergency dispatch banner CTA */}
             <div className="text-center">
               <Link
                 href="/dat-lich"
@@ -573,88 +769,116 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ================================================================ */}
-        {/* 5. SOCIAL PROOF — Persona-based testimonials                       */}
-        {/* ================================================================ */}
+        {/* 4. QUY TRÌNH KIỂM ĐỊNH QC 4 BƯỚC */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
+              {t.qcProcess.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6E5D53]">
+              {t.qcProcess.subtitle}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">01</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s1Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s1Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">02</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s2Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s2Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">03</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s3Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s3Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">04</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s4Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s4Desc}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. BẰNG CHỨNG XÃ HỘI & ĐÁNH GIÁ KHÁCH HÀNG (SOCIAL PROOF & REVIEWS) */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20 border-t border-[#E8E2D9]" id="danh-gia">
           <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs">
               <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-              <span>{isEn ? '1,200+ Satisfied Clients' : '1.200+ Khách Hàng Doanh Nghiệp & Cá Nhân Tin Chọn'}</span>
+              <span>{isEn ? '1,200+ Satisfied Corporate & Private Clients' : '1.200+ Khách Hàng Doanh Nghiệp & Cá Nhân Tin Chọn'}</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
-              {t.socialProof?.title || (isEn ? 'CLIENT TESTIMONIALS' : 'KHÁCH HÀNG CHIA SẺ')}
+              {t.reviews.title || (isEn ? 'CLIENT TESTIMONIALS & FEEDBACK' : 'NHẬN XÉT CỦA KHÁCH HÀNG')}
             </h2>
+            <p className="text-xs sm:text-sm text-[#6E5D53]">
+              {t.reviews.ratingText || (isEn ? 'From corporate & private clients across Long An - Tay Ninh' : 'Từ khách hàng doanh nghiệp & cá nhân tại Long An - Tây Ninh')}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {socialProofSegments.length >= 3 ? (
-              socialProofSegments.slice(0, 3).map((seg, idx) => (
-                <div
-                  key={idx}
-                  className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] hover:shadow-md transition-all flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#C0392B] bg-[#FBE8DE] px-2 py-0.5 rounded inline-block">
-                      {seg.persona}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayReviews.slice(0, 6).map((rev, idx) => (
+              <div
+                key={rev.id || idx}
+                className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] hover:shadow-md transition-all flex flex-col justify-between group"
+              >
+                <div className="space-y-3">
+                  {/* Star Rating & Verified Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-0.5 text-amber-400">
+                      {[...Array(rev.rating || 5)].map((_, i) => (
+                        <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <CheckCircle className="w-3 h-3 text-emerald-600" />
+                      <span>{isEn ? 'Verified' : 'Đã xác thực'}</span>
                     </span>
-                    <p className="text-xs sm:text-sm text-[#2B1810] italic leading-relaxed pt-1">
-                      &ldquo;{seg.quote}&rdquo;
-                    </p>
                   </div>
-                  <div className="pt-4 border-t border-[#E8E2D9] mt-4 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-bold text-xs text-[#2B1810]">{seg.author}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
-                        {seg.model} • {seg.warranty}
-                      </div>
-                    </div>
-                  </div>
+
+                  {/* Comment Quote */}
+                  <p className="text-xs sm:text-sm text-[#2B1810] italic leading-relaxed pt-1">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
                 </div>
-              ))
-            ) : (
-              (isEn ? ENGLISH_REVIEWS : (reviews.length > 0 ? reviews : initialCustomerReviews)).slice(0, 3).map((rev, idx) => (
-                <div
-                  key={rev.id || idx}
-                  className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] hover:shadow-md transition-all flex flex-col justify-between group"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-0.5 text-amber-400">
-                        {[...Array(rev.rating || 5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                        <CheckCircle className="w-3 h-3 text-emerald-600" />
-                        <span>{isEn ? 'Verified' : 'Đã xác thực'}</span>
-                      </span>
+
+                {/* Author Info */}
+                <div className="pt-4 border-t border-[#E8E2D9] mt-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-bold text-xs sm:text-sm text-[#2B1810] group-hover:text-[#C0392B] transition-colors">
+                      {rev.name}
                     </div>
-                    <p className="text-xs sm:text-sm text-[#2B1810] italic leading-relaxed pt-1">
-                      &ldquo;{rev.comment}&rdquo;
-                    </p>
+                    <div className="text-[11px] text-[#6E5D53]">{rev.role}</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">{rev.location}</div>
                   </div>
-                  <div className="pt-4 border-t border-[#E8E2D9] mt-4 flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-bold text-xs sm:text-sm text-[#2B1810] group-hover:text-[#C0392B] transition-colors">{rev.name}</div>
-                      <div className="text-[11px] text-[#6E5D53]">{rev.role}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{rev.location}</div>
-                    </div>
-                    {rev.service && (
-                      <span className="shrink-0 inline-block px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E8E2D9] text-[10px] font-bold text-[#6E5D53]">
+                  {rev.service && (
+                    <div className="text-right shrink-0">
+                      <span className="inline-block px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E8E2D9] text-[10px] font-bold text-[#6E5D53]">
                         {rev.service}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
-              ))
-            )}
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* ================================================================ */}
-        {/* 6. FAQ — Objection-Handling Accordion                              */}
-        {/* ================================================================ */}
+        {/* 6. FAQ DẠNG COLLAPSED ACCORDION */}
         <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
           <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
             <div className="text-xs uppercase tracking-widest text-[#C0392B] font-bold">
@@ -693,8 +917,9 @@ export default function HomePage() {
                       strokeWidth={1.5}
                     />
                   </button>
+
                   {isOpen && (
-                    <div id={`faq-answer-${idx}`} role="region" className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#6E5D53] leading-relaxed border-t border-[#E8E2D9] bg-[#FFFDF9]">
+                    <div id={`faq-answer-${idx}`} role="region" aria-labelledby={`faq-question-${idx}`} className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#6E5D53] leading-relaxed border-t border-[#E8E2D9] bg-[#FFFDF9]">
                       <p>{item.answer}</p>
                     </div>
                   )}
@@ -721,13 +946,13 @@ export default function HomePage() {
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold mb-1.5 border border-emerald-200">
                   <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
-                  <span>{selectedProduct.isSold ? t.products.soldBadge : `Còn ${selectedProduct.stockCount} máy`}</span>
+                  <span>{t.qcModal.badge}</span>
                 </div>
                 <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
                 <div className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
-                  <span className="text-slate-500">{t.qcModal.serviceTag}</span>
+                  <span className="text-slate-500">{t.qcModal.serviceTag || (isEn ? 'QC Status:' : 'Trạng thái kiểm định:')}</span>
                   <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                    {isEn ? '100% QC Passed' : '100% Đạt Chuẩn'}
+                    {isEn ? '100% Factory Standard Passed' : '100% Đạt Chuẩn Xuất Xưởng'}
                   </span>
                 </div>
               </div>
@@ -737,6 +962,7 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Hardware & Test Evidence Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
                 <div className="font-bold text-slate-900 flex items-center gap-1.5">
@@ -750,6 +976,7 @@ export default function HomePage() {
                   <span>{t.qcModal.stressTestGood}</span>
                 </div>
               </div>
+
               <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
                 <div className="font-bold text-slate-900 flex items-center gap-1.5">
                   <HardDrive className="w-4 h-4 text-[#C0392B]" strokeWidth={1.5} />
@@ -763,6 +990,7 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Warehouse Status Meta */}
             <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2">
               <div className="font-bold text-slate-900 flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
@@ -785,13 +1013,14 @@ export default function HomePage() {
               </div>
             </div>
 
+            {/* Modal Actions */}
             <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <Link
                 href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}&tag=${encodeURIComponent(selectedProduct.serviceTag || '')}`}
                 onClick={() => setSelectedProduct(null)}
                 className="flex-1 py-3 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
               >
-                <span>{t.products.btnOrder}</span>
+                <span>{t.products.btnOrder || 'Đặt Mua Máy'}</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
               <a
@@ -801,7 +1030,7 @@ export default function HomePage() {
                 className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
-                <span>{t.qcModal.btnZaloPhotos}</span>
+                <span>{t.qcModal.btnZaloPhotos || (isEn ? 'Chat Zalo For Real Photos' : 'Chat Zalo Xem Thêm Ảnh Thật')}</span>
               </a>
             </div>
           </div>

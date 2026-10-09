@@ -20,8 +20,6 @@ import {
   Tag,
   Space,
   Switch,
-  Select,
-  Checkbox,
 } from 'antd';
 
 import {
@@ -42,8 +40,6 @@ import {
   Upload,
   CreditCard,
   Check,
-  Settings,
-  Package,
 } from 'lucide-react';
 
 const { TextArea } = Input;
@@ -155,10 +151,30 @@ export default function CaiDatPage() {
     return 'https://vitinhantham.vn/api/webhook/zalo';
   };
 
-  // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <span className="font-mono">id:secret</span>)
-  // Token hiện tại đọc từ ENV var ZALO_BOT_TOKEN (bảo mật), không lưu DB
+  // Kiểm tra & chẩn đoán chi tiết Zalo Bot Token (định dạng <id>:<secret>)
   const validateBotTokenFormat = (): string | null => {
-    // Token được cấu hình qua ENV, không cho phép sửa từ UI
+    const raw = formData.zaloBotToken || '';
+    const token = raw.trim();
+    if (!token) return null;
+    if (/^https?:\/\//i.test(token)) {
+      return 'Bạn đang dán cả URL vào ô Token — hãy chỉ dán Token dạng <id>:<secret> (xem tại bot.zapps.vn/docs/create-bot/).';
+    }
+    if (token.startsWith('bot') && token.slice(3).includes(':')) {
+      return 'Token có tiền tố "bot" ở đầu — hãy bỏ phần "bot", chỉ giữ <id>:<secret>.';
+    }
+    if (!token.includes(':')) {
+      return `Token thiếu dấu ":" (chuỗi ${token.length} ký tự, không có dấu ":") — cần dạng <id>:<secret>. Copy lại toàn bộ Token từ trang tạo bot.`;
+    }
+    const pre = token.split(':', 1)[0];
+    if (!/^\d+$/.test(pre)) {
+      return `Phần trước dấu ":" phải là SỐ (id bot) — hiện tại là "${pre.slice(0, 24)}". Copy lại đúng Token từ trang tạo bot.`;
+    }
+    if (/\s/.test(token)) {
+      return 'Token có khoảng trắng ở giữa — hãy copy lại cả chuỗi liền mạch.';
+    }
+    if (/[/?#]/.test(token)) {
+      return 'Token chứa ký tự / ? # — sẽ làm hỏng URL gọi API. Hãy lấy lại Token từ trang tạo bot.';
+    }
     return null;
   };
 
@@ -169,8 +185,17 @@ export default function CaiDatPage() {
   };
 
   const handleTestWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Zalo Bot Token trước khi gửi thử nghiệm!');
+      return;
+    }
     if (!formData.zaloDefaultChatId?.trim()) {
       message.error('Vui lòng nhập Chat ID nhận tin nhắn!');
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
       return;
     }
 
@@ -183,6 +208,7 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chatId: formData.zaloDefaultChatId?.trim(),
+          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -190,53 +216,7 @@ export default function CaiDatPage() {
       if (data.ok) {
         message.success('Đã gửi tin nhắn thử nghiệm thành công! Vui lòng kiểm tra tin nhắn Bot.');
       } else {
-        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại ZALO_BOT_TOKEN env var & Chat ID'}`);
-      }
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      message.error(`Lỗi khi gửi test: ${errMsg}`);
-    } finally {
-      setIsTestingWebhook(false);
-    }
-  };
-
-  const handleTestCustomerCareReminder = async () => {
-    if (!formData.customerCareReminderChatId?.trim()) {
-      message.error('Vui lòng nhập Chat ID nhóm Zalo nhận nhắc nhở!');
-      return;
-    }
-    if (!formData.customerCareReminderMessage?.trim()) {
-      message.error('Vui lòng nhập mẫu tin nhắn nhắc nhở!');
-      return;
-    }
-
-    // Test with sample data
-    const testMessage = formData.customerCareReminderMessage
-      .replace('{{customer_name}}', 'Nguyễn Văn A (Test)')
-      .replace('{{customer_phone}}', '0909123456')
-      .replace('{{device_model}}', 'Dell OptiPlex 7060 SFF')
-      .replace('{{service_tag}}', 'ST-TEST123')
-      .replace('{{sale_date}}', new Date().toLocaleDateString('vi-VN'))
-      .replace('{{warranty_months}}', '12')
-      .replace('{{interval}}', '1');
-
-    setIsTestingWebhook(true); // Reuse the loading state
-    try {
-      await updateSystemSettings(formData);
-      const res = await fetch('/api/webhook/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chatId: formData.customerCareReminderChatId.trim(),
-          apiBaseUrl: formData.botApiBaseUrl?.trim(),
-          text: testMessage,
-        }),
-      });
-      const data = await res.json();
-      if (data.ok) {
-        message.success('Đã gửi tin nhắn test nhắc nhở thành công! Vui lòng kiểm tra nhóm Zalo.');
-      } else {
-        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại ZALO_BOT_TOKEN env var & Chat ID'}`);
+        message.error(`Gửi tin nhắn thất bại: ${data.error || 'Vui lòng kiểm tra lại Token & Chat ID'}`);
       }
     } catch (err: unknown) {
       const errMsg = err instanceof Error ? err.message : String(err);
@@ -247,6 +227,15 @@ export default function CaiDatPage() {
   };
 
   const handleSetWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Bot Token!');
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
+      return;
+    }
     setIsSettingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -257,6 +246,8 @@ export default function CaiDatPage() {
         body: JSON.stringify({
           action: 'set',
           webhookUrl,
+          secretToken: formData.zaloBotSecretToken?.trim(),
+          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -275,6 +266,15 @@ export default function CaiDatPage() {
   };
 
   const handleGetWebhookInfo = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Bot Token!');
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
+      return;
+    }
     setIsCheckingWebhook(true);
     try {
       await updateSystemSettings(formData);
@@ -283,6 +283,7 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'info',
+          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -302,6 +303,15 @@ export default function CaiDatPage() {
   };
 
   const handleDeleteWebhook = async () => {
+    if (!formData.zaloBotToken?.trim()) {
+      message.error('Vui lòng nhập Bot Token!');
+      return;
+    }
+    const tokenFormatError = validateBotTokenFormat();
+    if (tokenFormatError) {
+      message.error(tokenFormatError);
+      return;
+    }
     setIsDeletingWebhook(true);
     try {
       const res = await fetch('/api/webhook/setup', {
@@ -309,6 +319,7 @@ export default function CaiDatPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'delete',
+          token: formData.zaloBotToken?.trim(),
           apiBaseUrl: formData.botApiBaseUrl?.trim(),
         }),
       });
@@ -975,7 +986,7 @@ export default function CaiDatPage() {
                         <TextArea
                           rows={2}
                           value={formData.footerAbout}
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleChange('footerAbout', e.target.value)}
+                          onChange={(e) => handleChange('footerAbout', e.target.value)}
                           className="rounded-lg text-xs"
                         />
                       </div>
@@ -1077,7 +1088,23 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-{/* Chat ID / User ID */}
+                      {/* Bot Token / Access Token */}
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Zalo Bot Token *
+                        </label>
+                        <Input.Password
+                          value={formData.zaloBotToken || ''}
+                          onChange={(e) => handleChange('zaloBotToken', e.target.value)}
+                          placeholder="VD: 1234567890123:AbCdEf..."
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Lấy Zalo Bot Token tại https://bot.zapps.vn/docs/create-bot/ — định dạng &lt;id&gt;:&lt;secret&gt;.
+                        </span>
+                      </div>
+
+                      {/* Chat ID / User ID */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Chat ID nhận tin nhắn *
@@ -1109,52 +1136,37 @@ export default function CaiDatPage() {
                         </span>
                       </div>
 
-{/* Bot Token / Access Token */}
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
-                          Zalo Bot Token *
-                        </label>
-                        <Input.Password
-                          value={formData.zaloBotToken || ''}
-                          onChange={(e) => handleChange('zaloBotToken', e.target.value)}
-                          placeholder="VD: 1234567890123:AbCdEf... (để trống = dùng env var)"
-                          className="w-full rounded-lg text-xs font-mono"
-                        />
-                        <div className="text-[11px] text-slate-500 mt-1 whitespace-pre-line">
-                          Lấy Zalo Bot Token tại https://bot.zapps.vn/docs/create-bot/ — định dạng <span className="font-mono">id:secret</span>.
-                          Ưu tiên biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_TOKEN</span>. Để trống để dùng env var.
-                        </div>
-                      </div>
-
                       {/* Secret Token */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Secret Token Bảo Vệ Webhook
                         </label>
-                        <Input.Password
+                        <Input
                           value={formData.zaloBotSecretToken || ''}
                           onChange={(e) => handleChange('zaloBotSecretToken', e.target.value)}
-                          placeholder="VD: an_tam_secret_2026 (để trống = dùng env var)"
+                          placeholder="VD: an_tam_secret_key_2026"
                           className="w-full rounded-lg text-xs font-mono"
                         />
-                        <div className="text-[11px] text-slate-500 mt-1 whitespace-pre-line">
-                          Khớp với header bảo mật khi Zalo gửi webhook.
-                          Ưu tiên biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_SECRET_TOKEN</span>. Để trống để dùng env var.
-                        </div>
-                      </div>
-
-                      {/* Security Notice */}
-                      <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
-                        <div className="flex items-center gap-2 text-[11px] text-emerald-800">
-                          <HelpCircle className="w-4 h-4 shrink-0" />
-                          <span>
-                            <strong>Bảo mật:</strong> Token & Secret Token được <strong>mã hóa AES-256</strong> trước khi lưu DB.
-                            Biến môi trường <span className="font-mono text-blue-700">ZALO_BOT_TOKEN</span> / <span className="font-mono text-blue-700">ZALO_BOT_SECRET_TOKEN</span> (file <span className="font-mono text-blue-700">.env.local</span>) luôn có độ ưu tiên cao hơn.
-                          </span>
-                        </div>
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Khớp với header bảo mật <code>X-Telegram-Bot-Api-Secret-Token</code> (hoặc <code>X-Bot-Token</code>) khi Zalo gửi webhook.
+                        </span>
                       </div>
 
                       {/* Custom Webhook URL */}
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Custom Webhook Song Song (n8n, Zapier, Discord, Make)
+                        </label>
+                        <Input
+                          value={formData.customWebhookUrl || ''}
+                          onChange={(e) => handleChange('customWebhookUrl', e.target.value)}
+                          placeholder="VD: https://n8n.example.com/webhook/vitinh-antam"
+                          className="w-full rounded-lg text-xs font-mono"
+                        />
+                        <span className="text-[11px] text-slate-500 mt-1 block">
+                          Tự động bắn JSON sự kiện đến hệ thống thứ 2 nếu có.
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -1265,7 +1277,29 @@ export default function CaiDatPage() {
                           Hủy deleteWebhook
                         </Button>
                       </Popconfirm>
-</div>
+                    </div>
+                  </div>
+
+                  {/* Hộp hướng dẫn lấy Token & Chat ID siêu tốc */}
+                  <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-2 text-xs text-amber-950">
+                    <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                      <HelpCircle className="w-4 h-4 text-amber-700" />
+                      <span>💡 Hướng dẫn tạo Bot nhận thông báo tức thì trong 1 phút (Miễn phí 100%):</span>
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 text-[11px] text-amber-900 pl-1 leading-relaxed">
+                      <li>
+                        <strong>Bước 1 (Lấy Bot Token):</strong> Mở app Telegram, tìm kiếm <code>@BotFather</code> &rarr; Gửi <code>/newbot</code> &rarr; Làm theo hướng dẫn để đặt tên bot &rarr; Copy chuỗi Token có dạng <code>7123456789:AA...</code> dán vào ô <strong>Token</strong> ở trên.
+                      </li>
+                      <li>
+                        <strong>Bước 2 (Lấy Chat ID cá nhân / nhóm):</strong> Tìm kiếm <code>@userinfobot</code> trên Telegram &rarr; Gửi tin nhắn bất kỳ &rarr; Bot sẽ trả về <strong>Id</strong> của bạn (VD: <code>123456789</code>). Dán số này vào ô <strong>Chat ID</strong>.
+                      </li>
+                      <li>
+                        <strong>Bước 3 (Nhận tin nhắn):</strong> Mở cuộc trò chuyện với Bot của bạn trên Telegram và nhấn nút <strong>Start</strong> (bắt buộc để bot có quyền gửi tin).
+                      </li>
+                      <li>
+                        <strong>Bước 4 (Thử nghiệm):</strong> Bấm nút <strong>&quot;Gửi Tin Nhắn Test&quot;</strong> ở trên để xác nhận thông báo hoạt động thành công!
+                      </li>
+                    </ul>
                   </div>
 
                   {/* Nút lưu cấu hình */}
@@ -1285,138 +1319,6 @@ export default function CaiDatPage() {
           },
 
 
-
-
-          // TAB MỚI: CÀI ĐẶT HỆ THỐNG (Warranty & Customer Care Reminders)
-          {
-            key: 'system',
-            label: (
-              <span className="font-bold text-xs sm:text-sm flex items-center gap-1.5 text-slate-800">
-                <Settings className="w-4 h-4 text-emerald-600" />
-                <span>Cài Đặt Hệ Thống</span>
-              </span>
-            ),
-            children: (
-              <Card className="rounded-xl border-slate-200 shadow-xs space-y-6 p-4">
-                {/* Section 1: Cấu hình Bảo hành mặc định cho bán hàng kho */}
-                <div className="space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                    <Package className="w-4 h-4 text-emerald-600" />
-                    1. Bảo Hành Mặc Định Cho Bán Hàng Kho
-                  </h3>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                    <label className="block text-xs font-bold text-slate-700 mb-2">Thời gian bảo hành mặc định (tháng)</label>
-                    <Select
-                      value={formData.defaultWarrantyMonths || 12}
-                      onChange={(value) => setFormData((prev) => ({ ...prev, defaultWarrantyMonths: Number(value) }))}
-                      className="w-full sm:w-48"
-                    >
-                      <Select.Option value={3}>3 Tháng</Select.Option>
-                      <Select.Option value={6}>6 Tháng</Select.Option>
-                      <Select.Option value={12}>12 Tháng (Mặc định)</Select.Option>
-                      <Select.Option value={36}>36 Tháng</Select.Option>
-                    </Select>
-                    <p className="text-[11px] text-slate-500 mt-1">Giá trị này sẽ được dùng làm mặc định khi tạo phiếu bán hàng mới tại kho.</p>
-                  </div>
-                </div>
-
-                {/* Section 2: Nhắc nhở chăm sóc khách hàng */}
-                <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                    <Bell className="w-4 h-4 text-amber-600" />
-                    2. Nhắc Nhở Chăm Sóc Khách Hàng (Customer Care Reminders)
-                  </h3>
-
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">Bật nhắc nhở tự động</div>
-                      <div className="text-[11px] text-slate-500">Gửi tin nhắn nhắc nhở chăm sóc khách hàng vào nhóm Zalo theo lịch trình</div>
-                    </div>
-                    <Switch
-                      checked={formData.enableCustomerCareReminders !== false}
-                      onChange={(checked) => setFormData((prev) => ({ ...prev, enableCustomerCareReminders: checked }))}
-                    />
-                  </div>
-
-                  <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-3">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Chat ID Nhóm Zalo Nhận Nhắc Nhở</label>
-                      <Input
-                        placeholder="VD: 123456789 (Chat ID nhóm Zalo Bot)"
-                        value={formData.customerCareReminderChatId || ''}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, customerCareReminderChatId: e.target.value }))}
-                        className="text-xs font-mono"
-                      />
-                      <p className="text-[11px] text-slate-500 mt-1">Lấy Chat ID nhóm bằng cách thêm @userinfobot vào nhóm Zalo Bot và gửi tin nhắn bất kỳ.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-2">Các mốc nhắc nhở (tháng sau bàn giao)</label>
-                      <div className="flex flex-wrap gap-2">
-                        {[1, 6, 12].map((m) => (
-                          <label key={m} className="inline-flex items-center gap-1.5 cursor-pointer">
-                            <Checkbox
-                              checked={(formData.customerCareReminderIntervals || [1, 6, 12]).includes(m)}
-                              onChange={(checked) => {
-                                const current = formData.customerCareReminderIntervals || [1, 6, 12];
-                                const next = checked
-                                  ? [...current, m]
-                                  : current.filter((v: number) => v !== m);
-                                setFormData((prev) => ({ ...prev, customerCareReminderIntervals: next }));
-                              }}
-                            />
-                            <span className="text-xs font-medium text-slate-700">{m} Tháng</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Mẫu tin nhắn nhắc nhở</label>
-                      <TextArea
-                        rows={4}
-                        placeholder="Sử dụng các placeholder: {{customer_name}}, {{customer_phone}}, {{device_model}}, {{service_tag}}, {{sale_date}}, {{warranty_months}}, {{interval}}"
-                        value={formData.customerCareReminderMessage || ''}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData((prev) => ({ ...prev, customerCareReminderMessage: e.target.value }))}
-                        className="text-[11px] font-mono bg-slate-50"
-                      />
-                      <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
-                        <span>Placeholders có sẵn:</span>
-                        <code className="bg-slate-100 px-1 rounded">{'{{customer_name}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{customer_phone}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{device_model}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{service_tag}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{sale_date}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{warranty_months}}'}</code>
-                        <code className="bg-slate-100 px-1 rounded">{'{{interval}}'}</code>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="primary"
-                      icon={<Send className="w-3.5 h-3.5" />}
-                      onClick={handleTestCustomerCareReminder}
-                      className="bg-amber-600 hover:bg-amber-700 text-white font-semibold h-9 text-xs"
-                    >
-                      Gửi Tin Nhắn Test Nhắc Nhở
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Nút lưu cấu hình */}
-                <div className="pt-4 border-t border-slate-200 flex justify-end">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={isSaving}
-                    className="bg-[#0068FF] hover:bg-[#0052cc] text-white font-bold h-9 px-6 rounded-lg text-xs shadow-sm shadow-blue-500/20"
-                  >
-                    Lưu Cài Đặt Hệ Thống
-                  </Button>
-                </div>
-              </Card>
-            ),
-          },
           // TAB 3: QUẢN LÝ FAQ
           {
             key: 'faqs',
@@ -1602,7 +1504,6 @@ export default function CaiDatPage() {
               </Card>
             ),
           },
-/* REMOVED: key-email tab
           {
             key: 'key-email',
             label: (
@@ -1625,7 +1526,7 @@ export default function CaiDatPage() {
                     href="/quan-ly-key"
                     className="inline-flex items-center px-4 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-bold transition-all shadow-xs w-fit uppercase"
                   >
-                    ĐẾN TRANG QUẢN LÝ KHO KEY & MẪU EMAIL →
+                    ĐẾN TRANG QUẢN LÝ KHO KEY &amp; MẪU EMAIL →
                   </Link>
                 </div>
                 <div className="p-4 bg-[#FAF7F2] rounded-xl border border-[#E8E2D9] text-xs text-[#6E5D53] leading-relaxed">
@@ -1634,7 +1535,6 @@ export default function CaiDatPage() {
               </Card>
             ),
           },
-*/
         ]}
       />
 
@@ -1786,7 +1686,7 @@ export default function CaiDatPage() {
       >
         <div className="pt-2 space-y-3">
           <p className="text-xs text-slate-600">
-            Dữ liệu phản hồi trực tiếp từ Zalo Bot Platform API (<span className="font-mono text-emerald-400">getWebhookInfo</span>):
+            Dữ liệu phản hồi trực tiếp từ Zalo Bot Platform API (<code>getWebhookInfo</code>):
           </p>
           <pre className="p-3 bg-slate-900 text-emerald-400 font-mono text-xs rounded-xl overflow-x-auto max-h-72 whitespace-pre-wrap">
             {JSON.stringify(webhookInfoData, null, 2)}

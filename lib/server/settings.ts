@@ -2,37 +2,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { initialSystemSettings, SystemSettings } from '@/lib/store';
 import { getServerSupabase } from './supabaseAdmin';
-import crypto from 'node:crypto';
 
 const DATA_DIR = join(process.cwd(), '.data');
 const SETTINGS_FILE = join(DATA_DIR, 'settings.json');
 let memorySettings: SystemSettings | null = null;
-
-// Encryption key from env (32 bytes for AES-256)
-const ENCRYPTION_KEY = process.env.SETTINGS_ENCRYPTION_KEY 
-  ? Buffer.from(process.env.SETTINGS_ENCRYPTION_KEY, 'hex')
-  : crypto.randomBytes(32); // Fallback for dev only
-
-const IV_LENGTH = 16; // AES block size
-
-function encrypt(text: string): string {
-  if (!text) return '';
-  const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
-}
-
-function decrypt(encryptedText: string): string {
-  if (!encryptedText || !encryptedText.includes(':')) return encryptedText; // Return as-is if not encrypted
-  const [ivHex, encrypted] = encryptedText.split(':');
-  const iv = Buffer.from(ivHex, 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-cbc', ENCRYPTION_KEY, iv);
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
-}
 
 // Mapping giữa TypeScript camelCase và Supabase snake_case
 const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
@@ -61,38 +34,22 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['bankAccountName', 'bank_account_name'],
   ['paymentQrNote', 'payment_qr_note'],
   ['botApiBaseUrl', 'bot_api_base_url'],
-  ['zaloDefaultChatId', 'zalo_default_chat_id'],
-  ['customWebhookUrl', 'custom_webhook_url'],
   ['zaloBotToken', 'zalo_bot_token'],
   ['zaloBotSecretToken', 'zalo_bot_secret_token'],
+  ['zaloDefaultChatId', 'zalo_default_chat_id'],
+  ['customWebhookUrl', 'custom_webhook_url'],
   ['notifyOnNewBooking', 'notify_on_new_booking'],
   ['notifyOnNewOrder', 'notify_on_new_order'],
   ['notifyOnNewTicket', 'notify_on_new_ticket'],
   ['notifyOnKeyRequest', 'notify_on_key_request'],
   ['notifyOnSaleSuccess', 'notify_on_sale_success'],
-  ['defaultWarrantyMonths', 'default_warranty_months'],
-  ['enableCustomerCareReminders', 'enable_customer_care_reminders'],
-  ['customerCareReminderChatId', 'customer_care_reminder_chat_id'],
-  ['customerCareReminderIntervals', 'customer_care_reminder_intervals'],
-  ['customerCareReminderMessage', 'customer_care_reminder_message'],
 ];
-
-// Fields that should be encrypted at rest
-const ENCRYPTED_FIELDS: Set<keyof SystemSettings> = new Set([
-  'zaloBotToken',
-  'zaloBotSecretToken',
-]);
 
 export function rowToSettings(row: Record<string, unknown>): SystemSettings {
   const res: Record<string, unknown> = { ...initialSystemSettings };
   for (const [camel, snake] of FIELD_MAP) {
     if (row[snake] !== undefined && row[snake] !== null) {
-      let value = row[snake];
-      // Decrypt encrypted fields when reading from DB
-      if (ENCRYPTED_FIELDS.has(camel) && typeof value === 'string') {
-        value = decrypt(value);
-      }
-      res[camel] = value;
+      res[camel] = row[snake];
     }
   }
   return res as unknown as SystemSettings;
@@ -103,20 +60,13 @@ export function mergeRowIntoSettings(base: SystemSettings, row: Record<string, u
   const baseRecord = base as unknown as Record<string, unknown>;
   for (const [camel, snake] of FIELD_MAP) {
     if (row[snake] !== undefined && row[snake] !== null) {
-      let value = row[snake];
-      if (typeof value === 'string') {
-        const str = value.trim();
+      if (typeof row[snake] === 'string') {
+        const str = (row[snake] as string).trim();
         if (str !== '' || baseRecord[camel] === undefined) {
-          // Decrypt encrypted fields when reading from DB
-          if (ENCRYPTED_FIELDS.has(camel)) {
-            value = decrypt(str);
-          } else {
-            value = str;
-          }
-          res[camel] = value;
+          res[camel] = str;
         }
       } else {
-        res[camel] = value;
+        res[camel] = row[snake];
       }
     }
   }
@@ -127,12 +77,7 @@ export function settingsToRow(data: Partial<SystemSettings>): Record<string, unk
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const [camel, snake] of FIELD_MAP) {
     if (data[camel] !== undefined) {
-      let value = data[camel];
-      // Encrypt sensitive fields before writing to DB
-      if (ENCRYPTED_FIELDS.has(camel) && typeof value === 'string') {
-        value = encrypt(value);
-      }
-      row[snake] = value;
+      row[snake] = data[camel];
     }
   }
   return row;
@@ -207,7 +152,7 @@ async function upsertSupabaseSettingsSafely(sb: ReturnType<typeof getServerSupab
         'whatsapp_number', 'whatsapp_link', 'email', 'address', 'street_address',
         'district', 'city', 'service_areas', 'working_hours_weekday', 'working_hours_weekend',
         'prime_hours', 'footer_about', 'footer_copyright', 'store_name',
-        'bot_api_base_url', 'zalo_default_chat_id',
+        'bot_api_base_url', 'zalo_bot_token', 'zalo_bot_secret_token', 'zalo_default_chat_id',
         'custom_webhook_url', 'notify_on_new_booking', 'notify_on_new_order',
         'notify_on_new_ticket', 'notify_on_key_request'
       ]);
