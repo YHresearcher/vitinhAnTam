@@ -5,41 +5,63 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 
-const COMMON_SERVICES = [
+interface ServiceItem {
+  id: string;
+  name: string;
+  defaultPrice: number;
+  warrantyMonths: number;
+  category: string;
+}
+
+const COMMON_SERVICES: ServiceItem[] = [
   {
-    id: 'spa-tf7',
-    name: 'Gói Spa Máy Tính & Tra Keo Thermalright TF7',
-    price: 150000,
+    id: 've-sinh-tra-keo',
+    name: 'Vệ sinh, bảo dưỡng & Tra keo tản nhiệt',
+    defaultPrice: 150000,
     warrantyMonths: 1,
     category: 'Vệ sinh & Bảo dưỡng',
   },
   {
-    id: 'os-install',
-    name: 'Cài Đặt Windows 11 Pro + Bộ Office Bản Quyền Chuẩn',
-    price: 100000,
+    id: 'cai-dat-he-thong',
+    name: 'Cài đặt hệ điều hành & Phần mềm',
+    defaultPrice: 150000,
     warrantyMonths: 1,
-    category: 'Hệ điều hành',
+    category: 'Hệ điều hành / Phần mềm',
   },
   {
-    id: 'ssd-500gb',
-    name: 'Nâng Cấp SSD Kingston NV2 500GB NVMe PCIe 4.0',
-    price: 890000,
+    id: 'nang-cap-ssd',
+    name: 'Nâng cấp / Thay thế ổ cứng (SSD / HDD)',
+    defaultPrice: 0,
     warrantyMonths: 36,
-    category: 'Ổ cứng',
+    category: 'Ổ cứng lưu trữ',
   },
   {
-    id: 'ram-16gb',
-    name: 'Nâng Cấp RAM DDR4 16GB Kingston Fury 3200MHz',
-    price: 750000,
+    id: 'nang-cap-ram',
+    name: 'Nâng cấp / Thay thế bộ nhớ RAM',
+    defaultPrice: 0,
     warrantyMonths: 36,
     category: 'Bộ nhớ RAM',
   },
   {
-    id: 'psu-500w',
-    name: 'Thay Nguồn Công Suất Thực 500W Chuẩn 80 Plus',
-    price: 650000,
-    warrantyMonths: 36,
+    id: 'thay-nguon-psu',
+    name: 'Thay thế / Sửa chữa nguồn máy tính (PSU)',
+    defaultPrice: 0,
+    warrantyMonths: 12,
     category: 'Bộ nguồn',
+  },
+  {
+    id: 'sua-chua-mainboard',
+    name: 'Sửa chữa phần cứng Mainboard / Chipset',
+    defaultPrice: 0,
+    warrantyMonths: 3,
+    category: 'Phần cứng Mainboard',
+  },
+  {
+    id: 'thay-linh-kien-khac',
+    name: 'Thay thế linh kiện khác (Màn hình, Phím, Pin, Quạt)',
+    defaultPrice: 0,
+    warrantyMonths: 6,
+    category: 'Linh kiện khác',
   },
 ];
 
@@ -76,7 +98,12 @@ export default function TaoPhieuSuaChuaPage() {
   const [serviceTag, setServiceTag] = useState('');
   const [windowsPin, setWindowsPin] = useState('');
   const [issueDescription, setIssueDescription] = useState('');
-  const [selectedServices, setSelectedServices] = useState<string[]>(['spa-tf7']);
+  const [selectedServices, setSelectedServices] = useState<string[]>(['ve-sinh-tra-keo']);
+  const [servicePrices, setServicePrices] = useState<Record<string, number>>(() => ({
+    've-sinh-tra-keo': 150000,
+  }));
+  const [serviceNotes, setServiceNotes] = useState<Record<string, string>>({});
+  const [serviceWarranties, setServiceWarranties] = useState<Record<string, number>>({});
   const [customCost, setCustomCost] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,13 +122,38 @@ export default function TaoPhieuSuaChuaPage() {
       setSelectedServices(selectedServices.filter((s) => s !== id));
     } else {
       setSelectedServices([...selectedServices, id]);
+      if (servicePrices[id] === undefined) {
+        const item = COMMON_SERVICES.find((s) => s.id === id);
+        setServicePrices((prev) => ({ ...prev, [id]: item ? item.defaultPrice : 0 }));
+      }
     }
   };
 
-  // Calculate Total Cost
+  const handlePriceChange = (id: string, price: number) => {
+    setServicePrices((prev) => ({
+      ...prev,
+      [id]: Math.max(0, price),
+    }));
+  };
+
+  const handleNoteChange = (id: string, note: string) => {
+    setServiceNotes((prev) => ({
+      ...prev,
+      [id]: note,
+    }));
+  };
+
+  const handleWarrantyChange = (id: string, months: number) => {
+    setServiceWarranties((prev) => ({
+      ...prev,
+      [id]: months,
+    }));
+  };
+
+  // Calculate Total Cost: Tổng các dịch vụ đã chọn (cho phép tự nhập) + phụ thu
   const totalCost = selectedServices.reduce((sum, sId) => {
-    const s = COMMON_SERVICES.find((item) => item.id === sId);
-    return sum + (s ? s.price : 0);
+    if (serviceCategory === 'bao_hanh') return sum;
+    return sum + (servicePrices[sId] ?? 0);
   }, customCost);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,11 +168,13 @@ export default function TaoPhieuSuaChuaPage() {
       const code = generateTicketCode();
       const parts = selectedServices.map((sId) => {
         const item = COMMON_SERVICES.find((s) => s.id === sId)!;
+        const note = serviceNotes[sId]?.trim();
+        const price = serviceCategory === 'bao_hanh' ? 0 : (servicePrices[sId] ?? 0);
         return {
-          part_name: item.name,
+          part_name: note ? `${item.name} (${note})` : item.name,
           quantity: 1,
-          price: item.price,
-          warranty_months: item.warrantyMonths,
+          price,
+          warranty_months: serviceWarranties[sId] ?? item.warrantyMonths,
         };
       });
 
@@ -522,52 +576,118 @@ export default function TaoPhieuSuaChuaPage() {
             </div>
           </div>
 
-          {/* Checklist Gói Dịch Vụ */}
+          {/* Checklist Gói Dịch Vụ & Linh Kiện Tổng Quát */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-slate-700">
                 {serviceCategory === 'bao_hanh'
-                  ? 'Linh kiện hoặc Dịch vụ bảo hành tiếp nhận:'
-                  : 'Linh kiện thay thế & Dịch vụ đi kèm:'}
+                  ? 'Hạng mục dịch vụ / linh kiện bảo hành tiếp nhận:'
+                  : 'Hạng mục dịch vụ & Linh kiện (cho phép tự nhập giá tiền theo nhu cầu khách):'}
               </span>
-              <span className="text-xs text-slate-400">Tick chọn để cộng dồn</span>
+              <span className="text-xs text-slate-400">Tick chọn để nhập giá tiền &amp; ghi chú</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {COMMON_SERVICES.map((s) => {
                 const isChecked = selectedServices.includes(s.id);
+                const currentPrice = servicePrices[s.id] ?? s.defaultPrice;
+                const currentNote = serviceNotes[s.id] ?? '';
+                const currentWarranty = serviceWarranties[s.id] ?? s.warrantyMonths;
+
                 return (
                   <div
                     key={s.id}
-                    onClick={() => toggleService(s.id)}
-                    className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                    className={`p-3.5 rounded-xl border transition-all ${
                       isChecked
-                        ? 'bg-blue-50/70 border-blue-300 shadow-xs'
+                        ? 'bg-blue-50/50 border-blue-300 shadow-xs'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className={`w-5 h-5 rounded border flex items-center justify-center text-xs font-bold font-mono transition-colors ${
-                        isChecked ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-transparent border-slate-300'
-                      }`}>
-                        ✓
-                      </span>
-                      <div>
-                        <div className="text-xs font-semibold text-slate-900">{s.name}</div>
-                        <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
-                          <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600">
-                            {s.category}
-                          </span>
-                          <span>•</span>
-                          <span className="text-emerald-700 font-medium">
-                            Bảo hành {s.warrantyMonths} tháng
-                          </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div
+                        onClick={() => toggleService(s.id)}
+                        className="flex items-start gap-3 cursor-pointer flex-1 select-none"
+                      >
+                        <span className={`w-5 h-5 mt-0.5 rounded border flex items-center justify-center text-xs font-bold font-mono transition-colors shrink-0 ${
+                          isChecked ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-transparent border-slate-300'
+                        }`}>
+                          ✓
+                        </span>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900">{s.name}</div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] text-slate-600 font-medium">
+                              {s.category}
+                            </span>
+                            <span>•</span>
+                            <span className="text-emerald-700 font-medium">
+                              Bảo hành {currentWarranty} tháng
+                            </span>
+                          </div>
                         </div>
                       </div>
+
+                      {/* Hiển thị / Nhập giá tiền */}
+                      <div className="text-right shrink-0">
+                        {serviceCategory === 'bao_hanh' ? (
+                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 font-bold text-xs rounded-lg border border-emerald-200 font-mono">
+                            Bảo Hành 0đ
+                          </span>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs text-slate-500 font-medium">Giá:</span>
+                            <input
+                              type="number"
+                              disabled={!isChecked}
+                              step={10000}
+                              min={0}
+                              value={currentPrice === 0 ? '' : currentPrice}
+                              onChange={(e) => handlePriceChange(s.id, Number(e.target.value))}
+                              placeholder="0"
+                              onClick={(e) => e.stopPropagation()}
+                              className={`w-28 px-2.5 py-1 text-xs text-right font-bold font-mono rounded-lg border focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                                isChecked
+                                  ? 'bg-white border-blue-300 text-blue-700'
+                                  : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                              }`}
+                            />
+                            <span className="text-xs text-slate-600 font-semibold font-mono">đ</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs font-bold text-slate-900 font-mono">
-                      {serviceCategory === 'bao_hanh' ? 'Bảo Hành 0đ' : `+${s.price.toLocaleString('vi-VN')} đ`}
-                    </div>
+
+                    {/* Chi tiết linh kiện & bảo hành khi được chọn */}
+                    {isChecked && (
+                      <div className="mt-2.5 pt-2 border-t border-blue-100/80 flex flex-col sm:flex-row sm:items-center gap-2.5">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={currentNote}
+                            onChange={(e) => handleNoteChange(s.id, e.target.value)}
+                            placeholder="Ghi chú chi tiết linh kiện / model nếu có (VD: SSD 500GB, RAM 8GB DDR4...)"
+                            className="w-full px-2.5 py-1 bg-white border border-slate-200 focus:border-blue-400 rounded-lg text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[11px] text-slate-500 whitespace-nowrap">BH riêng:</span>
+                          {[1, 3, 6, 12, 24, 36].map((m) => (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => handleWarrantyChange(s.id, m)}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-all ${
+                                currentWarranty === m
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+                              }`}
+                            >
+                              {m}T
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -594,38 +714,20 @@ export default function TaoPhieuSuaChuaPage() {
           </div>
         </div>
 
-        {/* Multi-tier Warranty Preview Card - WHITE & BLUE THEME */}
-        <div className="bg-gradient-to-br from-blue-50/90 to-indigo-50/70 text-slate-800 p-6 rounded-2xl shadow-xs border-2 border-blue-200">
-          <div className="flex items-center justify-between pb-4 border-b border-blue-200">
-            <div>
-              <span className="font-bold text-base text-slate-900">Cam Kết Bảo Hành Phân Tầng Điện Tử</span>
+        {/* Khối Tổng Chi Phí Ước Tính (Thay thế khối cam kết bảo hành phân tầng) */}
+        <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-sm border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              {serviceCategory === 'bao_hanh' ? 'Tổng phụ thu bảo hành ước tính' : 'Tổng chi phí ước tính (Dịch vụ & Linh kiện)'}
             </div>
-            <div className="text-right">
-              <div className="text-xs text-slate-500 font-medium">Tổng chi phí ước tính:</div>
-              <div className="text-2xl font-black text-blue-700 font-mono">
-                {totalCost.toLocaleString('vi-VN')} đ
-              </div>
+            <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+              <span>{selectedServices.length} hạng mục được chọn</span>
+              {customCost > 0 && <span>• Có phụ thu ngoài: {customCost.toLocaleString('vi-VN')} đ</span>}
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 text-xs">
-            <div className="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-xs">
-              <div className="text-emerald-700 font-bold mb-1">Tầng 1: Linh Kiện Mới (36T)</div>
-              <p className="text-slate-600 text-[11px] leading-relaxed">
-                Đổi mới 1-đổi-1 cho SSD/RAM/Nguồn nếu phát sinh lỗi phần cứng theo serial nhà sản xuất.
-              </p>
-            </div>
-            <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-xs">
-              <div className="text-blue-700 font-bold mb-1">Tầng 2: Keo TF7 &amp; Nhiệt Độ (30N)</div>
-              <p className="text-slate-600 text-[11px] leading-relaxed">
-                Bảo hành nhiệt độ CPU dưới 70°C khi làm việc văn phòng, miễn phí vệ sinh lại nếu quạt kêu.
-              </p>
-            </div>
-            <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs">
-              <div className="text-purple-700 font-bold mb-1">Tầng 3: Cài Đặt Hệ Thống (30N)</div>
-              <p className="text-slate-600 text-[11px] leading-relaxed">
-                Hỗ trợ UltraViewer / Anydesk từ xa miễn phí lỗi font chữ, máy in, mạng nội bộ.
-              </p>
+          <div className="text-right">
+            <div className="text-3xl font-black text-emerald-400 font-mono tracking-tight">
+              {totalCost.toLocaleString('vi-VN')} đ
             </div>
           </div>
         </div>
