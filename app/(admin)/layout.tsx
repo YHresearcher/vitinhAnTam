@@ -7,7 +7,6 @@ import { Search, Plus, KeyRound, Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
-import { PendingSaleWidget } from '@/components/admin/PendingSaleWidget';
 import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
 import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -335,9 +334,6 @@ export default function AdminLayout({
 
       {/* NEW ORDER NOTIFICATION WIDGET (Đơn hàng mới từ website — sales/admin/ktv xác nhận) */}
       <NewOrderNotificationWidget />
-
-      {/* PENDING SALE WIDGET (Máy đợi bán do khách đặt hàng — nhận tại kho / giao hàng) */}
-      <PendingSaleWidget />
 
       {/* ADMIN KEY RELEASE POPUP (Thông báo & duyệt cấp key thời gian thực) */}
       <AdminKeyReleasePopup />

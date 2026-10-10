@@ -5,11 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   InventoryItem,
-  SoftwareLicense,
-  SoftwareKeyItem,
   generateCustomerCode,
-  KeyCategory,
-  KeyEmailTemplateConfig,
+  SparePart,
 } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import { SoldInventoryTab } from '@/components/admin/SoldInventoryTab';
@@ -27,12 +24,6 @@ export default function KhoMayPage() {
     addSparePart,
     updateSparePart,
     deleteSparePart,
-    softwareLicenses,
-    addSoftwareLicense,
-    addSoftwareKeys,
-    assignSoftwareKey,
-    updateSoftwareKeyStatus,
-    deleteSoftwareKey,
     currentUser,
     canEditStock,
     canUpdateRepairStatus,
@@ -44,21 +35,12 @@ export default function KhoMayPage() {
     cancelReservationItem,
     canSellAndEditWarranty,
     sellInventoryItem,
+    sellSparePart,
     customers,
-    // Windows & Office Key Management (Requirements I & II)
-    keyCategories,
-    licenseKeys,
-    keyEmailTemplate,
-    addKeyCategory,
-    deleteKeyCategory,
-    addLicenseKey,
-    addBatchLicenseKeys,
-    deleteLicenseKey,
-    updateKeyEmailTemplate,
   } = useStore();
 
-  // Navigation tab state: Máy tính, Máy đã bán, Linh kiện, Phần mềm bản quyền
-  const [activeTab, setActiveTab] = useState<'machines' | 'sold' | 'components' | 'software'>('machines');
+  // Navigation tab state: Máy bộ, Laptop, Linh kiện, Máy đã bán
+  const [activeTab, setActiveTab] = useState<'may-bo' | 'laptop' | 'components' | 'sold'>('may-bo');
 
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
@@ -97,223 +79,18 @@ export default function KhoMayPage() {
     notes: 'Mới 100% nguyên seal',
   });
 
-  // Filter & Search states - Software (Phần mềm)
-  const [isAddSoftwareModalOpen, setIsAddSoftwareModalOpen] = useState(false);
-  const [newSoftware, setNewSoftware] = useState({
-    software_name: '',
-    software_type: 'os',
-    license_type: 'oem',
-    quantity_in_stock: 10,
-    unit_cost: 350000,
-    unit_price: 550000,
-    duration_months: 0,
-    distributor: 'Microsoft Partner / Phân phối chính hãng',
-    notes: 'Key kích hoạt kỹ thuật số chính hãng',
-    initial_keys_raw: '',
-  });
-
-  // Key Pool Management States
-  const [selectedSoftwareForKeys, setSelectedSoftwareForKeys] = useState<SoftwareLicense | null>(null);
-  const [keySearchQuery, setKeySearchQuery] = useState('');
-  const [keyStatusFilter, setKeyStatusFilter] = useState<'all' | 'available' | 'used' | 'revoked'>('all');
-  const [batchKeysInput, setBatchKeysInput] = useState('');
-  const [batchKeysNotes, setBatchKeysNotes] = useState('');
-  const [copiedKeyId, setCopiedKeyId] = useState<string | null>(null);
-  const [assigningKeyTarget, setAssigningKeyTarget] = useState<{ softwareId: string; key: SoftwareKeyItem } | null>(null);
-  const [assignCustomerName, setAssignCustomerName] = useState('');
-  const [assignTicketCode, setAssignTicketCode] = useState('');
-  const [assignNotes, setAssignNotes] = useState('');
-
-  // =========================================================================
-  // KEY WINDOWS & OFFICE STATES & ACTIONS (YÊU CẦU I & II)
-  // =========================================================================
-  const [isAddKeyModalOpen, setIsAddKeyModalOpen] = useState(false);
-  const [isManageCatModalOpen, setIsManageCatModalOpen] = useState(false);
-  const [isEmailTemplateModalOpen, setIsEmailTemplateModalOpen] = useState(false);
-
-  // Form states: Thêm Key Bản Quyền
-  const [keyPresetSelect, setKeyPresetSelect] = useState<string>('WINDOWS 11 PROFESSIONAL');
-  const [keyCustomOthersName, setKeyCustomOthersName] = useState<string>('');
-  const [keyDescriptionInput, setKeyDescriptionInput] = useState<string>(
-    'Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác'
-  );
-  const [keyInputMode, setKeyInputMode] = useState<'batch' | 'single'>('batch');
-  const [keySingleInput, setKeySingleInput] = useState<string>('');
-  const [keyBatchInput, setKeyBatchInput] = useState<string>('');
-  const [keyUnitPriceInput, setKeyUnitPriceInput] = useState<number>(350000);
-  const [keyImportPriceInput, setKeyImportPriceInput] = useState<number>(0);
-  const [copiedKeyCode, setCopiedKeyCode] = useState<string | null>(null);
-
-  // Filter states
-  const [keyCategoryFilter, setKeyCategoryFilter] = useState<string>('all');
-  const [keyStatusFilterTab, setKeyStatusFilterTab] = useState<string>('all');
-  const [keySearchFilter, setKeySearchFilter] = useState<string>('');
-  const [hideZeroStockKeys, setHideZeroStockKeys] = useState<boolean>(true); // Dữ liệu nếu = 0 thì không hiển thị
-
-  // Email template config state — suy ra từ store, state chỉ ghi đè khi user sửa form
-  const [emailFormOverride, setEmailFormOverride] = useState<KeyEmailTemplateConfig | null>(null);
-  const emailFormConfig = emailFormOverride ?? keyEmailTemplate;
-  const setEmailFormConfig = (next: KeyEmailTemplateConfig) => setEmailFormOverride(next);
-  const [isSavingEmailConfig, setIsSavingEmailConfig] = useState(false);
-
-  // Kiểm tra trùng khớp CSDL khi Admin chọn hoặc gõ mục "Others"
-  const matchedExistingCat = useMemo(() => {
-    if (keyPresetSelect !== 'others' || !keyCustomOthersName.trim()) return null;
-    return (keyCategories || []).find(
-      (c) => c.name.trim().toLowerCase() === keyCustomOthersName.trim().toLowerCase()
-    );
-  }, [keyPresetSelect, keyCustomOthersName, keyCategories]);
-
-  // Handler khi đổi Dropdown phân loại
-  const handleKeyPresetChange = (val: string) => {
-    setKeyPresetSelect(val);
-    if (val === 'WINDOWS 11 PROFESSIONAL') {
-      setKeyDescriptionInput('Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác');
-      setKeyUnitPriceInput(350000);
-    } else if (val === 'WINDOWS 11 HOME') {
-      setKeyDescriptionInput('Bản quyền trọn đời cho máy tính cá nhân gia đình, hỗ trợ nâng cấp');
-      setKeyUnitPriceInput(290000);
-    } else if (val === 'OFFICE PRO PLUS 2021') {
-      setKeyDescriptionInput('Trọn bộ Word, Excel, PowerPoint, Outlook dùng vĩnh viễn không gia hạn hàng tháng');
-      setKeyUnitPriceInput(490000);
-    } else if (val === 'others') {
-      setKeyDescriptionInput('Key bản quyền số chính hãng, kích hoạt trực tuyến ổn định');
-      setKeyUnitPriceInput(350000);
-    } else {
-      const found = (keyCategories || []).find((c) => c.name === val);
-      if (found) {
-        setKeyDescriptionInput(found.description || 'Key bản quyền chính hãng');
-        const existingKey = (licenseKeys || []).find((k) => k.category_id === found.id);
-        if (existingKey?.unit_price) {
-          setKeyUnitPriceInput(existingKey.unit_price);
-        }
-        if (typeof existingKey?.import_price === 'number') {
-          setKeyImportPriceInput(existingKey.import_price);
-        }
-      }
-    }
+  // Helper tính ngày hết hạn bảo hành từ ngày bán
+  const calculateWarrantyEndDate = (startDateStr: string, months: number): string => {
+    if (!startDateStr) return '';
+    const d = new Date(startDateStr);
+    if (isNaN(d.getTime())) return '';
+    d.setMonth(d.getMonth() + months);
+    return d.toLocaleDateString('vi-VN');
   };
 
-  // Submit Handler: Thêm Key Bản Quyền (với kiểm tra CSDL và Merge dữ liệu)
-  const handleAddKeysSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canEditStock()) {
-      alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền nhập key!');
-      return;
-    }
 
-    let targetCat: KeyCategory | undefined;
 
-    if (keyPresetSelect === 'others') {
-      const cleanName = keyCustomOthersName.trim();
-      if (!cleanName) {
-        alert('Vui lòng nhập tên phân loại trong mục "Others"!');
-        return;
-      }
 
-      // Kiểm tra CSDL: Nếu trùng khớp -> merge; nếu mới -> lưu vào CSDL & ghi nhận dropdown
-      targetCat = await addKeyCategory({
-        name: cleanName,
-        type: 'others',
-        description: keyDescriptionInput.trim() || 'Key bản quyền chính hãng',
-      });
-    } else {
-      targetCat = (keyCategories || []).find(
-        (c) => c.name.trim().toLowerCase() === keyPresetSelect.trim().toLowerCase()
-      );
-      if (!targetCat) {
-        targetCat = await addKeyCategory({
-          name: keyPresetSelect,
-          type: keyPresetSelect.toLowerCase().includes('windows') ? 'windows' : 'office',
-          description: keyDescriptionInput.trim(),
-        });
-      }
-    }
-
-    if (!targetCat) {
-      alert('Không xác định được phân loại key!');
-      return;
-    }
-
-    // Nhập key
-    if (keyInputMode === 'single') {
-      if (!keySingleInput.trim()) {
-        alert('Vui lòng nhập mã key!');
-        return;
-      }
-      await addLicenseKey({
-        category_id: targetCat.id,
-        category_name: targetCat.name,
-        license_code: keySingleInput.trim(),
-        status: 'available',
-        import_price: keyImportPriceInput,
-        unit_price: keyUnitPriceInput,
-      });
-      setActionNotice(`Đã thêm 1 key cho phân loại [${targetCat.name}] vào kho!`);
-      setKeySingleInput('');
-    } else {
-      if (!keyBatchInput.trim()) {
-        alert('Vui lòng nhập ít nhất 1 mã key!');
-        return;
-      }
-      const res = await addBatchLicenseKeys(
-        targetCat.id,
-        targetCat.name,
-        keyBatchInput,
-        keyUnitPriceInput,
-        keyImportPriceInput
-      );
-      setActionNotice(`Đã thêm ${res.addedCount} key cho phân loại [${targetCat.name}] vào kho!`);
-      setKeyBatchInput('');
-    }
-
-    setTimeout(() => setActionNotice(null), 3500);
-    setIsAddKeyModalOpen(false);
-  };
-
-  // Submit Handler: Xóa phân loại (Chỉ xóa được loại thuộc 'others')
-  const handleDeleteCategory = async (cat: KeyCategory) => {
-    if (cat.is_default || cat.type !== 'others') {
-      alert('Quy định hệ thống: Không thể xóa các phân loại mặc định hoặc phân loại không thuộc nhóm "Others"!');
-      return;
-    }
-    const count = (licenseKeys || []).filter((k) => k.category_id === cat.id).length;
-    if (
-      !confirm(
-        `Bạn có chắc chắn muốn xóa phân loại "${cat.name}" khỏi CSDL? (Hiện có ${count} key đang thuộc phân loại này)`
-      )
-    ) {
-      return;
-    }
-    const res = await deleteKeyCategory(cat.id);
-    if (res.success) {
-      setActionNotice(res.message);
-      setTimeout(() => setActionNotice(null), 3000);
-    } else {
-      alert(res.message);
-    }
-  };
-
-  // Submit Handler: Lưu cấu hình email gửi key
-  const handleSaveEmailConfig = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingEmailConfig(true);
-    await updateKeyEmailTemplate(emailFormConfig);
-    // Gỡ bản ghi đè để form quay về làm việc trên dữ liệu của store
-    setEmailFormOverride(null);
-    setIsSavingEmailConfig(false);
-    setIsEmailTemplateModalOpen(false);
-    setActionNotice('Đã cập nhật mẫu email gửi key cho khách hàng thành công!');
-    setTimeout(() => setActionNotice(null), 3500);
-  };
-
-  const copyKeyText = (code: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(code);
-      setCopiedKeyCode(code);
-      setTimeout(() => setCopiedKeyCode(null), 2000);
-    }
-  };
 
 
   // Modal states - Machines
@@ -325,7 +102,7 @@ export default function KhoMayPage() {
   const [tempStockValue, setTempStockValue] = useState<number>(1);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
-  // Sales & Handover Modal States (Admin & Sales)
+  // Sales & Handover Modal States - Máy tính (Admin & Sales)
   const [sellingItem, setSellingItem] = useState<InventoryItem | null>(null);
   const [sellCustomerName, setSellCustomerName] = useState('');
   const [sellCustomerBirthDate, setSellCustomerBirthDate] = useState('1992-05-15');
@@ -334,6 +111,17 @@ export default function KhoMayPage() {
   const [sellSerialNumber, setSellSerialNumber] = useState('');
   const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(12);
   const [sellPrice, setSellPrice] = useState<number>(0);
+  const [sellDate, setSellDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Sales Modal States - Linh Kiện (Admin & Sales)
+  const [sellingPart, setSellingPart] = useState<SparePart | null>(null);
+  const [sellPartCustomerName, setSellPartCustomerName] = useState('');
+  const [sellPartCustomerPhone, setSellPartCustomerPhone] = useState('0918234891');
+  const [sellPartCustomerAddress, setSellPartCustomerAddress] = useState('Long An - Tây Ninh');
+  const [sellPartQuantity, setSellPartQuantity] = useState<number>(1);
+  const [sellPartWarrantyMonths, setSellPartWarrantyMonths] = useState<number>(12);
+  const [sellPartPrice, setSellPartPrice] = useState<number>(0);
+  const [sellPartDate, setSellPartDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const existingCustomerCodes = customers
     .map((c) => c.customer_code)
@@ -356,8 +144,11 @@ export default function KhoMayPage() {
     setSellCustomerPhone(item.customer_phone || '0918234891');
     setSellCustomerAddress('Long An - Tây Ninh');
     setSellSerialNumber(item.serial_number || `SN-${item.service_tag}-2025`);
-    setSellWarrantyMonths(item.warranty_months || 12);
+    const validMonths = [3, 6, 12, 36];
+    const initialWarranty = validMonths.includes(item.warranty_months || 0) ? (item.warranty_months as number) : 12;
+    setSellWarrantyMonths(initialWarranty);
     setSellPrice(item.price ?? item.retail_price ?? 0);
+    setSellDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleConfirmSale = async (e: React.FormEvent) => {
@@ -378,11 +169,62 @@ export default function KhoMayPage() {
       serialNumber: sellSerialNumber,
       warrantyMonths: sellWarrantyMonths,
       soldPrice: sellPrice,
+      saleDate: sellDate,
     });
 
     if (res.success) {
       setActionNotice(res.message);
       setSellingItem(null);
+      setTimeout(() => setActionNotice(null), 4000);
+    } else {
+      setActionNotice(res.message);
+      setTimeout(() => setActionNotice(null), 4000);
+    }
+  };
+
+  // Mở modal bán linh kiện
+  const handleOpenSellPartModal = (part: SparePart) => {
+    if (!canSellAndEditWarranty()) {
+      setActionNotice('Chỉ Quản trị viên và Nhân viên bán hàng mới có quyền xuất bán!');
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+    setSellingPart(part);
+    setSellPartCustomerName('');
+    setSellPartCustomerPhone('0918234891');
+    setSellPartCustomerAddress('Long An - Tây Ninh');
+    setSellPartQuantity(1);
+    const validMonths = [3, 6, 12, 36];
+    const partWarranty = validMonths.includes(part.warranty_months || 0) ? (part.warranty_months as number) : 36;
+    setSellPartWarrantyMonths(partWarranty);
+    setSellPartPrice(part.unit_price || 0);
+    setSellPartDate(new Date().toISOString().split('T')[0]);
+  };
+
+  // Xác nhận bán linh kiện
+  const handleConfirmPartSale = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sellingPart) return;
+    if (!sellPartCustomerName.trim() || !sellPartCustomerPhone.trim()) {
+      setActionNotice('Vui lòng nhập họ tên và số điện thoại khách hàng!');
+      setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+
+    const res = await sellSparePart({
+      partId: sellingPart.id,
+      customerName: sellPartCustomerName,
+      customerPhone: sellPartCustomerPhone,
+      customerAddress: sellPartCustomerAddress,
+      quantity: sellPartQuantity,
+      warrantyMonths: sellPartWarrantyMonths,
+      soldPrice: sellPartPrice,
+      saleDate: sellPartDate,
+    });
+
+    if (res.success) {
+      setActionNotice(res.message);
+      setSellingPart(null);
       setTimeout(() => setActionNotice(null), 4000);
     } else {
       setActionNotice(res.message);
@@ -459,9 +301,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const nowTimestamp = useMemo(() => Date.now(), []);
 
-  // Filtered inventory - Machines
+  // Filtered inventory - Machines (Máy bộ vs Laptop)
   const filteredInventory = useMemo(() => {
     return inventory.filter((item) => {
+      // Phân tách Máy Bộ vs Laptop
+      const isLaptop =
+        (item.form_factor || '').toLowerCase() === 'laptop' ||
+        (item.model || '').toLowerCase().includes('laptop') ||
+        (item.device_model || '').toLowerCase().includes('laptop');
+
+      if (activeTab === 'may-bo' && isLaptop) return false;
+      if (activeTab === 'laptop' && !isLaptop) return false;
+
       const model = item.model || item.device_model || '';
       const matchesSearch =
         item.service_tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -486,7 +337,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
       return matchesSearch && matchesBrand && matchesStatus;
     });
-  }, [inventory, searchQuery, selectedBrand, selectedStatus, nowTimestamp]);
+  }, [inventory, activeTab, searchQuery, selectedBrand, selectedStatus, nowTimestamp]);
 
   // Filtered Spare Parts - Linh kiện
   const filteredSpareParts = useMemo(() => {
@@ -507,11 +358,28 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     });
   }, [spareParts, partSearchQuery, partConditionFilter, partTypeFilter]);
 
-  // Statistics (Updated: "SSD Chuẩn Cao" đổi thành "Linh Kiện" mới/cũ, bổ sung Phần Mềm)
+  // Statistics
   const stats = useMemo(() => {
     const total = inventory.reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
     const ready = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
     const testing = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
+
+    // Phân loại Máy Bộ vs Laptop
+    const mayBoTotal = inventory.filter((i) => {
+      const isLaptop =
+        (i.form_factor || '').toLowerCase() === 'laptop' ||
+        (i.model || '').toLowerCase().includes('laptop') ||
+        (i.device_model || '').toLowerCase().includes('laptop');
+      return !isLaptop && i.qc_status !== 'sold';
+    }).reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
+
+    const laptopTotal = inventory.filter((i) => {
+      const isLaptop =
+        (i.form_factor || '').toLowerCase() === 'laptop' ||
+        (i.model || '').toLowerCase().includes('laptop') ||
+        (i.device_model || '').toLowerCase().includes('laptop');
+      return isLaptop && i.qc_status !== 'sold';
+    }).reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
 
     // Linh kiện (Mới & Cũ bóc máy)
     const componentsTotal = spareParts.reduce((acc, p) => acc + (p.quantity_in_stock || 0), 0);
@@ -521,14 +389,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     const componentsUsed = spareParts
       .filter((p) => p.condition === 'used')
       .reduce((acc, p) => acc + (p.quantity_in_stock || 0), 0);
-
-    // Phần mềm bản quyền & Key Pool (Windows/Office)
-    const softwareTotal = softwareLicenses.reduce((acc, s) => acc + (s.quantity_in_stock || 0), 0);
-    const softwareCount = softwareLicenses.length;
-    const keysAvailable = (licenseKeys || []).filter((k) => k.status === 'available').length;
-    const keysUsed = (licenseKeys || []).filter((k) => k.status === 'used' || k.status === 'assigned').length;
-    const keysFaulty = (licenseKeys || []).filter((k) => k.status === 'faulty').length;
-    const keysTotal = (licenseKeys || []).length;
 
     // Thiết bị cảnh báo tồn kho lâu (Aging Warning: 50-55d Yellow, 56-60d+ Red)
     const agingYellow = inventory.filter((i) => {
@@ -545,6 +405,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
     return {
       total,
+      mayBoTotal,
+      laptopTotal,
       ready,
       reserved,
       testing,
@@ -555,14 +417,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       componentsTotal,
       componentsNew,
       componentsUsed,
-      softwareTotal,
-      softwareCount,
-      keysAvailable,
-      keysUsed,
-      keysFaulty,
-      keysTotal,
     };
-  }, [inventory, spareParts, softwareLicenses, licenseKeys]);
+  }, [inventory, spareParts, nowTimestamp]);
 
   // Helper tính toán thời gian bảo hành thời gian thực
   const getRealtimeWarrantyStatus = (handoverDateStr?: string, warrantyMonths: number = 12) => {
@@ -625,34 +481,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     return inventory.filter((item) => item.qc_status === 'sold' || Boolean(item.handover_date));
   }, [inventory]);
 
-  // Phân loại key hiển thị (Dữ liệu nếu = 0 thì không hiển thị)
-  const visibleKeyCategories = useMemo(() => {
-    return (keyCategories || []).filter((cat) => {
-      const availableCount = (licenseKeys || []).filter(
-        (k) => k.category_id === cat.id && k.status === 'available'
-      ).length;
-      if (hideZeroStockKeys && availableCount === 0) return false;
-      return true;
-    });
-  }, [keyCategories, licenseKeys, hideZeroStockKeys]);
 
-  // Danh sách Key bản quyền đã lọc
-  const filteredLicenseKeys = useMemo(() => {
-    return (licenseKeys || []).filter((k) => {
-      if (keyCategoryFilter !== 'all' && k.category_id !== keyCategoryFilter) return false;
-      if (keyStatusFilterTab !== 'all' && k.status !== keyStatusFilterTab) return false;
-      if (keySearchFilter.trim()) {
-        const q = keySearchFilter.trim().toLowerCase();
-        const matchCode = k.license_code.toLowerCase().includes(q);
-        const matchCat = (k.category_name || '').toLowerCase().includes(q);
-        const matchCustomer =
-          (k.customer_name || '').toLowerCase().includes(q) ||
-          (k.assigned_to_customer || '').toLowerCase().includes(q);
-        if (!matchCode && !matchCat && !matchCustomer) return false;
-      }
-      return true;
-    });
-  }, [licenseKeys, keyCategoryFilter, keyStatusFilterTab, keySearchFilter]);
 
   const handleOpenLabelModal = (item: InventoryItem) => {
     setSelectedItemForLabel(item);
@@ -797,73 +626,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     }
   };
 
-  // Handlers for Software (Phần mềm & Bản quyền số)
-  const handleCreateNewSoftware = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newSoftware.software_name.trim()) {
-      alert('Vui lòng nhập tên phần mềm / gói bản quyền!');
-      return;
-    }
 
-    try {
-      const rawKeys = newSoftware.initial_keys_raw
-        ? newSoftware.initial_keys_raw
-            .split('\n')
-            .map((k) => k.trim())
-            .filter((k) => k.length > 0)
-        : [];
-
-      const initialKeyItems: SoftwareKeyItem[] = rawKeys.map((k, idx) => ({
-        id: `key-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
-        key_code: k,
-        status: 'available',
-        notes: newSoftware.notes || undefined,
-      }));
-
-      const finalQuantity = initialKeyItems.length > 0 ? initialKeyItems.length : Number(newSoftware.quantity_in_stock);
-
-      await addSoftwareLicense({
-        software_name: newSoftware.software_name.trim(),
-        software_type: newSoftware.software_type,
-        license_type: newSoftware.license_type,
-        quantity_in_stock: finalQuantity,
-        unit_cost: Number(newSoftware.unit_cost),
-        unit_price: Number(newSoftware.unit_price),
-        duration_months: Number(newSoftware.duration_months),
-        distributor: newSoftware.distributor,
-        notes: newSoftware.notes,
-        license_keys: initialKeyItems.length > 0 ? initialKeyItems : undefined,
-      });
-
-      setIsAddSoftwareModalOpen(false);
-      setActionNotice(
-        `Đã thêm phần mềm [${newSoftware.software_name}] với ${
-          initialKeyItems.length > 0 ? `${initialKeyItems.length} key` : 'số lượng'
-        } vào kho!`
-      );
-      setTimeout(() => setActionNotice(null), 3000);
-
-      // Reset form
-      setNewSoftware({
-        software_name: '',
-        software_type: 'os',
-        license_type: 'oem',
-        quantity_in_stock: 10,
-        unit_cost: 350000,
-        unit_price: 550000,
-        duration_months: 0,
-        distributor: 'Microsoft Partner / Phân phối chính hãng',
-        notes: 'Key kích hoạt kỹ thuật số chính hãng',
-        initial_keys_raw: '',
-      });
-    } catch (err: unknown) {
-      alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm phần mềm'));
-    }
-  };
 
   // Export CSV (Excel)
   const handleExportCSV = () => {
-    if (activeTab === 'machines') {
+    if (activeTab === 'may-bo' || activeTab === 'laptop') {
       if (filteredInventory.length === 0) return;
       const headers = ['Mã Quản Lý', 'Model Thiết Bị', 'Số Serial', 'CPU', 'RAM', 'Ổ Cứng', 'Trạng Thái', 'Giá Bán', 'Bảo Hành', 'Ghi Chú'];
       const rows = filteredInventory.map((item) => [
@@ -883,7 +650,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `danh_sach_kho_may_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', `danh_sach_${activeTab === 'may-bo' ? 'may_bo' : 'laptop'}_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -907,24 +674,24 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } else {
-      if (filteredLicenseKeys.length === 0) return;
-      const headers = ['Mã Key', 'Phân Loại', 'Trạng Thái', 'Đơn Giá', 'Khách Hàng Nhận', 'Ngày Cấp', 'Ghi Chú'];
-      const rows = filteredLicenseKeys.map((k) => [
-        `"${k.license_code.replace(/"/g, '""')}"`,
-        `"${(k.category_name || '').replace(/"/g, '""')}"`,
-        `"${k.status === 'available' ? 'Sẵn sàng' : k.status === 'used' ? 'Đã sử dụng' : k.status === 'assigned' ? 'Đã cấp' : 'Lỗi'}"`,
-        k.unit_price || 0,
-        `"${(k.assigned_to_customer || k.customer_name || '').replace(/"/g, '""')}"`,
-        `"${(k.assigned_at || '').slice(0, 10)}"`,
-        `"${(k.notes || '').replace(/"/g, '""')}"`,
+    } else if (activeTab === 'sold') {
+      if (soldMachines.length === 0) return;
+      const headers = ['Mã Quản Lý', 'Model Thiết Bị', 'Khách Hàng', 'SĐT', 'Ngày Bán', 'Bảo Hành', 'Số Serial'];
+      const rows = soldMachines.map((m) => [
+        `"${m.service_tag || ''}"`,
+        `"${(m.device_model || m.model || '').replace(/"/g, '""')}"`,
+        `"${(m.customer_name || '').replace(/"/g, '""')}"`,
+        `"${m.customer_phone || ''}"`,
+        `"${(m.handover_date || '').slice(0, 10)}"`,
+        `"${m.warranty_months || 0} tháng"`,
+        `"${m.serial_number || ''}"`,
       ]);
       const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `danh_sach_key_ban_quyen_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.setAttribute('download', `danh_sach_may_da_ban_${new Date().toISOString().slice(0, 10)}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -945,15 +712,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            {activeTab === 'machines' && 'Kho Máy Bộ'}
+            {activeTab === 'may-bo' && 'Kho Máy Bộ'}
+            {activeTab === 'laptop' && 'Kho Laptop'}
             {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
-            {activeTab === 'software' && 'Kho Phần Mềm'}
             <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
-              {activeTab === 'machines' && `${stats.ready + stats.testing} máy`}
+              {activeTab === 'may-bo' && `${stats.mayBoTotal} máy bộ`}
+              {activeTab === 'laptop' && `${stats.laptopTotal} laptop`}
               {activeTab === 'sold' && `${stats.sold} máy đã bán`}
               {activeTab === 'components' && `${spareParts.length} mục`}
-              {activeTab === 'software' && `${softwareLicenses.length} mục`}
             </span>
           </h1>
         </div>
@@ -966,7 +733,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           >
             Xuất Excel (CSV)
           </button>
-          {activeTab === 'machines' && canEditStock() && (
+          {(activeTab === 'may-bo' || activeTab === 'laptop') && canEditStock() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
@@ -982,68 +749,40 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               + Thêm linh kiện
             </button>
           )}
-          {activeTab === 'software' && canEditStock() && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsAddKeyModalOpen(true)}
-                className="inline-flex items-center justify-center px-3.5 py-2 bg-[#C0392B] hover:bg-[#A93226] text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
-              >
-                + Nhập key bản quyền
-              </button>
-              <button
-                onClick={() => setIsManageCatModalOpen(true)}
-                className="inline-flex items-center justify-center px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap shrink-0"
-              >
-                Phân loại key
-              </button>
-              <button
-                onClick={() => setIsEmailTemplateModalOpen(true)}
-                className="inline-flex items-center justify-center px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap shrink-0"
-              >
-                Mẫu email gửi khách
-              </button>
-              <Link
-                href="/quan-ly-key"
-                className="inline-flex items-center justify-center px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-all whitespace-nowrap shrink-0"
-              >
-                Duyệt cấp key →
-              </Link>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Category Tabs: Machines, Sold, Components, Software */}
+      {/* Category Tabs: Máy bộ, Laptop, Linh kiện, Máy đã bán */}
       <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
         <button
-          onClick={() => setActiveTab('machines')}
+          onClick={() => setActiveTab('may-bo')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'machines'
+            activeTab === 'may-bo'
               ? 'bg-white text-blue-700 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           <span>Máy bộ tồn kho</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
-            activeTab === 'machines' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
+            activeTab === 'may-bo' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.ready + stats.testing}
+            {stats.mayBoTotal}
           </span>
         </button>
 
         <button
-          onClick={() => setActiveTab('sold')}
+          onClick={() => setActiveTab('laptop')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'sold'
-              ? 'bg-white text-purple-700 shadow-xs'
+            activeTab === 'laptop'
+              ? 'bg-white text-indigo-700 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Máy đã bán</span>
+          <span>Laptop tồn kho</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
-            activeTab === 'sold' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
+            activeTab === 'laptop' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.sold}
+            {stats.laptopTotal}
           </span>
         </button>
 
@@ -1055,7 +794,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Linh kiện</span>
+          <span>Kho linh kiện</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'components' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
           }`}>
@@ -1064,18 +803,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </button>
 
         <button
-          onClick={() => setActiveTab('software')}
+          onClick={() => setActiveTab('sold')}
           className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'software'
-              ? 'bg-white text-[#C0392B] shadow-xs'
+            activeTab === 'sold'
+              ? 'bg-white text-purple-700 shadow-xs'
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Key Win &amp; Office</span>
+          <span>Máy đã bán &amp; BH</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
-            activeTab === 'software' ? 'bg-[#FBE8DE] text-[#C0392B]' : 'bg-slate-200 text-slate-700'
+            activeTab === 'sold' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700'
           }`}>
-            {stats.keysAvailable} sẵn
+            {stats.sold}
           </span>
         </button>
       </div>
@@ -1087,11 +826,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-      {/* KPI Stats Grid (Compact) - Clean Typography, No Empty Icon Boxes */}
+      {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-[11px] text-slate-500 truncate">Máy Tồn Kho</div>
-          <div className="text-base font-bold text-slate-900 font-mono mt-0.5">{stats.total} máy</div>
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
+          activeTab === 'may-bo' ? 'bg-blue-50/50 border-blue-300' : 'bg-white border-slate-200'
+        }`}>
+          <div className="text-[11px] text-slate-500 truncate">Máy Bộ Tồn Kho</div>
+          <div className="text-base font-bold text-blue-800 font-mono mt-0.5">{stats.mayBoTotal} máy</div>
+        </div>
+
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
+          activeTab === 'laptop' ? 'bg-indigo-50/50 border-indigo-300' : 'bg-white border-slate-200'
+        }`}>
+          <div className="text-[11px] text-slate-500 truncate">Laptop Tồn Kho</div>
+          <div className="text-base font-bold text-indigo-800 font-mono mt-0.5">{stats.laptopTotal} máy</div>
         </div>
 
         <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
@@ -1107,28 +855,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
         }`}>
-          <div className="text-[11px] text-slate-500 truncate">Linh Kiện</div>
+          <div className="text-[11px] text-slate-500 truncate">Linh Kiện Tồn Kho</div>
           <div className="text-base font-bold text-emerald-800 font-mono mt-0.5">{stats.componentsTotal} món</div>
           <div className="text-[10px] text-slate-500 font-medium">
             Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
           </div>
         </div>
-
-        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
-          activeTab === 'software' ? 'bg-[#FBE8DE]/50 border-[#C0392B]' : 'bg-white border-slate-200'
-        }`}>
-          <div className="text-[11px] text-slate-500 truncate">Key Windows &amp; Office</div>
-          <div className="text-base font-bold text-[#C0392B] font-mono mt-0.5">{stats.keysAvailable} sẵn sàng</div>
-          <div className="text-[10px] text-slate-500 font-medium">
-            {stats.keysUsed} đã cấp • {stats.keysFaulty} lỗi
-          </div>
-        </div>
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: MÁY TÍNH & THIẾT BỊ ĐỒNG BỘ */}
+      {/* TAB 1: MÁY TÍNH & LAPTOP */}
       {/* ========================================================================= */}
-      {activeTab === 'machines' && (
+      {(activeTab === 'may-bo' || activeTab === 'laptop') && (
         <>
           {/* Search & Filter Toolbar */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -1761,349 +1499,27 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                           {/* Actions */}
                           <td className="py-3.5 px-4 text-center">
-                            {canEditStock() && (
-                              <button
-                                onClick={() => handleDeletePart(part.id, part.part_name)}
-                                title="Xóa linh kiện (Chỉ Admin)"
-                                className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
-                              >
-                                Xóa
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ========================================================================= */}
-      {/* ========================================================================= */}
-      {/* TAB 3: KHO KEY WINDOWS & OFFICE (BẢN QUYỀN SỐ) */}
-      {/* ========================================================================= */}
-      {activeTab === 'software' && (
-        <>
-          {/* Search & Filter Toolbar - Key Windows & Office */}
-          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-              {/* Search box */}
-              <div className="relative w-full md:w-80">
-                <input
-                  type="text"
-                  value={keySearchFilter}
-                  onChange={(e) => setKeySearchFilter(e.target.value)}
-                  placeholder="Tìm mã key, phiên bản, khách hàng..."
-                  className="w-full px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:bg-white"
-                />
-                {keySearchFilter && (
-                  <button
-                    onClick={() => setKeySearchFilter('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold"
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Status Filter Pills */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg overflow-x-auto w-full md:w-auto">
-                {[
-                  { id: 'all', label: 'Tất cả' },
-                  { id: 'available', label: 'Sẵn sàng' },
-                  { id: 'assigned', label: 'Đang cấp' },
-                  { id: 'used', label: 'Đã kích hoạt' },
-                  { id: 'faulty', label: 'Lỗi kỹ thuật' },
-                ].map((st) => (
-                  <button
-                    key={st.id}
-                    onClick={() => setKeyStatusFilterTab(st.id)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors whitespace-nowrap ${
-                      keyStatusFilterTab === st.id
-                        ? 'bg-white text-[#C0392B] shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    {st.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Zero Stock Rule Toggle: Dữ liệu nếu = 0 thì không hiển thị */}
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 shrink-0">
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={hideZeroStockKeys}
-                    onChange={(e) => setHideZeroStockKeys(e.target.checked)}
-                    className="w-4 h-4 rounded text-[#C0392B] focus:ring-[#C0392B]"
-                  />
-                  <span>Ẩn phân loại hết key (= 0)</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Category Filter Pills (Dynamically loaded, hides if stock = 0 when toggle is ON) */}
-            <div className="flex items-center gap-2 pt-2 border-t border-slate-100 text-xs overflow-x-auto">
-              <span className="text-slate-400 font-medium shrink-0">Phân loại:</span>
-              <button
-                onClick={() => setKeyCategoryFilter('all')}
-                className={`px-2.5 py-1 rounded-full font-medium transition-all whitespace-nowrap ${
-                  keyCategoryFilter === 'all'
-                    ? 'bg-[#C0392B] text-white'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                Tất cả ({visibleKeyCategories.length})
-              </button>
-              {visibleKeyCategories.map((c) => {
-                const inStock = (licenseKeys || []).filter(
-                  (k) => k.category_id === c.id && k.status === 'available'
-                ).length;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => setKeyCategoryFilter(c.id)}
-                    className={`px-2.5 py-1 rounded-full font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                      keyCategoryFilter === c.id
-                        ? 'bg-[#2B1810] text-white'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>{c.name}</span>
-                    <span
-                      className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                        keyCategoryFilter === c.id
-                          ? 'bg-white/20 text-white'
-                          : 'bg-emerald-100 text-emerald-800'
-                      }`}
-                    >
-                      {inStock}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Cards Grid: Các Phiên Bản Bản Quyền (Tuân thủ: nếu = 0 thì không hiển thị khi hideZeroStockKeys bật) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {visibleKeyCategories.length === 0 ? (
-              <div className="col-span-full bg-white p-8 rounded-xl border border-slate-200 text-center text-slate-400 text-sm">
-                Không có phân loại nào còn key trong kho (Số lượng = 0 đã tự động ẩn). Vui lòng nhấn &ldquo;+ Nhập key bản quyền&rdquo; để bổ sung key vào kho!
-              </div>
-            ) : (
-              visibleKeyCategories.map((cat) => {
-                const inStock = (licenseKeys || []).filter(
-                  (k) => k.category_id === cat.id && k.status === 'available'
-                ).length;
-                const totalKeys = (licenseKeys || []).filter((k) => k.category_id === cat.id).length;
-                const sampleKey = (licenseKeys || []).find((k) => k.category_id === cat.id);
-                const price = sampleKey?.unit_price || (cat.type === 'office' ? 490000 : 350000);
-
-                return (
-                  <div
-                    key={cat.id}
-                    className="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-3"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                            cat.type === 'office'
-                              ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                              : cat.type === 'windows'
-                              ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                              : 'bg-purple-100 text-purple-800 border border-purple-200'
-                          }`}
-                        >
-                          {cat.type}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1 font-mono">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                          <span>Còn {inStock} key sẵn</span>
-                        </span>
-                      </div>
-
-                      <div>
-                        <h3 className="font-black text-slate-900 text-sm uppercase tracking-tight">
-                          {cat.name}
-                        </h3>
-                        <div className="text-base font-bold text-[#C0392B] font-mono mt-0.5">
-                          {new Intl.NumberFormat('vi-VN').format(price)} đ
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                          {cat.description || 'Key bản quyền chính hãng Microsoft, hỗ trợ kích hoạt trực tuyến ổn định.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <span className="text-[11px] text-slate-400 font-mono">
-                        Tổng {totalKeys} key (Đã dùng {totalKeys - inStock})
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {canEditStock() && cat.type === 'others' && !cat.is_default && (
-                          <button
-                            onClick={() => handleDeleteCategory(cat)}
-                            title="Xóa phân loại này (chỉ áp dụng cho mục Others)"
-                            className="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 border border-rose-200 rounded font-semibold transition-colors"
-                          >
-                            Xóa
-                          </button>
-                        )}
-                        <button
-                          onClick={() => {
-                            setKeyPresetSelect(cat.name);
-                            setKeyDescriptionInput(cat.description);
-                            setKeyUnitPriceInput(price);
-                            setIsAddKeyModalOpen(true);
-                          }}
-                          className="px-2.5 py-1 text-xs font-bold bg-slate-100 hover:bg-[#C0392B] hover:text-white text-slate-700 rounded transition-colors"
-                        >
-                          + Nhập thêm
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Table of License Keys */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-tight">
-                  DANH SÁCH KEY BẢN QUYỀN TRONG KHO ({filteredLicenseKeys.length} key)
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Dữ liệu đồng bộ trực tiếp với hệ thống phê duyệt popup và gửi email tự động cho khách hàng.
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Mã License Key</th>
-                    <th className="py-3 px-4">Phiên Bản / Phân Loại</th>
-                    <th className="py-3 px-4">Trạng Thái</th>
-                    <th className="py-3 px-4 text-right">Đơn Giá</th>
-                    <th className="py-3 px-4">Bàn Giao / Khách Hàng</th>
-                    <th className="py-3 px-4 text-center">Thao Tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 text-sm">
-                  {filteredLicenseKeys.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        Không tìm thấy key bản quyền nào phù hợp với bộ lọc hiện tại.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredLicenseKeys.map((keyItem) => {
-                      return (
-                        <tr key={keyItem.id} className="hover:bg-slate-50/70 transition-colors">
-                          {/* License Key Code */}
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-slate-900 text-xs bg-slate-100 px-2 py-1 rounded border border-slate-200 select-all">
-                                {keyItem.license_code}
-                              </span>
-                              <button
-                                onClick={() => copyKeyText(keyItem.license_code)}
-                                title="Sao chép mã key"
-                                className="text-xs px-2 py-0.5 rounded font-semibold bg-white border border-slate-300 hover:bg-slate-100 text-slate-600 transition-colors"
-                              >
-                                {copiedKeyCode === keyItem.license_code ? '✓ Đã chép' : 'Chép'}
-                              </button>
-                            </div>
-                            {keyItem.notes && (
-                              <div className="text-[11px] text-slate-400 italic mt-0.5">
-                                {keyItem.notes}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Category */}
-                          <td className="py-3.5 px-4">
-                            <span className="font-semibold text-xs text-slate-800 uppercase">
-                              {keyItem.category_name}
-                            </span>
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                                keyItem.status === 'available'
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                  : keyItem.status === 'used'
-                                  ? 'bg-purple-100 text-purple-800 border border-purple-200'
-                                  : keyItem.status === 'assigned'
-                                  ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                                  : 'bg-rose-100 text-rose-800 border border-rose-200'
-                              }`}
-                            >
-                              {keyItem.status === 'available' && '✓ Sẵn sàng'}
-                              {keyItem.status === 'used' && 'Đã kích hoạt'}
-                              {keyItem.status === 'assigned' && 'Đã duyệt cấp'}
-                              {keyItem.status === 'faulty' && '⚠ Key lỗi'}
-                            </span>
-                          </td>
-
-                          {/* Unit Price */}
-                          <td className="py-3.5 px-4 text-right">
-                            <span className="font-bold text-slate-900 font-mono text-xs">
-                              {keyItem.unit_price
-                                ? `${new Intl.NumberFormat('vi-VN').format(keyItem.unit_price)} đ`
-                                : '350.000 đ'}
-                            </span>
-                          </td>
-
-                          {/* Customer / Dispatch Info */}
-                          <td className="py-3.5 px-4 text-xs">
-                            {keyItem.assigned_to_customer || keyItem.customer_name ? (
-                              <div>
-                                <div className="font-semibold text-slate-900">
-                                  {keyItem.assigned_to_customer || keyItem.customer_name}
-                                </div>
-                                <div className="text-slate-500 font-mono text-[11px]">
-                                  {keyItem.assigned_to_phone || keyItem.customer_phone || ''}
-                                  {keyItem.assigned_at && ` • ${keyItem.assigned_at.slice(0, 10)}`}
-                                </div>
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 italic">Chưa xuất kho</span>
-                            )}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="py-3.5 px-4 text-center">
-                            {canEditStock() && (
-                              <div className="flex items-center justify-center gap-1.5">
+                            <div className="flex items-center justify-center gap-1.5">
+                              {canSellAndEditWarranty() && (
                                 <button
-                                  onClick={async () => {
-                                    if (confirm(`Bạn có chắc muốn xóa mã key [${keyItem.license_code}] khỏi kho?`)) {
-                                      await deleteLicenseKey(keyItem.id);
-                                      setActionNotice(`Đã xóa key ${keyItem.license_code}`);
-                                      setTimeout(() => setActionNotice(null), 3000);
-                                    }
-                                  }}
-                                  title="Xóa key này"
-                                  className="px-2 py-0.5 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
+                                  onClick={() => handleOpenSellPartModal(part)}
+                                  disabled={part.quantity_in_stock <= 0}
+                                  title={part.quantity_in_stock <= 0 ? 'Hết hàng tồn' : 'Xuất bán linh kiện này'}
+                                  className="px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 disabled:opacity-50 disabled:pointer-events-none rounded border border-emerald-200 transition-colors"
+                                >
+                                  Bán LK
+                                </button>
+                              )}
+                              {canEditStock() && (
+                                <button
+                                  onClick={() => handleDeletePart(part.id, part.part_name)}
+                                  title="Xóa linh kiện (Chỉ Admin)"
+                                  className="px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded border border-rose-200 font-medium"
                                 >
                                   Xóa
                                 </button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -2115,6 +1531,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           </div>
         </>
       )}
+
 
       {/* Modal Nhập Máy Mới */}
       {isAddModalOpen && (
@@ -2503,6 +1920,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Ngày Bán (Bắt Đầu Bảo Hành) *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={sellDate}
+                      onChange={(e) => setSellDate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                       Thời Hạn Bảo Hành *
                     </label>
                     <select
@@ -2510,25 +1942,35 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       onChange={(e) => setSellWarrantyMonths(Number(e.target.value))}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-700"
                     >
+                      <option value={3}>3 Tháng</option>
                       <option value={6}>6 Tháng</option>
                       <option value={12}>12 Tháng</option>
-                      <option value={24}>24 Tháng</option>
                       <option value={36}>36 Tháng</option>
                     </select>
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Giá Bán Thực Tế (VNĐ)</label>
+                    <PricePreview value={sellPrice} label="Giá bán" tone="emerald" />
+                    <input
+                      type="number"
+                      min={0}
+                      step={50000}
+                      value={sellPrice}
+                      onChange={(e) => setSellPrice(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Giá Bán Thực Tế (VNĐ)</label>
-                  <PricePreview value={sellPrice} label="Giá bán" tone="emerald" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={50000}
-                    value={sellPrice}
-                    onChange={(e) => setSellPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
-                  />
+                {/* Live Warranty Calculation */}
+                <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-slate-600 font-medium">
+                    Kích hoạt BH: <strong className="text-slate-900 font-mono">{sellDate ? new Date(sellDate).toLocaleDateString('vi-VN') : '—'}</strong>
+                  </span>
+                  <span className="text-blue-800 font-semibold">
+                    Hết hạn BH: <strong className="text-blue-700 font-mono">{calculateWarrantyEndDate(sellDate, sellWarrantyMonths) || '—'}</strong>
+                  </span>
                 </div>
               </div>
 
@@ -2545,6 +1987,199 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
                 >
                   Xác Nhận Bán Máy
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL BÁN LINH KIỆN */}
+      {sellingPart && (
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-xl w-full p-6 space-y-4 my-8 animate-fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Bán Linh Kiện &amp; Kích Hoạt Bảo Hành
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Tự động trừ kho linh kiện và tạo phiếu bảo hành cho khách hàng.
+                </p>
+              </div>
+              <button
+                onClick={() => setSellingPart(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmPartSale} className="space-y-4">
+              {/* Part Overview Banner */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Linh kiện</span>
+                  <div className="font-bold text-slate-900 text-sm mt-0.5">
+                    {sellingPart.part_name}
+                  </div>
+                  <div className="text-slate-500 mt-0.5 flex items-center gap-2">
+                    <span className="capitalize">Loại: <strong>{sellingPart.part_type}</strong></span>
+                    <span>•</span>
+                    <span className="text-emerald-700 font-semibold">Tồn kho: {sellingPart.quantity_in_stock} cái</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Đơn giá niêm yết</span>
+                  <div className="text-base font-black text-emerald-700 mt-0.5 font-mono">
+                    {(sellingPart.unit_price || 0).toLocaleString('vi-VN')} đ
+                  </div>
+                </div>
+              </div>
+
+              {/* CUSTOMER INFO */}
+              <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 space-y-3">
+                <label className="text-xs font-bold text-emerald-900 uppercase tracking-wider block">
+                  Thông Tin Khách Hàng
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và Tên *</label>
+                    <input
+                      type="text"
+                      required
+                      value={sellPartCustomerName}
+                      onChange={(e) => setSellPartCustomerName(e.target.value)}
+                      placeholder="VD: Nguyễn Văn A"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Số Điện Thoại *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={sellPartCustomerPhone}
+                      onChange={(e) => setSellPartCustomerPhone(e.target.value)}
+                      placeholder="0918xxxxxx"
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Địa Chỉ</label>
+                  <input
+                    type="text"
+                    value={sellPartCustomerAddress}
+                    onChange={(e) => setSellPartCustomerAddress(e.target.value)}
+                    placeholder="Phường/Xã, Tỉnh..."
+                    className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* QUANTITY, PRICE & WARRANTY */}
+              <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                  Số Lượng, Ngày Bán &amp; Bảo Hành
+                </label>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Số Lượng Bán (Tối đa {sellingPart.quantity_in_stock}) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      max={sellingPart.quantity_in_stock}
+                      value={sellPartQuantity}
+                      onChange={(e) => setSellPartQuantity(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Giá Bán Thực Tế (VNĐ / Cái) *
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={10000}
+                      value={sellPartPrice}
+                      onChange={(e) => setSellPartPrice(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Ngày Bán (Bắt Đầu Bảo Hành) *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={sellPartDate}
+                      onChange={(e) => setSellPartDate(e.target.value)}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Thời Hạn Bảo Hành *
+                    </label>
+                    <select
+                      value={sellPartWarrantyMonths}
+                      onChange={(e) => setSellPartWarrantyMonths(Number(e.target.value))}
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700"
+                    >
+                      <option value={3}>3 Tháng</option>
+                      <option value={6}>6 Tháng</option>
+                      <option value={12}>12 Tháng</option>
+                      <option value={36}>36 Tháng</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Live calculation banner */}
+                <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <span className="text-slate-600 font-medium">
+                    Kích hoạt: <strong className="text-slate-900 font-mono">{sellPartDate ? new Date(sellPartDate).toLocaleDateString('vi-VN') : '—'}</strong>
+                  </span>
+                  <span className="text-emerald-800 font-semibold">
+                    Hết hạn BH: <strong className="text-emerald-700 font-mono">{calculateWarrantyEndDate(sellPartDate, sellPartWarrantyMonths) || '—'}</strong>
+                  </span>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-medium">Tổng tiền thanh toán:</span>
+                  <span className="font-bold text-sm text-emerald-700 font-mono">
+                    {(sellPartPrice * sellPartQuantity).toLocaleString('vi-VN')} đ
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSellingPart(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+                >
+                  Xác Nhận Bán Linh Kiện
                 </button>
               </div>
             </form>
@@ -2764,221 +2399,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
                 >
                   Lưu Linh Kiện
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL THÊM PHẦN MỀM */}
-      {isAddSoftwareModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
-            <div className="px-6 py-4 bg-purple-50/70 border-b border-purple-100 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  Thêm Phần Mềm &amp; Bản Quyền
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsAddSoftwareModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/50 text-base font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateNewSoftware} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Software Name */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tên Phần Mềm / Bản Quyền *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: Windows 11 Pro"
-                    value={newSoftware.software_name}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, software_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium"
-                  />
-                </div>
-
-                {/* Software Category */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Danh Mục
-                  </label>
-                  <select
-                    value={newSoftware.software_type}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, software_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  >
-                    <option value="os">Windows (Hệ điều hành)</option>
-                    <option value="office">Office (Văn phòng)</option>
-                    <option value="antivirus">Diệt virus</option>
-                    <option value="accounting">Quản trị doanh nghiệp</option>
-                    <option value="pos">Bán hàng (KiotViet...)</option>
-                    <option value="utility">Tiện ích</option>
-                  </select>
-                </div>
-
-                {/* License Type */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Cấp Phép
-                  </label>
-                  <select
-                    value={newSoftware.license_type}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, license_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-semibold text-purple-800"
-                  >
-                    <option value="oem">OEM (Theo máy)</option>
-                    <option value="retail">Retail (Chuyển máy được)</option>
-                    <option value="subscription">Subscription (Đăng ký định kỳ)</option>
-                    <option value="fpp">FPP (Hộp nguyên bản quyền)</option>
-                  </select>
-                </div>
-
-                {/* Duration Months */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Thời Hạn
-                  </label>
-                  <select
-                    value={newSoftware.duration_months}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, duration_months: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  >
-                    <option value={0}>Vĩnh viễn</option>
-                    <option value={12}>12 Tháng</option>
-                    <option value={24}>24 Tháng</option>
-                    <option value={36}>36 Tháng</option>
-                  </select>
-                </div>
-
-                {/* Initial Stock */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số Key Tồn Kho *
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={newSoftware.quantity_in_stock}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, quantity_in_stock: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold font-mono"
-                  />
-                </div>
-
-                {/* Distributor */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Đối Tác / Nhà Phân Phối
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Microsoft CSP, MISA..."
-                    value={newSoftware.distributor}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, distributor: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  />
-                </div>
-
-                {/* Unit Cost */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Nhập (VNĐ)
-                  </label>
-                  <PricePreview value={newSoftware.unit_cost} label="Giá đầu vào" tone="rose" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={newSoftware.unit_cost}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, unit_cost: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-medium font-mono"
-                  />
-                </div>
-
-                {/* Unit Price */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Bán (VNĐ)
-                  </label>
-                  <PricePreview value={newSoftware.unit_price} label="Giá bán" tone="emerald" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={newSoftware.unit_price}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, unit_price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none font-bold text-purple-700 font-mono"
-                  />
-                </div>
-
-                {/* Batch Keys Input */}
-                <div className="md:col-span-2 bg-purple-50/50 p-3 rounded-lg border border-purple-200">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                      <span>🔑</span> Nhập Danh Sách Key Bản Quyền (Tùy chọn)
-                    </label>
-                    <span className="text-[11px] text-purple-600 font-medium">
-                      {newSoftware.initial_keys_raw.split('\n').filter((k) => k.trim().length > 0).length} key đã nhập
-                    </span>
-                  </div>
-                  <textarea
-                    rows={3}
-                    placeholder="Dán danh sách key bản quyền tại đây, mỗi dòng 1 key...&#10;VD: VK7JG-NPHTM-C97JM-9MPGT-3V66T&#10;Nếu nhập key tại đây, số lượng tồn kho sẽ tự động tính theo số key hợp lệ."
-                    value={newSoftware.initial_keys_raw}
-                    onChange={(e) => {
-                      const text = e.target.value;
-                      const validCount = text.split('\n').filter((k) => k.trim().length > 0).length;
-                      setNewSoftware({
-                        ...newSoftware,
-                        initial_keys_raw: text,
-                        quantity_in_stock: validCount > 0 ? validCount : newSoftware.quantity_in_stock,
-                      });
-                    }}
-                    className="w-full px-3 py-2 border border-purple-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  />
-                  <div className="text-[11px] text-slate-500 mt-1">
-                    Mỗi dòng là 1 license key. Hệ thống sẽ lưu trữ và quản lý trạng thái từng key riêng biệt.
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Ghi Chú
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="VD: Kích hoạt online, hỗ trợ xuất VAT..."
-                    value={newSoftware.notes}
-                    onChange={(e) => setNewSoftware({ ...newSoftware, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setIsAddSoftwareModalOpen(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all"
-                >
-                  Lưu Phần Mềm
                 </button>
               </div>
             </form>
@@ -3246,12 +2666,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               </div>
             </div>
 
-            {/* Modal Footer */}
+                        {/* Modal Footer */}
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setViewingSpecsItem(null)}
-                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg transition-colors"
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 Đóng
               </button>
@@ -3265,7 +2685,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       setViewingSpecsItem(null);
                       handleCancelReservation(target);
                     }}
-                    className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 text-xs font-bold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+                    className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 text-xs font-bold rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
                     <Ban className="w-3.5 h-3.5" />
                     Không mua (Trả về kho)
@@ -3278,7 +2698,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     setIsLabelModalOpen(true);
                     setViewingSpecsItem(null);
                   }}
-                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-semibold rounded-lg shadow-2xs transition-colors"
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-semibold rounded-lg shadow-2xs transition-colors cursor-pointer"
                 >
                   In Tem Nhiệt (50x30mm)
                 </button>
@@ -3288,7 +2708,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     handleOpenSellModal(viewingSpecsItem);
                     setViewingSpecsItem(null);
                   }}
-                  className={`px-4 py-2 text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95 ${
+                  className={`px-4 py-2 text-white text-xs font-bold rounded-lg shadow-xs transition-all active:scale-95 cursor-pointer ${
                     viewingSpecsItem.qc_status === 'reserved'
                       ? 'bg-purple-600 hover:bg-purple-700'
                       : 'bg-emerald-600 hover:bg-emerald-700'
@@ -3302,941 +2722,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* MODAL QUẢN LÝ KEY BẢN QUYỀN */}
-      {/* ========================================================================= */}
-      {selectedSoftwareForKeys && (() => {
-        // Always get the freshest copy of the software license from store state
-        const currentSw = softwareLicenses.find((s) => s.id === selectedSoftwareForKeys.id) || selectedSoftwareForKeys;
-        const allKeys = currentSw.license_keys || [];
-        const availableCount = allKeys.filter((k) => k.status === 'available').length;
-        const usedCount = allKeys.filter((k) => k.status === 'used').length;
-        const revokedCount = allKeys.filter((k) => k.status === 'revoked').length;
-
-        // Filter keys
-        const filteredKeys = allKeys.filter((k) => {
-          const matchStatus = keyStatusFilter === 'all' ? true : k.status === keyStatusFilter;
-          const q = keySearchQuery.toLowerCase().trim();
-          const matchQuery = !q
-            ? true
-            : k.key_code.toLowerCase().includes(q) ||
-              (k.assigned_customer || '').toLowerCase().includes(q) ||
-              (k.assigned_ticket_code || '').toLowerCase().includes(q) ||
-              (k.notes || '').toLowerCase().includes(q);
-          return matchStatus && matchQuery;
-        });
-
-        const handleCopyKey = (keyItem: SoftwareKeyItem) => {
-          navigator.clipboard.writeText(keyItem.key_code);
-          setCopiedKeyId(keyItem.id);
-          setTimeout(() => setCopiedKeyId(null), 2000);
-        };
-
-        const handleAddBatchKeys = async (e: React.FormEvent) => {
-          e.preventDefault();
-          const rawLines = batchKeysInput.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
-          if (rawLines.length === 0) {
-            alert('Vui lòng nhập ít nhất 1 mã key bản quyền!');
-            return;
-          }
-          await addSoftwareKeys(currentSw.id, rawLines, batchKeysNotes);
-          setBatchKeysInput('');
-          setBatchKeysNotes('');
-          setActionNotice(`Đã thêm thành công ${rawLines.length} key vào kho!`);
-          setTimeout(() => setActionNotice(null), 3000);
-        };
-
-        return (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in flex flex-col max-h-[90vh]">
-              {/* Header */}
-              <div className="px-6 py-4 bg-purple-900 text-white flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🔑</span>
-                    <h3 className="text-base font-bold text-white">
-                      Kho Key Bản Quyền: {currentSw.software_name}
-                    </h3>
-                  </div>
-                  <div className="text-xs text-purple-200 mt-0.5 flex items-center gap-2">
-                    <span className="font-semibold text-white uppercase">{currentSw.license_type}</span>
-                    <span>•</span>
-                    <span>{currentSw.distributor || 'Chính hãng'}</span>
-                    <span>•</span>
-                    <span>{currentSw.duration_months === 0 ? 'Vĩnh viễn' : `${currentSw.duration_months} tháng`}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedSoftwareForKeys(null)}
-                  className="text-purple-200 hover:text-white p-1.5 rounded-lg hover:bg-purple-800 text-base font-bold transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Body */}
-              <div className="p-6 overflow-y-auto space-y-6 flex-1">
-                {/* 4 Stats Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-xl">
-                    <div className="text-[11px] font-semibold text-emerald-700">Khả Dụng (Sẵn sàng)</div>
-                    <div className="text-2xl font-black text-emerald-900 font-mono mt-0.5">{availableCount}</div>
-                    <div className="text-[10px] text-emerald-600">Sẵn sàng xuất / cài máy</div>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200 p-3 rounded-xl">
-                    <div className="text-[11px] font-semibold text-amber-700">Đã Cấp / Đã Bán</div>
-                    <div className="text-2xl font-black text-amber-900 font-mono mt-0.5">{usedCount}</div>
-                    <div className="text-[10px] text-amber-600">Đã gán cho khách / máy</div>
-                  </div>
-                  <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl">
-                    <div className="text-[11px] font-semibold text-rose-700">Thu Hồi / Báo Lỗi</div>
-                    <div className="text-2xl font-black text-rose-900 font-mono mt-0.5">{revokedCount}</div>
-                    <div className="text-[10px] text-rose-600">Tạm khóa hoặc đổi trả</div>
-                  </div>
-                  <div className="bg-slate-100 border border-slate-200 p-3 rounded-xl">
-                    <div className="text-[11px] font-semibold text-slate-700">Tổng Số Key</div>
-                    <div className="text-2xl font-black text-slate-900 font-mono mt-0.5">{allKeys.length}</div>
-                    <div className="text-[10px] text-slate-500">Toàn bộ kho lưu trữ</div>
-                  </div>
-                </div>
-
-                {/* Batch Add Keys Section */}
-                {canEditStock() && (
-                  <form onSubmit={handleAddBatchKeys} className="bg-purple-50/60 p-4 rounded-xl border border-purple-200 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                        <span>➕</span> Nhập Thêm Danh Sách Key Mới Vào Kho
-                      </span>
-                      <span className="text-[11px] text-purple-700 font-medium">
-                        {batchKeysInput.split('\n').filter((l) => l.trim().length > 0).length} key sắp thêm
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div className="md:col-span-2">
-                        <textarea
-                          rows={2}
-                          placeholder="Dán mã key tại đây (mỗi dòng 1 key, ví dụ: VK7JG-NPHTM-C97JM-9MPGT-3V66T)..."
-                          value={batchKeysInput}
-                          onChange={(e) => setBatchKeysInput(e.target.value)}
-                          className="w-full px-3 py-2 border border-purple-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                        />
-                      </div>
-                      <div className="space-y-2 flex flex-col justify-between">
-                        <input
-                          type="text"
-                          placeholder="Ghi chú lô key (VD: Lô FPT 24/09)..."
-                          value={batchKeysNotes}
-                          onChange={(e) => setBatchKeysNotes(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-purple-300 rounded-lg text-xs bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!batchKeysInput.trim()}
-                          className="w-full py-2 bg-purple-700 hover:bg-purple-800 disabled:bg-slate-300 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer disabled:cursor-not-allowed"
-                        >
-                          Lưu Vào Kho
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                )}
-
-                {/* Filter and Search Bar */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
-                  <div className="relative w-full sm:w-72">
-                    <input
-                      type="text"
-                      placeholder="Tìm mã key, khách hàng, phiếu..."
-                      value={keySearchQuery}
-                      onChange={(e) => setKeySearchQuery(e.target.value)}
-                      className="w-full px-3 py-1.5 pr-7 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    />
-                    {keySearchQuery && (
-                      <button
-                        onClick={() => setKeySearchQuery('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-lg self-stretch sm:self-auto overflow-x-auto">
-                    {(
-                      [
-                        { id: 'all' as const, label: `Tất cả (${allKeys.length})` },
-                        { id: 'available' as const, label: `Khả dụng (${availableCount})` },
-                        { id: 'used' as const, label: `Đã gán (${usedCount})` },
-                        { id: 'revoked' as const, label: `Lỗi/Khóa (${revokedCount})` },
-                      ] as const
-                    ).map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setKeyStatusFilter(tab.id)}
-                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
-                          keyStatusFilter === tab.id
-                            ? 'bg-white text-purple-800 shadow-xs font-bold'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Keys Table */}
-                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                          <th className="py-2.5 px-3">STT</th>
-                          <th className="py-2.5 px-3">Mã Key Bản Quyền</th>
-                          <th className="py-2.5 px-3">Trạng Thái</th>
-                          <th className="py-2.5 px-3">Thông Tin Sử Dụng</th>
-                          <th className="py-2.5 px-3">Ghi Chú</th>
-                          <th className="py-2.5 px-3 text-right">Thao Tác</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {filteredKeys.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="py-8 text-center text-slate-400">
-                              Chưa có key bản quyền nào phù hợp. Hãy dán thêm key ở trên.
-                            </td>
-                          </tr>
-                        ) : (
-                          filteredKeys.map((k, index) => {
-                            const isCopied = copiedKeyId === k.id;
-                            return (
-                              <tr key={k.id} className="hover:bg-slate-50/80 transition-colors">
-                                <td className="py-2.5 px-3 text-slate-400 font-mono">{index + 1}</td>
-                                
-                                {/* Key Code with Copy Button */}
-                                <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
-                                  <div className="flex items-center gap-2">
-                                    <span className="tracking-wide select-all">{k.key_code}</span>
-                                    <button
-                                      onClick={() => handleCopyKey(k)}
-                                      className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all ${
-                                        isCopied
-                                          ? 'bg-emerald-600 text-white'
-                                          : 'bg-slate-100 hover:bg-purple-100 text-slate-600 hover:text-purple-700 border border-slate-200 cursor-pointer'
-                                      }`}
-                                      title="Copy mã key"
-                                    >
-                                      {isCopied ? '✓ Đã copy' : 'Copy'}
-                                    </button>
-                                  </div>
-                                </td>
-
-                                {/* Status */}
-                                <td className="py-2.5 px-3">
-                                  {k.status === 'available' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                      Khả dụng
-                                    </span>
-                                  )}
-                                  {k.status === 'used' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                      Đã xuất cho khách
-                                    </span>
-                                  )}
-                                  {k.status === 'revoked' && (
-                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                                      Lỗi / Thu hồi
-                                    </span>
-                                  )}
-                                </td>
-
-                                {/* Assignment Info */}
-                                <td className="py-2.5 px-3 text-slate-700">
-                                  {k.assigned_customer ? (
-                                    <div>
-                                      <div className="font-semibold text-slate-900">{k.assigned_customer}</div>
-                                      <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
-                                        {k.assigned_ticket_code && (
-                                          <span className="font-mono text-purple-700 bg-purple-50 px-1 rounded">
-                                            {k.assigned_ticket_code}
-                                          </span>
-                                        )}
-                                        {k.assigned_at && (
-                                          <span>{new Date(k.assigned_at).toLocaleDateString('vi-VN')}</span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <span className="text-slate-400 italic">Chưa gán</span>
-                                  )}
-                                </td>
-
-                                {/* Notes */}
-                                <td className="py-2.5 px-3 text-slate-500 text-[11px] max-w-[150px] truncate" title={k.notes}>
-                                  {k.notes || '—'}
-                                </td>
-
-                                {/* Actions */}
-                                <td className="py-2.5 px-3 text-right">
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    {k.status === 'available' ? (
-                                      <button
-                                        onClick={() => {
-                                          setAssigningKeyTarget({ softwareId: currentSw.id, key: k });
-                                          setAssignCustomerName('');
-                                          setAssignTicketCode('');
-                                          setAssignNotes('');
-                                        }}
-                                        className="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded border border-purple-200 font-semibold text-[11px] cursor-pointer"
-                                      >
-                                        Gán khách
-                                      </button>
-                                    ) : (
-                                      <button
-                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'available')}
-                                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium cursor-pointer"
-                                        title="Hoàn lại key vào kho khả dụng"
-                                      >
-                                        Trả về kho
-                                      </button>
-                                    )}
-
-                                    {k.status !== 'revoked' ? (
-                                      <button
-                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'revoked')}
-                                        className="px-2 py-1 text-amber-700 hover:bg-amber-50 rounded border border-amber-200 text-[11px] cursor-pointer"
-                                        title="Báo lỗi / Khóa key này"
-                                      >
-                                        Khóa
-                                      </button>
-                                    ) : (
-                                      <button
-                                        onClick={() => updateSoftwareKeyStatus(currentSw.id, k.id, 'available')}
-                                        className="px-2 py-1 text-emerald-700 hover:bg-emerald-50 rounded border border-emerald-200 text-[11px] cursor-pointer"
-                                        title="Mở khóa key này"
-                                      >
-                                        Mở lại
-                                      </button>
-                                    )}
-
-                                    {canEditStock() && (
-                                      <button
-                                        onClick={() => {
-                                          if (confirm(`Xóa key [${k.key_code}] khỏi kho?`)) {
-                                            deleteSoftwareKey(currentSw.id, k.id);
-                                          }
-                                        }}
-                                        className="px-2 py-1 text-rose-600 hover:bg-rose-50 rounded border border-rose-200 text-[11px] cursor-pointer"
-                                        title="Xóa vĩnh viễn"
-                                      >
-                                        ✕
-                                      </button>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                <span>
-                  💡 Tự động cập nhật số lượng tồn kho theo số key khả dụng. Key có thể sao chép nhanh 1 chạm khi kỹ thuật cài máy.
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedSoftwareForKeys(null)}
-                  className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* ========================================================================= */}
-      {/* MODAL GÁN KEY BẢN QUYỀN CHO KHÁCH HÀNG / PHIẾU DỊCH VỤ */}
-      {/* ========================================================================= */}
-      {assigningKeyTarget && (
-        <div className="fixed inset-0 z-60 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
-            <div className="px-5 py-3.5 bg-purple-700 text-white flex items-center justify-between">
-              <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>🔑</span> Xuất &amp; Gán Key Cho Khách Hàng
-              </h4>
-              <button
-                onClick={() => setAssigningKeyTarget(null)}
-                className="text-purple-200 hover:text-white text-sm font-bold cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!assignCustomerName.trim()) {
-                  alert('Vui lòng nhập tên khách hàng!');
-                  return;
-                }
-                await assignSoftwareKey(assigningKeyTarget.softwareId, assigningKeyTarget.key.id, {
-                  customerName: assignCustomerName.trim(),
-                  ticketCode: assignTicketCode.trim() || undefined,
-                  notes: assignNotes.trim() || undefined,
-                });
-                setActionNotice(`Đã xuất key [${assigningKeyTarget.key.key_code}] cho khách [${assignCustomerName}]!`);
-                setTimeout(() => setActionNotice(null), 3000);
-                setAssigningKeyTarget(null);
-              }}
-              className="p-5 space-y-3.5 text-xs"
-            >
-              <div className="bg-purple-50 p-2.5 rounded-lg border border-purple-200 font-mono text-purple-900 font-bold select-all">
-                {assigningKeyTarget.key.key_code}
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Tên Khách Hàng / Công Ty *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="VD: Anh Minh - Cty Xây Dựng Long An"
-                  value={assignCustomerName}
-                  onChange={(e) => setAssignCustomerName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Mã Phiếu Dịch Vụ / Sửa Chữa (Nếu có)
-                </label>
-                <input
-                  type="text"
-                  placeholder="VD: #TK-2025-0590 hoặc Đơn Hàng #012"
-                  value={assignTicketCode}
-                  onChange={(e) => setAssignTicketCode(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Ghi Chú Kích Hoạt / Thiết Bị Cài Đặt
-                </label>
-                <input
-                  type="text"
-                  placeholder="VD: Kích hoạt trên laptop Dell Latitude 5420..."
-                  value={assignNotes}
-                  onChange={(e) => setAssignNotes(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setAssigningKeyTarget(null)}
-                  className="px-3 py-1.5 text-slate-600 hover:text-slate-800 font-medium cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg transition-colors cursor-pointer"
-                >
-                  Xác Nhận Xuất Key
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL 1: NHẬP ĐẦU VÀO THÔNG TIN KEY WINDOWS & OFFICE (YÊU CẦU II) */}
-      {/* ========================================================================= */}
-      {isAddKeyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
-            <div className="px-6 py-4 bg-[#FBE8DE] border-b border-[#F2C4B2] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-[#C0392B] uppercase tracking-wider">
-                  HỆ THỐNG QUẢN LÝ HÀNG HÓA • BẢN QUYỀN SỐ
-                </span>
-                <h3 className="text-base font-black text-[#2B1810] uppercase tracking-tight">
-                  NHẬP ĐẦU VÀO KEY WINDOWS &amp; OFFICE
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsAddKeyModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-white/50 text-base font-bold transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleAddKeysSubmit} className="p-6 space-y-4">
-              {/* Dropdown Phân loại từng phiên bản */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-black text-[#2B1810] uppercase">
-                    PHÂN LOẠI TỪNG PHIÊN BẢN (DROPDOWN LIST) *
-                  </label>
-                  <span className="text-[11px] text-slate-500">
-                    Sẵn có Windows, Office &amp; các loại đã tạo
-                  </span>
-                </div>
-                <select
-                  value={keyPresetSelect}
-                  onChange={(e) => handleKeyPresetChange(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:ring-2 focus:ring-[#C0392B] focus:bg-white focus:outline-none"
-                >
-                  <optgroup label="Phiên bản chuẩn sẵn có">
-                    <option value="WINDOWS 11 PROFESSIONAL">Windows 11 Professional</option>
-                    <option value="WINDOWS 11 HOME">Windows 11 Home</option>
-                    <option value="OFFICE PRO PLUS 2021">Office Pro Plus 2021</option>
-                  </optgroup>
-
-                  {(keyCategories || []).filter((c) => c.type === 'others').length > 0 && (
-                    <optgroup label="Các phân loại khác đã có trong CSDL (Others)">
-                      {(keyCategories || [])
-                        .filter((c) => c.type === 'others')
-                        .map((cat) => (
-                          <option key={cat.id} value={cat.name}>
-                            {cat.name}
-                          </option>
-                        ))}
-                    </optgroup>
-                  )}
-
-                  <optgroup label="Tùy chọn tạo mới">
-                    <option value="others">+ Nhập phân loại khác (Others)...</option>
-                  </optgroup>
-                </select>
-              </div>
-
-              {/* Khi chọn "Others" -> Cho phép Admin tự nhập text & Kiểm tra CSDL */}
-              {keyPresetSelect === 'others' && (
-                <div className="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2 animate-fade-in">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-black text-amber-900 uppercase">
-                      TÊN PHÂN LOẠI MỚI (MỤC &quot;OTHERS&quot;) *
-                    </label>
-                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                      Kiểm tra CSDL thời gian thực
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: WINDOWS 10 PRO, OFFICE 365, WINDOWS SERVER..."
-                    value={keyCustomOthersName}
-                    onChange={(e) => setKeyCustomOthersName(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-sm font-bold text-slate-900 uppercase focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-
-                  {/* Thông báo kiểm tra CSDL: Trùng khớp -> Merge, Mới -> Thêm dropdown */}
-                  {matchedExistingCat ? (
-                    <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-300 text-xs text-emerald-800 font-medium flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <span>
-                        ✓ <strong>Trùng khớp CSDL:</strong> Phân loại &quot;{matchedExistingCat.name}&quot; đã tồn tại. Hệ thống sẽ <strong>tự động MERGE dữ liệu</strong> key vào phân loại này!
-                      </span>
-                    </div>
-                  ) : keyCustomOthersName.trim() ? (
-                    <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-300 text-xs text-blue-800 font-medium flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                      <span>
-                        ★ <strong>Phân loại mới:</strong> &quot;{keyCustomOthersName.trim().toUpperCase()}&quot; chưa có trong CSDL. Khi lưu, hệ thống sẽ <strong>tự động ghi nhận vào CSDL</strong> và đưa vào dropdown list cho các lần sau!
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="text-[11px] text-amber-700 italic">
-                      Nhập tên phân loại để hệ thống tự động đối chiếu CSDL và gộp (merge) dữ liệu nếu đã có.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Mô tả từng loại key */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Mô Tả Từng Loại Key (Chính sách kích hoạt &amp; hỗ trợ)
-                </label>
-                <textarea
-                  rows={2}
-                  value={keyDescriptionInput}
-                  onChange={(e) => setKeyDescriptionInput(e.target.value)}
-                  placeholder="VD: Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác..."
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                />
-              </div>
-
-              {/* Phương thức nhập key & Đơn giá */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hình Thức Nhập Key
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setKeyInputMode('batch')}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${
-                        keyInputMode === 'batch'
-                          ? 'border-[#C0392B] bg-[#FBE8DE] text-[#C0392B]'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                      }`}
-                    >
-                      Dán hàng loạt
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setKeyInputMode('single')}
-                      className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${
-                        keyInputMode === 'single'
-                          ? 'border-[#C0392B] bg-[#FBE8DE] text-[#C0392B]'
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                      }`}
-                    >
-                      Nhập 1 key đơn
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Đầu Vào / Key (VNĐ)
-                  </label>
-                  <PricePreview value={keyImportPriceInput} label="Giá đầu vào" tone="rose" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={keyImportPriceInput}
-                    onChange={(e) => setKeyImportPriceInput(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold font-mono focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Đơn Giá Bán Khuyến Nghị (VNĐ)
-                  </label>
-                  <PricePreview value={keyUnitPriceInput} label="Giá bán" tone="emerald" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={keyUnitPriceInput}
-                    onChange={(e) => setKeyUnitPriceInput(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold font-mono focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Ô nhập mã key */}
-              {keyInputMode === 'batch' ? (
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Danh Sách Mã Key (Mỗi dòng 1 key) *
-                    </label>
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      {keyBatchInput.split(/[\r\n]+/).filter((k) => k.trim()).length} key đã nhập
-                    </span>
-                  </div>
-                  <textarea
-                    rows={5}
-                    required
-                    value={keyBatchInput}
-                    onChange={(e) => setKeyBatchInput(e.target.value)}
-                    placeholder={`W269N-WFGWX-YVC9B-4J6C9-T83GX\nVK7JG-NPHTM-C97JM-9MPGT-3V66T\nMH37W-N47XK-V7XM9-C7227-GCQG9`}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono tracking-wider focus:ring-2 focus:ring-[#C0392B] focus:outline-none bg-slate-50 uppercase"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Mã Key Đơn Lẻ *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={keySingleInput}
-                    onChange={(e) => setKeySingleInput(e.target.value)}
-                    placeholder="VD: XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono font-bold tracking-wider focus:ring-2 focus:ring-[#C0392B] focus:outline-none uppercase"
-                  />
-                </div>
-              )}
-
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setIsAddKeyModalOpen(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 bg-[#C0392B] hover:bg-[#A93226] text-white text-sm font-bold rounded-lg shadow-sm transition-all cursor-pointer"
-                >
-                  Lưu &amp; Nhập Kho Key
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL 2: QUẢN LÝ & XÓA PHÂN LOẠI KEY (CHỈ XÓA ĐƯỢC MỤC OTHERS) */}
-      {/* ========================================================================= */}
-      {isManageCatModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h3 className="text-base font-black text-slate-900 uppercase">
-                  QUẢN LÝ PHÂN LOẠI KEY BẢN QUYỀN
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Quy định: Chỉ được phép xóa phân loại thuộc mục &quot;Others&quot;. Các phân loại mặc định được khóa an toàn.
-                </p>
-              </div>
-              <button
-                onClick={() => setIsManageCatModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200 text-base font-bold transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-600 uppercase">
-                      <th className="py-2.5 px-3">Tên Phân Loại</th>
-                      <th className="py-2.5 px-3">Nhóm</th>
-                      <th className="py-2.5 px-3">Mô Tả</th>
-                      <th className="py-2.5 px-3 text-center">Tồn Kho</th>
-                      <th className="py-2.5 px-3 text-center">Quyền Xóa</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {(keyCategories || []).map((cat) => {
-                      const inStock = (licenseKeys || []).filter(
-                        (k) => k.category_id === cat.id && k.status === 'available'
-                      ).length;
-                      const totalKeys = (licenseKeys || []).filter((k) => k.category_id === cat.id).length;
-                      const canDeleteThis = cat.type === 'others' && !cat.is_default;
-
-                      return (
-                        <tr key={cat.id} className="hover:bg-slate-50/70">
-                          <td className="py-3 px-3 font-bold text-slate-900 uppercase">
-                            {cat.name}
-                          </td>
-                          <td className="py-3 px-3">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                cat.type === 'office'
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : cat.type === 'windows'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-purple-100 text-purple-800'
-                              }`}
-                            >
-                              {cat.type}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-slate-600 max-w-xs truncate">
-                            {cat.description}
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono font-bold">
-                            <span className={inStock > 0 ? 'text-emerald-700' : 'text-slate-400'}>
-                              {inStock}
-                            </span>
-                            <span className="text-slate-400 font-normal"> / {totalKeys}</span>
-                          </td>
-                          <td className="py-3 px-3 text-center">
-                            {canDeleteThis ? (
-                              <button
-                                onClick={() => handleDeleteCategory(cat)}
-                                className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded font-semibold text-xs transition-colors cursor-pointer"
-                              >
-                                Xóa phân loại
-                              </button>
-                            ) : (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">
-                                Mặc định (Khóa)
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="flex items-center justify-end pt-2">
-                <button
-                  onClick={() => setIsManageCatModalOpen(false)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
-                >
-                  Đóng
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL 3: CẤU HÌNH MẪU EMAIL GỬI KEY CHO KHÁCH (YÊU CẦU II) */}
-      {/* ========================================================================= */}
-      {isEmailTemplateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-[#C0392B] uppercase tracking-wider">
-                  TỰ ĐỘNG HÓA GIAO KEY CHO KHÁCH HÀNG
-                </span>
-                <h3 className="text-base font-black text-slate-900 uppercase">
-                  CẤU HÌNH THÔNG TIN &amp; MẪU EMAIL GỬI KEY
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsEmailTemplateModalOpen(false)}
-                className="text-slate-400 hover:text-slate-700 p-1.5 rounded-lg hover:bg-slate-200 text-base font-bold transition-colors cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveEmailConfig} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tên Người Gửi (Sender Name) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={emailFormConfig.sender_name}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, sender_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Người Gửi (Sender Email) *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={emailFormConfig.sender_email}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, sender_email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Hotline Hỗ Trợ Khách
-                  </label>
-                  <input
-                    type="text"
-                    value={emailFormConfig.support_phone}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, support_phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Zalo Hỗ Trợ Khách
-                  </label>
-                  <input
-                    type="text"
-                    value={emailFormConfig.support_zalo}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, support_zalo: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Tiêu Đề Email (Email Subject) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={emailFormConfig.subject}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, subject: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-bold"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Nội Dung Mẫu Email (Template Content) *
-                    </label>
-                    <span className="text-[10px] text-slate-400">
-                      Hỗ trợ biến động: &#123;TEN_KHACH_HANG&#125;, &#123;MA_KEY&#125;, &#123;TEN_SAN_PHAM&#125;, &#123;HOTLINE_HO_TRO&#125;
-                    </span>
-                  </div>
-                  <textarea
-                    rows={8}
-                    required
-                    value={emailFormConfig.content_template}
-                    onChange={(e) => setEmailFormConfig({ ...emailFormConfig, content_template: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-[#C0392B] focus:outline-none leading-relaxed"
-                  />
-                </div>
-              </div>
-
-              {/* Submit Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setIsEmailTemplateModalOpen(false)}
-                  className="px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-medium cursor-pointer"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingEmailConfig}
-                  className="px-5 py-2.5 bg-[#C0392B] hover:bg-[#A93226] text-white text-sm font-bold rounded-lg shadow-sm transition-all cursor-pointer"
-                >
-                  {isSavingEmailConfig ? 'Đang lưu...' : 'Lưu Mẫu Email'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Thermal Label Modal (50x30mm) */}
+{/* Thermal Label Modal (50x30mm) */}
       <ThermalLabelModal
         isOpen={isLabelModalOpen}
         onClose={() => setIsLabelModalOpen(false)}

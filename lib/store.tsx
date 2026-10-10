@@ -75,6 +75,8 @@ export interface SystemSettings {
   footerAbout: string;
   footerCopyright: string;
   storeName: string;
+  technicalHotline?: string;
+  googleMapsEmbedUrl?: string;
 
   // Cấu hình QR Code Thanh Toán & Ngân Hàng (Hiển thị khi mua hàng)
   paymentQrUrl?: string;
@@ -199,7 +201,19 @@ interface StoreContextType {
     warrantyMonths: number;
     soldPrice?: number;
     notes?: string;
+    saleDate?: string;
   }) => Promise<{ success: boolean; customerCode: string; message: string }>;
+
+  sellSparePart: (params: {
+    partId: string;
+    customerName: string;
+    customerPhone: string;
+    customerAddress?: string;
+    quantity: number;
+    warrantyMonths: number;
+    soldPrice: number;
+    saleDate?: string;
+  }) => Promise<{ success: boolean; message: string }>;
 
   // Member management actions (Admin)
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
@@ -2407,6 +2421,7 @@ export function StoreProvider({
     warrantyMonths: number;
     soldPrice?: number;
     notes?: string;
+    saleDate?: string;
   }): Promise<{ success: boolean; customerCode: string; message: string }> => {
     if (!canSellAndEditWarranty()) {
       return {
@@ -2420,6 +2435,10 @@ export function StoreProvider({
     if (!item) {
       return { success: false, customerCode: '', message: 'Không tìm thấy thiết bị trong kho!' };
     }
+
+    const saleDateTime = params.saleDate ? new Date(params.saleDate) : new Date();
+    const warrantyUntilDate = new Date(saleDateTime);
+    warrantyUntilDate.setMonth(warrantyUntilDate.getMonth() + params.warrantyMonths);
 
     // Generate Customer Code: [DDMM] + [4 last digits of phone]
     const existingCustomerCodes = customers
@@ -2437,7 +2456,7 @@ export function StoreProvider({
       sold_by: currentUser.name,
       serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
       warranty_months: params.warrantyMonths,
-      handover_date: new Date().toISOString(),
+      handover_date: saleDateTime.toISOString(),
       retail_price: params.soldPrice || item.retail_price || item.price,
     };
 
@@ -2457,7 +2476,7 @@ export function StoreProvider({
       address: params.customerAddress.trim() || 'Long An - Tây Ninh',
       customer_tier: 'VIP',
       notes: `Mua máy ${item.device_model || item.brand} (Tag: ${item.service_tag}, Serial: ${params.serialNumber})`,
-      created_at: new Date().toISOString(),
+      created_at: saleDateTime.toISOString(),
     };
 
     setCustomers((prev) => {
@@ -2478,11 +2497,11 @@ export function StoreProvider({
       technician_name: currentUser.name,
       status: 'delivered',
       visual_condition: 'Máy chuẩn A bàn giao mới 100% nguyên bản',
-      technician_note: `Bán hàng thành công. Serial: ${params.serialNumber}. Bảo hành ${params.warrantyMonths} tháng.`,
+      technician_note: `Bán hàng thành công. Serial: ${params.serialNumber}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
       estimated_cost: params.soldPrice || item.retail_price || item.price || 0,
       total_amount: params.soldPrice || item.retail_price || item.price || 0,
-      created_at: new Date().toISOString(),
-      warranty_until: new Date(Date.now() + params.warrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: saleDateTime.toISOString(),
+      warranty_until: warrantyUntilDate.toISOString(),
     };
 
     setTickets((prev) => {
@@ -2581,6 +2600,124 @@ export function StoreProvider({
       success: true,
       customerCode,
       message: `Bán máy thành công! Mã khách hàng: ${customerCode} (Trích 5% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
+    };
+  };
+
+  const sellSparePart = async (params: {
+    partId: string;
+    customerName: string;
+    customerPhone: string;
+    customerAddress?: string;
+    quantity: number;
+    warrantyMonths: number;
+    soldPrice: number;
+    saleDate?: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    if (!canSellAndEditWarranty()) {
+      return {
+        success: false,
+        message: 'Bạn không có quyền thực hiện bán hàng hoặc điều chỉnh thông tin bảo hành!',
+      };
+    }
+
+    const part = spareParts.find((p) => p.id === params.partId);
+    if (!part) {
+      return { success: false, message: 'Không tìm thấy linh kiện trong kho!' };
+    }
+
+    if (params.quantity <= 0) {
+      return { success: false, message: 'Số lượng bán phải lớn hơn 0!' };
+    }
+
+    if (params.quantity > (part.quantity_in_stock || 0)) {
+      return { success: false, message: `Số lượng tồn kho không đủ (chỉ còn ${part.quantity_in_stock})!` };
+    }
+
+    const saleDateTime = params.saleDate ? new Date(params.saleDate) : new Date();
+    const warrantyUntilDate = new Date(saleDateTime);
+    warrantyUntilDate.setMonth(warrantyUntilDate.getMonth() + params.warrantyMonths);
+
+    // 1. Giảm tồn kho
+    const updatedStock = Math.max(0, (part.quantity_in_stock || 0) - params.quantity);
+    const updatedPart: SparePart = { ...part, quantity_in_stock: updatedStock };
+    setSpareParts((prev) => {
+      const next = prev.map((p) => (p.id === params.partId ? updatedPart : p));
+      saveToLocal(STORAGE_KEYS.spareParts, next);
+      return next;
+    });
+
+    // 2. Thêm hoặc cập nhật khách hàng
+    const existingCustomerCodes = customers
+      .map((c) => c.customer_code)
+      .filter((code): code is string => Boolean(code));
+    const customerCode = generateCustomerCode('', params.customerPhone, existingCustomerCodes);
+
+    const newCustomer: Customer = {
+      id: createId(),
+      customer_code: customerCode,
+      full_name: params.customerName.trim(),
+      phone: params.customerPhone.trim(),
+      address: params.customerAddress?.trim() || 'Long An - Tây Ninh',
+      customer_tier: 'Standard',
+      notes: `Mua linh kiện ${part.part_name} x${params.quantity}`,
+      created_at: saleDateTime.toISOString(),
+    };
+
+    setCustomers((prev) => {
+      const next = [newCustomer, ...prev];
+      saveToLocal(STORAGE_KEYS.customers, next);
+      return next;
+    });
+
+    // 3. Tạo phiếu bảo hành
+    const warrantyTicket: ServiceTicket = {
+      id: createId(),
+      ticket_code: `#LK-${customerCode}-${Date.now().toString().slice(-4)}`,
+      customer_name: params.customerName.trim(),
+      customer_phone: params.customerPhone.trim(),
+      customer_address: params.customerAddress?.trim() || 'Long An - Tây Ninh',
+      device_service_tag: `LK-${part.part_type}-${part.id.slice(-4)}`,
+      device_name: `Linh kiện: ${part.part_name} (x${params.quantity})`,
+      technician_name: currentUser.name,
+      status: 'delivered',
+      visual_condition: part.condition === 'new' ? 'Linh kiện mới 100% nguyên seal' : 'Linh kiện zin tháo máy',
+      technician_note: `Xuất bán linh kiện x${params.quantity}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
+      estimated_cost: params.soldPrice,
+      total_amount: params.soldPrice,
+      created_at: saleDateTime.toISOString(),
+      warranty_until: warrantyUntilDate.toISOString(),
+    };
+
+    setTickets((prev) => {
+      const next = [warrantyTicket, ...prev];
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+
+    // Sync Supabase nếu khả dụng
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await Promise.all([
+        isUuid(part.id)
+          ? runSupabaseWrite(
+              () => client.from('spare_parts').update(updatedPart).eq('id', part.id),
+              'Cập nhật tồn linh kiện'
+            )
+          : Promise.resolve(true),
+        runSupabaseWrite(
+          () => client.from('customers').insert([newCustomer]),
+          'Thêm khách hàng (bán linh kiện)'
+        ),
+        runSupabaseWrite(
+          () => client.from('service_tickets').insert([warrantyTicket]),
+          'Tạo phiếu bảo hành (bán linh kiện)'
+        ),
+      ]);
+    }
+
+    return {
+      success: true,
+      message: `Xuất bán linh kiện thành công! Bảo hành ${params.warrantyMonths} tháng đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}.`,
     };
   };
 
@@ -2980,6 +3117,7 @@ export function StoreProvider({
       canSellAndEditWarranty,
       canAccessCRM,
       sellInventoryItem,
+      sellSparePart,
       updateUser,
       changeUserPassword,
       resetUserPassword,

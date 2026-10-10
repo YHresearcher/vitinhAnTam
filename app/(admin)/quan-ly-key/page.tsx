@@ -22,7 +22,6 @@ export default function QuanLyKeyPage() {
     keyCategories,
     licenseKeys,
     keyReleaseRequests,
-    keyEmailTemplate,
     addKeyCategory,
     deleteKeyCategory,
     addLicenseKey,
@@ -35,13 +34,12 @@ export default function QuanLyKeyPage() {
     reportKeyFaulty,
     restoreFaultyKey,
     rejectKeyReleaseRequest,
-    updateKeyEmailTemplate,
   } = useViTinhAnTamStore();
 
   const isAdmin = currentUser.role === 'admin';
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState<'requests' | 'inventory' | 'reports' | 'email'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'inventory' | 'reports'>('requests');
 
   // Request Filter
   const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'activated' | 'faulty'>('all');
@@ -58,11 +56,6 @@ export default function QuanLyKeyPage() {
   const [revealedKeys, setRevealedKeys] = useState<Record<string, boolean>>({});
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
-
-  // Test email states
-  const [testEmailAddress, setTestEmailAddress] = useState(currentUser?.email || 'vitinhantam@gmail.com');
-  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
-  const [testEmailFeedback, setTestEmailFeedback] = useState<string | null>(null);
 
   // Form states: Lấy key trực tiếp cho khách / Tạo yêu cầu
   const [adminReleaseMode, setAdminReleaseMode] = useState<'direct' | 'request'>('direct');
@@ -85,10 +78,6 @@ export default function QuanLyKeyPage() {
   const [catSelectedPreset, setCatSelectedPreset] = useState<string>('WINDOWS 11 PROFESSIONAL');
   const [catCustomName, setCatCustomName] = useState('');
   const [catDescription, setCatDescription] = useState('Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác');
-
-  // Form states: Email template
-  const [emailForm, setEmailForm] = useState(keyEmailTemplate);
-  const [isSavingEmail, setIsSavingEmail] = useState(false);
 
   // Inventory table filter
   const [invCatFilter, setInvCatFilter] = useState('all');
@@ -275,45 +264,6 @@ export default function QuanLyKeyPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Dispatch Test Email
-  const handleSendTestEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!testEmailAddress || !testEmailAddress.includes('@')) {
-      alert('Vui lòng nhập địa chỉ email hợp lệ để nhận thử nghiệm!');
-      return;
-    }
-
-    setIsSendingTestEmail(true);
-    setTestEmailFeedback(null);
-    try {
-      const res = await fetch('/api/send-key-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_email: testEmailAddress.trim(),
-          customer_name: 'Khách Hàng Thử Nghiệm (Test)',
-          customer_phone: '0901.234.567',
-          category_name: 'WINDOWS 11 PROFESSIONAL (TEST EMAIL)',
-          license_code: 'W269N-WFGWX-YVC9B-4J6C9-T83GX',
-          template: emailForm,
-          is_test: true,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setTestEmailFeedback(`✅ Đã gửi email thử nghiệm thành công đến: ${testEmailAddress}`);
-        triggerFeedback('Đã phát lệnh gửi email thử nghiệm nghiệm thu!');
-      } else {
-        setTestEmailFeedback(`⚠️ Gửi thử không thành công: ${data.message}`);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Không thể gửi';
-      setTestEmailFeedback(`❌ Lỗi kết nối gửi email: ${msg}`);
-    } finally {
-      setIsSendingTestEmail(false);
-    }
-  };
-
   // Submit Handler: LẤY KEY (Admin) hoặc TẠO YÊU CẦU CẤP KEY (KTV / Sales)
   const handleTakeKeySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -439,15 +389,6 @@ export default function QuanLyKeyPage() {
     setFaultyModalReq(null);
     setFaultyReasonInput('');
     triggerFeedback(res.message);
-  };
-
-  // Submit Handler: Email Template Save
-  const handleSaveEmailTemplate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingEmail(true);
-    await updateKeyEmailTemplate(emailForm);
-    setIsSavingEmail(false);
-    triggerFeedback('Đã cập nhật cấu hình email gửi key thành công!');
   };
 
   return (
@@ -602,20 +543,6 @@ export default function QuanLyKeyPage() {
             }`}
           >
             📊 BÁO CÁO &amp; DOANH THU KEY
-          </button>
-        )}
-
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => setActiveTab('email')}
-            className={`px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${
-              activeTab === 'email'
-                ? 'border-[#C0392B] text-[#C0392B] bg-[#FFFDF9]'
-                : 'border-transparent text-[#6E5D53] hover:text-[#2B1810]'
-            }`}
-          >
-            CẤU HÌNH MẪU EMAIL GỬI KEY
           </button>
         )}
       </div>
@@ -1353,242 +1280,6 @@ export default function QuanLyKeyPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* TAB 4: CẤU HÌNH MẪU EMAIL GỬI KEY (ADMIN ONLY) */}
-      {/* ========================================================================= */}
-      {activeTab === 'email' && isAdmin && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Edit Form */}
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#E8E2D9] shadow-xs space-y-4">
-            <div className="border-b border-[#E8E2D9] pb-3">
-              <h3 className="text-sm font-black text-[#2B1810]">
-                CHỈNH SỬA MẪU EMAIL GỬI KEY CHO KHÁCH
-              </h3>
-              <p className="text-xs text-[#6E5D53] mt-0.5">
-                Khi kỹ thuật viên xác nhận key hoạt động, hệ thống sẽ tự động gửi email với nội dung bên dưới đến địa chỉ email của khách hàng.
-              </p>
-            </div>
-
-            <form onSubmit={handleSaveEmailTemplate} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#2B1810] mb-1">
-                    TÊN NGƯỜI GỬI (SENDER NAME) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={emailForm.sender_name}
-                    onChange={(e) => setEmailForm({ ...emailForm, sender_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#2B1810] mb-1">
-                    EMAIL NGƯỜI GỬI (SENDER EMAIL) *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={emailForm.sender_email}
-                    onChange={(e) => setEmailForm({ ...emailForm, sender_email: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#2B1810] mb-1">
-                  TIÊU ĐỀ EMAIL (SUBJECT) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={emailForm.subject}
-                  onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-bold"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-[#2B1810] mb-1">
-                    HOTLINE HỖ TRỢ KỸ THUẬT *
-                  </label>
-                  <input
-                    type="text"
-                    value={emailForm.support_phone}
-                    onChange={(e) => setEmailForm({ ...emailForm, support_phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#2B1810] mb-1">
-                    ZALO CSKH HỖ TRỢ *
-                  </label>
-                  <input
-                    type="text"
-                    value={emailForm.support_zalo}
-                    onChange={(e) => setEmailForm({ ...emailForm, support_zalo: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#2B1810] mb-1">
-                  NỘI DUNG MẪU EMAIL (TEMPLATE BODY) *
-                </label>
-                <textarea
-                  rows={10}
-                  required
-                  value={emailForm.content_template}
-                  onChange={(e) => setEmailForm({ ...emailForm, content_template: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] focus:ring-2 focus:ring-[#C0392B] focus:outline-none font-mono text-xs leading-relaxed"
-                />
-                <div className="mt-1.5 p-2 bg-[#FAF7F2] rounded-lg border border-[#E8E2D9] text-[11px] text-[#6E5D53] space-y-1">
-                  <span className="font-bold text-[#2B1810]">Các biến thay thế tự động có sẵn:</span>
-                  <div className="flex flex-wrap gap-1.5 font-mono text-[10px] text-[#C0392B]">
-                    <span>{'{TEN_KHACH_HANG}'}</span>
-                    <span>{'{TEN_SAN_PHAM}'}</span>
-                    <span>{'{MA_KEY}'}</span>
-                    <span>{'{HUONG_DAN_KICH_HOAT}'}</span>
-                    <span>{'{HOTLINE_HO_TRO}'}</span>
-                    <span>{'{ZALO_HO_TRO}'}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button
-                  type="submit"
-                  disabled={isSavingEmail}
-                  className="px-6 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-all shadow-xs"
-                >
-                  {isSavingEmail ? 'Đang lưu...' : 'LƯU CẤU HÌNH MẪU EMAIL'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Live Preview Panel */}
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#E8E2D9] shadow-xs space-y-4">
-            <div className="border-b border-[#E8E2D9] pb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black text-[#2B1810]">
-                  XEM TRƯỚC GIAO DIỆN EMAIL THỰC TẾ (LIVE PREVIEW)
-                </h3>
-                <p className="text-xs text-[#6E5D53] mt-0.5">
-                  Mô phỏng bức thư điện tử hiển thị trong hộp thư đến của khách hàng.
-                </p>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                CHUẨN HTML RESPONSIVE
-              </span>
-            </div>
-
-            {/* Email Shell */}
-            <div className="rounded-xl border border-[#E8E2D9] overflow-hidden bg-white shadow-sm font-sans text-xs">
-              {/* Email Client Header */}
-              <div className="bg-[#FAF7F2] p-3 border-b border-[#E8E2D9] space-y-1 text-[11px]">
-                <div>
-                  <span className="text-[#6E5D53]">Người gửi: </span>
-                  <strong className="text-[#2B1810]">
-                    {emailForm.sender_name} &lt;{emailForm.sender_email}&gt;
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-[#6E5D53]">Tiêu đề: </span>
-                  <strong className="text-[#C0392B]">{emailForm.subject}</strong>
-                </div>
-                <div>
-                  <span className="text-[#6E5D53]">Người nhận: </span>
-                  <strong className="text-[#2B1810]">anh.tuan.kế_toán@gmail.com</strong>
-                </div>
-              </div>
-
-              {/* Email Client Body */}
-              <div className="p-6 space-y-4 bg-white text-[#2B1810]">
-                {/* Brand Banner */}
-                <div className="p-4 rounded-xl bg-[#2B1810] text-white flex items-center justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-amber-400">
-                      BÀN GIAO BẢN QUYỀN CHÍNH HÃNG
-                    </div>
-                    <div className="text-base font-black tracking-tight text-white mt-0.5">
-                      VI TÍNH AN TÂM
-                    </div>
-                  </div>
-                  <span className="text-xs font-mono text-white/80">
-                    Bảo hành trọn đời
-                  </span>
-                </div>
-
-                {/* Rendered Template */}
-                <div className="whitespace-pre-line leading-relaxed text-[#2B1810] font-sans">
-                  {emailForm.content_template
-                    .replace('{TEN_KHACH_HANG}', 'Anh Tuấn')
-                    .replace('{TEN_SAN_PHAM}', 'WINDOWS 11 PROFESSIONAL')
-                    .replace('{MA_KEY}', 'VK7JG-NPHTM-C97JM-9MPGT-3V66T')
-                    .replace(
-                      '{HUONG_DAN_KICH_HOAT}',
-                      '1. Mở Cài đặt (Settings) -> System -> Activation.\n2. Bấm "Change product key" và dán mã trên vào ô nhập liệu.\n3. Bấm Activate để hoàn tất kích hoạt.'
-                    )
-                    .replace('{HOTLINE_HO_TRO}', emailForm.support_phone)
-                    .replace('{ZALO_HO_TRO}', emailForm.support_zalo)}
-                </div>
-
-                {/* Footer Signature */}
-                <div className="pt-4 border-t border-[#E8E2D9] text-[11px] text-[#6E5D53]">
-                  <div><strong>TRUNG TÂM MÁY TÍNH VI TÍNH AN TÂM</strong></div>
-                  <div>Địa chỉ: 45 Nguyễn Huệ, Phường 1, Tân An, Long An</div>
-                  <div>Hotline hỗ trợ kỹ thuật: {emailForm.support_phone}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Test Email Dispatch Box */}
-            <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-300 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase text-amber-900 tracking-wider">
-                  🚀 GỬI THỬ NGHIỆM EMAIL BÀN GIAO (LIVE TEST)
-                </span>
-                <span className="text-[10px] font-mono text-amber-800 bg-amber-100 px-2 py-0.5 rounded font-bold">
-                  TEST DISPATCH
-                </span>
-              </div>
-              <p className="text-xs text-[#6E5D53]">
-                Gửi một email mẫu thực tế vào hòm thư của bạn để kiểm tra hiển thị trên Gmail / Outlook trên điện thoại và máy tính.
-              </p>
-              <form onSubmit={handleSendTestEmail} className="flex flex-col sm:flex-row items-center gap-2 pt-1">
-                <input
-                  type="email"
-                  required
-                  placeholder="Nhập email nhận thử (VD: your.email@gmail.com)"
-                  value={testEmailAddress}
-                  onChange={(e) => setTestEmailAddress(e.target.value)}
-                  className="w-full sm:flex-1 px-3 py-2 border border-amber-300 rounded-lg text-xs bg-white text-[#2B1810] font-mono"
-                />
-                <button
-                  type="submit"
-                  disabled={isSendingTestEmail}
-                  className="w-full sm:w-auto px-4 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
-                >
-                  {isSendingTestEmail ? 'Đang gửi test...' : 'GỬI EMAIL THỬ'}
-                </button>
-              </form>
-              {testEmailFeedback && (
-                <div className="text-xs font-bold text-[#2B1810] pt-1">
-                  {testEmailFeedback}
-                </div>
-              )}
             </div>
           </div>
         </div>
