@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initialInventory } from '@/lib/mockData';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 // Protected API.
@@ -30,16 +29,20 @@ export async function GET(request: NextRequest) {
           source: 'supabase',
         });
       }
-    } catch {
-      // Fallback
+      if (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Lỗi truy vấn cơ sở dữ liệu Supabase';
+      return NextResponse.json({ success: false, error: msg }, { status: 500 });
     }
   }
 
   return NextResponse.json({
     success: true,
-    total: initialInventory.length,
-    data: initialInventory,
-    source: 'fallback',
+    total: 0,
+    data: [],
+    source: 'supabase',
   });
 }
 

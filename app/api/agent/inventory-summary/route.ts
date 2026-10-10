@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { initialInventory } from '@/lib/mockData';
 
 export async function GET(req: NextRequest) {
   try {
@@ -32,12 +31,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Fallback to initial mock inventory
-    const readyItems = initialInventory.filter((i) => i.qc_status === 'ready_to_sell');
     return NextResponse.json({
       success: true,
-      count: readyItems.length,
-      items: readyItems,
+      count: 0,
+      items: [],
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown server error';

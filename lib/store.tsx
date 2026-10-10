@@ -28,23 +28,12 @@ import {
   isUuid,
 } from './supabase';
 import {
-  initialCustomers,
-  initialInventory,
-  initialSpareParts,
-  initialSoftwareLicenses,
-  initialTickets,
-  initialOnsiteDispatches,
-  initialShiftLogs,
   initialUsers,
   FaqItem,
   CustomerReview,
   initialFaqs,
-  initialCustomerReviews,
   initialKeyCategories,
-  initialLicenseKeys,
-  initialKeyReleaseRequests,
   initialKeyEmailTemplate,
-  initialWarrantyProvisions,
 } from './mockData';
 
 
@@ -385,18 +374,18 @@ export function StoreProvider({
   const [currentUser, setCurrentUser] = useState<UserAccount>(initialUsers[0]);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  // Collections
-  const [inventory, setInventory] = useState<InventoryItem[]>(initialInventory);
-  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  // Collections (Khởi tạo mảng rỗng để không có dữ liệu mockup gây ảnh hưởng đến hiệu quả hệ thống)
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [faqs, setFaqs] = useState<FaqItem[]>(initialFaqs);
-  const [reviews, setReviews] = useState<CustomerReview[]>(initialCustomerReviews);
-  const [tickets, setTickets] = useState<ServiceTicket[]>(initialTickets);
-  const [spareParts, setSpareParts] = useState<SparePart[]>(initialSpareParts);
-  const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>(initialSoftwareLicenses);
-  const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>(initialOnsiteDispatches);
-  const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(initialShiftLogs);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
-  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(MOCK_BLOG_CATEGORIES);
+  const [reviews, setReviews] = useState<CustomerReview[]>([]);
+  const [tickets, setTickets] = useState<ServiceTicket[]>([]);
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
+  const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>([]);
+  const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>([]);
+  const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
     if (initialSettings && typeof initialSettings === 'object') {
       return { ...initialSystemSettings, ...initialSettings };
@@ -469,12 +458,12 @@ export function StoreProvider({
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
-  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>(initialLicenseKeys);
-  const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>(initialKeyReleaseRequests);
+  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>([]);
+  const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>([]);
   const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
 
   // 5% Warranty Provision Fund State
-  const [warrantyProvisions, setWarrantyProvisions] = useState<WarrantyProvision[]>(initialWarrantyProvisions);
+  const [warrantyProvisions, setWarrantyProvisions] = useState<WarrantyProvision[]>([]);
 
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
@@ -939,14 +928,18 @@ export function StoreProvider({
       const pullFromSupabase = async (includeAdminData: boolean): Promise<boolean> => {
         if (!isUsingSupabase || !supabase) return false;
 
-        // 1. Tải kho máy công khai (dùng cho cả khách vãng lai và nhân sự)
-        const invResult = await supabase.from('inventory_items').select('*');
+        // 1. Tải kho máy công khai và blog (dùng cho cả khách vãng lai và nhân sự)
+        const [invResult, blogPostRes, blogCatRes] = await Promise.all([
+          supabase.from('inventory_items').select('*'),
+          supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
+          supabase.from('blog_categories').select('*').order('created_at', { ascending: true }),
+        ]);
         if (invResult.error) {
           throw new Error(invResult.error.message);
         }
-        if (invResult.data && invResult.data.length > 0) {
-          setInventory(invResult.data as InventoryItem[]);
-        }
+        setInventory((invResult.data as InventoryItem[]) || []);
+        if (blogPostRes.data) setBlogPosts(blogPostRes.data as BlogPost[]);
+        if (blogCatRes.data) setBlogCategories(blogCatRes.data as BlogCategory[]);
 
         // 2. TỐI ƯU SUPABASE EGRESS & BẢO MẬT:
         // Khách vãng lai (chưa đăng nhập): DỪNG LẠI TẠI ĐÂY!
@@ -979,11 +972,11 @@ export function StoreProvider({
           throw new Error(failures.map((failure) => failure.message).join(' | '));
         }
 
-        if (cusResult.data && cusResult.data.length > 0) setCustomers(cusResult.data as Customer[]);
-        if (tckResult.data && tckResult.data.length > 0) setTickets(tckResult.data as ServiceTicket[]);
-        if (spResult.data && spResult.data.length > 0) setSpareParts(spResult.data as SparePart[]);
-        if (onsResult.data && onsResult.data.length > 0) setOnsiteDispatches(onsResult.data as OnsiteDispatch[]);
-        if (shfResult.data && shfResult.data.length > 0) setShiftLogs(shfResult.data as ShiftLog[]);
+        setCustomers((cusResult.data as Customer[]) || []);
+        setTickets((tckResult.data as ServiceTicket[]) || []);
+        setSpareParts((spResult.data as SparePart[]) || []);
+        setOnsiteDispatches((onsResult.data as OnsiteDispatch[]) || []);
+        setShiftLogs((shfResult.data as ShiftLog[]) || []);
 
         setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
         return true;
@@ -1004,11 +997,23 @@ export function StoreProvider({
 
       // Local storage fallback / persistence for remaining items (keys, settings, faqs, reviews)
       if (typeof window !== 'undefined') {
+        const isLegacyMockId = (id: unknown): boolean => {
+          if (typeof id !== 'string') return false;
+          return /^(inv-|c\d+$|t\d+$|sp-|lic-|od-|sh-|rev-|k-|p\d+$|s\d+$|TK-2025-059)/.test(id);
+        };
+
         const readJson = <T,>(key: string, apply: (value: T) => void) => {
           const raw = localStorage.getItem(key);
           if (!raw) return;
           try {
-            apply(JSON.parse(raw) as T);
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+              // Lọc bỏ mọi dữ liệu mock tồn đọng trong localStorage của trình duyệt
+              const sanitized = parsed.filter((item: any) => !item || !item.id || !isLegacyMockId(item.id));
+              apply(sanitized as unknown as T);
+              return;
+            }
+            apply(parsed as T);
           } catch (e) {
             console.warn(`Bỏ qua dữ liệu hỏng trong localStorage (${key}):`, e);
             localStorage.removeItem(key);
@@ -1158,19 +1163,14 @@ export function StoreProvider({
       const spData = spResult.data ?? [];
       const onsData = onsResult.data ?? [];
       const shfData = shfResult.data ?? [];
-
-      if (invData.length > 0) setInventory(invData as InventoryItem[]);
-      if (cusData.length > 0) setCustomers(cusData as Customer[]);
-      if (tckData.length > 0) setTickets(tckData as ServiceTicket[]);
-      if (spData.length > 0) setSpareParts(spData as SparePart[]);
-      if (onsData.length > 0) setOnsiteDispatches(onsData as OnsiteDispatch[]);
-      if (shfData.length > 0) setShiftLogs(shfData as ShiftLog[]);
-      if (blogPostResult.data && blogPostResult.data.length > 0) {
-        setBlogPosts(blogPostResult.data as BlogPost[]);
-      }
-      if (blogCatResult.data && blogCatResult.data.length > 0) {
-        setBlogCategories(blogCatResult.data as BlogCategory[]);
-      }
+      setInventory(invData as InventoryItem[]);
+      setCustomers(cusData as Customer[]);
+      setTickets(tckData as ServiceTicket[]);
+      setSpareParts(spData as SparePart[]);
+      setOnsiteDispatches(onsData as OnsiteDispatch[]);
+      setShiftLogs(shfData as ShiftLog[]);
+      setBlogPosts((blogPostResult.data as BlogPost[]) || []);
+      setBlogCategories((blogCatResult.data as BlogCategory[]) || []);
 
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
       setSyncStatus('synced');
@@ -3059,23 +3059,20 @@ export function StoreProvider({
   };
 
   const resetToDefault = () => {
-    setUsers(initialUsers);
-    setCurrentUser(initialUsers[0]);
-    setInventory(initialInventory);
-    setCustomers(initialCustomers);
-    setTickets(initialTickets);
-    setSpareParts(initialSpareParts);
-    setSoftwareLicenses(initialSoftwareLicenses);
-    setOnsiteDispatches(initialOnsiteDispatches);
-    setShiftLogs(initialShiftLogs);
-    setFaqs(initialFaqs);
-    setReviews(initialCustomerReviews);
-    setWarrantyProvisions(initialWarrantyProvisions);
-    setBlogPosts(MOCK_BLOG_POSTS);
-    setBlogCategories(MOCK_BLOG_CATEGORIES);
+    setInventory([]);
+    setCustomers([]);
+    setTickets([]);
+    setSpareParts([]);
+    setSoftwareLicenses([]);
+    setOnsiteDispatches([]);
+    setShiftLogs([]);
+    setReviews([]);
+    setLicenseKeys([]);
+    setKeyReleaseRequests([]);
+    setWarrantyProvisions([]);
+    setBlogPosts([]);
+    setBlogCategories([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEYS.users);
-      localStorage.removeItem(STORAGE_KEYS.userId);
       localStorage.removeItem(STORAGE_KEYS.inventory);
       localStorage.removeItem(STORAGE_KEYS.customers);
       localStorage.removeItem(STORAGE_KEYS.tickets);
@@ -3085,9 +3082,14 @@ export function StoreProvider({
       localStorage.removeItem(STORAGE_KEYS.shiftLogs);
       localStorage.removeItem(STORAGE_KEYS.faqs);
       localStorage.removeItem(STORAGE_KEYS.reviews);
+      localStorage.removeItem(STORAGE_KEYS.licenseKeys);
+      localStorage.removeItem(STORAGE_KEYS.keyReleaseRequests);
       localStorage.removeItem(STORAGE_KEYS.warrantyProvisions);
       localStorage.removeItem(STORAGE_KEYS.blogPosts);
       localStorage.removeItem(STORAGE_KEYS.blogCategories);
+    }
+    if (isUsingSupabase && supabase) {
+      syncWithSupabase().catch((e) => console.warn('Supabase resync warning:', e));
     }
   };
 

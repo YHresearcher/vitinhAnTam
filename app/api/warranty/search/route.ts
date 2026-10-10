@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { initialInventory, initialTickets, initialCustomers } from '@/lib/mockData';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
@@ -10,10 +9,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Query parameter q is required' }, { status: 400 });
   }
 
-  const cleanQuery = q.toLowerCase();
   const digitsOnly = q.replace(/\D/g, '');
 
-  // 1. Try querying Supabase if configured
+  // Query Supabase directly
   if (isSupabaseConfigured() && supabase) {
     try {
       const [invRes, tckRes, cusRes] = await Promise.all([
@@ -46,48 +44,14 @@ export async function GET(request: NextRequest) {
           },
         });
       }
-    } catch {
-      // Proceed to fallback
+    } catch (err: unknown) {
+      console.warn('Supabase warranty search query error:', err);
     }
   }
 
-  // 2. Fallback to Local/Mock Data
-  const matchedItem = initialInventory.find(
-    (item) =>
-      item.service_tag.toLowerCase() === cleanQuery ||
-      item.serial_number?.toLowerCase() === cleanQuery
+  return NextResponse.json(
+    { found: false, message: 'Không tìm thấy dữ liệu bảo hành cho thông tin đã nhập trong hệ thống.' },
+    { status: 404 }
   );
-
-  const matchedTicket = initialTickets.find((ticket) => {
-    const phoneDigits = ticket.customer_phone.replace(/\D/g, '');
-    return (
-      ticket.ticket_code.toLowerCase() === cleanQuery ||
-      (ticket.service_tag && ticket.service_tag.toLowerCase() === cleanQuery) ||
-      (digitsOnly.length >= 7 && phoneDigits.includes(digitsOnly))
-    );
-  });
-
-  const matchedCustomer = initialCustomers.find((c) => {
-    const phoneDigits = c.phone.replace(/\D/g, '');
-    return digitsOnly.length >= 7 && phoneDigits.includes(digitsOnly);
-  });
-
-  if (!matchedItem && !matchedTicket && !matchedCustomer) {
-    return NextResponse.json(
-      { found: false, message: 'Không tìm thấy dữ liệu bảo hành cho thông tin đã nhập.' },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json({
-    found: true,
-    query: q,
-    source: 'fallback',
-    data: {
-      item: matchedItem || null,
-      ticket: matchedTicket || null,
-      customer: matchedCustomer || null,
-    },
-  });
 }
 
