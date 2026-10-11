@@ -18,6 +18,8 @@ import {
   Search,
   RotateCcw,
   Check,
+  MessageCircle,
+  Phone,
 } from 'lucide-react';
 
 function AppointmentBookingContent() {
@@ -60,6 +62,8 @@ function AppointmentBookingContent() {
   );
   const [timeSlot, setTimeSlot] = useState(t.timeSlots[2]?.label || 'Khung giờ chiều tối (17:30 - 21:00)');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showZaloModal, setShowZaloModal] = useState(false);
+  const [customerUsedZalo, setCustomerUsedZalo] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<{
     code: string;
     name: string;
@@ -139,8 +143,14 @@ function AppointmentBookingContent() {
       return;
     }
 
+    setShowZaloModal(true);
+  };
+
+  const submitBooking = async (useZalo: boolean) => {
     setIsSubmitting(true);
     setErrorMsg('');
+    setShowZaloModal(false);
+    setCustomerUsedZalo(useZalo);
 
     try {
       const ticketCode = `#TK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -592,6 +602,66 @@ function AppointmentBookingContent() {
                   {t.commitmentNote}
                 </p>
               </div>
+             </form>
+
+             {/* ZALO CONFIRMATION MODAL */}
+             {showZaloModal && (
+               <div className="fixed inset-0 bg-[#1A0F0A]/60 backdrop-blur-sm flex items-center justify-center p-5 z-50">
+                 <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6">
+                   <div className="text-center mb-4">
+                     <div className="w-14 h-14 bg-[#FBE8DE] text-[#C0392B] rounded-full flex items-center justify-center mx-auto mb-3 border border-[#F2C4B2]">
+                       <MessageCircle className="w-7 h-7" />
+                     </div>
+                     <h3 className="text-lg font-black text-slate-900 mb-1">
+                       {currentLang === 'en' ? 'How would you like to be contacted?' : 'Bạn muốn nhận thông báo qua kênh nào?'}
+                     </h3>
+                     <p className="text-xs text-slate-600">
+                       {currentLang === 'en'
+                         ? 'We will send your booking confirmation via your preferred method'
+                         : 'Chúng tôi sẽ gửi thông báo xác nhận qua kênh bạn chọn'}
+                     </p>
+                   </div>
+
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                     <button
+                       type="button"
+                       onClick={() => submitBooking(true)}
+                       disabled={isSubmitting}
+                       className="w-full px-4 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-emerald-700 shadow-xs transition-all disabled:opacity-50"
+                     >
+                       <MessageCircle className="w-4 h-4" />
+                       <span>{currentLang === 'en' ? 'Via Zalo (Instant)' : 'Qua Zalo (Nhanh nhất)'}</span>
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => submitBooking(false)}
+                       disabled={isSubmitting}
+                       className="w-full px-4 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 shadow-2xs transition-all disabled:opacity-50"
+                     >
+                       <Phone className="w-4 h-4" />
+                       <span>{currentLang === 'en' ? 'Via SMS' : 'Qua Tin nhắn SMS'}</span>
+                     </button>
+                   </div>
+
+                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                     <ul className="text-[11px] text-slate-600 space-y-2">
+                       <li className="flex items-start gap-2">
+                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
+                         <span>{currentLang === 'en' ? 'Booking confirmation sent' : 'Gửi xác nhận lịch hẹn'}</span>
+                       </li>
+                       <li className="flex items-start gap-2">
+                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
+                         <span>{currentLang === 'en' ? 'Real-time status updates' : 'Cập nhật trạng thái thời gian thực'}</span>
+                       </li>
+                       <li className="flex items-start gap-2">
+                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
+                         <span>{currentLang === 'en' ? 'Quick response to questions' : 'Phản hồi nhanh khi cần hỏi đáp'}</span>
+                       </li>
+                     </ul>
+                   </div>
+                 </div>
+               </div>
+             )}
             </form>
           </div>
         )}

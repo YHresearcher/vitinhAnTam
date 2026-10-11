@@ -68,9 +68,9 @@ export function CrmAlertsPanel({
       .sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [customers]);
 
-  // Danh sách nhắc bảo dưỡng 6 tháng (>= 180 ngày)
+    // Danh sách nhắc bảo dưỡng 6 tháng (>= 180 ngày)
   const maintenanceDueList = useMemo(() => {
-    const nowTimestamp = Date.now();
+    const now = new Date();
     return customers
       .map((cust) => {
         const cleanPhone = cust.phone.replace(/\D/g, '');
@@ -115,7 +115,7 @@ export function CrmAlertsPanel({
         });
 
         if (!latestDate) return null;
-        const daysSince = Math.floor((nowTimestamp - (latestDate as Date).getTime()) / (1000 * 60 * 60 * 24));
+        const daysSince = Math.floor((now.getTime() - (latestDate as Date).getTime()) / (1000 * 60 * 60 * 24));
         const monthsSince = Math.floor(daysSince / 30);
 
         if (daysSince >= 180) {

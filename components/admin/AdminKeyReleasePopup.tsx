@@ -45,7 +45,7 @@ export function AdminKeyReleasePopup() {
     if (currentIndex >= pendingRequests.length && pendingRequests.length > 0) {
       setCurrentIndex(pendingRequests.length - 1);
     }
-  }, [pendingRequests.length, currentIndex]);
+  }, [pendingRequests.length]);
 
   const prevCountRef = useRef(0);
   const prevAdminRef = useRef(isAdmin);

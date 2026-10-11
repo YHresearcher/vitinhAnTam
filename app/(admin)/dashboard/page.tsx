@@ -50,7 +50,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
   // ==========================================
   // THỐNG KÊ THIẾT BỊ & CẢNH BÁO TỒN KHO LÂU
   // ==========================================
-  const nowTimestamp = useMemo(() => Date.now(), []);
+  const nowTimestamp = Date.now();
 
   const deviceStats = useMemo(() => {
     const total = inventory.length;
