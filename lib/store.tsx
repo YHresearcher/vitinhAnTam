@@ -33,6 +33,7 @@ import {
   CustomerReview,
   initialFaqs,
   initialKeyCategories,
+  initialLicenseKeys,
   initialKeyEmailTemplate,
 } from './mockData';
 
@@ -458,7 +459,7 @@ export function StoreProvider({
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
   const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
-  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>([]);
+  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>(initialLicenseKeys);
   const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>([]);
   const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
 
@@ -1032,8 +1033,33 @@ export function StoreProvider({
         readJson<SoftwareLicense[]>(STORAGE_KEYS.softwareLicenses, setSoftwareLicenses);
         readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
         readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
-        readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, setKeyCategories);
-        readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, setLicenseKeys);
+        readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, (parsed) => {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const merged = [...parsed];
+            for (const initCat of initialKeyCategories) {
+              const found = merged.find((c) => c.id === initCat.id);
+              if (found) {
+                found.description = initCat.description;
+              } else {
+                merged.push(initCat);
+              }
+            }
+            setKeyCategories(merged);
+          } else {
+            setKeyCategories(initialKeyCategories);
+          }
+        });
+
+        readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, (parsed) => {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingCodes = new Set(parsed.map((k) => k.license_code.toUpperCase()));
+            const missing = initialLicenseKeys.filter((k) => !existingCodes.has(k.license_code.toUpperCase()));
+            const merged = [...parsed, ...missing];
+            setLicenseKeys(merged);
+          } else {
+            setLicenseKeys(initialLicenseKeys);
+          }
+        });
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
         readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);

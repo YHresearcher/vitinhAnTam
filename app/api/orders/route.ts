@@ -248,24 +248,6 @@ export async function POST(request: NextRequest) {
       console.warn('Zalo Bot / Webhook order notification error:', err);
     }
 
-    // Nếu khách chọn dùng Zalo, kích hoạt sự kiện gửi xác nhận đơn hàng qua Zalo đến khách hàng
-    if (useZalo) {
-      try {
-        await dispatchSystemEvent('customer_zalo_order', {
-          orderCode,
-          customerName,
-          customerPhone,
-          deviceName,
-          totalAmount: Number(body.device_price) || 0,
-          paymentMethod: order.payment_method === 'qr' ? 'Chuyển khoản VietQR' : 'Tiền mặt khi nhận hàng',
-          deliveryMethod: order.delivery_method,
-          shippingAddress: (body.customer_address || '').trim() || (order.delivery_method === 'pickup' ? 'Nhận tại quầy' : 'Giao tận nơi'),
-          note: (body.note || '').trim(),
-        });
-      } catch (err) {
-        console.warn('Customer Zalo order notification error:', err);
-      }
-    }
 
     return NextResponse.json({
       success: true,

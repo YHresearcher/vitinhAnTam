@@ -314,19 +314,22 @@ export async function dispatchSystemEvent(
     const nowStr = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
     if (eventType === 'new_booking') {
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
       formattedText = `🚨 [ĐẶT LỊCH DỊCH VỤ MỚI]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `🏷️ Mã tiếp nhận: ${payload.ticketCode || 'N/A'}\n` +
         `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
-        `📞 SĐT / Zalo: ${payload.customerPhone || 'N/A'}\n` +
+        `📞 SĐT khách: ${payload.customerPhone || 'N/A'}\n` +
         `📍 Địa điểm: ${payload.address || 'Tại quầy cửa hàng'}\n` +
         `💻 Thiết bị: ${payload.deviceType || 'Máy tính'}\n` +
         `🔧 Dịch vụ yêu cầu: ${payload.serviceNeeded || 'Kiểm tra tổng quát'}\n` +
         `⏰ Thời gian hẹn: ${payload.bookingDate || 'Hôm nay'} (${payload.bookingTime || 'Sớm nhất'})\n` +
         `⏱️ Tạo lúc: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
+        (cleanPhone ? `👉 KTV bấm link để chat Zalo ngay với khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
         `👉 Vui lòng liên hệ khách hàng để xác nhận lịch!`;
     } else if (eventType === 'new_order') {
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
       formattedText = `🛒 [ĐƠN HÀNG MUA MÁY / LINH KIỆN MỚI]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `📦 Mã đơn: ${payload.orderCode || payload.id || 'N/A'}\n` +
@@ -336,10 +339,10 @@ export async function dispatchSystemEvent(
         `📍 Giao đến: ${payload.shippingAddress || 'Nhận tại cửa hàng'}\n` +
         `💰 Tổng tiền: ${typeof payload.totalAmount === 'number' ? payload.totalAmount.toLocaleString('vi-VN') + ' đ' : payload.totalAmount || '0 đ'}\n` +
         `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản VietQR'}\n` +
-        (payload.useZalo ? `📱 Khách dùng Zalo: Có xác nhận qua SĐT này\n` : '') +
         (payload.note ? `📝 Ghi chú: ${payload.note}\n` : '') +
         `⏱️ Tạo lúc: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
+        (cleanPhone ? `👉 KTV bấm link để chat Zalo ngay với khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
         `👉 Xem chi tiết tại menu Quản Lý Đơn Hàng.`;
     } else if (eventType === 'new_ticket') {
       formattedText = `🛠️ [PHIẾU SỬA CHỮA MỚI]\n` +
@@ -394,24 +397,26 @@ export async function dispatchSystemEvent(
       const amountStr = typeof payload.totalAmount === 'number'
         ? payload.totalAmount.toLocaleString('vi-VN') + ' đ'
         : (payload.totalAmount || '0 đ');
-      formattedText = `📱 [XÁC NHẬN ĐƠN HÀNG QUA ZALO KHÁCH HÀNG]\n` +
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
+      formattedText = `📱 [YÊU CẦU XÁC NHẬN ĐƠN QUA ZALO KHÁCH HÀNG]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `Chào bạn ${payload.customerName || 'quý khách'},\n` +
-        `Vi Tính An Tâm xin gửi xác nhận đơn đặt hàng của bạn:\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 Số điện thoại Zalo: ${payload.customerPhone || 'N/A'}\n` +
         `📦 Mã đơn: ${payload.orderCode || 'N/A'}\n` +
         `💻 Sản phẩm: ${payload.deviceName || 'N/A'}\n` +
         `💰 Tổng tiền: ${amountStr}\n` +
         `📍 Nhận hàng: ${payload.deliveryMethod === 'pickup' ? 'Nhận trực tiếp tại cửa hàng' : `Giao tận nơi — ${payload.shippingAddress || ''}`}\n` +
         `💳 Phương thức: ${payload.paymentMethod || 'Chuyển khoản QR'}\n` +
-        `🛡️ Bảo hành: Máy chuẩn A, nguyên bản, hỗ trợ nhanh chóng.\n` +
         `⏰ Thời gian đặt: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} để chuẩn bị máy chu đáo cho bạn. Trân trọng cảm ơn!`;
+        (cleanPhone ? `👉 KTV bấm vào link để chat Zalo ngay với khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
+        `💬 KTV vui lòng gửi tin nhắn xác nhận đơn cho khách sớm nhất nhé!`;
     } else if (eventType === 'customer_zalo_booking') {
-      formattedText = `📱 [XÁC NHẬN ĐẶT LỊCH HẸN QUA ZALO KHÁCH HÀNG]\n` +
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
+      formattedText = `📱 [YÊU CẦU XÁC NHẬN LỊCH HẸN QUA ZALO KHÁCH HÀNG]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `Chào bạn ${payload.customerName || 'quý khách'},\n` +
-        `Vi Tính An Tâm xin gửi xác nhận thông tin lịch hẹn dịch vụ của bạn:\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 Số điện thoại Zalo: ${payload.customerPhone || 'N/A'}\n` +
         `🏷️ Mã tiếp nhận: ${payload.ticketCode || 'N/A'}\n` +
         `💻 Thiết bị: ${payload.deviceType || 'Máy tính'}\n` +
         `🔧 Dịch vụ yêu cầu: ${payload.serviceNeeded || 'Kiểm tra tổng quát'}\n` +
@@ -419,7 +424,8 @@ export async function dispatchSystemEvent(
         `📍 Địa chỉ: ${payload.address || 'Tại cửa hàng'}\n` +
         `⏱️ Thời gian đặt: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
-        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} trước khi phục vụ để xác nhận lịch chu đáo cho bạn. Trân trọng cảm ơn!`;
+        (cleanPhone ? `👉 KTV bấm vào link để chat Zalo ngay với khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
+        `💬 KTV trực ca vui lòng liên hệ xác nhận lịch hẹn cho khách nhé!`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

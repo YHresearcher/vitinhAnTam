@@ -82,9 +82,9 @@ export async function POST(req: NextRequest) {
     } else if (textLower === 'id' || textLower === 'uid' || textLower === 'user_id') {
       replyText = `🔎 Zalo User ID của bạn là: ${senderId}\n\nDùng ID này tại: Cài đặt -> phần "Zalo User ID nhận tin nhắn".`;
     } else if (textLower.startsWith('tn-') || textLower.startsWith('phieu-')) {
-      replyText = `🔍 Hệ thống đã tiếp nhận yêu cầu tra cứu mã phiếu [${text}]. Kỹ thuật viên sẽ kiểm tra chi tiết và phản hồi bạn trong ít phút!`;
+      replyText = `🔍 Hệ thống đã tiếp nhận yêu cầu tra cứu mã phiếu [${text}]. Kỹ thuật viên sẽ kiểm tra chi tiết và phản hồi bạn trong thời gian nhanh nhất!`;
     } else if (textLower.startsWith('at-') || textLower.startsWith('don-')) {
-      replyText = `📦 Hệ thống đã tiếp nhận yêu cầu tra cứu mã đơn hàng [${text}]. Kỹ thuật viên sẽ kiểm tra và phản hồi bạn trong ít phút!`;
+      replyText = `📦 Hệ thống đã tiếp nhận yêu cầu tra cứu mã đơn hàng [${text}]. Kỹ thuật viên sẽ kiểm tra và phản hồi bạn trong thời gian nhanh nhất!`;
     }
 
     if (replyText) {

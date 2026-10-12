@@ -1706,6 +1706,7 @@ export default function QuanLyKeyPage() {
                       </>
                     ) : (
                       <>
+                        <option value="OFFICE PRO PLUS 2024">OFFICE PRO PLUS 2024</option>
                         <option value="OFFICE PRO PLUS 2021">OFFICE PRO PLUS 2021</option>
                         <option value="OFFICE PRO PLUS 2019">OFFICE PRO PLUS 2019</option>
                         <option value="MICROSOFT 365 FAMILY">MICROSOFT 365 FAMILY</option>
