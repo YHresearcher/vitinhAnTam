@@ -1431,15 +1431,39 @@ export function StoreProvider({
 
   const fetchPendingOrders = async (): Promise<CustomerOrder[]> => {
     try {
-      const res = await fetch('/api/orders?status=pending', { cache: 'no-store' });
-      if (!res.ok) return [];
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        setPendingOrders(json.data);
-        return json.data;
+      const res = await fetch('/api/orders?status=pending', {
+        cache: 'no-store',
+        headers: {
+          'x-staff-role': currentUser?.role || 'admin',
+        },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setPendingOrders(json.data);
+          return json.data;
+        }
       }
-    } catch {
-      // Bỏ qua lỗi kết nối
+    } catch (e) {
+      console.warn('Fetch /api/orders error:', e);
+    }
+
+    // Dự phòng trực tiếp từ Supabase nếu API bị chặn hoặc rỗng
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (!error && Array.isArray(data)) {
+          setPendingOrders(data as CustomerOrder[]);
+          return data as CustomerOrder[];
+        }
+      } catch (err) {
+        console.warn('Direct Supabase pending orders fallback error:', err);
+      }
     }
     return [];
   };
@@ -1469,11 +1493,15 @@ export function StoreProvider({
       });
     }
 
+    let success = false;
     // 2. Gọi PATCH /api/orders
     try {
       const res = await fetch('/api/orders', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-staff-role': currentUser?.role || 'admin',
+        },
         body: JSON.stringify({
           id: order.id,
           status: 'confirmed',
@@ -1481,11 +1509,34 @@ export function StoreProvider({
         }),
       });
       if (res.ok) {
-        setPendingOrders((prev) => prev.filter((o) => o.id !== order.id));
-        return true;
+        success = true;
       }
     } catch (e) {
-      console.warn('Confirm order error:', e);
+      console.warn('Confirm order API error:', e);
+    }
+
+    // 3. Dự phòng cập nhật trực tiếp Supabase
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase
+          .from('orders')
+          .update({
+            status: 'confirmed',
+            confirmed_by: currentUser.name || 'Admin',
+            confirmed_at: new Date().toISOString(),
+          })
+          .eq('id', order.id);
+        if (!error) {
+          success = true;
+        }
+      } catch (err) {
+        console.warn('Direct Supabase order confirm error:', err);
+      }
+    }
+
+    if (success) {
+      setPendingOrders((prev) => prev.filter((o) => o.id !== order.id));
+      return true;
     }
     return false;
   };

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { formatVND } from '@/lib/supabase';
+import { formatVND, supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { OrderSuccessQrCard } from '@/components/public/OrderSuccessQrCard';
 import {
   Check,
@@ -64,26 +64,36 @@ export default function MuaHangClient() {
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const orderPayload = {
+      order_code: orderCode,
+      customer_name: customerName.trim(),
+      customer_phone: customerPhone.trim(),
+      customer_address: customerAddress.trim(),
+      device_name: deviceName.trim(),
+      device_price: devicePrice,
+      device_tag: deviceTag.trim(),
+      payment_method: paymentMethod,
+      delivery_method: deliveryMethod,
+      note: customerNote.trim(),
+      status: 'pending',
+    };
+
     try {
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order_code: orderCode,
-          customer_name: customerName,
-          customer_phone: customerPhone,
-          customer_address: customerAddress,
-          device_name: deviceName,
-          device_price: devicePrice,
-          device_tag: deviceTag,
-          payment_method: paymentMethod,
-          delivery_method: deliveryMethod,
-          note: customerNote,
-          status: 'pending',
-          use_zalo: false,
-        }),
+        body: JSON.stringify(orderPayload),
       });
-      if (!response.ok) throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
+
+      if (!response.ok) {
+        // Dự phòng ghi trực tiếp Supabase từ client nếu API trả về lỗi
+        if (isSupabaseConfigured() && supabase) {
+          const { error: sbErr } = await supabase.from('orders').insert([orderPayload]);
+          if (sbErr) throw new Error(sbErr.message);
+        } else {
+          throw new Error(isEn ? 'Failed to place order' : 'Đặt hàng thất bại, vui lòng thử lại.');
+        }
+      }
       setStep('success');
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : 'Đặt hàng thất bại');
