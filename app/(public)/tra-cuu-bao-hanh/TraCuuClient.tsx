@@ -97,11 +97,28 @@ function WarrantyLookupContent() {
     return () => clearTimeout(timer);
   }, [urlTag, executeSearch]);
 
-  // Tính toán thời hạn bảo hành thực tế của máy
-  const warrantyMonths =
-    searchResult?.item?.warranty_months ||
-    searchResult?.ticket?.warranty_duration_months ||
-    12;
+  // Tính toán thời hạn bảo hành thực tế của máy:
+  // Ưu tiên theo phiếu bán/giao hàng thực tế (ticket), sau đó tới thông tin máy (item)
+  const calculateWarrantyMonths = (): number => {
+    if (searchResult?.ticket?.warranty_duration_months) {
+      return Number(searchResult.ticket.warranty_duration_months);
+    }
+    const rawStart = searchResult?.item?.handover_date || searchResult?.ticket?.created_at;
+    if (searchResult?.ticket?.warranty_until && rawStart) {
+      const startMs = new Date(rawStart).getTime();
+      const endMs = new Date(searchResult.ticket.warranty_until).getTime();
+      if (!isNaN(startMs) && !isNaN(endMs) && endMs > startMs) {
+        const months = Math.round((endMs - startMs) / (1000 * 60 * 60 * 24 * 30.4375));
+        if (months > 0) return months;
+      }
+    }
+    if (searchResult?.item?.warranty_months) {
+      return Number(searchResult.item.warranty_months);
+    }
+    return 12;
+  };
+
+  const warrantyMonths = calculateWarrantyMonths();
 
   const handoverDateRaw =
     searchResult?.item?.handover_date ||
@@ -112,8 +129,14 @@ function WarrantyLookupContent() {
   const startDate = new Date(handoverDateRaw);
   const validStartDate = Number.isNaN(startDate.getTime()) ? new Date() : startDate;
 
-  const expiryDate = new Date(validStartDate);
-  expiryDate.setMonth(expiryDate.getMonth() + warrantyMonths);
+  // Hạn bảo hành phần cứng máy
+  const expiryDate = searchResult?.ticket?.warranty_until
+    ? new Date(searchResult.ticket.warranty_until)
+    : (() => {
+        const d = new Date(validStartDate);
+        d.setMonth(d.getMonth() + warrantyMonths);
+        return d;
+      })();
 
   const nowTimestamp = Date.now();
   const totalDays = Math.max(1, Math.ceil((expiryDate.getTime() - validStartDate.getTime()) / (1000 * 60 * 60 * 24)));

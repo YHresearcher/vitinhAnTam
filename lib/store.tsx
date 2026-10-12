@@ -985,6 +985,29 @@ export function StoreProvider({
         setOnsiteDispatches((onsResult.data as OnsiteDispatch[]) || []);
         setShiftLogs((shfResult.data as ShiftLog[]) || []);
 
+        // 4. Đồng bộ Kho Key Bản Quyền từ Supabase
+        try {
+          const keysRes = await fetch('/api/keys', {
+            headers: { 'x-staff-role': 'admin' },
+          });
+          if (keysRes.ok) {
+            const keysJson = await keysRes.json();
+            if (keysJson.success) {
+              if (Array.isArray(keysJson.categories) && keysJson.categories.length > 0) {
+                setKeyCategories(keysJson.categories);
+              }
+              if (Array.isArray(keysJson.keys) && keysJson.keys.length > 0) {
+                setLicenseKeys(keysJson.keys);
+              }
+              if (Array.isArray(keysJson.requests)) {
+                setKeyReleaseRequests(keysJson.requests);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Could not pull keys from /api/keys:', e);
+        }
+
         setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
         return true;
       };
@@ -1298,8 +1321,7 @@ export function StoreProvider({
       return next;
     });
 
-    // Dữ liệu mock (inv-1, inv-2...) không tồn tại trong DB — chỉ ghi khi id là UUID hợp lệ
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').update(data).eq('id', id),
@@ -1359,7 +1381,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.inventory, next);
       return next;
     });
-    if (isUsingSupabase && supabase && isUuid(id)) {
+    if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
         () => client.from('inventory_items').delete().eq('id', id),
@@ -1792,6 +1814,20 @@ export function StoreProvider({
   // ==========================================
   // WINDOWS & OFFICE KEY MANAGEMENT & RELEASE
   // ==========================================
+  // Helper to sync key operations with Supabase via backend API
+  const syncKeyMutation = async (body: any, method: 'POST' | 'PATCH' | 'DELETE' = 'POST') => {
+    if (typeof window === 'undefined') return;
+    try {
+      await fetch('/api/keys', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch (err) {
+      console.warn('Failed to sync key mutation to Supabase:', err);
+    }
+  };
+
   const addKeyCategory = async (catData: { name: string; type: 'windows' | 'office' | 'others'; description: string }): Promise<KeyCategory> => {
     const trimmedName = catData.name.trim();
     // Check if existing category matches (case-insensitive, trimmed)
@@ -1807,6 +1843,7 @@ export function StoreProvider({
         saveToLocal(STORAGE_KEYS.keyCategories, next);
         return next;
       });
+      syncKeyMutation({ action: 'add_category', category: updated });
       return updated;
     }
 
@@ -1824,6 +1861,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyCategories, next);
       return next;
     });
+    syncKeyMutation({ action: 'add_category', category: newCat });
     return newCat;
   };
 
@@ -1838,6 +1876,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyCategories, next);
       return next;
     });
+    syncKeyMutation({ action: 'delete_category', id }, 'DELETE');
     return { success: true, message: 'Đã xóa phân loại thành công!' };
   };
 
@@ -1854,6 +1893,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.licenseKeys, next);
       return next;
     });
+    syncKeyMutation({ action: 'add_key', key: newKey });
     return newKey;
   };
 
@@ -1881,6 +1921,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.licenseKeys, next);
       return next;
     });
+    syncKeyMutation({ action: 'add_batch', keys: newKeys });
     return { success: true, addedCount: newKeys.length };
   };
 
@@ -1890,6 +1931,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.licenseKeys, next);
       return next;
     });
+    syncKeyMutation({ action: 'delete_key', id }, 'DELETE');
     return true;
   };
 
@@ -1899,6 +1941,7 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.licenseKeys, next);
       return next;
     });
+    syncKeyMutation({ action: 'update_key', id, data: updates }, 'PATCH');
     return true;
   };
 
@@ -1981,6 +2024,9 @@ export function StoreProvider({
       return next;
     });
 
+    syncKeyMutation({ action: 'update_key', id: assignedKey.id, data: assignedKey }, 'PATCH');
+    syncKeyMutation({ action: 'create_request', request: newReq });
+
     return {
       success: true,
       message: `Đã LẤY key [${assignedKey.license_code}] cho khách ${newReq.customer_name} (phiếu ${newReq.request_code}).`,
@@ -2041,6 +2087,8 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
       return next;
     });
+
+    syncKeyMutation({ action: 'create_request', request: newReq });
 
     // Gửi thông báo Webhook & Zalo Bot cho Admin
     if (typeof window !== 'undefined') {
@@ -2127,6 +2175,9 @@ export function StoreProvider({
       return next;
     });
 
+    syncKeyMutation({ action: 'update_key', id: assignedKey.id, data: assignedKey }, 'PATCH');
+    syncKeyMutation({ action: 'update_request', id: approvedReq.id, data: approvedReq }, 'PATCH');
+
     return {
       success: true,
       message: `Đã duyệt cấp key thành công! Key đã hiển thị cho kỹ thuật/sales kiểm tra kích hoạt.`,
@@ -2188,6 +2239,17 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
       return next;
     });
+
+    syncKeyMutation({ action: 'add_key', key: newKey });
+    syncKeyMutation({ action: 'update_request', id: requestId, data: {
+      status: 'approved_waiting_test',
+      released_key_id: newKey.id,
+      released_key_code: newKey.license_code,
+      admin_id: currentUser.id,
+      admin_name: currentUser.name,
+      approved_at: now,
+      updated_at: now,
+    } }, 'PATCH');
 
     return {
       success: true,
@@ -2252,6 +2314,14 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
       return next;
     });
+
+    syncKeyMutation({ action: 'update_key', id: req.released_key_id, data: { status: 'used' } }, 'PATCH');
+    syncKeyMutation({ action: 'update_request', id: requestId, data: {
+      status: 'active_confirmed',
+      email_sent: true,
+      email_sent_at: emailSentTime,
+      updated_at: emailSentTime,
+    } }, 'PATCH');
 
     // 4. Gửi thông báo phát hành Key thành công qua Bot đến nhóm đã cài đặt sẵn
     try {
@@ -2339,6 +2409,29 @@ export function StoreProvider({
       return next;
     });
 
+    syncKeyMutation({
+      action: 'update_key',
+      id: req.released_key_id,
+      data: {
+        status: 'faulty',
+        notes: `Key lỗi: ${reason} (Báo cáo bởi ${currentUser.name})`,
+      },
+    }, 'PATCH');
+
+    syncKeyMutation({
+      action: 'update_request',
+      id: requestId,
+      data: {
+        status: 'auto_re_requested',
+        faulty_reason: reason.trim() || 'Key không hoạt động',
+        faulty_history: updatedHistory,
+        admin_note: note,
+        released_key_id: null,
+        released_key_code: null,
+        updated_at: now,
+      },
+    }, 'PATCH');
+
     if (availableCount === 0) {
       return {
         success: true,
@@ -2382,6 +2475,8 @@ export function StoreProvider({
       return next;
     });
 
+    syncKeyMutation({ action: 'update_key', id: keyId, data: restoredKey }, 'PATCH');
+
     return {
       success: true,
       message: `Đã khôi phục key [${targetKey.license_code}] về trạng thái SẴN SÀNG trong kho!`,
@@ -2403,6 +2498,17 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.keyReleaseRequests, next);
       return next;
     });
+
+    syncKeyMutation({
+      action: 'update_request',
+      id: requestId,
+      data: {
+        status: 'rejected',
+        admin_note: reason,
+        updated_at: new Date().toISOString(),
+      },
+    }, 'PATCH');
+
     return true;
   };
 
@@ -2670,6 +2776,7 @@ export function StoreProvider({
       total_amount: params.soldPrice || item.retail_price || item.price || 0,
       created_at: saleDateTime.toISOString(),
       warranty_until: warrantyUntilDate.toISOString(),
+      warranty_duration_months: params.warrantyMonths,
     };
 
     setTickets((prev) => {
@@ -2683,12 +2790,10 @@ export function StoreProvider({
       const client = supabase;
       const itemId = params.itemId;
       await Promise.all([
-        isUuid(itemId)
-          ? runSupabaseWrite(
-              () => client.from('inventory_items').update(updatedItem).eq('id', itemId),
-              'Cập nhật thiết bị (bán hàng)'
-            )
-          : Promise.resolve(true),
+        runSupabaseWrite(
+          () => client.from('inventory_items').update(updatedItem).eq('id', itemId),
+          'Cập nhật thiết bị (bán hàng)'
+        ),
         runSupabaseWrite(
           () => client.from('customers').insert([newCustomer]),
           'Thêm khách hàng (bán hàng)'
@@ -2854,6 +2959,7 @@ export function StoreProvider({
       total_amount: params.soldPrice,
       created_at: saleDateTime.toISOString(),
       warranty_until: warrantyUntilDate.toISOString(),
+      warranty_duration_months: params.warrantyMonths,
     };
 
     setTickets((prev) => {
@@ -2866,12 +2972,10 @@ export function StoreProvider({
     if (isUsingSupabase && supabase) {
       const client = supabase;
       await Promise.all([
-        isUuid(part.id)
-          ? runSupabaseWrite(
-              () => client.from('spare_parts').update(updatedPart).eq('id', part.id),
-              'Cập nhật tồn linh kiện'
-            )
-          : Promise.resolve(true),
+        runSupabaseWrite(
+          () => client.from('spare_parts').update(updatedPart).eq('id', part.id),
+          'Cập nhật tồn linh kiện'
+        ),
         runSupabaseWrite(
           () => client.from('customers').insert([newCustomer]),
           'Thêm khách hàng (bán linh kiện)'
