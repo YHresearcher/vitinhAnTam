@@ -171,6 +171,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     pendingTicketsCount,
     pendingDispatchesCount,
     pendingKeyRequestsCount,
+    pendingOrdersCount,
   ]);
 
   const sidebarContent = (

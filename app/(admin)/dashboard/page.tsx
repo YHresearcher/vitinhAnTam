@@ -15,6 +15,7 @@ import { RevenuePillarsDonutChart } from '@/components/dashboard/RevenuePillarsD
 import { SlaHealthDashboardChart } from '@/components/dashboard/SlaHealthDashboardChart';
 import { TechnicianWorkloadRecharts } from '@/components/dashboard/TechnicianWorkloadRecharts';
 import { InventoryAgingRecharts } from '@/components/dashboard/InventoryAgingRecharts';
+import { message } from 'antd';
 
 export default function DashboardPage() {
   const {
@@ -615,7 +616,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       onClick={async () => {
                         const ok = await confirmPendingOrder(order);
                         if (ok) {
-                          alert(`Đã xác nhận đơn ${order.order_code} và chuyển máy sang trạng thái Đang đợi bán!`);
+                          message.success(`Đã xác nhận đơn ${order.order_code}! Thiết bị đã được chuyển sang trạng thái "Đang đợi bán".`);
+                        } else {
+                          message.error('Không thể xác nhận đơn hàng lúc này.');
                         }
                       }}
                       className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer text-center"

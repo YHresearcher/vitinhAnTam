@@ -1490,14 +1490,23 @@ export function StoreProvider({
     return false;
   };
 
-  // Tự động kiểm tra đơn hàng mới định kỳ mỗi 20s cho nhân sự quản trị
   useEffect(() => {
     if (!isLoggedIn) return;
     const canSee = currentUser && ['admin', 'sales_manager', 'tech_manager', 'sales', 'technician'].includes(currentUser.role);
     if (!canSee) return;
-    fetchPendingOrders();
-    const tm = setInterval(fetchPendingOrders, 20000);
-    return () => clearInterval(tm);
+
+    let isMounted = true;
+    const load = async () => {
+      if (isMounted) await fetchPendingOrders();
+    };
+    void load();
+    const tm = setInterval(() => {
+      void load();
+    }, 20000);
+    return () => {
+      isMounted = false;
+      clearInterval(tm);
+    };
   }, [isLoggedIn, currentUser]);
 
   // Spare parts management (Linh kiện mới & cũ)
