@@ -18,6 +18,11 @@ import {
   Search,
   Home,
   ChevronRight,
+  Monitor,
+  Laptop,
+  Boxes,
+  Wrench,
+  ShoppingBag,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatVND } from '@/lib/supabase';
@@ -26,16 +31,27 @@ import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 function ProductsCatalogContent() {
   const searchParams = useSearchParams();
-  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys } = useViTinhAnTamStore();
+  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, spareParts } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
+
+  // 3 Tab Danh Mục Chính: Máy tính để bàn | Laptop | Linh kiện
+  const tabParamRaw = searchParams.get('tab');
+  const initialMainTab =
+    tabParamRaw === 'laptop'
+      ? 'laptop'
+      : tabParamRaw === 'components' || tabParamRaw === 'linh-kien'
+      ? 'components'
+      : 'desktop';
+  const [mainTab, setMainTab] = useState<'desktop' | 'laptop' | 'components'>(initialMainTab);
+  const [partSubFilter, setPartSubFilter] = useState<'all' | 'ssd' | 'ram' | 'others'>('all');
 
   // Status Tab & Modal mua key được SUY RA từ URL.
   // State chỉ đóng vai trò GHI DE khi người dùng bấm nút — nhờ vậy không cần
   // useEffect + setState (tránh cascading render và lỗi react-hooks/set-state-in-effect).
-  const tabParam = searchParams.get('tab') === 'sold' ? 'sold' : 'in_stock';
+  const tabStatusParam = searchParams.get('status') === 'sold' || tabParamRaw === 'sold' ? 'sold' : 'in_stock';
   const [statusTabOverride, setStatusTabOverride] = useState<'in_stock' | 'sold' | null>(null);
-  const statusTab = statusTabOverride ?? tabParam;
+  const statusTab = statusTabOverride ?? tabStatusParam;
   const setStatusTab = (tab: 'in_stock' | 'sold') => setStatusTabOverride(tab);
 
   // Search keyword inside catalog
@@ -84,13 +100,33 @@ function ProductsCatalogContent() {
   }, [keyCategories, licenseKeys]);
 
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
-  const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
-  const soldProducts = useMemo(() => allProducts.filter((p) => p.isSold), [allProducts]);
+
+  // Phân tách Máy tính để bàn và Laptop
+  const desktopProducts = useMemo(() => {
+    return allProducts.filter((p) => p.category !== 'laptop');
+  }, [allProducts]);
+
+  const laptopProducts = useMemo(() => {
+    return allProducts.filter((p) => p.category === 'laptop');
+  }, [allProducts]);
+
+  // Danh mục máy tính theo tab hiện tại (desktop hoặc laptop)
+  const currentCategoryProducts = useMemo(() => {
+    return mainTab === 'laptop' ? laptopProducts : desktopProducts;
+  }, [mainTab, laptopProducts, desktopProducts]);
+
+  const inStockCurrentCategory = useMemo(() => {
+    return currentCategoryProducts.filter((p) => !p.isSold);
+  }, [currentCategoryProducts]);
+
+  const soldCurrentCategory = useMemo(() => {
+    return currentCategoryProducts.filter((p) => p.isSold);
+  }, [currentCategoryProducts]);
 
   const filteredInStock = useMemo(() => {
     const q = searchKeyword.trim().toLowerCase();
-    if (!q) return inStockProducts;
-    return inStockProducts.filter((item) => {
+    if (!q) return inStockCurrentCategory;
+    return inStockCurrentCategory.filter((item) => {
       return (
         item.name.toLowerCase().includes(q) ||
         item.serviceTag.toLowerCase().includes(q) ||
@@ -98,27 +134,75 @@ function ProductsCatalogContent() {
         (item.customerName && item.customerName.toLowerCase().includes(q))
       );
     });
-  }, [inStockProducts, searchKeyword]);
+  }, [inStockCurrentCategory, searchKeyword]);
 
   const filteredSold = useMemo(() => {
     const q = searchKeyword.trim().toLowerCase();
     const list = !q
-      ? soldProducts
-      : soldProducts.filter((item) => {
+      ? soldCurrentCategory
+      : soldCurrentCategory.filter((item) => {
           return (
             item.name.toLowerCase().includes(q) ||
             item.serviceTag.toLowerCase().includes(q) ||
             item.specs.cpu.toLowerCase().includes(q)
           );
         });
-    // Chỉ hiển thị 5 máy bán gần đây nhất
     return list.slice(0, 5);
-  }, [soldProducts, searchKeyword]);
+  }, [soldCurrentCategory, searchKeyword]);
 
   const totalReadyStock = useMemo(
-    () => inStockProducts.reduce((sum, item) => sum + item.stockCount, 0),
-    [inStockProducts]
+    () => inStockCurrentCategory.reduce((sum, item) => sum + item.stockCount, 0),
+    [inStockCurrentCategory]
   );
+
+  const inStockDesktopsCount = useMemo(
+    () => desktopProducts.filter((p) => !p.isSold).reduce((sum, item) => sum + item.stockCount, 0),
+    [desktopProducts]
+  );
+
+  const inStockLaptopsCount = useMemo(
+    () => laptopProducts.filter((p) => !p.isSold).reduce((sum, item) => sum + item.stockCount, 0),
+    [laptopProducts]
+  );
+
+  // Danh sách linh kiện kho (spare_parts)
+  const filteredSpareParts = useMemo(() => {
+    let list = spareParts || [];
+    if (partSubFilter === 'ssd') {
+      list = list.filter((p) => (p.part_type || '').toUpperCase() === 'SSD' || (p.part_name || '').toUpperCase().includes('SSD'));
+    } else if (partSubFilter === 'ram') {
+      list = list.filter((p) => (p.part_type || '').toUpperCase() === 'RAM' || (p.part_name || '').toUpperCase().includes('RAM'));
+    } else if (partSubFilter === 'others') {
+      list = list.filter((p) => {
+        const t = (p.part_type || '').toUpperCase();
+        return t !== 'SSD' && t !== 'RAM' && !p.part_name.toUpperCase().includes('SSD') && !p.part_name.toUpperCase().includes('RAM');
+      });
+    }
+
+    const q = searchKeyword.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((p) => {
+      return (
+        p.part_name.toLowerCase().includes(q) ||
+        (p.part_type || '').toLowerCase().includes(q) ||
+        (p.distributor || '').toLowerCase().includes(q) ||
+        (p.shelf_location || '').toLowerCase().includes(q) ||
+        (p.notes || '').toLowerCase().includes(q)
+      );
+    });
+  }, [spareParts, partSubFilter, searchKeyword]);
+
+  const getPartImage = (part: { part_type?: string; part_name?: string }) => {
+    const type = (part.part_type || '').toUpperCase();
+    const name = (part.part_name || '').toUpperCase();
+    if (type === 'SSD' || name.includes('SSD') || name.includes('NVME')) {
+      return 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=600&auto=format&fit=crop&q=80';
+    }
+    if (type === 'RAM' || name.includes('RAM') || name.includes('DDR')) {
+      return 'https://images.unsplash.com/photo-1562976540-1502c2145186?w=600&auto=format&fit=crop&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=80';
+  };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] font-inter text-[#2B1810]">
@@ -144,64 +228,221 @@ function ProductsCatalogContent() {
         </div>
       </div>
 
-      {/* 2. Controls & Search Toolbar */}
+      {/* 2. 3 TAB DANH MỤC CHÍNH (Desktop, Laptop, Linh kiện) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="danh-muc-san-pham">
-        {/* Controls wrapper */}
-        <div className="space-y-4 mb-8">
-          {/* Status Tabs: Sẵn hàng vs Đã bán */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs">
-            {/* Primary Switcher Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
-              <button
-                type="button"
-                onClick={() => setStatusTab('in_stock')}
-                className={`px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
-                  statusTab === 'in_stock'
-                    ? 'bg-[#C0392B] text-white shadow-xs'
-                    : 'text-[#6E5D53] hover:text-[#2B1810]'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'in_stock' ? 'bg-white' : 'bg-emerald-500'}`}></span>
-                <span>{isEn ? 'In Stock' : 'Sẵn hàng'}</span>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
-                  statusTab === 'in_stock' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-800'
-                }`}>
-                  {inStockProducts.length} dòng ({totalReadyStock} máy)
-                </span>
-              </button>
-
-              {/* Nút MUA KEY đưa xuống kế bên Sẵn hàng */}
-              <button
-                type="button"
-                onClick={() => setIsBuyKeyModalOpen(true)}
-                className="px-3.5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-amber-50 hover:bg-[#C0392B] text-[#C0392B] hover:text-white border border-[#C0392B]/30 uppercase tracking-wide cursor-pointer active:scale-95 shadow-2xs"
-              >
-                <span>🔑 MUA KEY</span>
-                {totalInStockKeys > 0 && (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#C0392B] text-white font-mono font-bold group-hover:bg-white group-hover:text-[#C0392B]">
-                    {totalInStockKeys}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusTab('sold')}
-                className={`px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
-                  statusTab === 'sold'
-                    ? 'bg-[#2B1810] text-white shadow-xs'
-                    : 'text-[#6E5D53] hover:text-[#2B1810]'
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'sold' ? 'bg-white' : 'bg-slate-400'}`}></span>
-                <span>{isEn ? 'Delivered' : 'Đã bàn giao'}</span>
-                <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
-                  statusTab === 'sold' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
-                }`}>
-                  {soldProducts.length} máy
-                </span>
-              </button>
+        {/* Hero Tabs Switcher */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          {/* TAB 1: Máy tính để bàn */}
+          <button
+            type="button"
+            onClick={() => {
+              setMainTab('desktop');
+              setStatusTab('in_stock');
+            }}
+            className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
+              mainTab === 'desktop'
+                ? 'bg-white border-[#C0392B] shadow-md ring-2 ring-[#C0392B]/10'
+                : 'bg-white/80 hover:bg-white border-[#E8E2D9] text-[#6E5D53] hover:text-[#2B1810]'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className={`p-3 rounded-xl transition-colors ${mainTab === 'desktop' ? 'bg-[#C0392B] text-white shadow-xs' : 'bg-[#FAF7F2] text-[#6E5D53]'}`}>
+                <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <div className={`font-bold text-sm sm:text-base ${mainTab === 'desktop' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
+                  {isEn ? 'Desktop PCs' : 'Máy tính để bàn'}
+                </div>
+                <div className="text-xs text-[#9C8E85]">
+                  Mini PC • SFF • Văn phòng • Đồ họa
+                </div>
+              </div>
             </div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
+              mainTab === 'desktop' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {inStockDesktopsCount} máy
+            </span>
+          </button>
+
+          {/* TAB 2: Laptop */}
+          <button
+            type="button"
+            onClick={() => {
+              setMainTab('laptop');
+              setStatusTab('in_stock');
+            }}
+            className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
+              mainTab === 'laptop'
+                ? 'bg-white border-[#C0392B] shadow-md ring-2 ring-[#C0392B]/10'
+                : 'bg-white/80 hover:bg-white border-[#E8E2D9] text-[#6E5D53] hover:text-[#2B1810]'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className={`p-3 rounded-xl transition-colors ${mainTab === 'laptop' ? 'bg-[#C0392B] text-white shadow-xs' : 'bg-[#FAF7F2] text-[#6E5D53]'}`}>
+                <Laptop className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <div className={`font-bold text-sm sm:text-base ${mainTab === 'laptop' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
+                  {isEn ? 'Laptops' : 'Laptop'}
+                </div>
+                <div className="text-xs text-[#9C8E85]">
+                  Dell Latitude • ThinkPad • HP
+                </div>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
+              mainTab === 'laptop' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {inStockLaptopsCount} máy
+            </span>
+          </button>
+
+          {/* TAB 3: Linh kiện */}
+          <button
+            type="button"
+            onClick={() => setMainTab('components')}
+            className={`p-4 sm:p-5 rounded-2xl border transition-all text-left flex items-center justify-between cursor-pointer ${
+              mainTab === 'components'
+                ? 'bg-white border-[#C0392B] shadow-md ring-2 ring-[#C0392B]/10'
+                : 'bg-white/80 hover:bg-white border-[#E8E2D9] text-[#6E5D53] hover:text-[#2B1810]'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className={`p-3 rounded-xl transition-colors ${mainTab === 'components' ? 'bg-[#C0392B] text-white shadow-xs' : 'bg-[#FAF7F2] text-[#6E5D53]'}`}>
+                <Boxes className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+              <div>
+                <div className={`font-bold text-sm sm:text-base ${mainTab === 'components' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
+                  {isEn ? 'Spare Parts' : 'Linh kiện'}
+                </div>
+                <div className="text-xs text-[#9C8E85]">
+                  RAM • SSD Kingston / Samsung • Phụ kiện
+                </div>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
+              mainTab === 'components' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
+            }`}>
+              {spareParts?.length || 0} mã hàng
+            </span>
+          </button>
+        </div>
+
+        {/* 3. TOOLBAR ĐIỀU KHIỂN & TÌM KIẾM THEO TAB */}
+        <div className="space-y-4 mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-2.5 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs">
+            {/* SUB-TABS KHI XEM MÁY TÍNH (DESKTOP HOẶC LAPTOP) */}
+            {mainTab !== 'components' ? (
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
+                <button
+                  type="button"
+                  onClick={() => setStatusTab('in_stock')}
+                  className={`px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
+                    statusTab === 'in_stock'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'in_stock' ? 'bg-white' : 'bg-emerald-500'}`}></span>
+                  <span>{isEn ? 'In Stock' : 'Sẵn hàng'}</span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
+                    statusTab === 'in_stock' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-800'
+                  }`}>
+                    {inStockCurrentCategory.length} dòng ({totalReadyStock} máy)
+                  </span>
+                </button>
+
+                {/* Nút MUA KEY đưa xuống kế bên Sẵn hàng */}
+                <button
+                  type="button"
+                  onClick={() => setIsBuyKeyModalOpen(true)}
+                  className="px-3.5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-amber-50 hover:bg-[#C0392B] text-[#C0392B] hover:text-white border border-[#C0392B]/30 uppercase tracking-wide cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  <span>🔑 MUA KEY</span>
+                  {totalInStockKeys > 0 && (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#C0392B] text-white font-mono font-bold group-hover:bg-white group-hover:text-[#C0392B]">
+                      {totalInStockKeys}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatusTab('sold')}
+                  className={`px-4 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-2 ${
+                    statusTab === 'sold'
+                      ? 'bg-[#2B1810] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'sold' ? 'bg-white' : 'bg-slate-400'}`}></span>
+                  <span>{isEn ? 'Delivered' : 'Đã bàn giao'}</span>
+                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
+                    statusTab === 'sold' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {soldCurrentCategory.length} máy
+                  </span>
+                </button>
+              </div>
+            ) : (
+              /* SUB-TABS KHI XEM LINH KIỆN */
+              <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
+                <button
+                  type="button"
+                  onClick={() => setPartSubFilter('all')}
+                  className={`px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                    partSubFilter === 'all'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  {isEn ? 'All Parts' : 'Tất cả'} ({spareParts?.length || 0})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPartSubFilter('ssd')}
+                  className={`px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                    partSubFilter === 'ssd'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  {isEn ? 'SSD Storage' : 'Ổ cứng SSD'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPartSubFilter('ram')}
+                  className={`px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                    partSubFilter === 'ram'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  {isEn ? 'RAM Memory' : 'Bộ nhớ RAM'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPartSubFilter('others')}
+                  className={`px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all cursor-pointer ${
+                    partSubFilter === 'others'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'text-[#6E5D53] hover:text-[#2B1810]'
+                  }`}
+                >
+                  {isEn ? 'Others' : 'Khác / Nguồn'}
+                </button>
+
+                {/* Nút MUA KEY */}
+                <button
+                  type="button"
+                  onClick={() => setIsBuyKeyModalOpen(true)}
+                  className="px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-amber-50 hover:bg-[#C0392B] text-[#C0392B] hover:text-white border border-[#C0392B]/30 uppercase tracking-wide cursor-pointer active:scale-95 shadow-2xs ml-1"
+                >
+                  <span>🔑 MUA KEY</span>
+                </button>
+              </div>
+            )}
 
             {/* Keyword Search Input */}
             <div className="relative w-full md:w-80">
@@ -209,7 +450,11 @@ function ProductsCatalogContent() {
                 type="text"
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
-                placeholder={isEn ? 'Search model, S/N, CPU...' : 'Tìm model, S/N, cấu hình...'}
+                placeholder={
+                  mainTab === 'components'
+                    ? (isEn ? 'Search part name, SSD, RAM...' : 'Tìm tên linh kiện, SSD, RAM, vị trí...')
+                    : (isEn ? 'Search model, S/N, CPU...' : 'Tìm model, S/N, cấu hình...')
+                }
                 className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9] text-xs font-medium text-[#2B1810] placeholder:text-[#9C8E85] focus:outline-none focus:border-[#C0392B] focus:bg-white transition-all"
               />
               <Search className="w-4 h-4 text-[#9C8E85] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -226,25 +471,59 @@ function ProductsCatalogContent() {
           </div>
         </div>
 
-        {/* 3. Phân Đoạn 1: SẴN HÀNG */}
-        {statusTab === 'in_stock' && (
-          <div className="space-y-6 mb-16">
-            <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-                <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
-                  {isEn ? 'In Stock' : 'Sẵn hàng'}
-                </h2>
-                <span className="text-xs text-slate-500 font-medium">
-                  ({filteredInStock.length} {isEn ? 'models' : 'dòng máy'} • {totalReadyStock} {isEn ? 'units available' : 'chiếc sẵn có'})
-                </span>
-              </div>
-            </div>
+        {/* 4. HIỂN THỊ NỘI DUNG THEO TAB CHÍNH */}
+        {mainTab !== 'components' ? (
+          <>
+            {/* Phân Đoạn 1: SẴN HÀNG */}
+            {statusTab === 'in_stock' && (
+              <div className="space-y-6 mb-16">
+                <div className="flex items-center justify-between border-b border-[#E8E2D9] pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
+                      {mainTab === 'laptop' ? (isEn ? 'Laptops In Stock' : 'Laptop Sẵn Hàng') : (isEn ? 'Desktops In Stock' : 'Máy Tính Để Bàn Sẵn Hàng')}
+                    </h2>
+                    <span className="text-xs text-slate-500 font-medium">
+                      ({filteredInStock.length} {isEn ? 'models' : 'dòng máy'} • {totalReadyStock} {isEn ? 'units available' : 'chiếc sẵn có'})
+                    </span>
+                  </div>
+                </div>
 
-            {filteredInStock.length === 0 ? (
-              <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#E8E2D9] p-8">
-                <p className="text-sm text-[#6E5D53]">{t.products.emptyInStock}</p>
-              </div>
+                {filteredInStock.length === 0 ? (
+                  <div className="py-12 px-6 text-center bg-white rounded-2xl border border-dashed border-[#E8E2D9] space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-700 mx-auto flex items-center justify-center">
+                      {mainTab === 'laptop' ? <Laptop className="w-8 h-8" /> : <Monitor className="w-8 h-8" />}
+                    </div>
+                    <div className="max-w-md mx-auto space-y-2">
+                      <h3 className="text-base font-bold text-[#2B1810]">
+                        {mainTab === 'laptop'
+                          ? 'Đợt Laptop Mới Đang Được Kiểm Định & Chuẩn Bị Về Kho'
+                          : t.products.emptyInStock}
+                      </h3>
+                      <p className="text-xs text-[#6E5D53] leading-relaxed">
+                        {mainTab === 'laptop'
+                          ? 'Các dòng Laptop văn phòng, doanh nhân chuẩn zin (Dell Latitude, ThinkPad, HP) thường hết hàng rất nhanh. Quý khách vui lòng liên hệ trực tiếp hoặc để lại yêu cầu cấu hình mong muốn để An Tâm giữ máy ngay khi xuất xưởng!'
+                          : 'Hiện chưa có sản phẩm phù hợp với từ khóa tìm kiếm. Quý khách vui lòng thử lại từ khóa khác.'}
+                      </p>
+                    </div>
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                      <a
+                        href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center gap-2"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        <span>Nhắn Zalo Nhận Tư Vấn Máy</span>
+                      </a>
+                      <Link
+                        href={`/dat-lich?service=${encodeURIComponent(mainTab === 'laptop' ? 'Tư vấn đặt Laptop theo yêu cầu' : 'Tư vấn máy tính')}`}
+                        className="px-4 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors"
+                      >
+                        Đặt cấu hình theo yêu cầu
+                      </Link>
+                    </div>
+                  </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredInStock.map((prod) => (
@@ -434,11 +713,167 @@ function ProductsCatalogContent() {
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  ) : (
+    /* ==================== TAB LINH KIỆN (SPARE PARTS) ==================== */
+    <div className="space-y-6 mb-16">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E8E2D9] pb-3">
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h2 className="text-lg sm:text-xl font-bold text-[#2B1810]">
+            {isEn ? 'Genuine Spare Parts & Upgrades' : 'Linh Kiện Máy Tính & Ổ Cứng SSD / RAM'}
+          </h2>
+          <span className="text-xs text-slate-500 font-medium">
+            ({filteredSpareParts.length} {isEn ? 'parts available' : 'sản phẩm sẵn có'})
+          </span>
+        </div>
+        <div className="text-xs text-[#6E5D53] flex items-center gap-1">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Bảo hành chính hãng 12 - 36 tháng • Miễn phí công lắp đặt & kiểm tra</span>
+        </div>
       </div>
+
+      {filteredSpareParts.length === 0 ? (
+        <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#E8E2D9] p-8 space-y-3">
+          <Boxes className="w-12 h-12 text-slate-400 mx-auto" />
+          <p className="text-sm text-[#6E5D53]">
+            {searchKeyword
+              ? `Không tìm thấy linh kiện phù hợp với từ khóa "${searchKeyword}".`
+              : 'Chưa có dữ liệu linh kiện trong danh mục này.'}
+          </p>
+          <div className="pt-2">
+            <a
+              href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Nhắn Zalo Hỏi Mẫu Linh Kiện Bạn Cần</span>
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredSpareParts.map((part) => {
+            const partImg = getPartImage(part);
+            const isAvailable = (part.quantity_in_stock || 0) > 0;
+            const partType = (part.part_type || 'LINH KIỆN').toUpperCase();
+
+            return (
+              <div
+                key={part.id}
+                className="group bg-white rounded-2xl border border-slate-200 hover:border-[#C0392B]/40 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+              >
+                {/* Image Preview */}
+                <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                  <Image
+                    src={partImg}
+                    alt={part.part_name}
+                    fill
+                    unoptimized
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
+                    <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
+                      {partType}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[10px] font-semibold">
+                      {part.condition === 'new' ? 'MỚI 100%' : 'ZIN BÓC MÁY 99%'}
+                    </span>
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight shadow-xs ${
+                      isAvailable ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'
+                    }`}>
+                      {isAvailable ? `CÒN SẴN: ${part.quantity_in_stock}` : 'TẠM HẾT'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="flex items-baseline justify-between gap-2 mb-1.5">
+                      <h3 className="text-base font-bold text-slate-900 line-clamp-2 group-hover:text-[#C0392B] transition-colors leading-snug">
+                        {part.part_name}
+                      </h3>
+                    </div>
+
+                    {/* Nhà phân phối & Vị trí kho */}
+                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+                      <span className="font-medium text-slate-700">
+                        {part.distributor ? `NPP: ${part.distributor}` : 'Phân phối chính hãng'}
+                      </span>
+                      {part.shelf_location && (
+                        <>
+                          <span>•</span>
+                          <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[11px] text-slate-600">
+                            Kệ {part.shelf_location}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Ghi chú & cam kết */}
+                    <div className="space-y-1 text-xs text-[#6E5D53] bg-[#FAF7F2] p-2.5 rounded-xl border border-[#E8E2D9]">
+                      {part.notes ? (
+                        <p className="line-clamp-2 leading-relaxed">💡 {part.notes}</p>
+                      ) : (
+                        <p className="leading-relaxed">💡 Tương thích chuẩn cho máy bàn & Laptop, hỗ trợ lắp ráp và sao lưu dữ liệu nguyên vẹn.</p>
+                      )}
+                    </div>
+
+                    {/* Giá bán & Bảo hành */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-baseline justify-between">
+                      <div>
+                        <span className="text-xs text-slate-400 block">{t.products.priceLabel}</span>
+                        <span className="text-xl font-black text-[#C0392B] tracking-tight">
+                          {formatVND(part.unit_price || 0)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Bảo hành {part.warranty_months} tháng</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-2 flex items-center gap-2 border-t border-slate-200">
+                    <a
+                      href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-2.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Tư vấn</span>
+                    </a>
+                    <Link
+                      href={`/dat-lich?device=${encodeURIComponent(part.part_name)}&service=${encodeURIComponent('Nâng cấp / Mua linh kiện')}`}
+                      className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>Đặt Mua & Lắp Đặt</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
       {/* QC & S/N INSPECTION MODAL */}
       <Modal

@@ -935,9 +935,10 @@ export function StoreProvider({
       const pullFromSupabase = async (includeAdminData: boolean): Promise<boolean> => {
         if (!isUsingSupabase || !supabase) return false;
 
-        // 1. Tải kho máy công khai và blog (dùng cho cả khách vãng lai và nhân sự)
-        const [invResult, blogPostRes, blogCatRes] = await Promise.all([
+        // 1. Tải kho máy công khai, linh kiện và blog (dùng cho cả khách vãng lai và nhân sự)
+        const [invResult, spResult, blogPostRes, blogCatRes] = await Promise.all([
           supabase.from('inventory_items').select('*'),
+          supabase.from('spare_parts').select('*'),
           supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
           supabase.from('blog_categories').select('*').order('created_at', { ascending: true }),
         ]);
@@ -945,12 +946,13 @@ export function StoreProvider({
           throw new Error(invResult.error.message);
         }
         setInventory((invResult.data as InventoryItem[]) || []);
+        if (spResult.data) setSpareParts(spResult.data as SparePart[]);
         if (blogPostRes.data) setBlogPosts(blogPostRes.data as BlogPost[]);
         if (blogCatRes.data) setBlogCategories(blogCatRes.data as BlogCategory[]);
 
         // 2. TỐI ƯU SUPABASE EGRESS & BẢO MẬT:
         // Khách vãng lai (chưa đăng nhập): DỪNG LẠI TẠI ĐÂY!
-        // Tuyệt đối không kéo 5 bảng bảo mật: customers, service_tickets, spare_parts, onsite_dispatches, shift_logs.
+        // Tuyệt đối không kéo 4 bảng bảo mật: customers, service_tickets, onsite_dispatches, shift_logs.
         // Giúp tiết kiệm hơn 90% băng thông Supabase Egress (5GB/tháng) và không làm rò rỉ dữ liệu khách hàng.
         if (!includeAdminData) {
           setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
@@ -961,18 +963,16 @@ export function StoreProvider({
         const [
           cusResult,
           tckResult,
-          spResult,
           onsResult,
           shfResult,
         ] = await Promise.all([
           supabase.from('customers').select('*'),
           supabase.from('service_tickets').select('*'),
-          supabase.from('spare_parts').select('*'),
           supabase.from('onsite_dispatches').select('*'),
           supabase.from('shift_logs').select('*'),
         ]);
 
-        const failures = [cusResult, tckResult, spResult, onsResult, shfResult].flatMap(
+        const failures = [cusResult, tckResult, onsResult, shfResult].flatMap(
           (result) => (result.error ? [result.error] : [])
         );
         if (failures.length > 0) {
@@ -981,7 +981,6 @@ export function StoreProvider({
 
         setCustomers((cusResult.data as Customer[]) || []);
         setTickets((tckResult.data as ServiceTicket[]) || []);
-        setSpareParts((spResult.data as SparePart[]) || []);
         setOnsiteDispatches((onsResult.data as OnsiteDispatch[]) || []);
         setShiftLogs((shfResult.data as ShiftLog[]) || []);
 

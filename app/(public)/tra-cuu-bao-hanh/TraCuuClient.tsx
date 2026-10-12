@@ -394,40 +394,7 @@ function WarrantyLookupContent() {
               )}
             </div>
 
-            {/* Gợi ý chính sách nếu khách hàng mua PC/laptop và nâng cấp máy cùng lúc (RAM/CPU/SSD) */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2.5">
-              <div className="flex items-center gap-2 text-xs font-bold text-blue-950">
-                <span>{t.upgradeTitle}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
-                {t.upgradeDesc}
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
-                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span>🖥️</span>
-                    <span>Cấu hình máy nguyên bộ</span>
-                  </div>
-                  <div className="text-slate-600">{t.upgradeMachinePart}</div>
-                </div>
 
-                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
-                  <div className="font-bold text-emerald-800 flex items-center gap-1.5">
-                    <span>⚡</span>
-                    <span>Nâng cấp RAM / SSD mới</span>
-                  </div>
-                  <div className="text-slate-600">{t.upgradeNewPart}</div>
-                </div>
-
-                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
-                  <div className="font-bold text-indigo-900 flex items-center gap-1.5">
-                    <span>🚀</span>
-                    <span>Nâng cấp CPU / Tháo máy</span>
-                  </div>
-                  <div className="text-slate-600">{t.upgradeCpuPart}</div>
-                </div>
-              </div>
-            </div>
 
             {/* Bottom Support Actions */}
             <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
