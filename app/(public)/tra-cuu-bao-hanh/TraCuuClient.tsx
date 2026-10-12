@@ -22,6 +22,7 @@ interface SearchResultData {
   item?: InventoryItem;
   ticket?: ServiceTicket;
   customer?: Customer;
+  order?: Record<string, unknown>;
 }
 
 function WarrantyLookupContent() {
@@ -56,40 +57,36 @@ function WarrantyLookupContent() {
     setIsSearching(true);
     setHasSearched(true);
     setTimeout(async () => {
-      let res = findWarrantyByTagOrPhone(q);
-      // Nếu chưa thấy trong bộ nhớ, truy vấn trực tiếp đúng 1 bản ghi từ Supabase theo mã phiếu / SĐT / Service Tag
-      if (!res || (!res.item && !res.ticket)) {
-        if (supabase) {
-          try {
-            const rawDigits = q.replace(/\D/g, '');
-            const filterParts = [`ticket_code.ilike.%${q}%`, `device_service_tag.ilike.%${q}%`];
-            if (rawDigits.length >= 7) {
-              filterParts.push(`customer_phone.ilike.%${rawDigits}%`);
-            }
-            const { data: tckData } = await supabase
-              .from('service_tickets')
-              .select('*')
-              .or(filterParts.join(','))
-              .limit(1);
+      // 1. Thử tìm nhanh trong bộ nhớ client
+      let res: SearchResultData | null = findWarrantyByTagOrPhone(q);
 
-            if (tckData && tckData.length > 0) {
-              res = { ticket: tckData[0] as ServiceTicket };
-            }
-          } catch (e) {
-            console.warn('Lỗi tra cứu trực tiếp Supabase:', e);
+      // 2. Tra cứu qua API bảo hành tổng hợp (hỗ trợ đầy đủ SĐT, Service Tag, vượt qua RLS và tìm cả đơn mua máy)
+      try {
+        const resp = await fetch(`/api/warranty/search?q=${encodeURIComponent(q)}`);
+        if (resp.ok) {
+          const apiJson = await resp.json();
+          if (apiJson.found && apiJson.data) {
+            res = {
+              item: (apiJson.data.item as InventoryItem) || res?.item,
+              ticket: (apiJson.data.ticket as ServiceTicket) || res?.ticket,
+              customer: (apiJson.data.customer as Customer) || res?.customer,
+              order: apiJson.data.order as Record<string, unknown>,
+            };
           }
         }
+      } catch (apiErr) {
+        console.warn('Lỗi gọi API tra cứu bảo hành:', apiErr);
       }
 
       setIsSearching(false);
-      if (res && (res.item || res.ticket)) {
+      if (res && (res.item || res.ticket || res.order)) {
         setSearchResult(res);
         showToast(t.toastSuccess);
       } else {
         setSearchResult(null);
         showToast(t.toastNotFound);
       }
-    }, 250);
+    }, 200);
   }, [findWarrantyByTagOrPhone, showToast, t.toastEmpty, t.toastNotFound, t.toastSuccess]);
 
   useEffect(() => {
@@ -99,6 +96,57 @@ function WarrantyLookupContent() {
     }, 50);
     return () => clearTimeout(timer);
   }, [urlTag, executeSearch]);
+
+  // Tính toán thời hạn bảo hành thực tế của máy
+  const warrantyMonths =
+    searchResult?.item?.warranty_months ||
+    searchResult?.ticket?.warranty_duration_months ||
+    12;
+
+  const handoverDateRaw =
+    searchResult?.item?.handover_date ||
+    searchResult?.ticket?.created_at ||
+    (searchResult?.order?.created_at as string) ||
+    '2025-05-15';
+
+  const startDate = new Date(handoverDateRaw);
+  const validStartDate = Number.isNaN(startDate.getTime()) ? new Date() : startDate;
+
+  const expiryDate = new Date(validStartDate);
+  expiryDate.setMonth(expiryDate.getMonth() + warrantyMonths);
+
+  const nowTimestamp = Date.now();
+  const totalDays = Math.max(1, Math.ceil((expiryDate.getTime() - validStartDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const remainingDays = Math.max(0, Math.ceil((expiryDate.getTime() - nowTimestamp) / (1000 * 60 * 60 * 24)));
+  const machineProgress = Math.min(100, Math.max(0, Math.round(((totalDays - remainingDays) / totalDays) * 100)));
+
+  // Hỗ trợ Kỹ thuật & Phần mềm: 12 tháng
+  const softwareExpiryDate = new Date(validStartDate);
+  softwareExpiryDate.setMonth(softwareExpiryDate.getMonth() + 12);
+  const softwareTotalDays = Math.max(1, Math.ceil((softwareExpiryDate.getTime() - validStartDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const softwareRemainingDays = Math.max(0, Math.ceil((softwareExpiryDate.getTime() - nowTimestamp) / (1000 * 60 * 60 * 24)));
+  const softwareProgress = Math.min(100, Math.max(0, Math.round(((softwareTotalDays - softwareRemainingDays) / softwareTotalDays) * 100)));
+
+  const deviceTitle =
+    searchResult?.item?.device_model ||
+    searchResult?.ticket?.device_name ||
+    (searchResult?.order?.device_name as string) ||
+    (currentLang === 'en' ? 'Desktop / Laptop System' : 'Máy tính PC / Laptop');
+
+  const serialOrTag =
+    searchResult?.item?.service_tag ||
+    searchResult?.item?.serial_number ||
+    searchResult?.ticket?.device_service_tag ||
+    (searchResult?.order?.device_tag as string) ||
+    (searchResult?.order?.order_code as string) ||
+    'ST-AT2025';
+
+  const customerDisplayName =
+    searchResult?.item?.customer_name ||
+    searchResult?.ticket?.customer_name ||
+    searchResult?.customer?.full_name ||
+    (searchResult?.order?.customer_name as string) ||
+    t.personalCustomer;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] pb-24">
@@ -171,7 +219,7 @@ function WarrantyLookupContent() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-xl font-bold text-slate-900">
-                      {searchResult.item?.device_model || searchResult.ticket?.device_name}
+                      {deviceTitle}
                     </h2>
                     <span className="px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-semibold">
                       {t.originalSelected}
@@ -181,18 +229,16 @@ function WarrantyLookupContent() {
                     <span className="flex items-center gap-1 font-mono">
                       <span className="text-slate-500 font-semibold">{t.serialLabel}</span>
                       <span className="text-[#C0392B] font-black bg-[#FBE8DE] border border-[#F2C4B2] px-2 py-0.5 rounded">
-                        {searchResult.item?.service_tag || searchResult.ticket?.device_service_tag}
+                        {serialOrTag}
                       </span>
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="w-3.5 h-3.5 text-slate-400" />
-                      <span>
-                        {searchResult.item?.customer_name || searchResult.ticket?.customer_name || t.personalCustomer}
-                      </span>
+                      <span>{customerDisplayName}</span>
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{t.handoverDate} {formatDateVN(searchResult.item?.handover_date) || '15/05/2025'}</span>
+                      <span>{t.handoverDate} {formatDateVN(validStartDate.toISOString())}</span>
                     </span>
                   </div>
                 </div>
@@ -219,7 +265,9 @@ function WarrantyLookupContent() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-100 bg-[#FAF7F2] rounded-2xl p-4">
               <div>
                 <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.packageLabel}</span>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">{t.packageValue}</p>
+                <p className="text-sm font-bold text-slate-900 mt-0.5">
+                  {currentLang === 'en' ? `An Tam Care (${warrantyMonths}M)` : `An Tam Care (${warrantyMonths}T)`}
+                </p>
               </div>
               <div>
                 <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.ssdHealthLabel}</span>
@@ -238,8 +286,8 @@ function WarrantyLookupContent() {
             </div>
           </div>
 
-          {/* Multi-tier Warranty Cards */}
-          <div className="rounded-3xl bg-white border border-[#E8E2D9] p-6 sm:p-8 shadow-sm space-y-5">
+          {/* Complete System Warranty Cards */}
+          <div className="rounded-3xl bg-white border border-[#E8E2D9] p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
@@ -255,64 +303,106 @@ function WarrantyLookupContent() {
             </div>
 
             <div className="space-y-4">
-              {/* Tier 1: Chassis & Mainboard */}
+              {/* Thẻ 1: Bảo hành toàn bộ máy PC / Laptop (Đồng bộ, không tách rời linh kiện) */}
               <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-md bg-[#C0392B] text-white font-bold flex items-center justify-center text-xs">
+                    <span className="w-6 h-6 rounded-md bg-[#C0392B] text-white font-bold flex items-center justify-center text-xs shrink-0">
                       1
                     </span>
                     <span className="font-bold text-slate-900">{t.tier1Name}</span>
-                    <span className="text-slate-500 font-mono">{t.tier1Expire}</span>
+                    <span className="text-slate-500 font-mono text-[11px]">
+                      ({currentLang === 'en' ? 'Valid until ' : 'Hạn đến '} {formatDateVN(expiryDate.toISOString())})
+                    </span>
                   </div>
-                  <span className="font-semibold text-[#C0392B]">{t.tier1Remaining}</span>
+                  <span className="font-semibold text-[#C0392B] shrink-0">
+                    {remainingDays > 0
+                      ? (currentLang === 'en' ? `${remainingDays} days remaining` : `Còn ${remainingDays} ngày bảo hành`)
+                      : (currentLang === 'en' ? 'Expired' : 'Hết hạn bảo hành')}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#C0392B] h-full rounded-full" style={{ width: '70%' }} />
+                  <div className="bg-[#C0392B] h-full rounded-full transition-all duration-500" style={{ width: `${machineProgress}%` }} />
                 </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  {t.tier1Note}
-                </p>
               </div>
 
-              {/* Tier 2: New SSD & RAM */}
+              {/* Thẻ 2: Hỗ trợ Kỹ thuật & Phần mềm: 12 tháng */}
               <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] space-y-2">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-md bg-emerald-600 text-white font-bold flex items-center justify-center text-xs">
+                    <span className="w-6 h-6 rounded-md bg-slate-800 text-white font-bold flex items-center justify-center text-xs shrink-0">
                       2
                     </span>
-                    <span className="font-bold text-slate-900">{t.tier2Name}</span>
-                    <span className="text-slate-500 font-mono">{t.tier2Expire}</span>
+                    <span className="font-bold text-slate-900">{t.tier3Name}</span>
+                    <span className="text-slate-500 font-mono text-[11px]">
+                      ({currentLang === 'en' ? '12 months • Until ' : '12 tháng • Hạn đến '} {formatDateVN(softwareExpiryDate.toISOString())})
+                    </span>
                   </div>
-                  <span className="font-semibold text-emerald-700">{t.tier2Remaining}</span>
+                  <span className="font-semibold text-slate-800 shrink-0">{t.tier3Remaining}</span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full" style={{ width: '15%' }} />
+                  <div className="bg-slate-700 h-full rounded-full transition-all duration-500" style={{ width: `${softwareProgress}%` }} />
                 </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  {t.tier2Note}
-                </p>
               </div>
 
-              {/* Tier 3: Software support */}
-              <div className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#E8E2D9] space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-md bg-slate-800 text-white font-bold flex items-center justify-center text-xs">
-                      3
-                    </span>
-                    <span className="font-bold text-slate-900">{t.tier3Name}</span>
-                    <span className="text-slate-500 font-mono">{t.tier3Expire}</span>
+              {/* Thẻ 3: Linh kiện nâng cấp nếu có trên phiếu tiếp nhận / sửa chữa */}
+              {searchResult.ticket?.parts_used && searchResult.ticket.parts_used.length > 0 && (
+                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-md bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                        +
+                      </span>
+                      <span className="font-bold text-emerald-950">{t.tier2Name}</span>
+                    </div>
+                    <span className="font-semibold text-emerald-700">{t.tier2Remaining}</span>
                   </div>
-                  <span className="font-semibold text-slate-800">{t.tier3Remaining}</span>
+                  <div className="space-y-1.5 pt-1">
+                    {searchResult.ticket.parts_used.map((part, idx) => (
+                      <div key={idx} className="flex justify-between items-center text-xs bg-white/80 px-3 py-1.5 rounded-lg border border-emerald-100">
+                        <span className="font-medium text-slate-800">{part.part_name} (x{part.quantity})</span>
+                        <span className="text-emerald-700 font-mono font-bold text-[11px]">
+                          {part.warranty_months ? `${part.warranty_months} tháng` : '36 tháng'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-slate-700 h-full rounded-full" style={{ width: '85%' }} />
+              )}
+            </div>
+
+            {/* Gợi ý chính sách nếu khách hàng mua PC/laptop và nâng cấp máy cùng lúc (RAM/CPU/SSD) */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-bold text-blue-950">
+                <span>{t.upgradeTitle}</span>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                {t.upgradeDesc}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-1">
+                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
+                    <span>🖥️</span>
+                    <span>Cấu hình máy nguyên bộ</span>
+                  </div>
+                  <div className="text-slate-600">{t.upgradeMachinePart}</div>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-snug">
-                  {t.tier3Note}
-                </p>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
+                  <div className="font-bold text-emerald-800 flex items-center gap-1.5">
+                    <span>⚡</span>
+                    <span>Nâng cấp RAM / SSD mới</span>
+                  </div>
+                  <div className="text-slate-600">{t.upgradeNewPart}</div>
+                </div>
+
+                <div className="p-3 bg-white rounded-xl border border-blue-100 text-[11px] space-y-1 shadow-2xs">
+                  <div className="font-bold text-indigo-900 flex items-center gap-1.5">
+                    <span>🚀</span>
+                    <span>Nâng cấp CPU / Tháo máy</span>
+                  </div>
+                  <div className="text-slate-600">{t.upgradeCpuPart}</div>
+                </div>
               </div>
             </div>
 

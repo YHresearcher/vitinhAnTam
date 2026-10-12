@@ -1205,11 +1205,16 @@ export function StoreProvider({
     // Search by Phone Number
     const rawDigits = query.replace(/\D/g, '');
     if (rawDigits.length >= 7) {
-      const matchedCust = customers.find((c) => c.phone.replace(/\D/g, '').includes(rawDigits));
-      const matchedTicket = tickets.find((t) => t.customer_phone.replace(/\D/g, '').includes(rawDigits));
-      const matchedItemByPhone = inventory.find((i) =>
-        i.customer_phone ? i.customer_phone.replace(/\D/g, '').includes(rawDigits) : false
-      );
+      const last7 = rawDigits.slice(-7);
+      const isMatchPhone = (phone?: string) => {
+        if (!phone) return false;
+        const p = phone.replace(/\D/g, '');
+        return p.includes(rawDigits) || rawDigits.includes(p) || (last7 && p.endsWith(last7));
+      };
+
+      const matchedCust = customers.find((c) => isMatchPhone(c.phone));
+      const matchedTicket = tickets.find((t) => isMatchPhone(t.customer_phone));
+      const matchedItemByPhone = inventory.find((i) => isMatchPhone(i.customer_phone));
 
       if (matchedCust || matchedTicket || matchedItemByPhone) {
         return { customer: matchedCust, ticket: matchedTicket, item: matchedItemByPhone };

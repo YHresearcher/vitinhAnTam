@@ -186,7 +186,8 @@ function AppointmentBookingContent() {
         total_amount: locationType === 'onsite' ? 150000 : 100000,
         visual_condition: 'Tiếp nhận qua hệ thống đặt lịch Online',
         status: 'processing',
-        technician_note: `Lịch hẹn: ${appointmentDate} (${timeSlot}) • Khu vực: ${fullAddr}`,
+        use_zalo: useZalo,
+        technician_note: `Lịch hẹn: ${appointmentDate} (${timeSlot}) • Khu vực: ${fullAddr}${useZalo ? ' • Khách có dùng Zalo' : ''}`,
         estimated_completion: `${timeSlot} - ${appointmentDate}`,
       });
 
@@ -206,9 +207,31 @@ function AppointmentBookingContent() {
               serviceNeeded,
               bookingDate: appointmentDate,
               bookingTime: timeSlot,
+              useZalo,
             },
           }),
         });
+
+        // Nếu khách chọn có dùng Zalo, kích hoạt tin nhắn Zalo gửi đến khách
+        if (useZalo) {
+          await fetch('/api/webhook/notify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              eventType: 'customer_zalo_booking',
+              payload: {
+                ticketCode,
+                customerName: customerName.trim(),
+                customerPhone: customerPhone.trim(),
+                address: fullAddr,
+                deviceType: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
+                serviceNeeded,
+                bookingDate: appointmentDate,
+                bookingTime: timeSlot,
+              },
+            }),
+          });
+        }
       } catch (notifyErr) {
         console.warn('Lỗi gửi thông báo Webhook / Zalo Bot:', notifyErr);
       }
@@ -279,6 +302,27 @@ function AppointmentBookingContent() {
               <Check className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{t.autoSentNote || 'Hệ thống đã tự động gửi thông tin lịch hẹn đến bộ phận kỹ thuật.'}</span>
             </div>
+
+            {/* Thông báo gửi qua Zalo nếu khách chọn Có */}
+            {customerUsedZalo && (
+              <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl text-left flex items-start gap-3 max-w-md mx-auto">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  Zalo
+                </div>
+                <div className="text-xs">
+                  <div className="font-bold text-blue-900">
+                    {currentLang === 'en' ? 'Appointment confirmed via Zalo' : 'Đã gửi thông tin lịch hẹn qua Zalo'}
+                  </div>
+                  <div className="text-blue-700 mt-0.5 leading-relaxed">
+                    {currentLang === 'en' ? (
+                      <>Bot has dispatched confirmation ticket <strong className="font-mono text-blue-950 font-bold">{bookingSuccess.code}</strong> to Zalo number <strong className="font-mono text-blue-950 font-bold">{bookingSuccess.phone}</strong>. Please check your Zalo!</>
+                    ) : (
+                      <>Hệ thống Bot đã tự động gửi phiếu hẹn <strong className="font-mono text-blue-950 font-bold">{bookingSuccess.code}</strong> tới số Zalo <strong className="font-mono text-blue-950 font-bold">{bookingSuccess.phone}</strong>. Bạn vui lòng kiểm tra Zalo nhé!</>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-[#FAF7F2] rounded-2xl p-5 text-xs text-left max-w-md mx-auto space-y-2.5 border border-[#E8E2D9]">
               <div className="flex justify-between items-center pb-2 border-b border-[#E8E2D9]">
@@ -602,66 +646,54 @@ function AppointmentBookingContent() {
                   {t.commitmentNote}
                 </p>
               </div>
-             </form>
+              {/* ZALO CONFIRMATION MODAL */}
+              {showZaloModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+                  <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 text-center space-y-4">
+                    <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto border border-blue-100 shadow-sm">
+                      <MessageCircle className="w-7 h-7" />
+                    </div>
 
-             {/* ZALO CONFIRMATION MODAL */}
-             {showZaloModal && (
-               <div className="fixed inset-0 bg-[#1A0F0A]/60 backdrop-blur-sm flex items-center justify-center p-5 z-50">
-                 <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6">
-                   <div className="text-center mb-4">
-                     <div className="w-14 h-14 bg-[#FBE8DE] text-[#C0392B] rounded-full flex items-center justify-center mx-auto mb-3 border border-[#F2C4B2]">
-                       <MessageCircle className="w-7 h-7" />
-                     </div>
-                     <h3 className="text-lg font-black text-slate-900 mb-1">
-                       {currentLang === 'en' ? 'How would you like to be contacted?' : 'Bạn muốn nhận thông báo qua kênh nào?'}
-                     </h3>
-                     <p className="text-xs text-slate-600">
-                       {currentLang === 'en'
-                         ? 'We will send your booking confirmation via your preferred method'
-                         : 'Chúng tôi sẽ gửi thông báo xác nhận qua kênh bạn chọn'}
-                     </p>
-                   </div>
+                    <div className="space-y-1.5">
+                      <h3 className="text-base font-bold text-slate-900">
+                        {currentLang === 'en'
+                          ? 'Do you use Zalo for this phone number?'
+                          : 'Bạn có dùng Zalo cho số điện thoại này chứ?'}
+                      </h3>
+                      <p className="text-xs text-slate-600">
+                        {currentLang === 'en' ? 'Phone Number: ' : 'Số điện thoại: '}
+                        <strong className="font-mono text-blue-700 font-bold">{customerPhone}</strong>
+                      </p>
+                      <p className="text-[11px] text-slate-500 leading-relaxed pt-1">
+                        {currentLang === 'en'
+                          ? 'If you choose Yes, Vi Tinh An Tam Bot will automatically send appointment confirmation to your Zalo for easy tracking.'
+                          : 'Nếu chọn Có, hệ thống Bot của Vi Tính An Tam sẽ tự động gửi thông tin chi tiết lịch hẹn đến Zalo của bạn để tiện theo dõi và lưu bảo hành.'}
+                      </p>
+                    </div>
 
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                     <button
-                       type="button"
-                       onClick={() => submitBooking(true)}
-                       disabled={isSubmitting}
-                       className="w-full px-4 py-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 border border-emerald-700 shadow-xs transition-all disabled:opacity-50"
-                     >
-                       <MessageCircle className="w-4 h-4" />
-                       <span>{currentLang === 'en' ? 'Via Zalo (Instant)' : 'Qua Zalo (Nhanh nhất)'}</span>
-                     </button>
-                     <button
-                       type="button"
-                       onClick={() => submitBooking(false)}
-                       disabled={isSubmitting}
-                       className="w-full px-4 py-4 rounded-2xl bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 border border-slate-300 shadow-2xs transition-all disabled:opacity-50"
-                     >
-                       <Phone className="w-4 h-4" />
-                       <span>{currentLang === 'en' ? 'Via SMS' : 'Qua Tin nhắn SMS'}</span>
-                     </button>
-                   </div>
-
-                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                     <ul className="text-[11px] text-slate-600 space-y-2">
-                       <li className="flex items-start gap-2">
-                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
-                         <span>{currentLang === 'en' ? 'Booking confirmation sent' : 'Gửi xác nhận lịch hẹn'}</span>
-                       </li>
-                       <li className="flex items-start gap-2">
-                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
-                         <span>{currentLang === 'en' ? 'Real-time status updates' : 'Cập nhật trạng thái thời gian thực'}</span>
-                       </li>
-                       <li className="flex items-start gap-2">
-                         <Check className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
-                         <span>{currentLang === 'en' ? 'Quick response to questions' : 'Phản hồi nhanh khi cần hỏi đáp'}</span>
-                       </li>
-                     </ul>
-                   </div>
-                 </div>
-               </div>
-             )}
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => submitBooking(false)}
+                        disabled={isSubmitting}
+                        className="py-2.5 px-3 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs hover:bg-slate-50 active:scale-95 transition-all"
+                      >
+                        {currentLang === 'en' ? 'No' : 'Không'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => submitBooking(true)}
+                        disabled={isSubmitting}
+                        className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        {isSubmitting
+                          ? (currentLang === 'en' ? 'Sending...' : 'Đang gửi...')
+                          : (currentLang === 'en' ? 'Yes' : 'Có')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         )}

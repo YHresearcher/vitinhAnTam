@@ -279,6 +279,7 @@ export type WebhookEventType =
   | 'sale_success' // Bán laptop/pc thành công -> bot chúc mừng đến nhóm đã cài đặt sẵn
   | 'key_release_success' // Phát hành/bán key bản quyền thành công -> bot chúc mừng đến nhóm
   | 'customer_zalo_order' // Gửi xác nhận đơn hàng đến Zalo khách hàng
+  | 'customer_zalo_booking' // Gửi xác nhận đặt lịch hẹn đến Zalo khách hàng
   | 'test_notification'; // Thông báo test từ admin
 
 /**
@@ -299,6 +300,7 @@ export async function dispatchSystemEvent(
     if (eventType === 'sale_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'key_release_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'customer_zalo_order') shouldNotifyZalo = true;
+    if (eventType === 'customer_zalo_booking') shouldNotifyZalo = true;
     if (eventType === 'test_notification') shouldNotifyZalo = true;
   }
 
@@ -405,6 +407,19 @@ export async function dispatchSystemEvent(
         `⏰ Thời gian đặt: ${nowStr}\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} để chuẩn bị máy chu đáo cho bạn. Trân trọng cảm ơn!`;
+    } else if (eventType === 'customer_zalo_booking') {
+      formattedText = `📱 [XÁC NHẬN ĐẶT LỊCH HẸN QUA ZALO KHÁCH HÀNG]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `Chào bạn ${payload.customerName || 'quý khách'},\n` +
+        `Vi Tính An Tâm xin gửi xác nhận thông tin lịch hẹn dịch vụ của bạn:\n` +
+        `🏷️ Mã tiếp nhận: ${payload.ticketCode || 'N/A'}\n` +
+        `💻 Thiết bị: ${payload.deviceType || 'Máy tính'}\n` +
+        `🔧 Dịch vụ yêu cầu: ${payload.serviceNeeded || 'Kiểm tra tổng quát'}\n` +
+        `⏰ Thời gian hẹn: ${payload.bookingDate || 'Hôm nay'} (${payload.bookingTime || 'Sớm nhất'})\n` +
+        `📍 Địa chỉ: ${payload.address || 'Tại cửa hàng'}\n` +
+        `⏱️ Thời gian đặt: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `Kỹ thuật viên Vi Tính An Tâm sẽ sớm liên hệ qua SĐT ${payload.customerPhone || ''} trước khi phục vụ để xác nhận lịch chu đáo cho bạn. Trân trọng cảm ơn!`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

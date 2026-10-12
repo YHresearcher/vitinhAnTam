@@ -416,6 +416,7 @@ export interface ServiceTicket {
   warranty_deadline?: string;
   completed_at?: string;
   warranty_until?: string;
+  use_zalo?: boolean;
   created_at?: string;
 }
 
