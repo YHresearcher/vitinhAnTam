@@ -337,6 +337,7 @@ export interface KeyReleaseRequest {
   faulty_reason?: string;
   admin_note?: string;
   email_sent?: boolean;
+  email_sent_at?: string;
   created_at: string;
   updated_at: string;
 }
