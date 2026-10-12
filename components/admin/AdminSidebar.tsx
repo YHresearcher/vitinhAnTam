@@ -89,8 +89,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         visible: canAccessCRM(),
       },
       {
-        label: 'Phiếu sửa chữa',
-        href: '/phieu-sua-chua',
+        label: 'Sửa chữa tại quầy',
+        href: '/cuu-ho-onsite?tab=counter',
         icon: Wrench,
         badge: pendingTicketsCount > 0 ? `${pendingTicketsCount}` : null,
         badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
@@ -204,8 +204,10 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             Phân hệ nghiệp vụ
           </div>
           {navItems.map((item) => {
-            const isActive =
-              pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+            const [itemPath, itemQuery] = item.href.split('?');
+            const isActive = itemQuery
+              ? pathname === itemPath && (typeof window !== 'undefined' && window.location.search.includes(itemQuery))
+              : pathname === item.href || (item.href !== '/dashboard' && pathname === itemPath);
             const IconComponent = item.icon;
             return (
               <Link

@@ -250,7 +250,7 @@ export function DeadlineTrackingWidget() {
                         </span>
                       </span>
                       <Link
-                        href={`/phieu-sua-chua?ticketId=${ticket.id}`}
+                        href={`/cuu-ho-onsite?tab=counter&ticketId=${ticket.id}`}
                         onClick={() => setIsOpen(false)}
                         className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded-lg transition-colors"
                       >
@@ -269,7 +269,7 @@ export function DeadlineTrackingWidget() {
               Tự động cập nhật theo thời gian thực
             </span>
             <Link
-              href="/phieu-sua-chua"
+              href="/cuu-ho-onsite?tab=counter"
               onClick={() => setIsOpen(false)}
               className="text-blue-600 hover:text-blue-800 font-bold text-xs"
             >
@@ -278,42 +278,47 @@ export function DeadlineTrackingWidget() {
           </div>
         </div>
       ) : (
-        /* 2. TRẠNG THÁI THU NHỎ (HÌNH CHỮ NHẬT DỌC NHỎ BÊN GÓC PHẢI VỚI 2 KHU VỰC) */
+        /* 2. TRẠNG THÁI THU NHỎ (DẠNG HORIZONTAL PILL SANG TRỌNG TẠI BOTTOM-6 RIGHT-4) */
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="flex flex-col w-[76px] sm:w-[80px] rounded-xl overflow-hidden shadow-xl border border-slate-300/90 bg-white hover:scale-105 active:scale-95 transition-all text-center cursor-pointer select-none group"
+          className="flex items-center gap-2.5 px-3.5 py-2 rounded-full shadow-lg hover:shadow-xl border border-slate-200 bg-white/95 backdrop-blur-xs hover:border-slate-300 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer select-none group"
           title="Bấm để xem chi tiết máy đến hạn / quá hạn"
         >
-          {/* Khu vực 1: Hạn trả máy */}
-          <div className="py-2.5 px-1 bg-amber-50/90 border-b border-amber-200 flex flex-col items-center justify-center transition-colors group-hover:bg-amber-100">
-            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-tighter leading-tight">
-              Hạn trả máy
+          {/* Section 1: Hạn trả máy */}
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+            <span className="text-[11px] font-bold text-slate-600 group-hover:text-slate-900 whitespace-nowrap">
+              Hạn trả
             </span>
-            <span className="text-xl sm:text-2xl font-black font-mono text-amber-900 mt-1 leading-none">
+            <span className="text-xs font-black font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-full border border-amber-200">
               {upcomingCount}
             </span>
           </div>
 
-          {/* Khu vực 2: Quá hạn */}
-          <div
-            className={`py-2.5 px-1 flex flex-col items-center justify-center transition-colors ${
-              overdueCount > 0
-                ? 'bg-red-50 text-red-800 group-hover:bg-red-100'
-                : 'bg-slate-50 text-slate-600 group-hover:bg-slate-100'
-            }`}
-          >
+          {/* Separator */}
+          <div className="w-px h-3.5 bg-slate-200" />
+
+          {/* Section 2: Quá hạn */}
+          <div className="flex items-center gap-1.5">
             <span
-              className={`text-[10px] font-bold uppercase tracking-tighter leading-tight ${
+              className={`w-2 h-2 rounded-full inline-block ${
+                overdueCount > 0 ? 'bg-red-500 animate-pulse' : 'bg-slate-300'
+              }`}
+            />
+            <span
+              className={`text-[11px] font-bold whitespace-nowrap ${
                 overdueCount > 0 ? 'text-red-700' : 'text-slate-500'
               }`}
             >
               Quá hạn
             </span>
-            <div className="flex items-center gap-1 mt-1">
+            <div className="flex items-center gap-1">
               <span
-                className={`text-xl sm:text-2xl font-black font-mono leading-none ${
-                  overdueCount > 0 ? 'text-red-700' : 'text-slate-700'
+                className={`text-xs font-black font-mono px-1.5 py-0.5 rounded-full border ${
+                  overdueCount > 0
+                    ? 'text-red-700 bg-red-50 border-red-200'
+                    : 'text-slate-600 bg-slate-100 border-slate-200'
                 }`}
               >
                 {overdueCount}

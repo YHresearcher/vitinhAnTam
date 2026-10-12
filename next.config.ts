@@ -58,12 +58,17 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/admin/tickets",
-        destination: "/phieu-sua-chua",
+        destination: "/cuu-ho-onsite?tab=counter",
         permanent: false,
       },
       {
         source: "/admin/phieu-sua-chua",
-        destination: "/phieu-sua-chua",
+        destination: "/cuu-ho-onsite?tab=counter",
+        permanent: false,
+      },
+      {
+        source: "/phieu-sua-chua",
+        destination: "/cuu-ho-onsite?tab=counter",
         permanent: false,
       },
       {

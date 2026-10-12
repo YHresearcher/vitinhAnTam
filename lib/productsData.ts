@@ -79,9 +79,17 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
       const specs = {
         cpu: item.cpu || item.specs?.cpu || 'Intel Core i5',
         ram: item.ram || item.specs?.ram || '16GB DDR4',
-        storage: item.ssd_capacity || item.specs?.ssd || 'SSD NVMe Siêu Tốc',
-        highlight: item.specs_summary || (item.specs?.ssd_health ? `SSD Health ${item.specs.ssd_health}%` : 'Chạy êm mát, bo mạch zin 100%'),
-        gift: rawMatch?.vi.specs.gift || 'Tặng combo phím chuột & lót chuột mới',
+        storage: item.ssd_capacity || item.specs?.ssd || (isEn ? 'High-Speed NVMe SSD' : 'SSD NVMe Siêu Tốc'),
+        highlight: item.specs_summary
+          ? item.specs_summary
+          : item.specs?.ssd_health
+          ? `SSD Health ${item.specs.ssd_health}%`
+          : isEn
+          ? 'Whisper-quiet & cool, 100% factory-original motherboard'
+          : 'Chạy êm mát, bo mạch zin 100%',
+        gift: isEn
+          ? 'Complimentary business keyboard & mouse bundle + mousepad'
+          : (rawMatch?.vi.specs.gift || 'Tặng combo phím chuột & lót chuột mới'),
       };
 
       const defaultImg =
@@ -90,6 +98,14 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
           : rawMatch?.img ||
             'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80';
 
+      const shelf = item.shelf_location
+        ? isEn
+          ? `Shelf ${item.shelf_location.replace(/^Kệ\s*/i, '')}`
+          : item.shelf_location
+        : isEn
+        ? 'Shelf A1'
+        : 'Kệ A1';
+
       return {
         id: item.id,
         serviceTag: item.service_tag,
@@ -97,17 +113,31 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         category,
         price: item.retail_price || item.price || 0,
         stockCount: isSold ? 0 : (item.stock_quantity ?? item.quantity ?? 1),
-        shelfLocation: item.shelf_location || 'Kệ A1',
+        shelfLocation: shelf,
         qcStatus: item.qc_status || 'ready_to_sell',
         burnInDuration: item.burn_in_duration || 60,
         isSold,
         customerName: item.customer_name,
-        customerArea: item.customer_phone ? 'Khu vực Tây Ninh' : undefined,
+        customerArea: item.customer_phone ? (isEn ? 'Tay Ninh Region' : 'Khu vực Tây Ninh') : undefined,
         handoverDate: item.handover_date,
         name: isEn && en ? en.name : (item.device_model || item.model || `${item.brand} ${item.form_factor}`),
-        badge: isEn && en ? en.badge : (rawMatch?.vi.badge || 'BO MẠCH NGUYÊN BẢN'),
-        subBadge: isEn && en ? en.subBadge : (rawMatch?.vi.subBadge || 'Bảo hành 12 tháng'),
-        desc: isEn && en ? en.desc : (rawMatch?.vi.desc || 'Máy tuyển chọn kỹ lưỡng, đã kiểm tra tải FurMark ổn định 100%.'),
+        badge: isEn
+          ? en
+            ? en.badge
+            : category === 'laptop'
+            ? 'GRADE-A CERTIFIED • CARBON CHASSIS'
+            : 'FACTORY-ORIGINAL MOTHERBOARD'
+          : (rawMatch?.vi.badge || 'BO MẠCH NGUYÊN BẢN'),
+        subBadge: isEn
+          ? en
+            ? en.subBadge
+            : '12-Month Hardware Warranty'
+          : (rawMatch?.vi.subBadge || 'Bảo hành 12 tháng'),
+        desc: isEn
+          ? en
+            ? en.desc
+            : 'Meticulously inspected enterprise hardware, 100% stress-tested with FurMark & AIDA64 for quiet and cool operation.'
+          : (rawMatch?.vi.desc || 'Máy tuyển chọn kỹ lưỡng, đã kiểm tra tải FurMark ổn định 100%.'),
         specs: isEn && en ? {
           cpu: en.cpu,
           ram: en.ram,

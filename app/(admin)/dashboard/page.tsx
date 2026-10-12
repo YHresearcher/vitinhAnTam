@@ -680,7 +680,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ) : (
           <>
             <Link
-              href="/phieu-sua-chua"
+              href="/cuu-ho-onsite?tab=counter"
               className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs hover:border-blue-300 transition-colors"
             >
               <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5">
@@ -1008,9 +1008,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <Link
             href={
               activeListTab === 'tickets'
-                ? '/phieu-sua-chua'
+                ? '/cuu-ho-onsite?tab=counter'
                 : activeListTab === 'onsite'
-                ? '/cuu-ho-onsite'
+                ? '/cuu-ho-onsite?tab=onsite'
                 : '/kho-may'
             }
             className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
@@ -1074,7 +1074,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   </span>
 
                   <Link
-                    href={`/phieu-sua-chua?ticketId=${tk.id}`}
+                    href={`/cuu-ho-onsite?tab=counter&ticketId=${tk.id}`}
                     className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded font-semibold transition-colors"
                   >
                     Xem

@@ -251,17 +251,17 @@ function ProductsCatalogContent() {
               </div>
               <div>
                 <div className={`font-bold text-sm sm:text-base ${mainTab === 'desktop' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
-                  {isEn ? 'Desktop PCs' : 'Máy tính để bàn'}
+                  {t.catalog?.desktopTitle || (isEn ? 'Desktop PCs & Workstations' : 'Máy tính để bàn')}
                 </div>
                 <div className="text-xs text-[#9C8E85]">
-                  Mini PC • SFF • Văn phòng • Đồ họa
+                  {t.catalog?.desktopSub || 'Mini PC • SFF • Văn phòng • Đồ họa'}
                 </div>
               </div>
             </div>
             <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
               mainTab === 'desktop' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
             }`}>
-              {inStockDesktopsCount} máy
+              {inStockDesktopsCount} {t.catalog?.unitsSuffix || (isEn ? 'units' : 'máy')}
             </span>
           </button>
 
@@ -284,17 +284,17 @@ function ProductsCatalogContent() {
               </div>
               <div>
                 <div className={`font-bold text-sm sm:text-base ${mainTab === 'laptop' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
-                  {isEn ? 'Laptops' : 'Laptop'}
+                  {t.catalog?.laptopTitle || (isEn ? 'Business Laptops' : 'Laptop')}
                 </div>
                 <div className="text-xs text-[#9C8E85]">
-                  Dell Latitude • ThinkPad • HP
+                  {t.catalog?.laptopSub || 'Dell Latitude • ThinkPad • HP'}
                 </div>
               </div>
             </div>
             <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
               mainTab === 'laptop' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
             }`}>
-              {inStockLaptopsCount} máy
+              {inStockLaptopsCount} {t.catalog?.unitsSuffix || (isEn ? 'units' : 'máy')}
             </span>
           </button>
 
@@ -314,17 +314,17 @@ function ProductsCatalogContent() {
               </div>
               <div>
                 <div className={`font-bold text-sm sm:text-base ${mainTab === 'components' ? 'text-[#C0392B]' : 'text-[#2B1810]'}`}>
-                  {isEn ? 'Spare Parts' : 'Linh kiện'}
+                  {t.catalog?.partsTitle || (isEn ? 'Certified Spare Parts & Storage' : 'Linh kiện')}
                 </div>
                 <div className="text-xs text-[#9C8E85]">
-                  RAM • SSD Kingston / Samsung • Phụ kiện
+                  {t.catalog?.partsSub || 'RAM • SSD Kingston / Samsung • Phụ kiện'}
                 </div>
               </div>
             </div>
             <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
               mainTab === 'components' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
             }`}>
-              {spareParts?.length || 0} mã hàng
+              {spareParts?.length || 0} {t.catalog?.itemsSuffix || (isEn ? 'items' : 'mã hàng')}
             </span>
           </button>
         </div>
@@ -345,11 +345,11 @@ function ProductsCatalogContent() {
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'in_stock' ? 'bg-white' : 'bg-emerald-500'}`}></span>
-                  <span>{isEn ? 'In Stock' : 'Sẵn hàng'}</span>
+                  <span>{t.products.tabInStock || (isEn ? 'In Stock' : 'Sẵn hàng')}</span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                     statusTab === 'in_stock' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-800'
                   }`}>
-                    {inStockCurrentCategory.length} dòng ({totalReadyStock} máy)
+                    {inStockCurrentCategory.length} {t.catalog?.linesPrefix || (isEn ? 'models' : 'dòng')} ({totalReadyStock} {t.catalog?.unitsSuffix || (isEn ? 'units' : 'máy')})
                   </span>
                 </button>
 
@@ -359,7 +359,7 @@ function ProductsCatalogContent() {
                   onClick={() => setIsBuyKeyModalOpen(true)}
                   className="px-3.5 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-amber-50 hover:bg-[#C0392B] text-[#C0392B] hover:text-white border border-[#C0392B]/30 uppercase tracking-wide cursor-pointer active:scale-95 shadow-2xs"
                 >
-                  <span>🔑 MUA KEY</span>
+                  <span>{t.catalog?.buyKeyBtn || (isEn ? '🔑 BUY LICENSE' : '🔑 MUA KEY')}</span>
                   {totalInStockKeys > 0 && (
                     <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#C0392B] text-white font-mono font-bold group-hover:bg-white group-hover:text-[#C0392B]">
                       {totalInStockKeys}
@@ -377,11 +377,11 @@ function ProductsCatalogContent() {
                   }`}
                 >
                   <span className={`w-2 h-2 rounded-full shrink-0 ${statusTab === 'sold' ? 'bg-white' : 'bg-slate-400'}`}></span>
-                  <span>{isEn ? 'Delivered' : 'Đã bàn giao'}</span>
+                  <span>{t.products.soldBadge || (isEn ? 'Delivered' : 'Đã bàn giao')}</span>
                   <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                     statusTab === 'sold' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-700'
                   }`}>
-                    {soldCurrentCategory.length} máy
+                    {soldCurrentCategory.length} {t.catalog?.unitsSuffix || (isEn ? 'units' : 'máy')}
                   </span>
                 </button>
               </div>
@@ -397,7 +397,7 @@ function ProductsCatalogContent() {
                       : 'text-[#6E5D53] hover:text-[#2B1810]'
                   }`}
                 >
-                  {isEn ? 'All Parts' : 'Tất cả'} ({spareParts?.length || 0})
+                  {t.catalog?.subPartsAll || (isEn ? 'All Parts' : 'Tất cả')} ({spareParts?.length || 0})
                 </button>
                 <button
                   type="button"
@@ -408,7 +408,7 @@ function ProductsCatalogContent() {
                       : 'text-[#6E5D53] hover:text-[#2B1810]'
                   }`}
                 >
-                  {isEn ? 'SSD Storage' : 'Ổ cứng SSD'}
+                  {t.catalog?.subPartsSsd || (isEn ? 'SSD Storage' : 'Ổ cứng SSD')}
                 </button>
                 <button
                   type="button"
@@ -419,7 +419,7 @@ function ProductsCatalogContent() {
                       : 'text-[#6E5D53] hover:text-[#2B1810]'
                   }`}
                 >
-                  {isEn ? 'RAM Memory' : 'Bộ nhớ RAM'}
+                  {t.catalog?.subPartsRam || (isEn ? 'RAM Memory' : 'Bộ nhớ RAM')}
                 </button>
                 <button
                   type="button"
@@ -430,7 +430,7 @@ function ProductsCatalogContent() {
                       : 'text-[#6E5D53] hover:text-[#2B1810]'
                   }`}
                 >
-                  {isEn ? 'Others' : 'Khác / Nguồn'}
+                  {t.catalog?.subPartsOthers || (isEn ? 'Others' : 'Khác / Nguồn')}
                 </button>
 
                 {/* Nút MUA KEY */}
@@ -439,7 +439,7 @@ function ProductsCatalogContent() {
                   onClick={() => setIsBuyKeyModalOpen(true)}
                   className="px-3.5 py-2 rounded-lg font-bold text-xs sm:text-sm transition-all flex items-center gap-1.5 bg-amber-50 hover:bg-[#C0392B] text-[#C0392B] hover:text-white border border-[#C0392B]/30 uppercase tracking-wide cursor-pointer active:scale-95 shadow-2xs ml-1"
                 >
-                  <span>🔑 MUA KEY</span>
+                  <span>{t.catalog?.buyKeyBtn || (isEn ? '🔑 BUY LICENSE' : '🔑 MUA KEY')}</span>
                 </button>
               </div>
             )}
@@ -733,7 +733,7 @@ function ProductsCatalogContent() {
         </div>
         <div className="text-xs text-[#6E5D53] flex items-center gap-1">
           <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span>Bảo hành chính hãng 12 - 36 tháng • Miễn phí công lắp đặt & kiểm tra</span>
+          <span>{t.catalog?.partsWarrantyBadge || (isEn ? '12 - 36 Month Genuine Warranty • Complimentary On-Site Installation & Diagnostics' : 'Bảo hành chính hãng 12 - 36 tháng • Miễn phí công lắp đặt & kiểm tra')}</span>
         </div>
       </div>
 
@@ -742,8 +742,8 @@ function ProductsCatalogContent() {
           <Boxes className="w-12 h-12 text-slate-400 mx-auto" />
           <p className="text-sm text-[#6E5D53]">
             {searchKeyword
-              ? `Không tìm thấy linh kiện phù hợp với từ khóa "${searchKeyword}".`
-              : 'Chưa có dữ liệu linh kiện trong danh mục này.'}
+              ? (isEn ? `No spare parts found matching query "${searchKeyword}".` : `Không tìm thấy linh kiện phù hợp với từ khóa "${searchKeyword}".`)
+              : (t.catalog?.partsEmptyMsg || 'Chưa có dữ liệu linh kiện trong danh mục này.')}
           </p>
           <div className="pt-2">
             <a
@@ -753,7 +753,7 @@ function ProductsCatalogContent() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
             >
               <MessageSquare className="w-4 h-4" />
-              <span>Nhắn Zalo Hỏi Mẫu Linh Kiện Bạn Cần</span>
+              <span>{t.catalog?.partsZaloInquire || (isEn ? 'Inquire via Zalo for Component Availability' : 'Nhắn Zalo Hỏi Mẫu Linh Kiện Bạn Cần')}</span>
             </a>
           </div>
         </div>
@@ -784,14 +784,14 @@ function ProductsCatalogContent() {
                       {partType}
                     </span>
                     <span className="px-2 py-0.5 rounded-md bg-emerald-600/90 text-white text-[10px] font-semibold">
-                      {part.condition === 'new' ? 'MỚI 100%' : 'ZIN BÓC MÁY 99%'}
+                      {part.condition === 'new' ? (t.catalog?.partsConditionNew || 'MỚI 100%') : (t.catalog?.partsConditionPulled || 'ZIN BÓC MÁY 99%')}
                     </span>
                   </div>
                   <div className="absolute top-3 right-3">
                     <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight shadow-xs ${
                       isAvailable ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-white'
                     }`}>
-                      {isAvailable ? `CÒN SẴN: ${part.quantity_in_stock}` : 'TẠM HẾT'}
+                      {isAvailable ? `${t.catalog?.partsInStock || (isEn ? 'IN STOCK' : 'CÒN SẴN')}: ${part.quantity_in_stock}` : (t.catalog?.partsOutOfStock || (isEn ? 'OUT OF STOCK' : 'TẠM HẾT'))}
                     </span>
                   </div>
                 </div>
@@ -808,13 +808,13 @@ function ProductsCatalogContent() {
                     {/* Nhà phân phối & Vị trí kho */}
                     <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
                       <span className="font-medium text-slate-700">
-                        {part.distributor ? `NPP: ${part.distributor}` : 'Phân phối chính hãng'}
+                        {part.distributor ? `${t.catalog?.partsDistributor || 'NPP'}: ${part.distributor}` : (t.catalog?.partsDistributorOfficial || (isEn ? 'Authorized Channel' : 'Phân phối chính hãng'))}
                       </span>
                       {part.shelf_location && (
                         <>
                           <span>•</span>
                           <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[11px] text-slate-600">
-                            Kệ {part.shelf_location}
+                            {t.catalog?.partsShelf || (isEn ? 'Shelf' : 'Kệ')} {part.shelf_location}
                           </span>
                         </>
                       )}
@@ -825,7 +825,7 @@ function ProductsCatalogContent() {
                       {part.notes ? (
                         <p className="line-clamp-2 leading-relaxed">💡 {part.notes}</p>
                       ) : (
-                        <p className="leading-relaxed">💡 Tương thích chuẩn cho máy bàn & Laptop, hỗ trợ lắp ráp và sao lưu dữ liệu nguyên vẹn.</p>
+                        <p className="leading-relaxed">💡 {t.catalog?.partsNotesDefault || (isEn ? 'Universal compatibility for Desktops & Laptops, with full data preservation & setup support.' : 'Tương thích chuẩn cho máy bàn & Laptop, hỗ trợ lắp ráp và sao lưu dữ liệu nguyên vẹn.')}</p>
                       )}
                     </div>
 
@@ -840,7 +840,7 @@ function ProductsCatalogContent() {
                       <div className="text-right">
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Bảo hành {part.warranty_months} tháng</span>
+                          <span>{t.catalog?.partsWarrantyLabel || (isEn ? 'Warranty' : 'Bảo hành')} {part.warranty_months ? `${part.warranty_months} ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}` : `36 ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}`}</span>
                         </span>
                       </div>
                     </div>
@@ -855,14 +855,14 @@ function ProductsCatalogContent() {
                       className="px-3 py-2.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
                     >
                       <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Tư vấn</span>
+                      <span>{isEn ? 'Inquire' : 'Tư vấn'}</span>
                     </a>
                     <Link
-                      href={`/dat-lich?device=${encodeURIComponent(part.part_name)}&service=${encodeURIComponent('Nâng cấp / Mua linh kiện')}`}
+                      href={`/dat-lich?device=${encodeURIComponent(part.part_name)}&service=${encodeURIComponent(isEn ? 'Hardware Upgrade / Purchase Component' : 'Nâng cấp / Mua linh kiện')}`}
                       className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
                     >
                       <Wrench className="w-3.5 h-3.5" />
-                      <span>Đặt Mua & Lắp Đặt</span>
+                      <span>{t.catalog?.partsOrderBtn || (isEn ? 'Order & Install' : 'Đặt Mua & Lắp Đặt')}</span>
                     </Link>
                   </div>
                 </div>
@@ -1045,10 +1045,10 @@ function ProductsCatalogContent() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E8E2D9]">
             <div>
               <h2 className="text-base font-black text-[#2B1810] uppercase tracking-tight">
-                MUA KEY BẢN QUYỀN
+                {isEn ? 'GENUINE SOFTWARE LICENSES' : 'MUA KEY BẢN QUYỀN'}
               </h2>
               <p className="text-xs text-[#6E5D53]">
-                Kích hoạt theo máy, bảo hành 1 đổi 1.
+                {isEn ? 'Hardware-bound digital license • Lifetime activation • 1-to-1 replacement guarantee' : 'Kích hoạt theo máy, bảo hành 1 đổi 1.'}
               </p>
             </div>
 
@@ -1079,7 +1079,7 @@ function ProductsCatalogContent() {
           {/* Danh sách phiên bản trong kho (chỉ hiển thị khi stock > 0) */}
           {inStockKeyCategories.length === 0 ? (
             <div className="py-8 text-center text-xs text-[#6E5D53] bg-[#FAF7F2] rounded-xl border border-[#E8E2D9]">
-              Hiện tại danh mục này đang tạm hết key sẵn kho. Quý khách vui lòng liên hệ trực tiếp nhân viên để đặt trước.
+              {t.catalog?.buyKeyModalEmpty || (isEn ? 'This software category is temporarily out of instant stock. Please reach out to our team to place a priority reservation.' : 'Hiện tại danh mục này đang tạm hết key sẵn kho. Quý khách vui lòng liên hệ trực tiếp nhân viên để đặt trước.')}
             </div>
           ) : (
             <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
@@ -1098,13 +1098,13 @@ function ProductsCatalogContent() {
                         {cat.name}
                       </span>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 font-mono">
-                        Còn {stock} key
+                        {isEn ? `${stock} licenses in stock` : `Còn ${stock} key`}
                       </span>
                     </div>
 
                     <div className="pt-2 border-t border-[#E8E2D9]">
                       <div className="text-[11px] text-[#6E5D53] font-medium mb-1.5">
-                        Liên hệ nhân viên để nhận giá tốt nhất:
+                        {t.catalog?.buyKeyModalContact || (isEn ? 'Contact our technical sales team for commercial pricing:' : 'Liên hệ nhân viên để nhận giá tốt nhất:')}
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         {(systemSettings.zaloContacts && systemSettings.zaloContacts.length > 0
@@ -1118,7 +1118,9 @@ function ProductsCatalogContent() {
                           <a
                             key={contact.id}
                             href={`https://zalo.me/${contact.phone}?text=${encodeURIComponent(
-                              `Chào ${contact.name}, tôi muốn mua key: ${cat.name}`
+                              isEn
+                                ? `Hello ${contact.name}, I would like to purchase license: ${cat.name}`
+                                : `Chào ${contact.name}, tôi muốn mua key: ${cat.name}`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"

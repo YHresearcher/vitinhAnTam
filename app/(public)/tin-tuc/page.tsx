@@ -12,9 +12,12 @@ import {
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatDateVN } from '@/lib/supabase';
+import { TRANSLATIONS } from '@/lib/translations';
 
 export default function PublicBlogPage() {
-  const { blogPosts, blogCategories } = useViTinhAnTamStore();
+  const { blogPosts, blogCategories, currentLang } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
+  const t = TRANSLATIONS[currentLang || 'vi'].blog;
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState('all');
 

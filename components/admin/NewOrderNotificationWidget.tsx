@@ -117,7 +117,7 @@ function TicketItemCard({
         <button type="button" onClick={() => onConfirm(ticket)} disabled={isConfirming} className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
           <Check className="w-3.5 h-3.5" /><span>{isConfirming ? 'Đang tiếp nhận...' : 'Tiếp Nhận Dịch Vụ'}</span>
         </button>
-        <Link href={isOnsite ? '/cuu-ho-onsite' : `/phieu-sua-chua?ticketId=${ticket.id}`} onClick={onClose} className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1" title="Chi tiết phiếu">
+        <Link href={isOnsite ? '/cuu-ho-onsite?tab=onsite' : `/cuu-ho-onsite?tab=counter&ticketId=${ticket.id}`} onClick={onClose} className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1" title="Chi tiết phiếu">
           <ExternalLink className="w-3 h-3" />
         </Link>
       </div>
@@ -553,7 +553,7 @@ export function NewOrderNotificationWidget() {
                 QL Đơn hàng →
               </Link>
               <Link
-                href="/phieu-sua-chua"
+                href="/cuu-ho-onsite?tab=counter"
                 onClick={() => setIsOpen(false)}
                 className="text-blue-600 dark:text-blue-400 font-bold hover:underline text-[11px]"
               >

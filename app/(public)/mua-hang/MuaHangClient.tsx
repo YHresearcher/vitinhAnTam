@@ -289,7 +289,15 @@ export default function MuaHangClient() {
                             className="text-[10px] px-1.5 py-0.5 rounded bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 flex items-center gap-0.5 font-sans"
                           >
                             <Copy className="w-2.5 h-2.5" />
-                            <span>{copiedField === 'acc_step1' ? 'Đã chép' : 'Sao chép'}</span>
+                            <span>
+                              {isEn
+                                ? copiedField === 'acc_step1'
+                                  ? 'Copied'
+                                  : 'Copy'
+                                : copiedField === 'acc_step1'
+                                ? 'Đã chép'
+                                : 'Sao chép'}
+                            </span>
                           </button>
                         </div>
                         <div className="text-[11px] text-[#6E5D53] font-semibold uppercase truncate">
