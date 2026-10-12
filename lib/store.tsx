@@ -225,6 +225,8 @@ interface StoreContextType {
   pendingOrdersCount: number;
   fetchPendingOrders: () => Promise<CustomerOrder[]>;
   confirmPendingOrder: (order: CustomerOrder) => Promise<boolean>;
+  fetchServiceTickets: () => Promise<ServiceTicket[]>;
+  confirmServiceTicket: (ticketId: string, technicianName?: string) => Promise<boolean>;
 
   // Sync state
   isUsingSupabase: boolean;
@@ -1562,6 +1564,86 @@ export function StoreProvider({
     return false;
   };
 
+  const fetchServiceTickets = async (): Promise<ServiceTicket[]> => {
+    try {
+      const res = await fetch('/api/tickets', {
+        cache: 'no-store',
+        headers: {
+          'x-staff-role': currentUser?.role || 'admin',
+        },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setTickets((prev) => {
+            const map = new Map(prev.map((t) => [t.id, t]));
+            let changed = false;
+            json.data.forEach((item: ServiceTicket) => {
+              const existing = map.get(item.id);
+              if (!existing || existing.status !== item.status) {
+                map.set(item.id, item);
+                changed = true;
+              }
+            });
+            if (changed) {
+              const next = Array.from(map.values()).sort(
+                (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+              );
+              saveToLocal(STORAGE_KEYS.tickets, next);
+              return next;
+            }
+            return prev;
+          });
+          return json.data;
+        }
+      }
+    } catch (e) {
+      console.warn('Fetch /api/tickets error:', e);
+    }
+    return [];
+  };
+
+  const confirmServiceTicket = async (ticketId: string, technicianName?: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/tickets', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-staff-role': currentUser?.role || 'admin',
+        },
+        body: JSON.stringify({
+          id: ticketId,
+          status: 'diagnosing',
+          technician_name: technicianName || currentUser?.name || 'KTV Trực ca',
+        }),
+      });
+      if (res.ok) {
+        setTickets((prev) => {
+          const next = prev.map((t) =>
+            t.id === ticketId
+              ? { ...t, status: 'diagnosing' as const, technician_name: technicianName || currentUser?.name || t.technician_name }
+              : t
+          );
+          saveToLocal(STORAGE_KEYS.tickets, next);
+          return next;
+        });
+        return true;
+      }
+    } catch (e) {
+      console.warn('Confirm ticket error:', e);
+    }
+    setTickets((prev) => {
+      const next = prev.map((t) =>
+        t.id === ticketId
+          ? { ...t, status: 'diagnosing' as const, technician_name: technicianName || currentUser?.name || t.technician_name }
+          : t
+      );
+      saveToLocal(STORAGE_KEYS.tickets, next);
+      return next;
+    });
+    return true;
+  };
+
   useEffect(() => {
     if (!isLoggedIn) return;
     const canSee = currentUser && ['admin', 'sales_manager', 'tech_manager', 'sales', 'technician'].includes(currentUser.role);
@@ -1569,12 +1651,14 @@ export function StoreProvider({
 
     let isMounted = true;
     const load = async () => {
-      if (isMounted) await fetchPendingOrders();
+      if (isMounted) {
+        await Promise.allSettled([fetchPendingOrders(), fetchServiceTickets()]);
+      }
     };
     void load();
     const tm = setInterval(() => {
       void load();
-    }, 20000);
+    }, 15000);
     return () => {
       isMounted = false;
       clearInterval(tm);
@@ -2541,6 +2625,15 @@ export function StoreProvider({
         'Tạo phiếu sửa chữa'
       );
     }
+
+    // Luôn đồng bộ đến máy chủ qua API /api/tickets (để các máy quản trị khác nhận được ngay)
+    if (typeof window !== 'undefined') {
+      fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTicket),
+      }).catch(() => undefined);
+    }
     // Gửi thông báo Webhook & Zalo Bot khi tạo phiếu tiếp nhận sửa chữa tại quầy
     if (typeof window !== 'undefined' && ticketData.visual_condition !== 'Tiếp nhận qua hệ thống đặt lịch Online') {
       fetch('/api/webhook/notify', {
@@ -3479,6 +3572,8 @@ export function StoreProvider({
       pendingOrdersCount: pendingOrders.length,
       fetchPendingOrders,
       confirmPendingOrder,
+      fetchServiceTickets,
+      confirmServiceTicket,
       resetToDefault,
     }),
     [

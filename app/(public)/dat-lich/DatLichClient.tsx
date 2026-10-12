@@ -187,6 +187,31 @@ function AppointmentBookingContent() {
         estimated_completion: `${timeSlot} - ${appointmentDate}`,
       });
 
+      // Đồng bộ trực tiếp đến API phiếu sửa chữa máy chủ
+      try {
+        await fetch('/api/tickets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticket_code: ticketCode,
+            customer_name: customerName.trim(),
+            customer_phone: customerPhone.trim(),
+            customer_address: fullAddr,
+            device_name: prefilledDevice ? `${deviceType} (${prefilledDevice})` : deviceType,
+            reception_mode: locationType === 'onsite' ? 'mobile' : 'counter',
+            ticket_type: locationType === 'onsite' ? 'onsite' : 'counter',
+            issue_description: `Đặt lịch: ${serviceNeeded || 'Kiểm tra máy tổng quát'}`,
+            estimated_cost: locationType === 'onsite' ? 150000 : 100000,
+            technician_note: `Lịch hẹn: ${appointmentDate} (${timeSlot}) • Khu vực: ${fullAddr}`,
+            estimated_completion: `${timeSlot} - ${appointmentDate}`,
+            visual_condition: 'Tiếp nhận qua hệ thống đặt lịch Online',
+            status: 'received',
+          }),
+        });
+      } catch (apiErr) {
+        console.warn('Đồng bộ /api/tickets:', apiErr);
+      }
+
       // Gửi thông báo Webhook / Zalo Bot tự động đến Kỹ thuật & Quản trị viên
       try {
         await fetch('/api/webhook/notify', {

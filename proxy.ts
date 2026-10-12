@@ -54,12 +54,17 @@ export function proxy(request: NextRequest) {
   }
 
   if (isProtectedApi(pathname)) {
+    // Cho phép POST /api/tickets công khai để khách đặt lịch hẹn dịch vụ từ trang web
+    if (pathname === '/api/tickets' && request.method === 'POST') {
+      return NextResponse.next();
+    }
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized', message: 'Phiên đăng nhập không tồn tại.' }, { status: 401 });
     }
-    if (session.role !== 'admin') {
+    const STAFF_ROLES: Array<SessionPayload['role']> = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
+    if (!STAFF_ROLES.includes(session.role)) {
       return NextResponse.json(
-        { error: 'Forbidden', message: 'Chỉ Quản trị viên (Admin) mới có quyền truy cập API này.' },
+        { error: 'Forbidden', message: 'Chỉ Nhân viên hoặc Quản trị viên mới có quyền truy cập API này.' },
         { status: 403 }
       );
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import {
   ShoppingCart,
@@ -15,15 +15,20 @@ import {
   Copy,
   Clock,
   Sparkles,
+  Wrench,
+  Truck,
+  MapPin,
+  Calendar,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { CustomerOrder } from '@/lib/supabase';
+import { CustomerOrder, ServiceTicket } from '@/lib/supabase';
 import { message } from 'antd';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Chờ xác nhận',
   confirmed: 'Đã xác nhận',
   processing: 'Đang xử lý',
+  received: 'Mới tiếp nhận',
   completed: 'Hoàn tất',
   cancelled: 'Đã hủy',
 };
@@ -45,13 +50,87 @@ function formatOrderTime(createdAt?: string): string {
   }
 }
 
+function TicketItemCard({
+  ticket,
+  isConfirming,
+  onConfirm,
+  onCopyPhone,
+  onClose,
+}: {
+  ticket: ServiceTicket;
+  isConfirming: boolean;
+  onConfirm: (t: ServiceTicket) => void;
+  onCopyPhone: (phone: string, e: React.MouseEvent) => void;
+  onClose: () => void;
+}) {
+  const cleanPhone = String(ticket.customer_phone || '').replace(/\D/g, '');
+  const isOnsite = ticket.ticket_type === 'onsite' || ticket.reception_mode === 'mobile';
+
+  return (
+    <div className="p-3 space-y-2 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/70">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono font-black text-sm text-blue-700 dark:text-blue-400">{ticket.ticket_code}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${isOnsite ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300'}`}>
+            {isOnsite ? '🚚 Onsite' : '🏪 Quầy'}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+          <Clock className="w-3 h-3 text-slate-400" />
+          <span>{formatOrderTime(ticket.created_at)}</span>
+        </div>
+      </div>
+      <div className="flex items-start justify-between gap-2 text-xs bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200/80">
+        <div>
+          <div className="font-bold text-slate-900 dark:text-slate-100">{ticket.customer_name}</div>
+          <div className="text-slate-500 font-mono text-[11px] flex items-center gap-1">
+            <span>{ticket.customer_phone}</span>
+            <button type="button" onClick={(e) => onCopyPhone(ticket.customer_phone, e)} className="text-slate-400 p-0.5"><Copy className="w-3 h-3" /></button>
+          </div>
+        </div>
+        {cleanPhone && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <a href={`https://zalo.me/${cleanPhone}`} target="_blank" rel="noreferrer" className="px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-[11px] font-bold flex items-center gap-1 border border-blue-200">
+              <MessageSquare className="w-3 h-3 text-blue-600" /><span>Zalo</span>
+            </a>
+            <a href={`tel:${cleanPhone}`} className="p-1.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200"><Phone className="w-3 h-3 text-emerald-600" /></a>
+          </div>
+        )}
+      </div>
+      <div className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200/80 text-xs space-y-1">
+        <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+          <Wrench className="w-3.5 h-3.5 text-blue-600" /><span>{ticket.issue_description || 'Kiểm tra máy'}</span>
+        </div>
+        {ticket.device_name && <div className="text-[11px] text-slate-600">Thiết bị: <strong>{ticket.device_name}</strong></div>}
+        {(ticket.estimated_completion || ticket.technician_note) && (
+          <div className="text-[11px] text-amber-800 dark:text-amber-300 flex items-center gap-1">
+            <Calendar className="w-3 h-3 text-amber-600" /><span>{ticket.estimated_completion || ticket.technician_note}</span>
+          </div>
+        )}
+      </div>
+      {(ticket.customer_address || ticket.dispatch_address) && (
+        <div className="text-[11px] text-slate-600 bg-amber-50/70 p-1.5 rounded-lg border border-amber-200/70 flex items-start gap-1">
+          <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" /><span>{ticket.customer_address || ticket.dispatch_address}</span>
+        </div>
+      )}
+      <div className="pt-1 flex items-center gap-2">
+        <button type="button" onClick={() => onConfirm(ticket)} disabled={isConfirming} className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50">
+          <Check className="w-3.5 h-3.5" /><span>{isConfirming ? 'Đang tiếp nhận...' : 'Tiếp Nhận Dịch Vụ'}</span>
+        </button>
+        <Link href={isOnsite ? '/cuu-ho-onsite' : `/phieu-sua-chua?ticketId=${ticket.id}`} onClick={onClose} className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1" title="Chi tiết phiếu">
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 /**
- * Widget thông báo đơn hàng mới từ website.
- * - Tự động bật mở khi có đơn pending mới phát sinh
- * - Phát chuông báo (có nút bật/tắt âm lượng & ghi nhớ tùy chọn)
- * - Hiển thị thời gian đặt, thông tin khách, nút Zalo / Gọi / Copy SĐT
- * - Nút xác nhận đơn 1 chạm (tự động chuyển trạng thái máy sang "Đang đợi bán")
- * - Thu nhỏ thành Floating Pill thông minh, tự động căn chỉnh tránh xung đột trên cả Mobile & Desktop
+ * Widget thông báo Đơn Hàng Mới & Yêu Cầu Dịch Vụ Mới từ website:
+ * - Đơn mua máy / linh kiện / key (pendingOrders)
+ * - Đơn yêu cầu dịch vụ / đặt lịch sửa chữa, cứu hộ onsite (pendingServiceRequests)
+ * - Tự động popup & phát chuông khi có yêu cầu mới
+ * - Bố cục hợp lý tại bottom-20 right-4 (xếp tầng trên DeadlineTrackingWidget bottom-6 right-4)
  */
 export function NewOrderNotificationWidget() {
   const {
@@ -59,6 +138,8 @@ export function NewOrderNotificationWidget() {
     isLoggedIn,
     pendingOrders,
     confirmPendingOrder,
+    tickets,
+    confirmServiceTicket,
   } = useViTinhAnTamStore();
 
   const canView = Boolean(
@@ -71,33 +152,47 @@ export function NewOrderNotificationWidget() {
     currentUser && ['admin', 'sales_manager', 'tech_manager'].includes(currentUser.role)
   );
 
+  // Danh sách yêu cầu dịch vụ / đặt lịch mới
+  const pendingServiceRequests = useMemo(() => {
+    return (tickets || []).filter((t) => {
+      const isOnlineBooking = t.visual_condition === 'Tiếp nhận qua hệ thống đặt lịch Online';
+      const isPending = t.status === 'received' || (isOnlineBooking && t.status === 'processing');
+      return isPending;
+    });
+  }, [tickets]);
+
+  const totalCount = pendingOrders.length + pendingServiceRequests.length;
+
   const [isOpen, setIsOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'orders' | 'tickets'>('orders');
   const [isConfirmingId, setIsConfirmingId] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [, setTick] = useState(0);
 
-  const prevCount = useRef(0);
+  const prevTotalCount = useRef(0);
   const hasUserDismissed = useRef(false);
 
-  // Khởi tạo tùy chọn chuông từ localStorage
+  // Tự động chuyển tab nếu tab hiện tại không có dữ liệu
+  useEffect(() => {
+    if (activeTab === 'orders' && pendingOrders.length === 0 && pendingServiceRequests.length > 0) {
+      setActiveTab('tickets');
+    } else if (activeTab === 'tickets' && pendingServiceRequests.length === 0 && pendingOrders.length > 0) {
+      setActiveTab('orders');
+    }
+  }, [activeTab, pendingOrders.length, pendingServiceRequests.length]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedMute = localStorage.getItem('ant_order_chime_muted');
-      if (savedMute === 'true') {
-        setIsMuted(true);
-      }
+      if (savedMute === 'true') setIsMuted(true);
     }
   }, []);
 
-  // Cập nhật lại nhãn relative time mỗi 30 giây
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTick((t) => t + 1);
-    }, 30000);
+    const timer = setInterval(() => setTick((t) => t + 1), 30000);
     return () => clearInterval(timer);
   }, []);
 
-  // Phát chuông thông báo đơn hàng
   const playChime = () => {
     if (isMuted) return;
     try {
@@ -109,8 +204,8 @@ export function NewOrderNotificationWidget() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12); // A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.12);
         gain.gain.setValueAtTime(0.25, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
         osc.connect(gain);
@@ -118,9 +213,7 @@ export function NewOrderNotificationWidget() {
         osc.start();
         osc.stop(ctx.currentTime + 0.5);
       }
-    } catch {
-      // Bỏ qua lỗi audio trình duyệt
-    }
+    } catch {}
   };
 
   const handleToggleMute = (e: React.MouseEvent) => {
@@ -132,48 +225,59 @@ export function NewOrderNotificationWidget() {
     }
     if (!nextState) {
       playChime();
-      message.info('Đã bật chuông thông báo đơn hàng mới.');
+      message.info('Đã bật chuông thông báo.');
     } else {
-      message.info('Đã tắt chuông thông báo đơn hàng mới.');
+      message.info('Đã tắt chuông thông báo.');
     }
   };
 
-  // Tự động mở khi có đơn hàng mới
+  // Tự động mở khi có đơn hàng hoặc yêu cầu dịch vụ mới
   useEffect(() => {
     if (!canView) return;
-    const count = pendingOrders.length;
 
-    if (count > 0) {
-      if (count > prevCount.current || !hasUserDismissed.current) {
-        setIsOpen(true);
-        if (count > prevCount.current) {
-          playChime();
-        }
+    if (totalCount > 0 && !hasUserDismissed.current) {
+      setIsOpen(true);
+      if (totalCount > prevTotalCount.current) {
+        playChime();
       }
-    } else {
+    } else if (totalCount === 0) {
       setIsOpen(false);
       hasUserDismissed.current = false;
     }
-    prevCount.current = count;
-  }, [canView, pendingOrders.length, isMuted]);
+    prevTotalCount.current = totalCount;
+  }, [canView, totalCount, isMuted]);
 
-  const handleConfirm = async (order: CustomerOrder) => {
+  const handleConfirmOrder = async (order: CustomerOrder) => {
     if (!canConfirm) {
-      message.warning('Chỉ Admin, Sales Manager hoặc Quản lý Kỹ thuật mới có quyền xác nhận đơn!');
+      message.warning('Chỉ Admin hoặc Quản lý mới có quyền xác nhận đơn!');
       return;
     }
     setIsConfirmingId(order.id);
     try {
       const success = await confirmPendingOrder(order);
       if (success) {
-        message.success(
-          `Đã xác nhận đơn hàng ${order.order_code}! Thiết bị đã được chuyển sang trạng thái "Đang đợi bán".`
-        );
+        message.success(`Đã xác nhận đơn hàng ${order.order_code}! Thiết bị chuyển sang "Đang đợi bán".`);
       } else {
-        message.error('Không thể xác nhận đơn hàng lúc này. Vui lòng thử lại!');
+        message.error('Không thể xác nhận đơn hàng lúc này.');
       }
     } catch {
       message.error('Lỗi khi gửi yêu cầu xác nhận đơn.');
+    } finally {
+      setIsConfirmingId(null);
+    }
+  };
+
+  const handleConfirmTicket = async (ticket: ServiceTicket) => {
+    setIsConfirmingId(ticket.id);
+    try {
+      const success = await confirmServiceTicket(ticket.id, currentUser?.name);
+      if (success) {
+        message.success(`Đã tiếp nhận yêu cầu dịch vụ ${ticket.ticket_code}! Chuyển sang khâu chẩn đoán.`);
+      } else {
+        message.error('Không thể cập nhật trạng thái phiếu lúc này.');
+      }
+    } catch {
+      message.error('Lỗi khi tiếp nhận yêu cầu dịch vụ.');
     } finally {
       setIsConfirmingId(null);
     }
@@ -194,22 +298,21 @@ export function NewOrderNotificationWidget() {
     setIsOpen(false);
   };
 
-  if (!canView || pendingOrders.length === 0) return null;
+  if (!canView || totalCount === 0) return null;
 
   const formatVND = (n: number) => `${Number(n || 0).toLocaleString('vi-VN')}₫`;
 
   return (
     <aside
-      aria-label="Đơn Hàng Mới Cần Xác Nhận"
-      className={`fixed print:hidden transition-all duration-300 z-[80] ${
+      aria-label="Thông Báo Đơn Hàng & Yêu Cầu Dịch Vụ Mới"
+      className={`fixed print:hidden transition-all duration-300 ${
         isOpen
-          ? 'bottom-3 right-3 left-3 sm:left-auto sm:bottom-6 sm:right-4 w-auto sm:w-[420px] max-w-[420px]'
-          : 'bottom-[114px] right-4 sm:bottom-6 sm:right-[108px]'
+          ? 'bottom-3 right-3 left-3 sm:left-auto sm:bottom-6 sm:right-4 w-auto sm:w-[440px] max-w-[440px] z-[85]'
+          : 'bottom-20 right-4 z-40'
       }`}
     >
       {isOpen ? (
-        /* ================= KHUNG THÔNG BÁO CHI TIẾT (MỞ RỘNG) ================= */
-        <div className="w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-red-400 dark:border-red-800 bg-white dark:bg-slate-900 animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="w-full rounded-2xl overflow-hidden shadow-2xl border-2 border-red-500/80 dark:border-red-700 bg-white dark:bg-slate-900 animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white p-3.5 flex items-center justify-between shadow-xs">
             <div className="flex items-center gap-2">
@@ -219,30 +322,24 @@ export function NewOrderNotificationWidget() {
               </span>
               <BellRing className="w-4 h-4 text-amber-300 animate-bounce" />
               <span className="text-xs font-black tracking-wide uppercase">
-                ĐƠN HÀNG MỚI TỪ WEBSITE
+                YÊU CẦU MỚI TỪ WEBSITE
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/20 text-white font-mono text-xs font-black">
-                {pendingOrders.length}
+                {totalCount}
               </span>
             </div>
 
             <div className="flex items-center gap-1.5">
-              {/* Nút bật / tắt chuông */}
               <button
                 type="button"
                 onClick={handleToggleMute}
                 className="w-7 h-7 rounded-lg bg-white/15 hover:bg-white/30 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
                 title={isMuted ? 'Bật chuông thông báo' : 'Tắt chuông thông báo'}
-                aria-label="Bật tắt chuông thông báo"
+                aria-label="Bật tắt chuông"
               >
-                {isMuted ? (
-                  <VolumeX className="w-3.5 h-3.5 text-amber-300" />
-                ) : (
-                  <Volume2 className="w-3.5 h-3.5 text-white" />
-                )}
+                {isMuted ? <VolumeX className="w-3.5 h-3.5 text-amber-300" /> : <Volume2 className="w-3.5 h-3.5 text-white" />}
               </button>
 
-              {/* Nút thu nhỏ */}
               <button
                 type="button"
                 onClick={handleDismiss}
@@ -255,18 +352,50 @@ export function NewOrderNotificationWidget() {
             </div>
           </div>
 
-          {/* Subheader Tip */}
-          <div className="bg-amber-50 dark:bg-amber-950/40 px-3.5 py-1.5 border-b border-amber-200/60 dark:border-amber-900/60 flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-200">
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-amber-600" />
-              <span>Khách đang đợi xác nhận và giữ máy</span>
-            </span>
-            <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300">vitinhantam.com</span>
+          {/* Subheader: Tabs Switcher */}
+          <div className="bg-slate-100 dark:bg-slate-800/80 p-1.5 border-b border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('orders')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'orders'
+                  ? 'bg-white dark:bg-slate-900 text-[#C0392B] dark:text-rose-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>Đơn Mua Hàng</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-red-100 text-red-700 font-mono font-bold">
+                {pendingOrders.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('tickets')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === 'tickets'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              <span>Dịch Vụ & Đặt Lịch</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-blue-100 text-blue-700 font-mono font-bold">
+                {pendingServiceRequests.length}
+              </span>
+            </button>
           </div>
 
-          {/* Body: Danh sách đơn hàng */}
+          {/* Body Content */}
           <div className="max-h-[55vh] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 p-2 space-y-2">
-            {pendingOrders.map((order) => {
+            {activeTab === 'orders' ? (
+              pendingOrders.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-400">
+                  Không có đơn mua hàng nào đang chờ xử lý.
+                </div>
+              ) : (
+                pendingOrders.map((order) => {
               const cleanPhone = String(order.customer_phone || '').replace(/\D/g, '');
               const isConfirmingThis = isConfirmingId === order.id;
               const timeAgoText = formatOrderTime(order.created_at);
@@ -375,63 +504,89 @@ export function NewOrderNotificationWidget() {
                     </div>
                   )}
 
-                  {/* Nút thao tác xác nhận */}
-                  {canConfirm ? (
+                  {/* Nút thao tác xác nhận đơn */}
+                  {canConfirm && (
                     <button
                       type="button"
-                      onClick={() => handleConfirm(order)}
+                      onClick={() => handleConfirmOrder(order)}
                       disabled={isConfirmingThis}
-                      className="mt-1 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
+                      className="mt-1 w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.99]"
                     >
                       <Check className="w-4 h-4 stroke-[2.5]" />
                       <span>{isConfirmingThis ? 'Đang xác nhận...' : 'Xác nhận đơn & Giữ máy'}</span>
                     </button>
-                  ) : (
-                    <div className="mt-1 w-full py-1.5 px-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-semibold text-center border border-slate-200 dark:border-slate-700">
-                      ⏳ Chờ Admin / Quản lý xác nhận
-                    </div>
                   )}
                 </div>
               );
-            })}
+            })
+          )
+        ) : (
+          /* TAB 2: YÊU CẦU DỊCH VỤ / ĐẶT LỊCH */
+            pendingServiceRequests.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-400">
+                Không có yêu cầu dịch vụ nào đang chờ xử lý.
+              </div>
+            ) : (
+              pendingServiceRequests.map((tk) => (
+                <TicketItemCard
+                  key={tk.id}
+                  ticket={tk}
+                  isConfirming={isConfirmingId === tk.id}
+                  onConfirm={handleConfirmTicket}
+                  onCopyPhone={handleCopyPhone}
+                  onClose={() => setIsOpen(false)}
+                />
+              ))
+            )
+          )}
           </div>
 
-          {/* Footer chuyển sang trang Quản lý đơn hàng */}
-          <div className="p-3 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
-            <span className="text-[11px] text-slate-500">
-              Kiểm tra &amp; xử lý đơn
-            </span>
-            <Link
-              href="/quan-ly-don-hang"
-              onClick={() => setIsOpen(false)}
-              className="font-bold text-[#C0392B] dark:text-rose-400 hover:underline flex items-center gap-1"
-            >
-              <span>Trang Quản Lý Đơn Hàng</span>
-              <ExternalLink className="w-3 h-3" />
-            </Link>
+          {/* Footer Link */}
+          <div className="bg-slate-50 dark:bg-slate-800 px-3.5 py-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+            <span className="text-slate-500 text-[11px]">Cửa hàng Vi Tính An Tâm</span>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/quan-ly-don-hang"
+                onClick={() => setIsOpen(false)}
+                className="text-[#C0392B] dark:text-rose-400 font-bold hover:underline text-[11px]"
+              >
+                QL Đơn hàng →
+              </Link>
+              <Link
+                href="/phieu-sua-chua"
+                onClick={() => setIsOpen(false)}
+                className="text-blue-600 dark:text-blue-400 font-bold hover:underline text-[11px]"
+              >
+                QL Phiếu SC →
+              </Link>
+            </div>
           </div>
         </div>
       ) : (
-        /* ================= NÚT FLOATING PILL THU NHỎ (GỌN GÀNG, ĐẲNG CẤP) ================= */
+        /* ================= FLOATING PILL KHI THU NHỎ (STACKED AT bottom-20 right-4) ================= */
         <button
           type="button"
           onClick={() => {
             hasUserDismissed.current = false;
             setIsOpen(true);
           }}
-          className="flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white shadow-xl shadow-red-950/30 border border-amber-400/50 hover:scale-105 active:scale-95 transition-all cursor-pointer font-sans group select-none"
-          title="Bấm để xem danh sách đơn hàng mới cần xác nhận"
+          className="group flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white shadow-xl hover:shadow-2xl border-2 border-red-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+          title="Nhấp để xem đơn hàng & yêu cầu dịch vụ mới"
         >
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-80"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-300"></span>
           </span>
-          <ShoppingCart className="w-4 h-4 text-amber-300" />
-          <span className="text-xs font-black uppercase tracking-wide">
-            Đơn mới
+          <BellRing className="w-4 h-4 text-amber-300 animate-bounce" />
+          <span className="text-xs font-bold tracking-wide">
+            {pendingOrders.length > 0 && pendingServiceRequests.length > 0
+              ? `${totalCount} Đơn & Dịch vụ`
+              : pendingServiceRequests.length > 0
+              ? `${pendingServiceRequests.length} Yêu cầu DV`
+              : `${pendingOrders.length} Đơn hàng mới`}
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-white text-[#C0392B] font-mono text-xs font-black shadow-xs">
-            {pendingOrders.length}
+          <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[11px] font-black">
+            {totalCount}
           </span>
         </button>
       )}

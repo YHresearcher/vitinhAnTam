@@ -13,7 +13,6 @@ import {
   Truck,
   CheckCircle2,
   Clock,
-  Ban,
   PackageCheck,
   ArrowRight,
   ShieldCheck,
@@ -42,7 +41,7 @@ const STATUSES = [
   { id: 'confirmed', label: 'Đã xác nhận', icon: CheckCircle2, color: 'bg-blue-50 text-blue-800 border-blue-200' },
   { id: 'processing', label: 'Đang đóng gói / QC', icon: PackageCheck, color: 'bg-purple-50 text-purple-800 border-purple-200' },
   { id: 'completed', label: 'Hoàn tất xuất kho', icon: ShieldCheck, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
-  { id: 'cancelled', label: 'Đã hủy', icon: Ban, color: 'bg-rose-50 text-rose-800 border-rose-200' },
+  // Đã loại bỏ cột 'cancelled' để ẩn các đơn hàng đã hủy khỏi giao diện quản lý
 ];
 
 export default function OrderManagementPage() {
@@ -261,7 +260,7 @@ export default function OrderManagementPage() {
           <p className="text-xs font-semibold text-slate-600">Đang đồng bộ danh sách đơn hàng...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3.5 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 items-start">
           {STATUSES.map((col) => {
             const list = filteredOrders.filter((o) => o.status === col.id);
             const ColIcon = col.icon;
