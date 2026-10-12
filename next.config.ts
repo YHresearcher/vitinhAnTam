@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  poweredByHeader: false,
+  compress: true,
   experimental: {
     optimizePackageImports: ['lucide-react', 'antd', '@ant-design/icons', 'recharts'],
   },
@@ -14,7 +16,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'vitinhantham.vn',
+        hostname: 'vitinhantam.com',
       },
       {
         protocol: 'https',

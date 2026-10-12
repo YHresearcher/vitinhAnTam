@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { MOCK_BLOG_POSTS } from '@/lib/supabase';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://vitinhantham.vn';
+  const baseUrl = 'https://vitinhantam.com';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {

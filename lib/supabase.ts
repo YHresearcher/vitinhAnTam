@@ -87,7 +87,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'tech_manager',
     roleTitle: 'Quản lý kỹ thuật',
     avatarBg: 'bg-teal-600',
-    email: 'qlkythuat@vitinhantham.vn',
+    email: 'qlkythuat@vitinhantam.com',
     phone: '0909.053.058',
   },
   sales_manager: {
@@ -97,7 +97,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     role: 'sales_manager',
     roleTitle: 'Quản lý bán hàng',
     avatarBg: 'bg-indigo-600',
-    email: 'qlbanhang@vitinhantham.vn',
+    email: 'qlbanhang@vitinhantam.com',
     phone: '0909.053.058',
   },
   admin: {
@@ -337,9 +337,26 @@ export interface KeyReleaseRequest {
   faulty_reason?: string;
   admin_note?: string;
   email_sent?: boolean;
-  email_sent_at?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface CustomerOrder {
+  id: string;
+  order_code: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_address?: string;
+  device_name: string;
+  device_price: number;
+  device_tag?: string;
+  payment_method: 'qr' | 'cash';
+  delivery_method: 'pickup' | 'delivery';
+  note?: string;
+  status: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
+  confirmed_by?: string;
+  confirmed_at?: string;
+  created_at?: string;
 }
 
 export interface KeyEmailTemplateConfig {

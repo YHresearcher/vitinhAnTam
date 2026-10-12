@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vitinhantham.vn'),
+  metadataBase: new URL('https://vitinhantam.com'),
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     'sửa máy tính tận nơi',
     'cứu hộ máy tính',
   ],
-  authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantham.vn' }],
+  authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantam.com' }],
   creator: 'Vi Tính An Tâm',
   publisher: 'Vi Tính An Tâm',
   formatDetection: {
@@ -63,13 +63,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, bảo hành chu đáo. Hotline: 0909.053.058.',
-    url: 'https://vitinhantham.vn',
+    url: 'https://vitinhantam.com',
     siteName: 'Vi Tính An Tâm',
     locale: 'vi_VN',
     type: 'website',
     images: [
       {
-        url: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, hỗ trợ tận tâm.',
-    images: ['https://vitinhantham.vn/anh-that-cua-hang.jpg'],
+    images: ['https://vitinhantam.com/anh-that-cua-hang.jpg'],
   },
   robots: {
     index: true,
@@ -100,10 +100,10 @@ const jsonLd = {
   '@type': 'LocalBusiness',
   name: 'Vi Tính An Tâm',
   slogan: 'Bán bằng tâm để bạn an tâm',
-  url: 'https://vitinhantham.vn',
+  url: 'https://vitinhantam.com',
   telephone: '+84909053058',
-  email: 'lienhe@vitinhantham.vn',
-  image: 'https://vitinhantham.vn/anh-that-cua-hang.jpg',
+  email: 'lienhe@vitinhantam.com',
+  image: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '45 Nguyễn Huệ, Phường 1',

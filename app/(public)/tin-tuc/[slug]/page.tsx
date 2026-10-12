@@ -53,7 +53,7 @@ export default async function BlogPostDetailPage({ params }: { params: Promise<{
     notFound();
   }
 
-  const postUrl = `https://vitinhantham.vn/tin-tuc/${post.slug}`;
+  const postUrl = `https://vitinhantam.com/tin-tuc/${post.slug}`;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8 px-4 sm:px-6 lg:px-8">

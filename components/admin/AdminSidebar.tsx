@@ -43,6 +43,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canAccessSettings,
     canAccessCRM,
     logout,
+    pendingOrdersCount,
   } = useViTinhAnTamStore();
 
   const handleNavClick = () => {
@@ -99,8 +100,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         label: 'Quản lý đơn hàng',
         href: '/quan-ly-don-hang',
         icon: ShoppingBag,
-        badge: null,
-        badgeColor: '',
+        badge: pendingOrdersCount > 0 ? `${pendingOrdersCount}` : null,
+        badgeColor: 'bg-rose-600 text-white font-mono font-bold animate-pulse shadow-xs',
         visible: true,
       },
       {

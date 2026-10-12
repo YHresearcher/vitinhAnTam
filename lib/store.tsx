@@ -20,6 +20,7 @@ import {
   KeyReleaseRequest,
   KeyEmailTemplateConfig,
   WarrantyProvision,
+  CustomerOrder,
   BlogPost,
   BlogCategory,
   MOCK_BLOG_POSTS,
@@ -100,7 +101,7 @@ export const initialSystemSettings: SystemSettings = {
   ],
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
-  email: 'lienhe@vitinhantham.vn',
+  email: 'lienhe@vitinhantam.com',
   address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   streetAddress: '52 Nguyễn Cửu Vân',
   district: 'P. Long An',
@@ -110,7 +111,7 @@ export const initialSystemSettings: SystemSettings = {
   workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
   primeHours: '17:30 - 21:00',
   footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
+  footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
   storeName: 'Vi Tính An Tâm',
 
   // Mặc định cấu hình QR Code Thanh Toán & Ngân Hàng
@@ -220,6 +221,10 @@ interface StoreContextType {
   softwareLicenses: SoftwareLicense[];
   onsiteDispatches: OnsiteDispatch[];
   shiftLogs: ShiftLog[];
+  pendingOrders: CustomerOrder[];
+  pendingOrdersCount: number;
+  fetchPendingOrders: () => Promise<CustomerOrder[]>;
+  confirmPendingOrder: (order: CustomerOrder) => Promise<boolean>;
 
   // Sync state
   isUsingSupabase: boolean;
@@ -385,6 +390,7 @@ export function StoreProvider({
   const [softwareLicenses, setSoftwareLicenses] = useState<SoftwareLicense[]>([]);
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>([]);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<CustomerOrder[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
@@ -1422,6 +1428,77 @@ export function StoreProvider({
     }
     return true;
   };
+
+  const fetchPendingOrders = async (): Promise<CustomerOrder[]> => {
+    try {
+      const res = await fetch('/api/orders?status=pending', { cache: 'no-store' });
+      if (!res.ok) return [];
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setPendingOrders(json.data);
+        return json.data;
+      }
+    } catch {
+      // Bỏ qua lỗi kết nối
+    }
+    return [];
+  };
+
+  const confirmPendingOrder = async (order: CustomerOrder): Promise<boolean> => {
+    // 1. Tự động liên kết và chuyển trạng thái máy trong kho sang "Đang đợi bán" (reserved)
+    let matched = inventory.find(
+      (i) => i.service_tag === order.device_tag && i.qc_status !== 'sold'
+    );
+    if (!matched && order.device_name) {
+      matched = inventory.find(
+        (i) =>
+          i.qc_status === 'ready_to_sell' &&
+          (order.device_name.toLowerCase().includes((i.device_model || i.model || '').toLowerCase()) ||
+            (i.device_model || i.model || '').toLowerCase().includes(order.device_name.toLowerCase()))
+      );
+    }
+    if (matched) {
+      await reserveInventoryItem({
+        itemId: matched.id,
+        customerName: order.customer_name,
+        customerPhone: order.customer_phone,
+        orderCode: order.order_code,
+        orderId: order.id,
+        deliveryMethod: order.delivery_method,
+        note: `Khách đặt từ website (Đơn ${order.order_code})`,
+      });
+    }
+
+    // 2. Gọi PATCH /api/orders
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: order.id,
+          status: 'confirmed',
+          matched_device_tag: matched?.service_tag,
+        }),
+      });
+      if (res.ok) {
+        setPendingOrders((prev) => prev.filter((o) => o.id !== order.id));
+        return true;
+      }
+    } catch (e) {
+      console.warn('Confirm order error:', e);
+    }
+    return false;
+  };
+
+  // Tự động kiểm tra đơn hàng mới định kỳ mỗi 20s cho nhân sự quản trị
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const canSee = currentUser && ['admin', 'sales_manager', 'tech_manager', 'sales', 'technician'].includes(currentUser.role);
+    if (!canSee) return;
+    fetchPendingOrders();
+    const tm = setInterval(fetchPendingOrders, 20000);
+    return () => clearInterval(tm);
+  }, [isLoggedIn, currentUser]);
 
   // Spare parts management (Linh kiện mới & cũ)
   const addSparePart = async (partData: Omit<SparePart, 'id'>): Promise<SparePart> => {
@@ -3235,6 +3312,10 @@ export function StoreProvider({
       updateDispatchStatus,
       assignDispatchTechnician,
       addShiftLog,
+      pendingOrders,
+      pendingOrdersCount: pendingOrders.length,
+      fetchPendingOrders,
+      confirmPendingOrder,
       resetToDefault,
     }),
     [
@@ -3257,6 +3338,7 @@ export function StoreProvider({
       warrantyProvisions,
       onsiteDispatches,
       shiftLogs,
+      pendingOrders,
       faqs,
       reviews,
       blogPosts,

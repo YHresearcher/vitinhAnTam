@@ -42,7 +42,7 @@ export default function ReviewsSection({ isEn, t }: ReviewsSectionProps) {
                   <CheckCircle className="w-3 h-3 inline" /> {isEn ? 'Verified' : 'Đã xác thực'}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[#2B1810] italic mb-4">"{rev.comment}"</p>
+              <p className="text-xs sm:text-sm text-[#2B1810] italic mb-4">&ldquo;{rev.comment}&rdquo;</p>
               <div className="pt-3 border-t border-[#E8E2D9]">
                 <div className="font-bold text-xs text-[#2B1810]">{rev.name}</div>
                 <div className="text-[11px] text-[#6E5D53]">{rev.role}</div>

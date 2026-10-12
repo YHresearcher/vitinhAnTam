@@ -28,6 +28,8 @@ export default function DashboardPage() {
     currentUser,
     updateDispatchStatus,
     updateQcStatus,
+    pendingOrders,
+    confirmPendingOrder,
   } = useViTinhAnTamStore();
 
   // Doanh thu / dòng tiền CHỈ dành cho Admin
@@ -548,6 +550,85 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           </Link>
         </div>
       </div>
+
+      {/* CẢNH BÁO ĐƠN HÀNG MỚI TỪ WEBSITE */}
+      {pendingOrders.length > 0 && (
+        <div className="bg-gradient-to-r from-red-50 via-rose-50 to-amber-50 dark:from-red-950/40 dark:via-rose-950/30 dark:to-amber-950/30 border-2 border-red-300 dark:border-red-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-red-200/80 dark:border-red-900/60">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+              </span>
+              <span className="text-sm font-black text-red-950 dark:text-red-200 uppercase tracking-wide flex items-center gap-1.5">
+                🛒 Có {pendingOrders.length} đơn hàng mới từ Website cần xác nhận!
+              </span>
+            </div>
+            <Link
+              href="/quan-ly-don-hang"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-xs transition-colors self-start sm:self-auto"
+            >
+              <span>Vào trang Quản lý Đơn hàng</span>
+              <span>→</span>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
+            {pendingOrders.slice(0, 3).map((order) => {
+              const cleanPhone = String(order.customer_phone || '').replace(/\D/g, '');
+              return (
+                <div
+                  key={order.id}
+                  className="bg-white dark:bg-slate-900 rounded-xl p-3 border border-red-200 dark:border-red-900/60 shadow-2xs space-y-2 flex flex-col justify-between"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-black text-[#C0392B] dark:text-rose-400">{order.order_code}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-800">
+                        Chờ xác nhận
+                      </span>
+                    </div>
+                    <div className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                      {order.customer_name} • {order.customer_phone}
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-300 truncate">
+                      {order.device_name}
+                    </div>
+                    <div className="font-mono font-black text-sm text-[#C0392B] dark:text-rose-400">
+                      {Number(order.device_price || 0).toLocaleString('vi-VN')}₫
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                    {cleanPhone && (
+                      <a
+                        href={`https://zalo.me/${cleanPhone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2 py-1 rounded bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-blue-700 dark:text-blue-300 text-[10px] font-bold border border-blue-200 dark:border-blue-800 transition-colors"
+                      >
+                        Zalo
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const ok = await confirmPendingOrder(order);
+                        if (ok) {
+                          alert(`Đã xác nhận đơn ${order.order_code} và chuyển máy sang trạng thái Đang đợi bán!`);
+                        }
+                      }}
+                      className="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-colors cursor-pointer text-center"
+                    >
+                      ✓ Xác nhận nhanh
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 4 Chỉ Số Cốt Lõi (Phân quyền Admin vs KTV/Sales) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">

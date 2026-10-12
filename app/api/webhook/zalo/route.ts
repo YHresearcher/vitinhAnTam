@@ -3,7 +3,7 @@ import { getZaloBotConfig, sendZaloBotMessage } from '@/lib/server/zaloBot';
 
 /**
  * Endpoint nhận incoming webhook từ Zalo Bot Platform
- * URL: https://vitinhantham.vn/api/webhook/zalo
+ * URL: https://vitinhantam.com/api/webhook/zalo
  */
 export async function GET() {
   return NextResponse.json({

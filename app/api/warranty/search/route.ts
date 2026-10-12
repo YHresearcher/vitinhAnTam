@@ -65,12 +65,12 @@ export async function GET(request: NextRequest) {
       }
 
       // 3. Tìm trong customers (Danh sách khách hàng)
-      let cusQuery = isPhoneSearch
+      const cusQuery = isPhoneSearch
         ? db.from('customers').select('*').or(`phone.ilike.%${rawDigits}%,phone.ilike.%${last7Digits}%,phone.ilike.%${q}%`)
         : db.from('customers').select('*').ilike('customer_code', `%${q}%`);
 
       // 4. Tìm trong orders (Đơn hàng đặt mua máy tính online)
-      let ordQuery = isPhoneSearch
+      const ordQuery = isPhoneSearch
         ? db.from('orders').select('*').or(`customer_phone.ilike.%${rawDigits}%,customer_phone.ilike.%${last7Digits}%,customer_phone.ilike.%${q}%`)
         : db.from('orders').select('*').ilike('order_code', `%${q}%`);
 
@@ -93,19 +93,19 @@ export async function GET(request: NextRequest) {
         return p && (p.includes(rawDigits) || rawDigits.includes(p) || p.slice(-7) === last7Digits);
       }) || items[0] || null;
 
-      let matchedTicket = tickets.find((t) => {
+      const matchedTicket = tickets.find((t) => {
         if (!isPhoneSearch) return true;
         const p = normalizePhoneDigits(t.customer_phone);
         return p && (p.includes(rawDigits) || rawDigits.includes(p) || p.slice(-7) === last7Digits);
       }) || tickets[0] || null;
 
-      let matchedCustomer = customers.find((c) => {
+      const matchedCustomer = customers.find((c) => {
         if (!isPhoneSearch) return true;
         const p = normalizePhoneDigits(c.phone);
         return p && (p.includes(rawDigits) || rawDigits.includes(p) || p.slice(-7) === last7Digits);
       }) || customers[0] || null;
 
-      let matchedOrder = orders.find((o) => {
+      const matchedOrder = orders.find((o) => {
         if (!isPhoneSearch) return true;
         const p = normalizePhoneDigits(o.customer_phone);
         return p && (p.includes(rawDigits) || rawDigits.includes(p) || p.slice(-7) === last7Digits);

@@ -305,7 +305,6 @@ export async function dispatchSystemEvent(
   }
 
   let zaloSent = false;
-  let customSent = false;
   let errorDetail: string | undefined;
 
   // 1. Gửi qua Zalo Bot nếu được cấu hình & bật

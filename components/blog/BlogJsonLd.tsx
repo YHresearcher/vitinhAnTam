@@ -21,14 +21,14 @@ export default function BlogJsonLd({ post, url }: BlogJsonLdProps) {
     author: {
       '@type': 'Organization',
       name: post.author_name || 'Vi Tính An Tâm',
-      url: 'https://vitinhantham.vn',
+      url: 'https://vitinhantam.com',
     },
     publisher: {
       '@type': 'Organization',
       name: 'Vi Tính An Tâm',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://vitinhantham.vn/logo.png',
+        url: 'https://vitinhantam.com/logo.png',
       },
     },
     mainEntityOfPage: {
@@ -47,13 +47,13 @@ export default function BlogJsonLd({ post, url }: BlogJsonLdProps) {
         '@type': 'ListItem',
         position: 1,
         name: 'Trang chủ',
-        item: 'https://vitinhantham.vn',
+        item: 'https://vitinhantam.com',
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: 'Tin tức & Thủ thuật',
-        item: 'https://vitinhantham.vn/tin-tuc',
+        item: 'https://vitinhantam.com/tin-tuc',
       },
       {
         '@type': 'ListItem',

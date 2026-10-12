@@ -156,7 +156,7 @@ export default function CaiDatPage() {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/api/webhook/zalo`;
     }
-    return 'https://vitinhantham.vn/api/webhook/zalo';
+    return 'https://vitinhantam.com/api/webhook/zalo';
   };
 
   const validateBotTokenFormat = (): string | null => {
@@ -385,7 +385,7 @@ export default function CaiDatPage() {
           zaloLink: 'https://zalo.me/0909053058',
           whatsappNumber: '0909053058',
           whatsappLink: 'https://wa.me/84909053058',
-          email: 'lienhe@vitinhantham.vn',
+          email: 'lienhe@vitinhantam.com',
           address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
           streetAddress: '52 Nguyễn Cửu Vân',
           district: 'P. Long An',
@@ -395,7 +395,7 @@ export default function CaiDatPage() {
           workingHoursWeekend: '08h00 - 21h00 (Cả ngày)',
           primeHours: '17:30 - 21:00',
           footerAbout: 'Chuyên cung cấp PC/laptop tuyển chọn Dell, HP, ThinkPad & dịch vụ hỗ trợ kỹ thuật, bảo hành nhanh chóng, tận tâm.',
-          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantham.vn) - Bán bằng tâm để bạn an tâm.`,
+          footerCopyright: `© ${new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - Bán bằng tâm để bạn an tâm.`,
           storeName: 'Vi Tính An Tâm',
         };
         setFormData(defaultData);
