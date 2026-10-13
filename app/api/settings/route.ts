@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStoredSettingsAsync, saveStoredSettingsAsync } from '@/lib/server/settings';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+  if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+    return NextResponse.json(
+      { success: false, message: 'Bạn không có quyền xem cấu hình hệ thống.' },
+      { status: 403 }
+    );
+  }
+
   const settings = await getStoredSettingsAsync();
   return NextResponse.json({ success: true, data: settings });
 }
