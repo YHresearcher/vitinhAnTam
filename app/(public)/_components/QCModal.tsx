@@ -59,7 +59,20 @@ export default function QCModal({
             </div>
             <div className="text-right shrink-0">
               <div className="text-xs text-slate-500">{t.qcModal.priceLabel}</div>
-              <div className="text-xl font-bold text-[#C0392B] font-mono">{formatVND(selectedProduct.price)}</div>
+              {selectedProduct.salePrice && selectedProduct.salePrice > 0 ? (
+                <div className="flex items-baseline gap-2 justify-end">
+                  <div className="text-xl font-bold text-[#C0392B] font-mono">
+                    {formatVND(selectedProduct.salePrice)}
+                  </div>
+                  <div className="text-xs font-semibold text-slate-400 line-through font-mono">
+                    {formatVND(selectedProduct.originalPrice || selectedProduct.price)}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xl font-bold text-[#C0392B] font-mono">
+                  {formatVND(selectedProduct.originalPrice || selectedProduct.price)}
+                </div>
+              )}
             </div>
           </div>
 

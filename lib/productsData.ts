@@ -14,6 +14,8 @@ export interface ShowcaseItem {
   subBadge: string;
   desc: string;
   price: number;
+  originalPrice?: number;
+  salePrice?: number;
   specs: {
     cpu: string;
     ram: string;
@@ -106,12 +108,18 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         ? 'Shelf A1'
         : 'Kệ A1';
 
+      const rawOriginal = item.original_price || item.price || item.retail_price || 0;
+      const rawSale = item.sale_price && item.sale_price > 0 ? item.sale_price : 0;
+      const effectivePrice = rawSale > 0 ? rawSale : rawOriginal;
+
       return {
         id: item.id,
         serviceTag: item.service_tag,
         img: defaultImg,
         category,
-        price: item.retail_price || item.price || 0,
+        price: effectivePrice,
+        originalPrice: rawOriginal,
+        salePrice: rawSale,
         stockCount: isSold ? 0 : (item.stock_quantity ?? item.quantity ?? 1),
         shelfLocation: shelf,
         qcStatus: item.qc_status || 'ready_to_sell',

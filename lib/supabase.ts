@@ -192,6 +192,8 @@ export interface InventoryItem {
   import_date?: string; // YYYY-MM-DD - Ngày nhập hàng vào kho
   retail_price?: number;
   price?: number;
+  original_price?: number; // Giá gốc niêm yết (VNĐ)
+  sale_price?: number; // Giá giảm khuyến mãi (VNĐ) - nếu = 0 hoặc trống thì bán theo giá gốc
   stock_quantity?: number;
   quantity?: number;
   deposit_amount?: number;
@@ -250,6 +252,8 @@ export interface SparePart {
   distributor?: string;
   unit_cost?: number;
   unit_price: number;
+  original_price?: number; // Giá gốc niêm yết (VNĐ)
+  sale_price?: number; // Giá giảm khuyến mãi (VNĐ) - nếu = 0 hoặc trống thì bán theo giá gốc
   shelf_location?: string;
   notes?: string;
 }

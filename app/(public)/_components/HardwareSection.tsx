@@ -80,9 +80,25 @@ export default function HardwareSection({
                   <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#C0392B] transition-colors">
                     {prod.name}
                   </h3>
-                  <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
-                    {formatVND(prod.price)}
-                  </div>
+                  {prod.salePrice && prod.salePrice > 0 ? (
+                    <div className="flex items-baseline gap-2 mt-1 flex-wrap">
+                      <span className="text-2xl font-black text-[#C0392B] font-mono tracking-tight">
+                        {formatVND(prod.salePrice)}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400 line-through font-mono">
+                        {formatVND(prod.originalPrice || prod.price)}
+                      </span>
+                      {prod.originalPrice && prod.originalPrice > prod.salePrice && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                          -{Math.round((1 - prod.salePrice / prod.originalPrice) * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
+                      {formatVND(prod.originalPrice || prod.price)}
+                    </div>
+                  )}
                   <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
                     {prod.desc}
                   </p>
