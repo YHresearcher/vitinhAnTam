@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { formatDateVN, InventoryItem, ServiceTicket, Customer, supabase } from '@/lib/supabase';
 import { TRANSLATIONS } from '@/lib/translations';
+import { DigitalMemberCard } from '@/components/public/DigitalMemberCard';
 import {
   Search,
   Monitor,
@@ -231,6 +232,25 @@ function WarrantyLookupContent() {
       {/* Result Display */}
       {searchResult ? (
         <section className="max-w-4xl mx-auto px-4 sm:px-6 mt-4 space-y-6 animate-fade-in">
+          {/* Digital VIP Member Card (Nếu có thông tin khách hàng) */}
+          {(searchResult.customer || searchResult.item?.customer_phone || searchResult.ticket?.customer_phone) && (
+            <div className="mb-2">
+              <DigitalMemberCard
+                customer={
+                  searchResult.customer || {
+                    id: searchResult.item?.id || searchResult.ticket?.id || 'cust-lookup',
+                    full_name: customerDisplayName,
+                    phone: searchResult.item?.customer_phone || searchResult.ticket?.customer_phone || '',
+                    address: searchResult.ticket?.customer_address || '',
+                    total_spent: searchResult.item?.price || searchResult.item?.retail_price || 0,
+                    last_purchase_date: searchResult.item?.handover_date || searchResult.ticket?.created_at,
+                  }
+                }
+                isEn={currentLang === 'en'}
+              />
+            </div>
+          )}
+
           {/* Header Identity Card */}
           <div className="rounded-3xl bg-white border border-[#E8E2D9] p-6 sm:p-8 shadow-sm relative overflow-hidden">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">

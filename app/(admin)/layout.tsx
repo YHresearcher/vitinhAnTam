@@ -9,6 +9,7 @@ import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidge
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
 import { AdminKeyReleasePopup } from '@/components/admin/AdminKeyReleasePopup';
 import { RequesterKeyTestPopup } from '@/components/admin/RequesterKeyTestPopup';
+import { SalesDailyReminderModal } from '@/components/admin/SalesDailyReminderModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 
@@ -340,6 +341,9 @@ export default function AdminLayout({
 
       {/* REQUESTER KEY TEST POPUP (Popup nhận key & kiểm tra hoạt động cho kỹ thuật / sales) */}
       <RequesterKeyTestPopup />
+
+      {/* SALES DAILY CRM REMINDER MODAL (Nhắc sinh nhật 3 ngày & chăm sóc sau bán hàng 1, 3, 6, 12 tháng) */}
+      <SalesDailyReminderModal />
     </div>
   );
 }

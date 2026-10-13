@@ -37,6 +37,7 @@ import {
   initialLicenseKeys,
   initialKeyEmailTemplate,
 } from './mockData';
+import { calculateCustomerTier } from './crmTiers';
 
 
 export interface ZaloContactItem {
@@ -2852,24 +2853,55 @@ export function StoreProvider({
       return next;
     });
 
-    // 2. Add or Update Customer with Customer Code and Birth Date
-    const newCustomer: Customer = {
-      id: createId(),
-      customer_code: customerCode,
-      full_name: params.customerName.trim(),
-      birth_date: params.birthDate,
-      phone: params.customerPhone.trim(),
-      address: params.customerAddress.trim() || 'Long An - Tây Ninh',
-      customer_tier: 'VIP',
-      notes: `Mua máy ${item.device_model || item.brand} (Tag: ${item.service_tag}, Serial: ${params.serialNumber})`,
-      created_at: saleDateTime.toISOString(),
-    };
+    // 2. Add or Update Customer with Customer Code, Birth Date, Total Spent & Tier
+    const saleAmount = params.soldPrice || item.retail_price || item.price || 0;
+    const cleanPhone = params.customerPhone.trim().replace(/\D/g, '');
+    const existingCust = customers.find((c) => c.phone.replace(/\D/g, '') === cleanPhone);
 
-    setCustomers((prev) => {
-      const next = [newCustomer, ...prev];
-      saveToLocal(STORAGE_KEYS.customers, next);
-      return next;
-    });
+    const prevSpent = existingCust?.total_spent || 0;
+    const newTotalSpent = prevSpent + saleAmount;
+    const newTier = calculateCustomerTier(newTotalSpent, saleDateTime.toISOString()).effectiveTier;
+
+    let customerToPersist: Customer;
+    if (existingCust) {
+      customerToPersist = {
+        ...existingCust,
+        full_name: params.customerName.trim() || existingCust.full_name,
+        birth_date: params.birthDate || existingCust.birth_date,
+        address: params.customerAddress.trim() || existingCust.address,
+        total_spent: newTotalSpent,
+        customer_tier: newTier,
+        last_purchase_date: saleDateTime.toISOString(),
+        assigned_sales_id: currentUser.id,
+        assigned_sales_name: currentUser.name,
+      };
+      setCustomers((prev) => {
+        const next = prev.map((c) => (c.id === existingCust.id ? customerToPersist : c));
+        saveToLocal(STORAGE_KEYS.customers, next);
+        return next;
+      });
+    } else {
+      customerToPersist = {
+        id: createId(),
+        customer_code: customerCode,
+        full_name: params.customerName.trim(),
+        birth_date: params.birthDate,
+        phone: params.customerPhone.trim(),
+        address: params.customerAddress.trim() || 'Long An - Tây Ninh',
+        customer_tier: newTier,
+        total_spent: newTotalSpent,
+        last_purchase_date: saleDateTime.toISOString(),
+        assigned_sales_id: currentUser.id,
+        assigned_sales_name: currentUser.name,
+        notes: `Mua máy ${item.device_model || item.brand} (Tag: ${item.service_tag}, Serial: ${params.serialNumber})`,
+        created_at: saleDateTime.toISOString(),
+      };
+      setCustomers((prev) => {
+        const next = [customerToPersist, ...prev];
+        saveToLocal(STORAGE_KEYS.customers, next);
+        return next;
+      });
+    }
 
     // 3. Create a Service Ticket record for warranty lookup
     const warrantyTicket: ServiceTicket = {
@@ -2906,10 +2938,15 @@ export function StoreProvider({
           () => client.from('inventory_items').update(updatedItem).eq('id', itemId),
           'Cập nhật thiết bị (bán hàng)'
         ),
-        runSupabaseWrite(
-          () => client.from('customers').insert([newCustomer]),
-          'Thêm khách hàng (bán hàng)'
-        ),
+        existingCust
+          ? runSupabaseWrite(
+              () => client.from('customers').update(customerToPersist).eq('id', existingCust.id),
+              'Cập nhật khách hàng (bán hàng)'
+            )
+          : runSupabaseWrite(
+              () => client.from('customers').insert([customerToPersist]),
+              'Thêm khách hàng (bán hàng)'
+            ),
         runSupabaseWrite(
           () => client.from('service_tickets').insert([warrantyTicket]),
           'Tạo phiếu bảo hành (bán hàng)'

@@ -16,9 +16,11 @@ import {
   PackageCheck,
   ArrowRight,
   ShieldCheck,
+  Award,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { supabase, isSupabaseConfigured, type InventoryItem } from '@/lib/supabase';
+import { CRM_TIER_CONFIG, calculateCustomerTier } from '@/lib/crmTiers';
 
 interface Order {
   id: string;
@@ -45,7 +47,7 @@ const STATUSES = [
 ];
 
 export default function OrderManagementPage() {
-  const { currentUser, inventory, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
+  const { currentUser, inventory, customers, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -329,6 +331,34 @@ export default function OrderManagementPage() {
                               <span>{order.customer_address}</span>
                             </div>
                           )}
+
+                          {/* Loyalty Tier & Discount Badge */}
+                          {(() => {
+                            const cleanPhone = (order.customer_phone || '').replace(/\D/g, '');
+                            const matched = customers.find((c) => c.phone.replace(/\D/g, '') === cleanPhone);
+                            const tierKey = matched
+                              ? calculateCustomerTier(matched.total_spent, matched.last_purchase_date).effectiveTier
+                              : 'standard';
+                            const tierConf = CRM_TIER_CONFIG[tierKey];
+                            if (tierConf.discountRate <= 0 && tierKey === 'standard') return null;
+
+                            const discountAmount = Math.round((Number(order.device_price) || 0) * tierConf.discountRate);
+                            return (
+                              <div className="mt-1.5 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px]">
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.2 rounded font-bold border ${tierConf.badgeBg} ${tierConf.badgeTextColor} ${tierConf.badgeBorder}`}>
+                                  <Award className="w-2.5 h-2.5" />
+                                  <span>{tierConf.label}</span>
+                                </span>
+                                {tierConf.discountRate > 0 ? (
+                                  <span className="font-bold text-emerald-700 font-mono">
+                                    Giảm {tierConf.discountPercentText} (-{discountAmount.toLocaleString('vi-VN')}₫)
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400 font-medium">Bảo lưu hạng</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
