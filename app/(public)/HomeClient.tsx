@@ -142,7 +142,7 @@ export default function HomePage() {
     for (const item of list) {
       if (picked.length >= 3) break;
       if (!picked.some((x) => x.id === item.id)) {
-        pushed.push(item);
+        picked.push(item);
       }
     }
     return picked.slice(0, 3);

@@ -2,8 +2,9 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { getShowcaseProducts, getPartImage } from '@/lib/productsData';
+import { getShowcaseProducts } from '@/lib/productsData';
 import { formatVND } from '@/lib/supabase';
 import { TRANSLATIONS } from '@/lib/translations';
 import HardwareSection from './HardwareSection';

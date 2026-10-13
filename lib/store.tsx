@@ -393,8 +393,8 @@ export function StoreProvider({
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>([]);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>([]);
   const [pendingOrders, setPendingOrders] = useState<CustomerOrder[]>([]);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(MOCK_BLOG_CATEGORIES);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
     if (initialSettings && typeof initialSettings === 'object') {
       return { ...initialSystemSettings, ...initialSettings };
@@ -949,8 +949,12 @@ export function StoreProvider({
         }
         setInventory((invResult.data as InventoryItem[]) || []);
         if (spResult.data) setSpareParts(spResult.data as SparePart[]);
-        if (blogPostRes.data) setBlogPosts(blogPostRes.data as BlogPost[]);
-        if (blogCatRes.data) setBlogCategories(blogCatRes.data as BlogCategory[]);
+        if (blogPostRes.data && !blogPostRes.error && (blogPostRes.data as BlogPost[]).length > 0) {
+          setBlogPosts(blogPostRes.data as BlogPost[]);
+        }
+        if (blogCatRes.data && !blogCatRes.error && (blogCatRes.data as BlogCategory[]).length > 0) {
+          setBlogCategories(blogCatRes.data as BlogCategory[]);
+        }
 
         // 2. TỐI ƯU SUPABASE EGRESS & BẢO MẬT:
         // Khách vãng lai (chưa đăng nhập): DỪNG LẠI TẠI ĐÂY!
@@ -1093,8 +1097,20 @@ export function StoreProvider({
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
         readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
-        readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, setBlogPosts);
-        readJson<BlogCategory[]>(STORAGE_KEYS.blogCategories, setBlogCategories);
+        readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, (parsed) => {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setBlogPosts(parsed);
+          } else {
+            setBlogPosts(MOCK_BLOG_POSTS);
+          }
+        });
+        readJson<BlogCategory[]>(STORAGE_KEYS.blogCategories, (parsed) => {
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setBlogCategories(parsed);
+          } else {
+            setBlogCategories(MOCK_BLOG_CATEGORIES);
+          }
+        });
 
         readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
           setSystemSettings((prev) => ({ ...prev, ...parsed }));
@@ -1225,8 +1241,12 @@ export function StoreProvider({
       setSpareParts(spData as SparePart[]);
       setOnsiteDispatches(onsData as OnsiteDispatch[]);
       setShiftLogs(shfData as ShiftLog[]);
-      setBlogPosts((blogPostResult.data as BlogPost[]) || []);
-      setBlogCategories((blogCatResult.data as BlogCategory[]) || []);
+      if (blogPostResult.data && !blogPostResult.error && (blogPostResult.data as BlogPost[]).length > 0) {
+        setBlogPosts(blogPostResult.data as BlogPost[]);
+      }
+      if (blogCatResult.data && !blogCatResult.error && (blogCatResult.data as BlogCategory[]).length > 0) {
+        setBlogCategories(blogCatResult.data as BlogCategory[]);
+      }
 
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
       setSyncStatus('synced');

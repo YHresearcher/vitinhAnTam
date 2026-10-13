@@ -105,7 +105,7 @@ export default function ComponentsSection({
                       <span className="text-[11px] text-slate-500 font-medium">
                         {part.condition === 'new' ? 'Mới 100% Chính Hãng' : 'Zin bóc máy'}
                       </span>
-                    </span>
+                    </div>
                     <h3 className="text-base font-bold text-slate-900 line-clamp-2 group-hover:text-[#C0392B] transition-colors leading-snug">
                       {part.part_name}
                     </h3>

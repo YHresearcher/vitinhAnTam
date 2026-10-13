@@ -1,29 +1,36 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Wrench, Bike } from 'lucide-react';
+import { useStore } from '@/lib/store';
 import CounterRepairTab from '@/components/admin/CounterRepairTab';
 import OnsiteDispatchTab from '@/components/admin/OnsiteDispatchTab';
 
 function CuuHoOnsiteContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { tickets, onsiteDispatches } = useStore();
 
   const tabParam = searchParams.get('tab');
   const ticketIdParam = searchParams.get('ticketId');
 
   const [activeTab, setActiveTab] = useState<'onsite' | 'counter'>(
-    tabParam === 'counter' || ticketIdParam ? 'counter' : 'onsite'
+    tabParam === 'onsite' ? 'onsite' : 'counter'
   );
+
+  const pendingTicketsCount = tickets.filter(
+    (t) => t.status === 'received' || t.status === 'diagnosing' || t.status === 'in_progress' || t.status === 'processing'
+  ).length;
+  const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed').length;
 
   useEffect(() => {
     if (ticketIdParam) {
       setActiveTab('counter');
-    } else if (tabParam === 'counter') {
-      setActiveTab('counter');
     } else if (tabParam === 'onsite') {
       setActiveTab('onsite');
+    } else if (tabParam === 'counter') {
+      setActiveTab('counter');
     }
   }, [tabParam, ticketIdParam]);
 
@@ -51,20 +58,7 @@ function CuuHoOnsiteContent() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center p-1.5 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
-          <button
-            type="button"
-            onClick={() => handleTabChange('onsite')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'onsite'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Bike className="w-4 h-4" />
-            <span>Cứu Hộ Onsite Tận Nơi</span>
-          </button>
-
+        <div className="flex items-center p-1.5 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto gap-1">
           <button
             type="button"
             onClick={() => handleTabChange('counter')}
@@ -76,6 +70,41 @@ function CuuHoOnsiteContent() {
           >
             <Wrench className="w-4 h-4" />
             <span>Sửa Chữa Tại Quầy</span>
+            {pendingTicketsCount > 0 && (
+              <span
+                className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full font-mono ${
+                  activeTab === 'counter'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-blue-100 text-blue-700'
+                }`}
+              >
+                {pendingTicketsCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTabChange('onsite')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'onsite'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Bike className="w-4 h-4" />
+            <span>Cứu Hộ Tận Nơi</span>
+            {pendingDispatchesCount > 0 && (
+              <span
+                className={`px-1.5 py-0.2 text-[10px] font-bold rounded-full font-mono ${
+                  activeTab === 'onsite'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {pendingDispatchesCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

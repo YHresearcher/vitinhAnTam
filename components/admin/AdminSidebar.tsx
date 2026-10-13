@@ -12,7 +12,6 @@ import {
   ShoppingBag,
   Boxes,
   KeyRound,
-  Truck,
   FileSpreadsheet,
   UserCog,
   Sliders,
@@ -89,10 +88,13 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         visible: canAccessCRM(),
       },
       {
-        label: 'Sửa chữa tại quầy',
-        href: '/cuu-ho-onsite?tab=counter',
+        label: 'Sửa chữa & Cứu hộ',
+        href: '/cuu-ho-onsite',
         icon: Wrench,
-        badge: pendingTicketsCount > 0 ? `${pendingTicketsCount}` : null,
+        badge:
+          pendingTicketsCount + pendingDispatchesCount > 0
+            ? `${pendingTicketsCount + pendingDispatchesCount}`
+            : null,
         badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
         visible: true,
       },
@@ -118,14 +120,6 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: KeyRound,
         badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
         badgeColor: 'bg-[#C0392B] text-white font-mono font-bold shadow-xs',
-        visible: true,
-      },
-      {
-        label: 'Cứu hộ tận nơi',
-        href: '/cuu-ho-onsite',
-        icon: Truck,
-        badge: pendingDispatchesCount > 0 ? `${pendingDispatchesCount}` : null,
-        badgeColor: 'bg-amber-100 text-amber-900 font-mono font-bold',
         visible: true,
       },
       {
