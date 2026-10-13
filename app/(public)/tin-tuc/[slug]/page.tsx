@@ -1,15 +1,10 @@
 import React from 'react';
 import { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  Clock, Calendar, User, ArrowLeft, Share2, Tag,
-  HelpCircle, ChevronRight, Laptop, PhoneCall
-} from 'lucide-react';
 import ReadingProgressBar from '@/components/blog/ReadingProgressBar';
-import TableOfContents from '@/components/blog/TableOfContents';
 import BlogJsonLd from '@/components/blog/BlogJsonLd';
-import { supabase, isSupabaseConfigured, MOCK_BLOG_POSTS, BlogPost, formatDateVN } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, BlogPost } from '@/lib/supabase';
+import BlogPostDetailClient from './BlogPostDetailClient';
 
 async function getBlogPost(slug: string): Promise<BlogPost | null> {
   if (isSupabaseConfigured() && supabase) {
@@ -60,7 +55,7 @@ export default async function BlogPostDetailPage({ params }: { params: Promise<{
       <ReadingProgressBar />
       <BlogJsonLd post={post} url={postUrl} />
 
-      <div className="max-w-7xl mx-auto space-y-6">
+      <BlogPostDetailClient post={post} postUrl={postUrl} />
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center gap-2 text-xs text-slate-500 overflow-x-auto whitespace-nowrap py-2">
           <Link href="/" className="hover:text-blue-600 transition">Trang chủ</Link>
@@ -171,30 +166,7 @@ export default async function BlogPostDetailPage({ params }: { params: Promise<{
             )}
           </article>
 
-          {/* Right Sticky Sidebar */}
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="sticky top-20 space-y-6">
-              <TableOfContents contentHtml={post.content} />
 
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg space-y-4">
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold tracking-wider uppercase">
-                  Tư vấn & Sửa chữa Laptop
-                </span>
-                <h3 className="text-lg font-bold">Cần hỗ trợ kiểm tra hoặc tối ưu máy tính?</h3>
-                <p className="text-xs text-blue-100 leading-relaxed">
-                  Đội ngũ kỹ thuật viên Vi Tính An Tâm sẵn sàng kiểm tra máy miễn phí, vệ sinh tra keo tản nhiệt lấy liền và nâng cấp tốc độ trong ngày.
-                </p>
-                <div className="pt-2">
-                  <a
-                    href="tel:0909053058"
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-blue-700 font-bold text-sm shadow-md hover:bg-blue-50 transition"
-                  >
-                    <PhoneCall className="w-4 h-4" /> Gọi hotline 0909.053.058
-                  </a>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </div>
