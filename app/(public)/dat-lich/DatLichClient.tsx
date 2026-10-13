@@ -489,7 +489,11 @@ function AppointmentBookingContent() {
                       {/* Dropdown Phường / Xã */}
                       <div className={selectedCity === 'long_an' ? 'sm:col-span-1' : 'sm:col-span-2'}>
                         <span className="text-xs text-slate-500 mb-1 block">
-                          {selectedCity === 'long_an' ? `${t.wardLabel} (Nội thành Tân An)` : t.wardLabel}
+                          {selectedCity === 'long_an'
+                            ? currentLang === 'en'
+                              ? `${t.wardLabel} (Tan An Central)`
+                              : `${t.wardLabel} (Nội thành Tân An)`
+                            : t.wardLabel}
                         </span>
                         <select
                           value={selectedWard}

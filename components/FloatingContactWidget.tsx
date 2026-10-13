@@ -94,9 +94,21 @@ export function FloatingContactWidget() {
                     <div className="text-xs font-bold text-slate-800 group-hover/z:text-[#0068FF]">
                       {contact.name} <span className="text-[10px] text-slate-400">({contact.phone})</span>
                     </div>
-                    <div className="text-[10px] text-[#6E5D53] line-clamp-1">{contact.role}</div>
+                    <div className="text-[10px] text-[#6E5D53] line-clamp-1">
+                      {isEn
+                        ? contact.role === 'Tư vấn bán hàng'
+                          ? 'Sales & Consultation'
+                          : contact.role === 'Hỗ trợ phần cứng'
+                          ? 'Hardware Support'
+                          : contact.role === 'Cứu hộ khẩn cấp'
+                          ? 'Emergency Dispatch'
+                          : contact.role
+                        : contact.role}
+                    </div>
                   </div>
-                  <span className="px-2 py-1 rounded bg-[#0068FF] text-white text-[10px] font-bold">Nhắn</span>
+                  <span className="px-2 py-1 rounded bg-[#0068FF] text-white text-[10px] font-bold">
+                    {isEn ? 'Chat' : 'Nhắn'}
+                  </span>
                 </a>
               ))}
             </div>

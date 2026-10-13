@@ -305,14 +305,14 @@ export default function HomePage() {
                 {/* Sub-card trust badges underneath image */}
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'System' : 'Hệ thống'}</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Digital Windows' : 'Windows Bản Quyền Số'}</div>
-                    <div className="text-[11px] text-slate-500">{isEn ? 'Permanent motherboard entitlement' : 'Vĩnh viễn theo bo mạch chủ'}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Operating System' : 'Hệ thống'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Windows OEM' : 'Windows Bản Quyền Số'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'Lifetime motherboard entitlement' : 'Vĩnh viễn theo bo mạch chủ'}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Support' : 'Hỗ trợ kỹ thuật'}</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Prompt Response' : 'Ứng Phó Nhanh'}</div>
-                    <div className="text-[11px] text-slate-500">{isEn ? 'On-site or via UltraViewer' : 'Tận nơi hoặc qua UltraViewer'}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Technical Support' : 'Hỗ trợ kỹ thuật'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Rapid On-Site Response' : 'Ứng Phó Nhanh'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'On-site dispatch & remote diagnostics' : 'Tận nơi hoặc qua UltraViewer'}</div>
                   </div>
                 </div>
               </div>
@@ -684,11 +684,11 @@ export default function HomePage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FBE8DE] text-[#C0392B]">
-                            {cat.type === 'office' ? 'ỨNG DỤNG VĂN PHÒNG' : 'HỆ ĐIỀU HÀNH'}
+                            {cat.type === 'office' ? (isEn ? 'OFFICE SUITE' : 'ỨNG DỤNG VĂN PHÒNG') : (isEn ? 'OPERATING SYSTEM' : 'HỆ ĐIỀU HÀNH')}
                           </span>
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>Còn {cat.availableStock} key</span>
+                            <span>{isEn ? `${cat.availableStock} licenses available` : `Còn ${cat.availableStock} key`}</span>
                           </span>
                         </div>
 
@@ -707,15 +707,15 @@ export default function HomePage() {
                         <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] text-[#6E5D53]">
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>Kích hoạt vĩnh viễn theo máy, không hết hạn</span>
+                            <span>{isEn ? 'Lifetime motherboard digital entitlement, never expires' : 'Kích hoạt vĩnh viễn theo máy, không hết hạn'}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>Cập nhật Windows / Office Update chính hãng</span>
+                            <span>{isEn ? 'Official Microsoft security updates & genuine patches' : 'Cập nhật Windows / Office Update chính hãng'}</span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>Hỗ trợ cài đặt từ xa qua UltraViewer / AnyDesk</span>
+                            <span>{isEn ? 'Remote activation & installation support included' : 'Hỗ trợ cài đặt từ xa qua UltraViewer / AnyDesk'}</span>
                           </div>
                         </div>
                       </div>
@@ -725,15 +725,15 @@ export default function HomePage() {
                           href={`/mua-hang?device=${encodeURIComponent(cat.name)}&price=${cat.price}&tag=${encodeURIComponent(cat.type || 'KEY')}`}
                           className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
                         >
-                          MUA KEY TRỰC TIẾP
+                          {isEn ? 'BUY LICENSE DIRECTLY' : 'MUA KEY TRỰC TIẾP'}
                         </Link>
                         <a
-                          href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent('Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ' + cat.name)}`}
+                          href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent(isEn ? `Hello Vi Tinh An Tam, I need consultation on license: ${cat.name}` : `Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ${cat.name}`)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="py-2.5 px-3.5 rounded-xl border border-[#E8E2D9] hover:bg-slate-50 text-[#2B1810] font-semibold text-xs transition-colors"
                         >
-                          Zalo
+                          {isEn ? 'Chat Zalo' : 'Zalo'}
                         </a>
                       </div>
                     </div>

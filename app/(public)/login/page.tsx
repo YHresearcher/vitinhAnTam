@@ -6,9 +6,12 @@ import { User, Lock, Eye, EyeOff, LogIn, ArrowLeft, AlertCircle, CheckCircle2 } 
 import { useViTinhAnTamStore } from '@/lib/store';
 import { Logo } from '@/components/Logo';
 import { FirstTimePasswordModal } from '@/components/login/FirstTimePasswordModal';
+import { TRANSLATIONS } from '@/lib/translations';
 
 export default function LoginPage() {
-  const { loginWithCredentials } = useViTinhAnTamStore();
+  const { loginWithCredentials, currentLang } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
+  const t = TRANSLATIONS[currentLang || 'vi'].login;
 
   const [identifierInput, setIdentifierInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -31,12 +34,12 @@ export default function LoginPage() {
     setSuccessMessage('');
 
     if (!identifierInput.trim()) {
-      setErrorMessage('Vui lòng nhập tên đăng nhập hoặc email.');
+      setErrorMessage(isEn ? 'Please enter your username or email.' : 'Vui lòng nhập tên đăng nhập hoặc email.');
       return;
     }
 
     if (!passwordInput) {
-      setErrorMessage('Vui lòng nhập mật khẩu.');
+      setErrorMessage(isEn ? 'Please enter your password.' : 'Vui lòng nhập mật khẩu.');
       return;
     }
 
@@ -57,13 +60,13 @@ export default function LoginPage() {
         return;
       }
 
-      setSuccessMessage(res.message || 'Đăng nhập thành công! Đang chuyển hướng...');
+      setSuccessMessage(res.message || (isEn ? 'Login successful! Redirecting...' : 'Đăng nhập thành công! Đang chuyển hướng...'));
       // Chuyển hướng ngay lập tức đến trang quản trị
       setTimeout(() => {
         window.location.replace('/dashboard');
       }, 300);
     } else {
-      setErrorMessage(res.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
+      setErrorMessage(res.message || (isEn ? 'Invalid username or password!' : 'Tên đăng nhập hoặc mật khẩu không chính xác!'));
     }
   };
 
@@ -85,7 +88,7 @@ export default function LoginPage() {
           className="inline-flex items-center gap-1.5 text-xs text-[#735A4D] dark:text-slate-400 hover:text-[#C0392B] dark:hover:text-rose-400 font-semibold px-3 py-1.5 rounded-lg hover:bg-white/80 dark:hover:bg-slate-900 transition-all"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Về trang chủ</span>
+          <span>{isEn ? 'Back to Homepage' : 'Về trang chủ'}</span>
         </Link>
       </div>
 
@@ -112,13 +115,13 @@ export default function LoginPage() {
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100/70 dark:bg-red-950/50 border border-red-200 dark:border-red-900/60 text-[#C0392B] dark:text-rose-400 text-[11px] font-bold tracking-wider uppercase mb-3 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-[#C0392B] dark:bg-rose-400 animate-pulse" />
-              <span>Cổng Quản Trị Nội Bộ</span>
+              <span>{t.badge || (isEn ? 'INTERNAL STAFF PORTAL' : 'Cổng Quản Trị Nội Bộ')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-[#2B1810] dark:text-slate-100 tracking-tight">
-              Đăng Nhập
+              {(isEn ? 'Staff Sign In' : 'Đăng Nhập')}
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-              Nhập thông tin tài khoản để truy cập hệ thống
+              {isEn ? 'Enter your staff credentials to access the internal system' : 'Nhập thông tin tài khoản để truy cập hệ thống'}
             </p>
           </div>
 
@@ -130,7 +133,7 @@ export default function LoginPage() {
                 htmlFor="identifier"
                 className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide"
               >
-                Tên đăng nhập hoặc Email
+                {t.emailLabel || (isEn ? 'Email / Username' : 'Tên đăng nhập hoặc Email')}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -159,13 +162,13 @@ export default function LoginPage() {
                   htmlFor="password"
                   className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide"
                 >
-                  Mật khẩu
+                  {(t.passwordLabel || (isEn ? 'Password' : 'Mật khẩu'))}
                 </label>
                 <Link
                   href="/quen-mat-khau"
                   className="text-xs font-semibold text-[#C0392B] dark:text-rose-400 hover:underline"
                 >
-                  Quên mật khẩu?
+                  {t.forgotPasswordLink || (isEn ? 'Forgot Password?' : 'Quên mật khẩu?')}
                 </Link>
               </div>
               <div className="relative">
@@ -182,7 +185,7 @@ export default function LoginPage() {
                     setPasswordInput(e.target.value);
                     if (errorMessage) setErrorMessage('');
                   }}
-                  placeholder="Nhập mật khẩu"
+                  placeholder={isEn ? 'Enter your password' : 'Nhập mật khẩu'}
                   className="w-full pl-10 pr-11 py-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#C0392B] dark:focus:ring-rose-500 focus:border-transparent transition-all"
                 />
                 <button
@@ -221,12 +224,12 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Đang đăng nhập...</span>
+                  <span>{isEn ? 'Authenticating...' : 'Đang đăng nhập...'}</span>
                 </>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  <span>Đăng Nhập</span>
+                  <span>{isEn ? 'Sign In' : 'Đăng Nhập'}</span>
                 </>
               )}
             </button>
@@ -236,7 +239,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <div className="w-full max-w-md mx-auto text-center py-4 text-xs text-slate-400 dark:text-slate-500 font-medium">
-        © {new Date().getFullYear()} Vi Tính An Tâm — Hệ Thống Quản Trị Doanh Nghiệp
+        © {new Date().getFullYear()} {isEn ? 'Vi Tinh An Tam — Enterprise Operations System' : 'Vi Tính An Tâm — Hệ Thống Quản Trị Doanh Nghiệp'}
       </div>
 
       {/* FIRST TIME CHANGE PASSWORD MODAL */}

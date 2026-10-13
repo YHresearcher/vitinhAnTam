@@ -282,7 +282,7 @@ export function Navbar() {
 
           {/* Mobile Language Switcher */}
           <div className="pt-2 border-t border-[#E8E2D9] flex items-center justify-between px-3.5">
-            <span className="text-xs font-bold text-[#6E5D53]">Ngôn ngữ / Language:</span>
+            <span className="text-xs font-bold text-[#6E5D53]">{isEn ? 'Language:' : 'Ngôn ngữ:'}</span>
             <div className="inline-flex items-center rounded-lg bg-[#EFE9DF] border border-[#E8E2D9] p-1 gap-1">
               <button
                 type="button"

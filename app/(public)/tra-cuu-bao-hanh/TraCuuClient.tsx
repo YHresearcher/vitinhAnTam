@@ -385,7 +385,13 @@ function WarrantyLookupContent() {
                       <div key={idx} className="flex justify-between items-center text-xs bg-white/80 px-3 py-1.5 rounded-lg border border-emerald-100">
                         <span className="font-medium text-slate-800">{part.part_name} (x{part.quantity})</span>
                         <span className="text-emerald-700 font-mono font-bold text-[11px]">
-                          {part.warranty_months ? `${part.warranty_months} tháng` : '36 tháng'}
+                          {part.warranty_months
+                            ? currentLang === 'en'
+                              ? `${part.warranty_months} months`
+                              : `${part.warranty_months} tháng`
+                            : currentLang === 'en'
+                            ? '36 months'
+                            : '36 tháng'}
                         </span>
                       </div>
                     ))}
