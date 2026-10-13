@@ -151,7 +151,7 @@ export default function KhoMayPage() {
     const validMonths = [3, 6, 12, 36];
     const initialWarranty = validMonths.includes(item.warranty_months || 0) ? (item.warranty_months as number) : 12;
     setSellWarrantyMonths(initialWarranty);
-    const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : (item.original_price || item.price ?? item.retail_price ?? 0);
+    const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
     setSellPrice(effectiveItemPrice);
     setSellDate(new Date().toISOString().split('T')[0]);
   };
