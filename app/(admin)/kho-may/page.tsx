@@ -15,8 +15,20 @@ import { InventoryPriceDisplay } from '@/components/admin/InventoryPriceDisplay'
 import EditPriceModal from '@/components/admin/EditPriceModal';
 import Link from 'next/link';
 import { message, Modal } from 'antd';
-import { User, Ban, ShieldCheck, AlertCircle, Tag, Pencil, Sparkles } from 'lucide-react';
+import { User, Ban, ShieldCheck, AlertCircle, Tag, Pencil, Sparkles, Coins, Landmark, ArrowRight } from 'lucide-react';
 
+interface CashflowSaleConfirm {
+  item: InventoryItem;
+  customerName: string;
+  customerPhone: string;
+  customerBirthDate: string;
+  customerAddress: string;
+  serialNumber: string;
+  warrantyMonths: number;
+  soldPrice: number;
+  saleDate: string;
+  costPrice: number;
+}
 
 export default function KhoMayPage() {
   const searchParams = useSearchParams();
@@ -43,14 +55,14 @@ export default function KhoMayPage() {
     customers,
   } = useStore();
 
-  // Navigation tab state: Máy bộ, Laptop, Linh kiện, Máy đã bán, Đã bán bởi dealer
-  const [activeTab, setActiveTab] = useState<'may-bo' | 'laptop' | 'components' | 'sold' | 'dealer_sold'>('may-bo');
+  // Navigation tab state: Máy bộ, Laptop, Linh kiện, Máy đã bán
+  const [activeTab, setActiveTab] = useState<'may-bo' | 'laptop' | 'components' | 'sold'>('may-bo');
 
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
   const [selectedStatus, setSelectedStatus] = useState<
-    'all' | 'ready_to_sell' | 'testing' | 'sold' | 'reserved' | 'aging_warning' | 'dealer_sold'
+    'all' | 'ready_to_sell' | 'testing' | 'sold' | 'reserved' | 'aging_warning'
   >('all');
 
   // Đồng bộ URL params (khi bấm từ Widget "Xem trong kho")
@@ -117,6 +129,8 @@ export default function KhoMayPage() {
   const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(12);
   const [sellPrice, setSellPrice] = useState<number>(0);
   const [sellDate, setSellDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [cashflowConfirmData, setCashflowConfirmData] = useState<CashflowSaleConfirm | null>(null);
+  const [isSubmittingSale, setIsSubmittingSale] = useState(false);
 
   // Sales Modal States - Linh Kiện (Admin & Sales)
   const [sellingPart, setSellingPart] = useState<SparePart | null>(null);
@@ -200,7 +214,7 @@ export default function KhoMayPage() {
     setEditingPricePart(null);
   };
 
-  const handleConfirmSale = async (e: React.FormEvent) => {
+  const handleConfirmSale = (e: React.FormEvent) => {
     e.preventDefault();
     if (!sellingItem) return;
     if (!sellCustomerName.trim() || !sellCustomerPhone.trim()) {
@@ -209,25 +223,85 @@ export default function KhoMayPage() {
       return;
     }
 
-    const res = await sellInventoryItem({
-      itemId: sellingItem.id,
-      customerName: sellCustomerName,
-      customerPhone: sellCustomerPhone,
-      birthDate: sellCustomerBirthDate,
-      customerAddress: sellCustomerAddress,
-      serialNumber: sellSerialNumber,
+    const initialCost = Number(sellingItem.import_price || sellingItem.cost_price || 0);
+    setCashflowConfirmData({
+      item: sellingItem,
+      customerName: sellCustomerName.trim(),
+      customerPhone: sellCustomerPhone.trim(),
+      customerBirthDate: sellCustomerBirthDate,
+      customerAddress: sellCustomerAddress.trim(),
+      serialNumber: sellSerialNumber.trim(),
       warrantyMonths: sellWarrantyMonths,
-      soldPrice: sellPrice,
+      soldPrice: Number(sellPrice) || 0,
       saleDate: sellDate,
+      costPrice: initialCost,
     });
+  };
 
-    if (res.success) {
-      setActionNotice(res.message);
-      setSellingItem(null);
-      setTimeout(() => setActionNotice(null), 4000);
-    } else {
-      setActionNotice(res.message);
-      setTimeout(() => setActionNotice(null), 4000);
+  const handleFinalizeSale = async () => {
+    if (!cashflowConfirmData || isSubmittingSale) return;
+    setIsSubmittingSale(true);
+
+    try {
+      const {
+        item,
+        customerName,
+        customerPhone,
+        customerBirthDate,
+        customerAddress,
+        serialNumber,
+        warrantyMonths,
+        soldPrice,
+        saleDate,
+        costPrice,
+      } = cashflowConfirmData;
+
+      // Đồng bộ giá vốn nếu người dùng điều chỉnh trong popup
+      if (costPrice !== (item.import_price || item.cost_price || 0)) {
+        await updateInventoryItem(item.id, { import_price: costPrice });
+      }
+
+      const profit = Math.max(0, soldPrice - costPrice);
+      const sellerBonus = Math.round(profit * 0.15);
+      const lenderBonus = Math.round(profit * 0.05);
+      const lenderTotal = costPrice + lenderBonus;
+      const warrantyReserve = Math.round(profit * 0.05);
+      const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
+
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (75%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
+
+      const res = await sellInventoryItem({
+        itemId: item.id,
+        customerName,
+        customerPhone,
+        birthDate: customerBirthDate,
+        customerAddress,
+        serialNumber,
+        warrantyMonths,
+        soldPrice,
+        saleDate,
+        notes: cashflowNote,
+      });
+
+      if (res.success) {
+        message.success({
+          content: `Xuất bán thành công máy [${item.service_tag}]! Dòng tiền đã được phân bổ & trích lập quỹ bảo hành.`,
+          duration: 4,
+        });
+        setActionNotice(res.message);
+        setCashflowConfirmData(null);
+        setSellingItem(null);
+        setTimeout(() => setActionNotice(null), 4000);
+      } else {
+        message.error(res.message || 'Lỗi khi xuất bán thiết bị!');
+        setActionNotice(res.message);
+        setTimeout(() => setActionNotice(null), 4000);
+      }
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : 'Đã xảy ra lỗi khi hoàn tất đơn bán!';
+      message.error(errorMsg);
+    } finally {
+      setIsSubmittingSale(false);
     }
   };
 
@@ -242,10 +316,10 @@ export default function KhoMayPage() {
           </p>
           <div className="text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 space-y-1">
             <p className="font-bold flex items-center gap-1">
-              <span>⚠️ Lưu ý quan trọng về doanh thu:</span>
+              <span>⚠️ Lưu ý:</span>
             </p>
             <p>
-              • Thiết bị sẽ chuyển sang trạng thái <strong>Đã bán bởi dealer</strong> (ngừng bán, tồn kho = 0).
+              • Thiết bị sẽ được <strong>gỡ khỏi danh sách hiển thị trong hệ thống</strong> (tồn kho = 0).
             </p>
             <p>
               • <strong>Doanh thu máy này sẽ KHÔNG được cộng vào doanh thu tổng</strong> và không phát sinh quỹ bảo hành hay tích lũy khách hàng.
@@ -253,14 +327,14 @@ export default function KhoMayPage() {
           </div>
         </div>
       ),
-      okText: 'Xác nhận Dealer đã bán',
+      okText: 'Xác nhận Dealer đã bán (Gỡ máy)',
       okButtonProps: { className: '!bg-orange-600 hover:!bg-orange-700 !text-white' },
       cancelText: 'Hủy',
       onOk: async () => {
         const res = await markItemAsDealerSold(item.id);
         if (res.success) {
-          message.success(res.message);
-          setActionNotice(res.message);
+          message.success(`Đã đánh dấu máy [${item.service_tag}] đã bán bởi Dealer (Không tính doanh thu & đã gỡ khỏi hệ thống).`);
+          setActionNotice(`Đã gỡ máy [${item.service_tag}] - Dealer đã bán`);
           if (sellingItem?.id === item.id) setSellingItem(null);
           setTimeout(() => setActionNotice(null), 4000);
         } else {
@@ -392,23 +466,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const nowTimestamp = useMemo(() => Date.now(), []);
 
-  // Filtered inventory - Machines (Máy bộ vs Laptop vs Dealer sold)
+  // Filtered inventory - Machines (Máy bộ vs Laptop)
   const filteredInventory = useMemo(() => {
     return inventory.filter((item) => {
+      // Máy đã bán bởi dealer không còn hiển thị trong hệ thống
+      if (item.qc_status === 'dealer_sold') return false;
+
       // Phân tách Máy Bộ vs Laptop
       const isLaptop =
         (item.form_factor || '').toLowerCase() === 'laptop' ||
         (item.model || '').toLowerCase().includes('laptop') ||
         (item.device_model || '').toLowerCase().includes('laptop');
 
-      if (activeTab === 'dealer_sold') {
-        if (item.qc_status !== 'dealer_sold') return false;
-      } else {
-        if (activeTab === 'may-bo' && isLaptop) return false;
-        if (activeTab === 'laptop' && !isLaptop) return false;
-        // Trong tab may-bo và laptop tồn kho, mặc định ẩn máy dealer_sold trừ khi chọn lọc riêng
-        if (selectedStatus === 'all' && item.qc_status === 'dealer_sold') return false;
-      }
+      if (activeTab === 'may-bo' && isLaptop) return false;
+      if (activeTab === 'laptop' && !isLaptop) return false;
 
       const model = item.model || item.device_model || '';
       const matchesSearch =
@@ -427,7 +498,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       let matchesStatus = true;
       if (selectedStatus === 'aging_warning') {
         const days = calculateDaysInStock(item, nowTimestamp);
-        matchesStatus = days >= 50 && item.qc_status !== 'sold' && item.qc_status !== 'dealer_sold';
+        matchesStatus = days >= 50 && item.qc_status !== 'sold';
       } else if (selectedStatus !== 'all') {
         matchesStatus = item.qc_status === selectedStatus;
       }
@@ -457,7 +528,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   // Statistics
   const stats = useMemo(() => {
-    const total = inventory.reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
+    const total = inventory
+      .filter((i) => i.qc_status !== 'dealer_sold')
+      .reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
     const ready = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
     const testing = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
 
@@ -498,7 +571,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     }).length;
     const agingTotal = agingYellow + agingRed;
     const sold = inventory.filter((i) => i.qc_status === 'sold' || Boolean(i.handover_date)).length;
-    const dealerSold = inventory.filter((i) => i.qc_status === 'dealer_sold').length;
     const reserved = inventory.filter((i) => i.qc_status === 'reserved').length;
 
     return {
@@ -509,7 +581,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       reserved,
       testing,
       sold,
-      dealerSold,
       agingYellow,
       agingRed,
       agingTotal,
@@ -829,13 +900,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             {activeTab === 'may-bo' && 'Kho Máy Bộ'}
             {activeTab === 'laptop' && 'Kho Laptop'}
             {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
-            {activeTab === 'dealer_sold' && 'Máy Đã Bán Bởi Dealer (Trading)'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
             <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
               {activeTab === 'may-bo' && `${stats.mayBoTotal} máy bộ`}
               {activeTab === 'laptop' && `${stats.laptopTotal} laptop`}
               {activeTab === 'sold' && `${stats.sold} máy đã bán`}
-              {activeTab === 'dealer_sold' && `${stats.dealerSold} máy dealer bán`}
               {activeTab === 'components' && `${spareParts.length} mục`}
             </span>
           </h1>
@@ -933,22 +1002,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             {stats.sold}
           </span>
         </button>
-
-        <button
-          onClick={() => setActiveTab('dealer_sold')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-            activeTab === 'dealer_sold'
-              ? 'bg-white text-orange-700 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900'
-          }`}
-        >
-          <span>Đã bán bởi Dealer</span>
-          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
-            activeTab === 'dealer_sold' ? 'bg-orange-100 text-orange-800' : 'bg-slate-200 text-slate-700'
-          }`}>
-            {stats.dealerSold}
-          </span>
-        </button>
       </div>
 
       {/* RBAC Notice (Compact) */}
@@ -959,7 +1012,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       )}
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'may-bo' ? 'bg-blue-50/50 border-blue-300' : 'bg-white border-slate-200'
         }`}>
@@ -985,14 +1038,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
 
         <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
-          activeTab === 'dealer_sold' ? 'bg-orange-50/50 border-orange-300' : 'bg-white border-slate-200'
-        }`}>
-          <div className="text-[11px] text-slate-500 truncate">Dealer Đã Bán</div>
-          <div className="text-base font-bold text-orange-700 font-mono mt-0.5">{stats.dealerSold} máy</div>
-          <div className="text-[10px] text-slate-400 font-medium">Không cộng doanh thu</div>
-        </div>
-
-        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
         }`}>
           <div className="text-[11px] text-slate-500 truncate">Linh Kiện Tồn Kho</div>
@@ -1004,9 +1049,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: MÁY TÍNH, LAPTOP & ĐÃ BÁN BỞI DEALER */}
+      {/* TAB 1: MÁY TÍNH & LAPTOP */}
       {/* ========================================================================= */}
-      {(activeTab === 'may-bo' || activeTab === 'laptop' || activeTab === 'dealer_sold') && (
+      {(activeTab === 'may-bo' || activeTab === 'laptop') && (
         <>
           {/* Search & Filter Toolbar */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -1066,7 +1111,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               { id: 'reserved', label: `Đang đợi bán (${stats.reserved})` },
               { id: 'testing', label: 'QC' },
               { id: 'sold', label: `Đã bán (${stats.sold})` },
-              { id: 'dealer_sold', label: `Dealer đã bán (${stats.dealerSold})` },
             ] as const
           ).map((s) => (
             <button
@@ -1076,13 +1120,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 selectedStatus === s.id
                   ? s.id === 'reserved'
                     ? 'bg-purple-600 text-white shadow-xs font-bold'
-                    : s.id === 'dealer_sold'
-                    ? 'bg-orange-600 text-white shadow-xs font-bold'
                     : 'bg-blue-600 text-white'
                   : s.id === 'reserved' && stats.reserved > 0
                   ? 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 font-bold'
-                  : s.id === 'dealer_sold' && stats.dealerSold > 0
-                  ? 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 font-bold'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -1140,10 +1180,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
                   const isReserved = item.qc_status === 'reserved';
-                  const isDealerSold = item.qc_status === 'dealer_sold';
                   const daysInStock = calculateDaysInStock(item, nowTimestamp);
-                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved && !isDealerSold;
-                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved && !isDealerSold;
+                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved;
+                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved;
 
                   return (
                     <tr
@@ -1151,8 +1190,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       className={`transition-colors ${
                         isReserved
                           ? 'bg-purple-50/50 hover:bg-purple-50/80'
-                          : isDealerSold
-                          ? 'bg-orange-50/40 hover:bg-orange-50/70'
                           : isRedAging
                           ? 'bg-rose-50/40 hover:bg-rose-50/70'
                           : isYellowAging
@@ -1170,12 +1207,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             {item.form_factor}
                           </span>
                         </div>
-                        {isDealerSold && (
-                          <div className="mt-1.5 p-1.5 bg-orange-100/70 border border-orange-200 rounded-md text-[11px] text-orange-900 max-w-xs">
-                            <span className="font-bold">Đã bán bởi Dealer</span>
-                            <span className="text-[10px] text-orange-700 block">Trading — Không cộng doanh thu</span>
-                          </div>
-                        )}
                         {isReserved && (
                           <div className="mt-1.5 p-1.5 bg-purple-100/70 border border-purple-200 rounded-md text-[11px] text-purple-900 max-w-xs">
                             <div className="font-semibold flex items-center gap-1 text-purple-800">
@@ -1248,14 +1279,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         {canUpdateRepairStatus() ? (
                           <select
                             value={item.qc_status}
-                            onChange={(e) =>
-                              updateQcStatus(item.id, e.target.value as InventoryItem['qc_status'])
-                            }
+                            onChange={(e) => {
+                              const val = e.target.value as InventoryItem['qc_status'];
+                              if (val === 'dealer_sold') {
+                                handleMarkDealerSold(item);
+                              } else {
+                                updateQcStatus(item.id, val);
+                              }
+                            }}
                             className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer focus:outline-none focus:ring-1 ${
                               isReserved
                                 ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                : isDealerSold
-                                ? 'bg-orange-50 text-orange-700 border-orange-200'
                                 : isReady
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isTesting
@@ -1267,15 +1301,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             <option value="reserved">Đang đợi bán</option>
                             <option value="testing">Đang QC</option>
                             <option value="sold">Đã bán (Shop)</option>
-                            <option value="dealer_sold">Đã bán bởi dealer</option>
+                            <option value="dealer_sold">Đã bán bởi dealer (Gỡ máy)</option>
                           </select>
                         ) : (
                           <span
                             className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
                               isReserved
                                 ? 'bg-purple-100 text-purple-800'
-                                : isDealerSold
-                                ? 'bg-orange-100 text-orange-800 border border-orange-200'
                                 : isReady
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : isTesting
@@ -1285,8 +1317,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           >
                             {isReserved
                               ? 'Đang đợi bán'
-                              : isDealerSold
-                              ? 'Đã bán bởi dealer'
                               : isReady
                               ? 'Sẵn sàng bán'
                               : isTesting
@@ -2294,9 +2324,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+                    className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                   >
-                    Xác Nhận Bán Máy (Shop)
+                    <span>Tiếp tục: Xem phân bổ dòng tiền</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -2304,6 +2335,305 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           </div>
         </div>
       )}
+
+      {/* POPUP THỐNG KÊ DÒNG TIỀN KHI XÁC NHẬN BÁN MÁY */}
+      {cashflowConfirmData && (() => {
+        const item = cashflowConfirmData.item;
+        const soldPrice = cashflowConfirmData.soldPrice;
+        const costPrice = cashflowConfirmData.costPrice;
+        const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
+        const isProfitable = profit > 0;
+
+        // 1. Tiền cho người bán (15% lợi nhuận)
+        const sellerCommission = isProfitable ? Math.round(profit * 0.15) : 0;
+        // 2. Thưởng người cho vay vốn (5% lợi nhuận)
+        const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
+        // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
+        const lenderTotal = costPrice + lenderBonus;
+        // 3. 5% tiền trích lập dự phòng
+        const warrantyReserve = isProfitable ? Math.round(profit * 0.05) : 0;
+        // 4. Lợi nhuận còn lại (75% lợi nhuận)
+        const remainingProfit = isProfitable
+          ? profit - sellerCommission - lenderBonus - warrantyReserve
+          : profit;
+
+        return (
+          <div className="fixed inset-0 z-60 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full p-6 space-y-4 my-8">
+              {/* Header */}
+              <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                    <Coins className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      <span>Thống Kê Dòng Tiền &amp; Xác Nhận Bán Máy</span>
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Kiểm tra phân bổ dòng tiền bán máy trước khi xuất kho chính thức
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCashflowConfirmData(null)}
+                  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors text-base font-bold cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Thông tin thiết bị & khách hàng */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Thiết bị</div>
+                  <div className="font-bold text-slate-800 text-sm mt-0.5">
+                    {item.brand} {item.device_model || item.model} ({item.form_factor})
+                  </div>
+                  <div className="text-slate-500 font-mono text-[11px] mt-0.5">
+                    Tag: <strong className="text-blue-700">{item.service_tag}</strong> • Serial: <strong className="text-slate-700">{cashflowConfirmData.serialNumber}</strong>
+                  </div>
+                </div>
+                <div className="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-200">
+                  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Khách mua hàng</div>
+                  <div className="font-bold text-slate-800 text-sm mt-0.5">
+                    {cashflowConfirmData.customerName}
+                  </div>
+                  <div className="text-slate-600 font-mono text-[11px] mt-0.5">
+                    SĐT: {cashflowConfirmData.customerPhone}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Chỉ số nền tảng: Giá bán ra - Giá vốn nhập - Lợi nhuận gộp */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl">
+                  <span className="text-[11px] text-blue-700 font-semibold uppercase tracking-wider block">
+                    1. Giá Bán Ra
+                  </span>
+                  <div className="text-lg font-black text-blue-800 font-mono mt-1">
+                    {soldPrice.toLocaleString('vi-VN')} ₫
+                  </div>
+                  <span className="text-[10px] text-blue-600 mt-0.5 block">Tổng thu từ khách hàng</span>
+                </div>
+
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] text-slate-600 font-semibold uppercase tracking-wider block">
+                      2. Giá Vốn Nhập
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">Tự động lấy</span>
+                  </div>
+                  <div className="mt-1">
+                    <input
+                      type="number"
+                      step={50000}
+                      min={0}
+                      value={cashflowConfirmData.costPrice}
+                      onChange={(e) => {
+                        const val = Number(e.target.value) || 0;
+                        setCashflowConfirmData((prev) => (prev ? { ...prev, costPrice: val } : null));
+                      }}
+                      className="w-full px-2 py-1 text-base font-black text-slate-800 font-mono bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      title="Bạn có thể điều chỉnh giá vốn nếu máy chưa có giá vốn ban đầu"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Có thể chỉnh nhanh nếu cần</span>
+                </div>
+
+                <div className={`p-3 border rounded-xl ${
+                  isProfitable ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/70 border-rose-200'
+                }`}>
+                  <span className={`text-[11px] font-semibold uppercase tracking-wider block ${
+                    isProfitable ? 'text-emerald-700' : 'text-rose-700'
+                  }`}>
+                    3. Lợi Nhuận Gộp
+                  </span>
+                  <div className={`text-lg font-black font-mono mt-1 ${
+                    isProfitable ? 'text-emerald-800' : 'text-rose-700'
+                  }`}>
+                    {profit.toLocaleString('vi-VN')} ₫
+                  </div>
+                  <span className={`text-[10px] mt-0.5 block ${
+                    isProfitable ? 'text-emerald-600' : 'text-rose-600'
+                  }`}>
+                    = Giá bán ra - Giá vốn nhập
+                  </span>
+                </div>
+              </div>
+
+              {/* 4 Khoản phân bổ dòng tiền theo đúng yêu cầu */}
+              <div className="space-y-2">
+                <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                  <span>Chi Tiết 4 Khoản Phân Bổ Dòng Tiền</span>
+                  <span className="text-[11px] text-slate-500 lowercase font-normal">
+                    (tính trên lợi nhuận {profit > 0 ? profit.toLocaleString('vi-VN') + ' ₫' : '0 ₫'})
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Khoản 1: Người bán 15% LN */}
+                  <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
+                        <User className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Tiền cho người bán</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
+                        15% LN
+                      </span>
+                    </div>
+                    <div className="text-base font-black text-indigo-950 font-mono">
+                      {sellerCommission.toLocaleString('vi-VN')} ₫
+                    </div>
+                    <p className="text-[11px] text-indigo-700">
+                      Hoa hồng cho nhân viên tư vấn &amp; chốt đơn
+                    </p>
+                  </div>
+
+                  {/* Khoản 2: Hoàn người cho vay vốn (Vốn + 5% LN) */}
+                  <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                        <Landmark className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Tiền hoàn người cho vay vốn</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-mono">
+                        Vốn + 5% LN
+                      </span>
+                    </div>
+                    <div className="text-base font-black text-amber-950 font-mono">
+                      {lenderTotal.toLocaleString('vi-VN')} ₫
+                    </div>
+                    <p className="text-[11px] text-amber-800">
+                      Vốn gốc: {costPrice.toLocaleString('vi-VN')}₫ + Thưởng 5% LN: {lenderBonus.toLocaleString('vi-VN')}₫
+                    </p>
+                  </div>
+
+                  {/* Khoản 3: 5% trích lập dự phòng */}
+                  <div className="p-3 bg-rose-50/60 border border-rose-200 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
+                        <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
+                        <span>5% trích lập dự phòng</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">
+                        5% LN
+                      </span>
+                    </div>
+                    <div className="text-base font-black text-rose-950 font-mono">
+                      {warrantyReserve.toLocaleString('vi-VN')} ₫
+                    </div>
+                    <p className="text-[11px] text-rose-700">
+                      Quỹ dự phòng rủi ro bảo hành thiết bị
+                    </p>
+                  </div>
+
+                  {/* Khoản 4: Lợi nhuận còn lại */}
+                  <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Lợi nhuận còn lại</span>
+                      </div>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
+                        75% LN
+                      </span>
+                    </div>
+                    <div className="text-base font-black text-emerald-950 font-mono">
+                      {remainingProfit.toLocaleString('vi-VN')} ₫
+                    </div>
+                    <p className="text-[11px] text-emerald-700">
+                      Lợi nhuận ròng giữ lại cho cửa hàng
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thanh kiểm toán cân đối dòng tiền */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-slate-600 flex items-center gap-1">
+                    <span>Tổng dòng tiền phân bổ:</span>
+                    <strong className="text-slate-900 font-mono">{soldPrice.toLocaleString('vi-VN')} ₫</strong>
+                  </span>
+                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                    <span>✓ Khớp 100% dòng tiền</span>
+                  </span>
+                </div>
+                {/* Visual stacked bar */}
+                <div className="w-full h-2.5 rounded-full overflow-hidden bg-slate-200 flex">
+                  {soldPrice > 0 && (
+                    <>
+                      <div
+                        style={{ width: `${Math.max(4, (lenderTotal / soldPrice) * 100)}%` }}
+                        className="bg-amber-500 h-full transition-all"
+                        title={`Hoàn vốn vay: ${lenderTotal.toLocaleString('vi-VN')}₫`}
+                      />
+                      <div
+                        style={{ width: `${Math.max(4, (sellerCommission / soldPrice) * 100)}%` }}
+                        className="bg-indigo-500 h-full transition-all"
+                        title={`Người bán: ${sellerCommission.toLocaleString('vi-VN')}₫`}
+                      />
+                      <div
+                        style={{ width: `${Math.max(3, (warrantyReserve / soldPrice) * 100)}%` }}
+                        className="bg-rose-500 h-full transition-all"
+                        title={`Quỹ dự phòng: ${warrantyReserve.toLocaleString('vi-VN')}₫`}
+                      />
+                      <div
+                        style={{ width: `${Math.max(4, (remainingProfit / soldPrice) * 100)}%` }}
+                        className="bg-emerald-500 h-full transition-all"
+                        title={`Lợi nhuận còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫`}
+                      />
+                    </>
+                  )}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 pt-0.5 font-mono">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Hoàn người vay vốn
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (15%)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại (75%)
+                  </span>
+                </div>
+              </div>
+
+              {/* Nút hành động */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setCashflowConfirmData(null)}
+                  className="px-4 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  ← Quay lại chỉnh sửa
+                </button>
+                <button
+                  type="button"
+                  disabled={isSubmittingSale}
+                  onClick={handleFinalizeSale}
+                  className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingSale ? (
+                    <span>Đang hoàn tất...</span>
+                  ) : (
+                    <>
+                      <span>Xác Nhận &amp; Xuất Bán Ngay</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MODAL BÁN LINH KIỆN */}
       {sellingPart && (

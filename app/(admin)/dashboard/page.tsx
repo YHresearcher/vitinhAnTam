@@ -56,21 +56,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
   const nowTimestamp = Date.now();
 
   const deviceStats = useMemo(() => {
-    const total = inventory.length;
-    const rts = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
-    const qc = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
-    const sold = inventory.filter((i) => i.qc_status === 'sold').length;
-    const dealerSold = inventory.filter((i) => i.qc_status === 'dealer_sold').length;
-    const other = Math.max(0, total - rts - qc - sold - dealerSold);
+    const activeInventory = inventory.filter((i) => i.qc_status !== 'dealer_sold');
+    const total = activeInventory.length;
+    const rts = activeInventory.filter((i) => i.qc_status === 'ready_to_sell').length;
+    const qc = activeInventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
+    const sold = activeInventory.filter((i) => i.qc_status === 'sold').length;
+    const other = Math.max(0, total - rts - qc - sold);
 
     // Aging alerts: 50-55d Yellow, 56-60d+ Red (loại trừ đã bán và dealer đã bán)
-    const agingYellowItems = inventory.filter((i) => {
+    const agingYellowItems = activeInventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 50 && days < 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
+      return days >= 50 && days < 56 && i.qc_status !== 'sold';
     });
-    const agingRedItems = inventory.filter((i) => {
+    const agingRedItems = activeInventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
+      return days >= 56 && i.qc_status !== 'sold';
     });
     const allAgingItems = [...agingRedItems, ...agingYellowItems].sort(
       (a, b) => calculateDaysInStock(b, nowTimestamp) - calculateDaysInStock(a, nowTimestamp)
@@ -81,21 +81,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     );
 
     // Phân bổ thương hiệu
-    const dellCount = inventory.filter((i) => (i.brand || '').toLowerCase().includes('dell')).length;
-    const hpCount = inventory.filter((i) => (i.brand || '').toLowerCase().includes('hp')).length;
-    const thinkpadCount = inventory.filter(
+    const dellCount = activeInventory.filter((i) => (i.brand || '').toLowerCase().includes('dell')).length;
+    const hpCount = activeInventory.filter((i) => (i.brand || '').toLowerCase().includes('hp')).length;
+    const thinkpadCount = activeInventory.filter(
       (i) =>
         (i.brand || '').toLowerCase().includes('lenovo') ||
         (i.brand || '').toLowerCase().includes('thinkpad')
     ).length;
     const otherBrandCount = Math.max(0, total - dellCount - hpCount - thinkpadCount);
 
-    // Tổng giá trị kho (ước tính - loại trừ đã bán và dealer bán)
-    const inventoryValue = inventory
-      .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
+    // Tổng giá trị kho (ước tính - loại trừ đã bán)
+    const inventoryValue = activeInventory
+      .filter((i) => i.qc_status !== 'sold')
       .reduce((sum, i) => sum + (i.price || i.retail_price || 4500000), 0);
-    const inventoryCapital = inventory
-      .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
+    const inventoryCapital = activeInventory
+      .filter((i) => i.qc_status !== 'sold')
       .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
 
     return {
@@ -103,7 +103,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       rts,
       qc,
       sold,
-      dealerSold,
       other,
       agingYellowItems,
       agingRedItems,
@@ -735,12 +734,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             <span>•</span>
             <span className="text-amber-700 font-semibold">{deviceStats.qc} QC</span>
             <span>•</span>
-            {deviceStats.dealerSold > 0 && (
-              <>
-                <span className="text-orange-700 font-semibold">{deviceStats.dealerSold} dealer bán</span>
-                <span>•</span>
-              </>
-            )}
             {deviceStats.allAgingItems.length > 0 ? (
               <span className="text-rose-600 font-bold">⚠️ {deviceStats.allAgingItems.length} tồn lâu</span>
             ) : (
