@@ -22,6 +22,8 @@ export interface ShowcaseItem {
     gift: string;
   };
   stockCount: number;
+  modelStockCount?: number;
+  modelName?: string;
   shelfLocation: string;
   qcStatus: string;
   burnInDuration: number;
@@ -65,6 +67,26 @@ export const RAW_PRODUCTS: RawProduct[] = [];
 
 export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = []): ShowcaseItem[] {
   if (inventory && inventory.length > 0) {
+    const getInvItemStock = (i: InventoryItem): number => {
+      if (i.qc_status === 'sold') return 0;
+      if (typeof i.stock_quantity === 'number') return Math.max(0, i.stock_quantity);
+      if (typeof i.quantity === 'number') return Math.max(0, i.quantity);
+      return 1;
+    };
+
+    // Tính tổng số lượng máy đang tồn kho sẵn bán theo từng model máy
+    const modelStockMap = new Map<string, number>();
+
+    inventory.forEach((inv) => {
+      if (inv.qc_status !== 'sold') {
+        const rawModel = (inv.device_model || inv.model || `${inv.brand || ''} ${inv.form_factor || ''}`.trim()).toLowerCase().replace(/\s+/g, ' ');
+        if (rawModel) {
+          const qty = getInvItemStock(inv);
+          modelStockMap.set(rawModel, (modelStockMap.get(rawModel) || 0) + qty);
+        }
+      }
+    });
+
     return inventory.map((item) => {
       const rawMatch = RAW_PRODUCTS.find((p) => p.serviceTag === item.service_tag);
       const en = rawMatch ? ENGLISH_PRODUCT_DETAILS[rawMatch.id] : null;
@@ -106,13 +128,23 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         ? 'Shelf A1'
         : 'Kệ A1';
 
+      const rawModel = (item.device_model || item.model || `${item.brand || ''} ${item.form_factor || ''}`.trim());
+      const normalizedModel = rawModel.toLowerCase().replace(/\s+/g, ' ');
+      const rawItemQty = getInvItemStock(item);
+      const modelStockCount = isSold
+        ? 0
+        : (modelStockMap.get(normalizedModel) ?? rawItemQty);
+      const stockCount = isSold ? 0 : rawItemQty;
+
       return {
         id: item.id,
         serviceTag: item.service_tag,
         img: defaultImg,
         category,
         price: item.retail_price || item.price || 0,
-        stockCount: isSold ? 0 : (item.stock_quantity ?? item.quantity ?? 1),
+        stockCount,
+        modelStockCount,
+        modelName: rawModel,
         shelfLocation: shelf,
         qcStatus: item.qc_status || 'ready_to_sell',
         burnInDuration: item.burn_in_duration || 60,
@@ -120,7 +152,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         customerName: item.customer_name,
         customerArea: item.customer_phone ? (isEn ? 'Tay Ninh Region' : 'Khu vực Tây Ninh') : undefined,
         handoverDate: item.handover_date,
-        name: isEn && en ? en.name : (item.device_model || item.model || `${item.brand} ${item.form_factor}`),
+        name: isEn && en ? en.name : (rawModel || `${item.brand} ${item.form_factor}`),
         badge: isEn
           ? en
             ? en.badge

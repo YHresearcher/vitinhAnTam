@@ -108,14 +108,23 @@ export default function HomePage() {
 
   // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
-  const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
+  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách
+  const inStockProducts = useMemo(
+    () =>
+      allProducts.filter(
+        (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
+      ),
+    [allProducts]
+  );
 
   // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
   const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
 
-  // 3 sản phẩm RAM & SSD ngẫu nhiên / sẵn kho từ kho linh kiện (spareParts)
+  // 3 sản phẩm RAM & SSD ngẫu nhiên / sẵn kho từ kho linh kiện (spareParts) có số lượng > 0
   const featuredComponents = useMemo(() => {
     const list = (spareParts || []).filter((p) => {
+      const stock = Number(p.quantity_in_stock) || 0;
+      if (stock <= 0) return false;
       const type = (p.part_type || '').toUpperCase();
       const name = (p.part_name || '').toUpperCase();
       return (
@@ -293,6 +302,8 @@ export default function HomePage() {
           <ProductTabsSection
             isEn={isEn}
             t={t}
+            homeProductTab={homeProductTab}
+            setSelectedProduct={setSelectedProduct}
           />
 
           {/* 3. DỊCH VỤ KỸ THUẬT & PHÒNG LAB ĐO KIỂM PHẦN CỨNG (Có hình ảnh thực tế) */}

@@ -115,8 +115,11 @@ function ProductsCatalogContent() {
     return mainTab === 'laptop' ? laptopProducts : desktopProducts;
   }, [mainTab, laptopProducts, desktopProducts]);
 
+  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách hàng hóa
   const inStockCurrentCategory = useMemo(() => {
-    return currentCategoryProducts.filter((p) => !p.isSold);
+    return currentCategoryProducts.filter(
+      (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
+    );
   }, [currentCategoryProducts]);
 
   const soldCurrentCategory = useMemo(() => {
@@ -156,18 +159,28 @@ function ProductsCatalogContent() {
   );
 
   const inStockDesktopsCount = useMemo(
-    () => desktopProducts.filter((p) => !p.isSold).reduce((sum, item) => sum + item.stockCount, 0),
+    () =>
+      desktopProducts
+        .filter(
+          (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
+        )
+        .reduce((sum, item) => sum + item.stockCount, 0),
     [desktopProducts]
   );
 
   const inStockLaptopsCount = useMemo(
-    () => laptopProducts.filter((p) => !p.isSold).reduce((sum, item) => sum + item.stockCount, 0),
+    () =>
+      laptopProducts
+        .filter(
+          (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
+        )
+        .reduce((sum, item) => sum + item.stockCount, 0),
     [laptopProducts]
   );
 
-  // Danh sách linh kiện kho (spare_parts)
+  // Danh sách linh kiện kho (spare_parts) - Ẩn các mã linh kiện có tồn kho = 0
   const filteredSpareParts = useMemo(() => {
-    let list = spareParts || [];
+    let list = (spareParts || []).filter((p) => (Number(p.quantity_in_stock) || 0) > 0);
     if (partSubFilter === 'ssd') {
       list = list.filter((p) => (p.part_type || '').toUpperCase() === 'SSD' || (p.part_name || '').toUpperCase().includes('SSD'));
     } else if (partSubFilter === 'ram') {
@@ -324,7 +337,7 @@ function ProductsCatalogContent() {
             <span className={`px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
               mainTab === 'components' ? 'bg-[#C0392B]/10 text-[#C0392B]' : 'bg-slate-100 text-slate-600'
             }`}>
-              {spareParts?.length || 0} {t.catalog?.itemsSuffix || (isEn ? 'items' : 'mã hàng')}
+              {(spareParts || []).filter((p) => (Number(p.quantity_in_stock) || 0) > 0).length} {t.catalog?.itemsSuffix || (isEn ? 'items' : 'mã hàng')}
             </span>
           </button>
         </div>

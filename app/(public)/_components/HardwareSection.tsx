@@ -31,7 +31,42 @@ export default function HardwareSection({
   featuredProducts,
   setSelectedProduct
 }: HardwareSectionProps) {
-  if (featuredProducts.length === 0) {
+  const { inventory } = useViTinhAnTamStore();
+
+  // Helper tính tổng số lượng tồn kho thực tế cho dòng/model máy này
+  const getModelStockCount = (prod: any): number => {
+    if (typeof prod.modelStockCount === 'number') {
+      return prod.modelStockCount;
+    }
+    if (!inventory || inventory.length === 0) {
+      return Math.max(0, Number(prod.stockCount) || 0);
+    }
+    const targetModel = (prod.modelName || prod.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const matchingItems = inventory.filter((item) => {
+      if (item.qc_status === 'sold') return false;
+      const m = (item.device_model || item.model || `${item.brand || ''} ${item.form_factor || ''}`.trim()).toLowerCase().replace(/\s+/g, ' ');
+      return m === targetModel || (targetModel && m.includes(targetModel)) || (m && targetModel.includes(m));
+    });
+    if (matchingItems.length === 0) {
+      return Math.max(0, Number(prod.stockCount) || 0);
+    }
+    return matchingItems.reduce(
+      (sum, item) => {
+        const qty = typeof item.stock_quantity === 'number'
+          ? Math.max(0, item.stock_quantity)
+          : typeof item.quantity === 'number'
+          ? Math.max(0, item.quantity)
+          : 1;
+        return sum + qty;
+      },
+      0
+    );
+  };
+
+  // Ẩn tất cả các model máy có số lượng tồn kho = 0 khỏi danh sách hàng hóa
+  const availableProducts = featuredProducts.filter((prod) => getModelStockCount(prod) > 0);
+
+  if (availableProducts.length === 0) {
     return (
       <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
         <Monitor className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -49,30 +84,42 @@ export default function HardwareSection({
     <>
       <div className="space-y-6 mb-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredProducts.map((prod) => (
-            <div
-              key={prod.id}
-              className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
-            >
-              {/* Image & Badges */}
-              <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
-                <Image
-                  src={prod.img}
-                  alt={prod.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
-                  <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                    <span>{t.products.inStockBadge || 'SẴN KHO'}</span>
-                  </span>
-                  <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
-                    {prod.badge}
-                  </span>
+          {availableProducts.map((prod) => {
+            const stockCount = getModelStockCount(prod);
+
+            return (
+              <div
+                key={prod.id}
+                className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+              >
+                {/* Image & Stock Badge */}
+                <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                  <Image
+                    src={prod.img}
+                    alt={prod.name}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  {/* Bỏ các badge phía trên, thay bằng số lượng model máy tồn kho hiện tại */}
+                  <div className="absolute top-3 left-3 flex items-center">
+                    {stockCount > 0 ? (
+                      <span className="px-2.5 py-1 rounded-md bg-emerald-700/95 backdrop-blur-xs text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1.5 border border-emerald-600/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                        <span>
+                          {isEn
+                            ? `In Stock: ${stockCount} ${stockCount > 1 ? 'units' : 'unit'}`
+                            : `Tồn kho: ${stockCount} máy`}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 rounded-md bg-slate-800/90 backdrop-blur-xs text-white text-[11px] font-semibold tracking-tight shadow-xs flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        <span>{isEn ? 'Out of Stock' : 'Tạm hết hàng'}</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
               {/* Content */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
@@ -136,7 +183,8 @@ export default function HardwareSection({
                 </div>
               </div>
             </div>
-          ))}
+          );
+        })}
         </div>
       </div>
     </>

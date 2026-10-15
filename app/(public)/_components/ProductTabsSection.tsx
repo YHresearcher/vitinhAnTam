@@ -14,23 +14,65 @@ import SoftwareSection from './SoftwareSection';
 interface ProductTabsSectionProps {
   isEn: boolean;
   t: any;
+  homeProductTab?: 'all' | 'hardware' | 'components' | 'software';
+  setSelectedProduct?: (value: any) => void;
 }
 
-export default function ProductTabsSection({ isEn, t }: ProductTabsSectionProps) {
+export default function ProductTabsSection({
+  isEn,
+  t,
+  homeProductTab: propHomeProductTab,
+  setSelectedProduct: propSetSelectedProduct,
+}: ProductTabsSectionProps) {
   const { inventory, keyCategories, licenseKeys, spareParts, systemSettings } = useViTinhAnTamStore();
-  const [homeProductTab, setHomeProductTab] = useState<'all' | 'hardware' | 'components' | 'software'>('all');
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [internalHomeProductTab, setInternalHomeProductTab] = useState<'all' | 'hardware' | 'components' | 'software'>('all');
+  const [internalSelectedProduct, setInternalSelectedProduct] = useState<any>(null);
+
+  const activeTab = propHomeProductTab ?? internalHomeProductTab;
+  const onSelectProduct = propSetSelectedProduct ?? setInternalSelectedProduct;
 
   // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
-  const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
+  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách
+  const inStockProducts = useMemo(
+    () =>
+      allProducts.filter(
+        (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
+      ),
+    [allProducts]
+  );
 
-  // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
-  const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
+  // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đại diện các model đang sẵn kho
+  const featuredProducts = useMemo(() => {
+    const seenModels = new Set<string>();
+    const distinct: typeof inStockProducts = [];
 
-  // 3 sản phẩm RAM & SSD ngẫu nhiên / sẵn kho từ kho linh kiện (spareParts)
+    for (const prod of inStockProducts) {
+      const modelKey = (prod.modelName || prod.name || '').trim().toLowerCase();
+      if (!seenModels.has(modelKey)) {
+        seenModels.add(modelKey);
+        distinct.push(prod);
+      }
+      if (distinct.length >= 3) break;
+    }
+
+    if (distinct.length < 3) {
+      for (const prod of inStockProducts) {
+        if (!distinct.some((d) => d.id === prod.id)) {
+          distinct.push(prod);
+        }
+        if (distinct.length >= 3) break;
+      }
+    }
+
+    return distinct;
+  }, [inStockProducts]);
+
+  // 3 sản phẩm RAM & SSD ngẫu nhiên / sẵn kho từ kho linh kiện (spareParts) có số lượng > 0
   const featuredComponents = useMemo(() => {
     const list = (spareParts || []).filter((p) => {
+      const stock = Number(p.quantity_in_stock) || 0;
+      if (stock <= 0) return false;
       const type = (p.part_type || '').toUpperCase();
       const name = (p.part_name || '').toUpperCase();
       return (
@@ -82,17 +124,17 @@ export default function ProductTabsSection({ isEn, t }: ProductTabsSectionProps)
   return (
     <>
       {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
-      {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
+      {(activeTab === 'all' || activeTab === 'hardware') && (
         <HardwareSection
           isEn={isEn}
           t={t}
           featuredProducts={featuredProducts}
-          setSelectedProduct={setSelectedProduct}
+          setSelectedProduct={onSelectProduct}
         />
       )}
 
       {/* 1.5. LINH KIỆN NÂNG CẤP (RAM, SSD CHÍNH HÃNG TRONG KHO HÀNG) */}
-      {(homeProductTab === 'all' || homeProductTab === 'components') && (
+      {(activeTab === 'all' || activeTab === 'components') && (
         <ComponentsSection
           isEn={isEn}
           t={t}
@@ -102,7 +144,7 @@ export default function ProductTabsSection({ isEn, t }: ProductTabsSectionProps)
       )}
 
       {/* 2. PHẦN MỀM & KEY BẢN QUYỀN WINDOWS / OFFICE */}
-      {(homeProductTab === 'all' || homeProductTab === 'software') && (
+      {(activeTab === 'all' || activeTab === 'software') && (
         <SoftwareSection
           isEn={isEn}
           t={t}
@@ -112,7 +154,7 @@ export default function ProductTabsSection({ isEn, t }: ProductTabsSectionProps)
       )}
 
       {/* Nút Xem Toàn Bộ Kho Hàng (chỉ hiển thị khi không trong tab software) */}
-      {(homeProductTab === 'all' || homeProductTab === 'hardware' || homeProductTab === 'components') && (
+      {(activeTab === 'all' || activeTab === 'hardware' || activeTab === 'components') && (
         <div className="pt-2 pb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="/danh-muc-san-pham"
