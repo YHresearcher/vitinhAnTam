@@ -53,6 +53,7 @@ export default function MuaHangClient() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerNote, setCustomerNote] = useState('');
+  const [referralCode, setReferralCode] = useState('');
 
   // Order submission
   const [orderCode] = useState(() => `#AT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
@@ -63,6 +64,8 @@ export default function MuaHangClient() {
   const submitOrder = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
+
+    const effectiveReferral = referralCode.trim() || 'Khách vãng lai';
 
     const orderPayload = {
       order_code: orderCode,
@@ -75,6 +78,7 @@ export default function MuaHangClient() {
       payment_method: paymentMethod,
       delivery_method: deliveryMethod,
       note: customerNote.trim(),
+      referral_code: effectiveReferral,
       status: 'pending',
     };
 
@@ -496,6 +500,37 @@ export default function MuaHangClient() {
                     className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B] resize-none"
                   />
                 </div>
+
+                <div>
+                  <label className="text-xs text-[#6E5D53] mb-1 flex items-center justify-between">
+                    <span className="font-semibold text-[#2B1810]">
+                      {isEn ? 'Referral Code (Optional)' : 'Mã người giới thiệu (Không bắt buộc)'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 italic">
+                      {isEn ? 'Leave blank for walk-in' : 'Để trống = Khách vãng lai'}
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
+                    placeholder={isEn ? 'e.g. SALE01 or referrer phone/code (Leave blank for walk-in)' : 'Nhập mã người giới thiệu hoặc SĐT người tư vấn'}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-[#E8E2D9] text-sm bg-[#FAF7F2] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#C0392B]"
+                  />
+                  <p className="text-[11px] text-[#8C7A70] mt-1">
+                    {referralCode.trim() ? (
+                      <span className="text-emerald-700 font-semibold">
+                        ✓ Ghi nhận người giới thiệu: {referralCode.trim()}
+                      </span>
+                    ) : (
+                      <span>
+                        {isEn
+                          ? 'If left blank, this order is recorded as "Walk-in customer".'
+                          : 'Nếu để trống, hệ thống sẽ tự động ghi nhận là "Khách vãng lai".'}
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -574,6 +609,26 @@ export default function MuaHangClient() {
                   {customerName && (
                     <div className="text-xs text-[#6E5D53] mt-0.5">{customerName} • {customerPhone}</div>
                   )}
+                </div>
+                <button onClick={() => setStep('delivery')} className="text-xs text-[#C0392B] font-semibold hover:underline">
+                  {isEn ? 'Edit' : 'Sửa'}
+                </button>
+              </div>
+
+              {/* Referral / Seller */}
+              <div className="p-4 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-[#6E5D53] font-bold">
+                    {isEn ? 'Referral / Seller' : 'Người giới thiệu / Nguồn đơn'}
+                  </div>
+                  <div className="text-sm font-semibold text-[#2B1810] mt-0.5 flex items-center gap-2">
+                    <span>{referralCode.trim() ? referralCode.trim() : (isEn ? 'Walk-in Customer' : 'Khách vãng lai')}</span>
+                    {!referralCode.trim() && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 border border-slate-200">
+                        {isEn ? 'Direct Web' : 'Trực tiếp web'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button onClick={() => setStep('delivery')} className="text-xs text-[#C0392B] font-semibold hover:underline">
                   {isEn ? 'Edit' : 'Sửa'}

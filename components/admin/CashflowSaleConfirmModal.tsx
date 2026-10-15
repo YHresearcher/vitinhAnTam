@@ -17,6 +17,9 @@ export interface CashflowSaleConfirmData {
   costPrice: number;
   orderCode?: string;
   notes?: string;
+  referralCode?: string;
+  sellerName?: string;
+  isWalkIn?: boolean;
 }
 
 interface CashflowSaleConfirmModalProps {
@@ -49,15 +52,22 @@ export default function CashflowSaleConfirmModal({
   const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
   const isProfitable = profit > 0;
 
-  // 1. Tiền cho người bán (15% lợi nhuận)
-  const sellerCommission = isProfitable ? Math.round(profit * 0.15) : 0;
+  // Khách vãng lai: không có mã giới thiệu / để trống trên web -> 15% hoa hồng sales gộp vào lợi nhuận chung
+  const isWalkIn =
+    Boolean(data.isWalkIn) ||
+    data.referralCode === 'Khách vãng lai' ||
+    data.sellerName === 'Khách vãng lai' ||
+    (!data.referralCode && !data.sellerName);
+
+  // 1. Tiền cho người bán (15% lợi nhuận) — Nếu là khách vãng lai, hoa hồng = 0₫
+  const sellerCommission = isProfitable && !isWalkIn ? Math.round(profit * 0.15) : 0;
   // 2. Thưởng người cho vay vốn (5% lợi nhuận)
   const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
   // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
   const lenderTotal = costPrice + lenderBonus;
   // 3. 5% tiền trích lập dự phòng
   const warrantyReserve = isProfitable ? Math.round(profit * 0.05) : 0;
-  // 4. Lợi nhuận còn lại (75% lợi nhuận)
+  // 4. Lợi nhuận còn lại (75% thông thường, hoặc 90% nếu là khách vãng lai gộp vào lợi nhuận chung)
   const remainingProfit = isProfitable
     ? profit - sellerCommission - lenderBonus - warrantyReserve
     : profit;
@@ -187,24 +197,44 @@ export default function CashflowSaleConfirmModal({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Khoản 1: Người bán 15% LN */}
-            <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
-                  <User className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Tiền cho người bán</span>
+            {/* Khoản 1: Người bán 15% LN hoặc Khách vãng lai */}
+            {isWalkIn ? (
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                    <User className="w-3.5 h-3.5 text-slate-500" />
+                    <span>Nguồn: Khách vãng lai</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-700 font-mono">
+                    0% (Gộp LN chung)
+                  </span>
                 </div>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
-                  15% LN
-                </span>
+                <div className="text-base font-black text-slate-700 font-mono">
+                  0 ₫
+                </div>
+                <p className="text-[11px] text-slate-600">
+                  15% hoa hồng được cộng dồn trực tiếp vào lợi nhuận chung
+                </p>
               </div>
-              <div className="text-base font-black text-indigo-950 font-mono">
-                {sellerCommission.toLocaleString('vi-VN')} ₫
+            ) : (
+              <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
+                    <User className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Tiền cho người bán {data.sellerName ? `(${data.sellerName})` : ''}</span>
+                  </div>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
+                    15% LN
+                  </span>
+                </div>
+                <div className="text-base font-black text-indigo-950 font-mono">
+                  {sellerCommission.toLocaleString('vi-VN')} ₫
+                </div>
+                <p className="text-[11px] text-indigo-700">
+                  Hoa hồng cho nhân viên tư vấn &amp; chốt đơn
+                </p>
               </div>
-              <p className="text-[11px] text-indigo-700">
-                Hoa hồng cho nhân viên tư vấn &amp; chốt đơn
-              </p>
-            </div>
+            )}
 
             {/* Khoản 2: Hoàn người cho vay vốn (Vốn + 5% LN) */}
             <div className="p-3 bg-amber-50/60 border border-amber-200 rounded-xl space-y-1">
@@ -244,22 +274,24 @@ export default function CashflowSaleConfirmModal({
               </p>
             </div>
 
-            {/* Khoản 4: Lợi nhuận còn lại */}
+            {/* Khoản 4: Lợi nhuận còn lại / Lợi nhuận chung */}
             <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
                   <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Lợi nhuận còn lại</span>
+                  <span>{isWalkIn ? 'Lợi nhuận chung doanh nghiệp' : 'Lợi nhuận còn lại'}</span>
                 </div>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-                  75% LN
+                  {isWalkIn ? '90% LN (gồm 15% vãng lai)' : '75% LN'}
                 </span>
               </div>
               <div className="text-base font-black text-emerald-950 font-mono">
                 {remainingProfit.toLocaleString('vi-VN')} ₫
               </div>
               <p className="text-[11px] text-emerald-700">
-                Lợi nhuận ròng giữ lại cho cửa hàng
+                {isWalkIn
+                  ? 'Lợi nhuận ròng cửa hàng (hưởng trọn 90% do không có người giới thiệu)'
+                  : 'Lợi nhuận ròng giữ lại cho cửa hàng'}
               </p>
             </div>
           </div>
@@ -308,13 +340,13 @@ export default function CashflowSaleConfirmModal({
               <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Hoàn người vay vốn
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (15%)
+              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> {isWalkIn ? 'Vãng lai (0% gộp)' : 'Người bán (15%)'}
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại (75%)
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> {isWalkIn ? 'LN chung (90%)' : 'LN còn lại (75%)'}
             </span>
           </div>
         </div>

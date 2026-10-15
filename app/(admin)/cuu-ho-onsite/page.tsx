@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Wrench, Bike } from 'lucide-react';
+import { Wrench, Bike, Plus } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import CounterRepairTab from '@/components/admin/CounterRepairTab';
 import OnsiteDispatchTab from '@/components/admin/OnsiteDispatchTab';
@@ -107,6 +108,16 @@ function CuuHoOnsiteContent() {
             )}
           </button>
         </div>
+
+        {/* Action Button: Tạo Phiếu Mới */}
+        <Link
+          href="/phieu-sua-chua/tao-moi"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs shrink-0 self-start md:self-auto cursor-pointer"
+          title="Tạo phiếu tiếp nhận sửa chữa mới"
+        >
+          <Plus className="w-4 h-4 stroke-[2.5]" />
+          <span>Tạo Phiếu Mới</span>
+        </Link>
       </div>
 
       {/* Tab Panels */}

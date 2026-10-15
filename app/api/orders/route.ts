@@ -23,6 +23,13 @@ type OrderPayload = {
   note?: string;
   status?: string;
   use_zalo?: boolean;
+  referral_code?: string;
+  created_by_id?: string;
+  created_by_name?: string;
+  seller_id?: string;
+  seller_name?: string;
+  assigned_care_id?: string;
+  assigned_care_name?: string;
 };
 
 const VALID_PAYMENT = ['qr', 'cash'];
@@ -186,11 +193,27 @@ export async function POST(request: NextRequest) {
     const orderCode = body.order_code?.trim() || `#AT-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
     const useZalo = Boolean(body.use_zalo);
     const rawNote = (body.note || '').trim();
-    const finalNote = useZalo
-      ? (rawNote ? `${rawNote} • [Khách dùng Zalo]` : '[Khách dùng Zalo]')
-      : rawNote;
 
-    // Chỉ gửi các cột thực tế tồn tại trong schema bảng orders của Supabase
+    const referralCode = (body.referral_code || '').trim() || 'Khách vãng lai';
+    const createdById = body.created_by_id || null;
+    const createdByName = body.created_by_name || null;
+    const sellerId = body.seller_id || createdById || null;
+    const sellerName = body.seller_name || createdByName || (referralCode !== 'Khách vãng lai' ? referralCode : null);
+    const assignedCareId = body.assigned_care_id || createdById || null;
+    const assignedCareName = body.assigned_care_name || createdByName || null;
+
+    const extraTags = [
+      `[Người GT: ${referralCode}]`,
+      sellerName ? `[Người bán: ${sellerName}]` : '',
+      assignedCareName ? `[CSKH: ${assignedCareName}]` : '',
+    ].filter(Boolean).join(' ');
+
+    const finalNote = [
+      rawNote,
+      useZalo ? '[Khách dùng Zalo]' : '',
+      extraTags,
+    ].filter(Boolean).join(' • ');
+
     const order: Record<string, unknown> = {
       order_code: orderCode,
       customer_name: customerName,
@@ -203,6 +226,13 @@ export async function POST(request: NextRequest) {
       delivery_method: body.delivery_method,
       note: finalNote,
       status: 'pending',
+      referral_code: referralCode,
+      created_by_id: createdById,
+      created_by_name: createdByName,
+      seller_id: sellerId,
+      seller_name: sellerName,
+      assigned_care_id: assignedCareId,
+      assigned_care_name: assignedCareName,
     };
 
     let savedId: string | null = null;
@@ -211,7 +241,27 @@ export async function POST(request: NextRequest) {
     const db = getDb();
     if (db) {
       try {
-        const { data, error } = await db.from('orders').insert([order]).select('id').single();
+        let { data, error } = await db.from('orders').insert([order]).select('id').single();
+        if (error && error.message?.includes('column')) {
+          // Fallback if some new columns are not yet in Supabase SQL schema
+          const safeOrder: Record<string, unknown> = {
+            order_code: orderCode,
+            customer_name: customerName,
+            customer_phone: customerPhone,
+            customer_address: (body.customer_address || '').trim(),
+            device_name: deviceName,
+            device_price: Number(body.device_price) || 0,
+            device_tag: (body.device_tag || '').trim(),
+            payment_method: body.payment_method,
+            delivery_method: body.delivery_method,
+            note: finalNote,
+            status: 'pending',
+          };
+          const retry = await db.from('orders').insert([safeOrder]).select('id').single();
+          data = retry.data;
+          error = retry.error;
+        }
+
         if (!error && data) {
           savedId = data.id;
           source = 'supabase';
@@ -323,10 +373,38 @@ export async function GET(request: NextRequest) {
   }
   rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 
+  const normalizedRows = rows.map((r) => {
+    const noteStr = String(r.note || '');
+    let referralCode = r.referral_code;
+    let sellerName = r.seller_name;
+    let assignedCareName = r.assigned_care_name;
+
+    if (!referralCode) {
+      const match = noteStr.match(/\[Người GT:\s*([^\]]+)\]/);
+      if (match) referralCode = match[1].trim();
+      else referralCode = 'Khách vãng lai';
+    }
+    if (!sellerName) {
+      const match = noteStr.match(/\[Người bán:\s*([^\]]+)\]/);
+      if (match) sellerName = match[1].trim();
+    }
+    if (!assignedCareName) {
+      const match = noteStr.match(/\[CSKH:\s*([^\]]+)\]/);
+      if (match) assignedCareName = match[1].trim();
+    }
+
+    return {
+      ...r,
+      referral_code: referralCode,
+      seller_name: sellerName,
+      assigned_care_name: assignedCareName,
+    };
+  });
+
   return NextResponse.json({
     success: true,
-    total: rows.length,
-    data: rows,
+    total: normalizedRows.length,
+    data: normalizedRows,
     source: db ? 'supabase+fallback' : 'fallback',
   });
 }
@@ -343,38 +421,86 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as { id?: string; status?: string; matched_device_tag?: string };
-    const allowed = ['confirmed', 'processing', 'completed', 'cancelled'];
-    if (!body.id || !body.status || !allowed.includes(body.status)) {
+    const body = (await request.json()) as {
+      id?: string;
+      status?: string;
+      matched_device_tag?: string;
+      assigned_care_id?: string;
+      assigned_care_name?: string;
+    };
+
+    if (!body.id) {
       return NextResponse.json(
-        { success: false, message: 'Thiếu id hoặc trạng thái không hợp lệ.' },
+        { success: false, message: 'Thiếu id đơn hàng.' },
         { status: 400 }
       );
+    }
+
+    const allowed = ['confirmed', 'processing', 'completed', 'cancelled'];
+    if (body.status && !allowed.includes(body.status)) {
+      return NextResponse.json(
+        { success: false, message: 'Trạng thái không hợp lệ.' },
+        { status: 400 }
+      );
+    }
+
+    // Kiểm tra quyền: Chỉ admin mới có quyền thay đổi người chăm sóc khách hàng
+    const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+    const staffRoleHeader = request.headers.get('x-staff-role');
+    const isAdmin = session?.role === 'admin' || staffRoleHeader === 'admin';
+
+    if ((body.assigned_care_id !== undefined || body.assigned_care_name !== undefined) && !isAdmin) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: 'Chỉ admin mới có quyền thay đổi người chăm sóc khách hàng.' },
+        { status: 403 }
+      );
+    }
+
+    const patchData: Record<string, unknown> = {};
+    if (body.status) {
+      patchData.status = body.status;
+      patchData.confirmed_by = session?.name || 'staff';
+      patchData.confirmed_at = new Date().toISOString();
+    }
+    if (body.assigned_care_id !== undefined) {
+      patchData.assigned_care_id = body.assigned_care_id;
+    }
+    if (body.assigned_care_name !== undefined) {
+      patchData.assigned_care_name = body.assigned_care_name;
     }
 
     const db = getDb();
     if (db) {
       try {
-        const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
         const { data: orderData } = await db
           .from('orders')
           .select('*')
           .eq('id', body.id)
           .single();
 
-        const { error } = await db
+        let { error } = await db
           .from('orders')
-          .update({
-            status: body.status,
-            confirmed_by: session?.name || 'staff',
-            confirmed_at: new Date().toISOString(),
-          })
+          .update(patchData)
           .eq('id', body.id);
+
+        if (error && error.message?.includes('column')) {
+          const safePatch: Record<string, unknown> = {};
+          if (body.status) {
+            safePatch.status = body.status;
+            safePatch.confirmed_by = session?.name || 'staff';
+            safePatch.confirmed_at = new Date().toISOString();
+          }
+          if (body.assigned_care_name) {
+            safePatch.note = `${orderData?.note || ''} • [CSKH: ${body.assigned_care_name}]`;
+          }
+          const retry = await db.from('orders').update(safePatch).eq('id', body.id);
+          error = retry.error;
+        }
 
         if (!error) {
           // Tự động đồng bộ trạng thái máy trong kho
           const deviceTag = body.matched_device_tag || orderData?.device_tag;
-          if (deviceTag) {
+          if (deviceTag && body.status) {
             if (body.status === 'confirmed' || body.status === 'processing') {
               await db
                 .from('inventory_items')
@@ -415,10 +541,17 @@ export async function PATCH(request: NextRequest) {
         const list = JSON.parse(readFileSync(file, 'utf8')) as Array<Record<string, unknown>>;
         const target = list.find((o) => o.id === body.id);
         if (target) {
-          target.status = body.status;
-          const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-          target.confirmed_by = session?.name || 'staff';
-          target.confirmed_at = new Date().toISOString();
+          if (body.status) {
+            target.status = body.status;
+            target.confirmed_by = session?.name || 'staff';
+            target.confirmed_at = new Date().toISOString();
+          }
+          if (body.assigned_care_id !== undefined) {
+            target.assigned_care_id = body.assigned_care_id;
+          }
+          if (body.assigned_care_name !== undefined) {
+            target.assigned_care_name = body.assigned_care_name;
+          }
           writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
         }
       }

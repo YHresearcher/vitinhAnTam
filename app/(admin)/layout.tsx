@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, KeyRound, Menu } from 'lucide-react';
+import { Search, KeyRound, Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
@@ -227,17 +227,6 @@ export default function AdminLayout({
 
             {/* Theme Toggle Icon Button (Dark / Light) */}
             <ThemeToggle variant="icon" />
-
-            {/* Create Ticket Button (Icon only on mobile, text on sm+) */}
-            <Link
-              href="/phieu-sua-chua/tao-moi"
-              prefetch={true}
-              className="flex items-center gap-1 h-8 sm:h-8.5 px-2 sm:px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xs font-semibold text-xs shrink-0"
-              title="Tạo phiếu tiếp nhận máy mới"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span className="hidden sm:inline">Tạo phiếu</span>
-            </Link>
 
             {/* User Profile & Logout - FULLY OPTIMIZED FOR MOBILE */}
             <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 dark:border-slate-700 min-w-0">
