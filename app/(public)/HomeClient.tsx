@@ -99,14 +99,25 @@ export default function HomePage() {
 
   // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
-  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách
-  const inStockProducts = useMemo(
-    () =>
-      allProducts.filter(
-        (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
-      ),
-    [allProducts]
-  );
+  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách, và gom 1 đại diện duy nhất cho mỗi dòng máy
+  const inStockProducts = useMemo(() => {
+    const list = allProducts.filter((p) => {
+      if (p.isSold) return false;
+      const count = typeof p.modelStockCount === 'number' ? p.modelStockCount : p.stockCount;
+      return count > 0;
+    });
+
+    const seenModels = new Set<string>();
+    const uniqueList: typeof list = [];
+    for (const p of list) {
+      const key = (p.modelName || p.name || '').trim().toLowerCase();
+      if (!seenModels.has(key)) {
+        seenModels.add(key);
+        uniqueList.push(p);
+      }
+    }
+    return uniqueList;
+  }, [allProducts]);
   
   // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
   const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
@@ -458,13 +469,14 @@ export default function HomePage() {
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
                             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           />
-                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
-                            <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1">
+                          <div className="absolute top-3 left-3 flex items-center">
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                              <span>{t.products.inStockBadge || 'SẴN KHO'}</span>
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
-                              {prod.badge}
+                              <span>
+                                {isEn
+                                  ? `${typeof prod.modelStockCount === 'number' ? prod.modelStockCount : prod.stockCount} in stock`
+                                  : `Sẵn kho ${typeof prod.modelStockCount === 'number' ? prod.modelStockCount : prod.stockCount} máy`}
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -1203,7 +1215,7 @@ export default function HomePage() {
                   <span>{t.qcModal.warehouseStatusTitle}</span>
                 </span>
                 <span className="px-2 py-0.5 rounded bg-[#C0392B] text-white text-[10px] font-bold">
-                  {t.qcModal.inWarehouseCount} {selectedProduct.stockCount} {t.qcModal.inWarehouseSuffix}
+                  {t.qcModal.inWarehouseCount} {typeof selectedProduct.modelStockCount === 'number' ? selectedProduct.modelStockCount : selectedProduct.stockCount} {t.qcModal.inWarehouseSuffix}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-slate-600 text-[11px]">
