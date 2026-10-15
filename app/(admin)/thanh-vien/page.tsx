@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { UserAccount, UserRole } from '@/lib/supabase';
+import { UserAccount, UserRole, generateStaffId } from '@/lib/supabase';
 // Lucide icons removed for minimalist text design
 
 
@@ -108,6 +108,7 @@ export default function MemberManagementPage() {
     const updatePayload: Partial<UserAccount> = {
       name: editingUser.name.trim(),
       username: cleanUsername || undefined,
+      referral_code: cleanUsername || editingUser.referral_code,
       email: editingUser.email.trim().toLowerCase(),
       phone: editingUser.phone?.trim() || '',
       role: editingUser.role,
@@ -141,13 +142,14 @@ export default function MemberManagementPage() {
       return;
     }
 
+    const existingIds = users.map((u) => u.username || u.referral_code || u.id).filter(Boolean);
     let finalUsername = newUserForm.username.trim().toLowerCase();
     if (!finalUsername) {
-      finalUsername = newUserForm.email.split('@')[0].trim().toLowerCase();
+      finalUsername = generateStaffId(newUserForm.name, existingIds);
     }
 
     if (!/^[a-z0-9_.-]+$/.test(finalUsername)) {
-      showToast('Tên đăng nhập chỉ gồm chữ cái, số, dấu gạch nối!');
+      showToast('Tên đăng nhập / Mã ID chỉ gồm chữ cái, số, dấu gạch nối!');
       return;
     }
 
@@ -178,6 +180,7 @@ export default function MemberManagementPage() {
     try {
       await addUser({
         username: finalUsername,
+        referral_code: finalUsername,
         name: newUserForm.name.trim(),
         email: newUserForm.email.trim().toLowerCase(),
         phone: newUserForm.phone.trim() || '0909.053.058',
@@ -201,7 +204,7 @@ export default function MemberManagementPage() {
         },
       });
 
-      showToast(`Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mật khẩu mặc định: Antam@2026)!`);
+      showToast(`Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mã ID: @${finalUsername}, Mật khẩu mặc định: Antam@2026)!`);
       setIsAddingUser(false);
       setNewUserForm({
         name: '',
@@ -220,10 +223,10 @@ export default function MemberManagementPage() {
 
   // Delete User
   const handleDeleteUser = async (id: string, name: string) => {
-    if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${name}" khỏi hệ thống không?`)) {
+    if (confirm(`Bạn có chắc chắn muốn xóa tài khoản "${name}" khỏi hệ thống không? Mã ID / Người giới thiệu của nhân viên này sẽ bị xóa hoàn toàn.`)) {
       const ok = await deleteUser(id);
       if (ok) {
-        showToast(`Đã xóa thành viên "${name}" thành công!`);
+        showToast(`Đã xóa thành viên "${name}" và ID thành công!`);
       } else {
         showToast('Không thể xóa tài khoản của chính bạn!');
       }
@@ -431,11 +434,11 @@ export default function MemberManagementPage() {
 
                 {/* Account Details: Username & Email separate */}
                 <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
-                  {/* Separate Username */}
+                  {/* Separate Username & Staff/Referral ID */}
                   <div className="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
-                    <span className="text-slate-500 text-[11px] font-medium">Tên đăng nhập:</span>
+                    <span className="text-slate-500 text-[11px] font-medium">Mã ID / Giới thiệu:</span>
                     <span className="font-mono font-bold text-blue-700">
-                      @{member.username || member.email.split('@')[0]}
+                      @{member.referral_code || member.username || member.email.split('@')[0]}
                     </span>
                   </div>
 
@@ -840,16 +843,27 @@ export default function MemberManagementPage() {
                   type="text"
                   required
                   value={newUserForm.name}
-                  onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
-                  placeholder="VD: Hoàng Đức Nam"
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    const existingIds = users.map((u) => u.username || u.referral_code || u.id).filter(Boolean);
+                    const autoId = generateStaffId(newName, existingIds);
+                    setNewUserForm({
+                      ...newUserForm,
+                      name: newName,
+                      username: autoId,
+                      email: newUserForm.email || (autoId ? `${autoId}@vitinhantam.com` : ''),
+                    });
+                  }}
+                  placeholder="VD: Nguyễn Văn Đăng"
                   className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Tên Đăng Nhập (@username) *
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Mã ID / Username *</span>
+                    <span className="text-[10px] text-blue-600 font-mono font-semibold">Tự động (VD: nvdang)</span>
                   </label>
                   <input
                     type="text"
@@ -861,10 +875,10 @@ export default function MemberManagementPage() {
                         username: e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ''),
                       })
                     }
-                    placeholder="VD: nam.hoang"
-                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                    placeholder="VD: nvdang"
+                    className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-bold"
                   />
-                  <p className="text-[10px] text-slate-400 mt-0.5">Dùng để đăng nhập</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Dùng đăng nhập &amp; mã người giới thiệu</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Email Liên Hệ *</label>

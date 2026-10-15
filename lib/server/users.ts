@@ -100,11 +100,12 @@ export function userToRow(user: StoredUser): Record<string, unknown> {
 
 export function ensureReferralCodes(users: StoredUser[]): boolean {
   let changed = false;
-  const existingCodes = users.map((u) => u.referral_code).filter(Boolean) as string[];
+  const existingCodes = users.map((u) => u.referral_code || u.username).filter(Boolean) as string[];
   for (const user of users) {
-    if (!user.referral_code) {
-      user.referral_code = generateReferralCode(user.username || user.name, existingCodes);
-      existingCodes.push(user.referral_code);
+    if (!user.referral_code || user.referral_code.startsWith('AT-')) {
+      const generated = generateReferralCode(user.name || user.username, existingCodes);
+      user.referral_code = generated;
+      existingCodes.push(generated);
       changed = true;
     }
   }

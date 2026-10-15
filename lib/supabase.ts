@@ -80,31 +80,58 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 export const isUuid = (value: string): boolean => UUID_PATTERN.test(value);
 
 /**
- * Tự động tạo mã người giới thiệu độc nhất cho nhân viên / người dùng (VD: AT-TP88, AT-SALES01, AT-7K9M)
+ * Tự động tạo Mã ID nhân viên / Mã người giới thiệu độc nhất từ họ tên tiếng Việt.
+ * Quy tắc: Các chữ cái đầu của họ và tên đệm + toàn bộ tên chính (viết thường, không dấu).
+ * Ví dụ: "Nguyễn Văn Đăng" -> "nvdang"
+ * Tránh trùng lặp: Nếu "nvdang" đã tồn tại -> sinh tiếp "nvdang1", "nvdang2", ...
  */
-export const generateReferralCode = (nameOrUsername?: string, existingCodes: string[] = []): string => {
-  let prefix = 'AT';
-  if (nameOrUsername) {
-    const slug = nameOrUsername
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .toUpperCase();
-    if (slug.length >= 2) {
-      prefix = `AT${slug.slice(0, 3)}`;
-    }
+export const generateStaffId = (fullName?: string, existingIds: string[] = []): string => {
+  if (!fullName || !fullName.trim()) return `user${Date.now().toString().slice(-4)}`;
+
+  const cleanStr = fullName
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .trim()
+    .toLowerCase();
+
+  const words = cleanStr.split(/\s+/).filter(Boolean);
+  let baseId = '';
+
+  if (words.length === 0) {
+    baseId = 'user';
+  } else if (words.length === 1) {
+    baseId = words[0];
+  } else {
+    // Chữ cái đầu các từ trước + toàn bộ từ cuối cùng (VD: Nguyen Van Dang -> n + v + dang = nvdang)
+    const initials = words.slice(0, -1).map((w) => w.charAt(0)).join('');
+    const lastName = words[words.length - 1];
+    baseId = `${initials}${lastName}`;
   }
-  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-  for (let attempt = 0; attempt < 100; attempt++) {
-    let suffix = '';
-    for (let i = 0; i < 4; i++) {
-      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    const code = `${prefix}-${suffix}`;
-    if (!existingCodes.includes(code)) return code;
+
+  baseId = baseId.replace(/[^a-z0-9]/g, '') || 'user';
+
+  const existingSet = new Set(
+    existingIds
+      .filter(Boolean)
+      .map((id) => id.trim().toLowerCase())
+  );
+
+  if (!existingSet.has(baseId)) {
+    return baseId;
   }
-  return `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  let counter = 1;
+  while (existingSet.has(`${baseId}${counter}`)) {
+    counter++;
+  }
+  return `${baseId}${counter}`;
 };
+
+// Alias để tương thích
+export const generateReferralCode = generateStaffId;
 
 
 export const MOCK_USERS: Record<UserRole, UserProfile> = {

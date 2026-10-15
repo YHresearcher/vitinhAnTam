@@ -245,18 +245,19 @@ export default function AdminLayout({
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">
                     {currentUser.roleTitle}
                   </span>
-                  {currentUser.referral_code && (
+                  {(currentUser.referral_code || currentUser.username) && (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigator.clipboard?.writeText(currentUser.referral_code || '');
-                        message.success(`Đã sao chép mã GT: ${currentUser.referral_code}`);
+                        const id = currentUser.referral_code || currentUser.username || '';
+                        navigator.clipboard?.writeText(id);
+                        message.success(`Đã sao chép mã ID: ${id}`);
                       }}
-                      title="Mã người giới thiệu của bạn (Click để sao chép)"
+                      title="Mã ID nhân viên / Mã giới thiệu (Click để sao chép)"
                       className="inline-flex items-center gap-0.5 text-[9.5px] font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 px-1 py-0.2 rounded hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer select-all shrink-0"
                     >
-                      Mã GT: {currentUser.referral_code}
+                      ID: {currentUser.referral_code || currentUser.username}
                     </button>
                   )}
                 </div>

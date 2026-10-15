@@ -294,19 +294,20 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">{currentUser.roleTitle}</div>
           </div>
         </div>
-        {currentUser.referral_code && (
+        {(currentUser.referral_code || currentUser.username) && (
           <button
             type="button"
             onClick={() => {
-              navigator.clipboard?.writeText(currentUser.referral_code || '');
-              message.success(`Đã sao chép mã GT: ${currentUser.referral_code}`);
+              const id = currentUser.referral_code || currentUser.username || '';
+              navigator.clipboard?.writeText(id);
+              message.success(`Đã sao chép mã ID: ${id}`);
             }}
-            title="Mã giới thiệu bán hàng của bạn (Click để sao chép gửi khách)"
+            title="Mã ID nhân viên / Giới thiệu bán hàng (Click để sao chép)"
             className="w-full mt-2 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors text-left"
           >
-            <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">Mã giới thiệu:</span>
+            <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">Mã ID giới thiệu:</span>
             <span className="text-xs font-mono font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1">
-              {currentUser.referral_code} 📋
+              @{currentUser.referral_code || currentUser.username} 📋
             </span>
           </button>
         )}
