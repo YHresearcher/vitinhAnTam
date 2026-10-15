@@ -32,15 +32,6 @@ import {
 } from '@/lib/translations';
 import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
-// Components
-import HeroSection from './_components/HeroSection';
-import ProductTabsSection from './_components/ProductTabsSection';
-import ServicesSection from './_components/ServicesSection';
-import QCProcessSection from './_components/QCProcessSection';
-import ReviewsSection from './_components/ReviewsSection';
-import FAQSection from './_components/FAQSection';
-import QCModal from './_components/QCModal';
-
 export default function HomePage() {
   const router = useRouter();
   const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs, reviews, spareParts } = useViTinhAnTamStore();
@@ -109,7 +100,7 @@ export default function HomePage() {
   // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
   const allProducts = useMemo(() => getShowcaseProducts(isEn, inventory), [isEn, inventory]);
   const inStockProducts = useMemo(() => allProducts.filter((p) => !p.isSold), [allProducts]);
-
+  
   // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
   const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
 
@@ -159,7 +150,7 @@ export default function HomePage() {
     }
     return 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=80';
   };
-
+  
   // Software products available in stock
   const availableSoftwareCategories = useMemo(() => {
     return (keyCategories || [])
@@ -207,6 +198,12 @@ export default function HomePage() {
     return [];
   }, [isEn, reviews]);
 
+  const zaloMessage = encodeURIComponent(
+    isEn
+      ? `Hello An Tam, I would like photos and details for ${selectedProduct?.name || ''}`
+      : `Chào An Tâm, tôi quan tâm máy ${selectedProduct?.name || ''}, vui lòng gửi thêm hình ảnh thực tế`
+  );
+
   return (
     <div className="w-full relative selection:bg-[#C0392B] selection:text-white">
       {/* Toast Notification */}
@@ -219,13 +216,144 @@ export default function HomePage() {
 
       <main className="w-full">
         {/* 1. HERO SECTION — Professional Split Design with High-Res Showroom Image */}
-        <HeroSection
-          onSearchSubmit={handleSearchSubmit}
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          isEn={isEn}
-          t={t}
-        />
+        <section className="bg-gradient-to-b from-[#FDFBF7] via-white to-[#F8FAFC] border-b border-slate-200/80 overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Top brand & store location status */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-6 pb-5 border-b border-slate-200/60 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#FBE8DE] text-[#C0392B] text-[10px] font-extrabold uppercase tracking-wider border border-[#F2C4B2]">
+                  {t.hero.brandTag || 'TIỆM VI TÍNH TỬ TẾ • TÂY NINH'}
+                </span>
+                
+              
+              </div>
+              
+            </div>
+
+            {/* Main Hero: 2-column with content left & image showcase right */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 py-10 lg:py-16 items-center">
+
+              {/* Left Column: Headlines & Actions */}
+              <div className="lg:col-span-7 flex flex-col gap-6">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#1A0F0A] tracking-tight leading-[1.12]">
+                  {t.hero.mainTitle}
+                </h1>
+
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl font-normal">
+                  {t.hero.description}
+                </p>
+
+                {/* Main CTA buttons - Tối ưu phần chọn lựa theo Hick's Law */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <a
+                    href="#san-pham"
+                    onClick={(e) => scrollToSection(e, 'san-pham')}
+                    className="px-7 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2 group cursor-pointer"
+                  >
+                    <span>{t.hero.btnBrowseStock || (isEn ? 'Browse Inventory' : 'Xem Máy Nổi Bật')}</span>
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                  <Link
+                    href="/dat-lich"
+                    className="px-6 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-semibold text-sm transition-all shadow-2xs hover:-translate-y-0.5"
+                  >
+                    {t.hero.btnScheduleService || (isEn ? 'Book Service' : 'Đặt Lịch Kỹ Thuật')}
+                  </Link>
+                </div>
+
+                {/* Quick warranty search box */}
+                <div className="pt-2">
+                  <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{isEn ? 'Check warranty & service history by Phone Number / Warranty Code:' : 'Tra cứu bảo hành & lịch sử sửa chữa theo Số Điện Thoại / Mã Bảo Hành:'}</span>
+                  </div>
+                  <form
+                    onSubmit={handleSearchSubmit}
+                    role="search"
+                    aria-label="Tra cứu bảo hành nhanh"
+                    className="flex items-stretch gap-2 max-w-lg"
+                  >
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        type="text"
+                        value={searchInput}
+                        onChange={(e) => setSearchInput(e.target.value)}
+                        placeholder={t.hero.quickSearchPlaceholder || (isEn ? 'Enter phone number or warranty code...' : 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...')}
+                        aria-label="Nhập Số Điện Thoại hoặc Mã Bảo Hành"
+                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-medium shadow-2xs"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center gap-1 shadow-2xs shrink-0"
+                    >
+                      <span>{t.hero.quickSearchBtn || (isEn ? 'Lookup' : 'Tra Cứu')}</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              {/* Right Column: Hero Showroom Image (Clean & Modern) */}
+              <div className="lg:col-span-5 relative">
+                <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200/90 aspect-16/11 group bg-slate-100">
+                  <Image
+                    src="/images/hero-showroom.jpg"
+                    alt="Showroom Vi Tính An Tâm - Máy Tính Doanh Nghiệp Tuyển Chọn"
+                    fill
+                    priority
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                  />
+                </div>
+
+                {/* Sub-card trust badges underneath image */}
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Operating System' : 'Hệ thống'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Windows OEM' : 'Windows Bản Quyền Số'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'Lifetime motherboard entitlement' : 'Vĩnh viễn theo bo mạch chủ'}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Technical Support' : 'Hỗ trợ kỹ thuật'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Rapid On-Site Response' : 'Ứng Phó Nhanh'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'On-site dispatch & remote diagnostics' : 'Tận nơi hoặc qua UltraViewer'}</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Bottom 2 Stats Strip */}
+            <div className="border-t border-slate-200/80 py-6 grid grid-cols-2 divide-x divide-slate-200/80">
+              <div className="px-2 sm:px-6 text-center sm:text-left">
+                <div className="text-2xl sm:text-3xl font-black text-[#C0392B] font-mono">
+                  100%
+                </div>
+                <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
+                  {isEn ? 'Component transparency' : 'Minh bạch linh kiện'}
+                </div>
+                <div className="text-[11px] text-slate-500 hidden sm:block">
+                  {isEn ? 'New is new, used is used — fully honest' : 'Mới báo mới, cũ báo cũ rõ ràng'}
+                </div>
+              </div>
+
+              <div className="px-2 sm:px-6 text-center sm:text-left">
+                <div className="text-2xl sm:text-3xl font-black text-[#1A0F0A] font-mono">
+                  {isEn ? 'Dedicated' : 'Tận Tâm'}
+                </div>
+                <div className="text-xs sm:text-sm font-semibold text-slate-800 mt-0.5">
+                  {isEn ? 'Prompt assistance' : 'Hỗ trợ nhanh chóng'}
+                </div>
+                <div className="text-[11px] text-slate-500 hidden sm:block">
+                  {isEn ? 'Minimizing workflow disruption' : 'Hạn chế tối đa gián đoạn công việc'}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
 
         {/* 2. DANH MỤC SẢN PHẨM TRANG CHỦ — Card Grid Layout */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="san-pham">
@@ -289,48 +417,822 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Product Tabs Section */}
-          <ProductTabsSection
-            isEn={isEn}
-            t={t}
-          />
+          {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
+          {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
+          {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
+            <div className="space-y-6 mb-10">
+              {featuredProducts.length === 0 ? (
+                <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
+                  <Monitor className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                  <p className="text-sm font-semibold text-slate-600">
+                    {isEn ? 'Hardware inventory is currently being updated.' : 'Kho máy tính đang được cập nhật thiết bị mới từ hệ thống.'}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    {isEn ? 'Please contact our hotline or Zalo for instant consultation.' : 'Quý khách vui lòng liên hệ Hotline/Zalo để được tư vấn cấu hình phù hợp.'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {featuredProducts.map((prod) => (
+                      <div
+                        key={prod.id}
+                        className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+                      >
+                        {/* Image & Badges */}
+                        <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                          <Image
+                            src={prod.img}
+                            alt={prod.name}
+                            fill
+                            unoptimized
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
+                            <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                              <span>{t.products.inStockBadge || 'SẴN KHO'}</span>
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
+                              {prod.badge}
+                            </span>
+                          </div>
+                        </div>
 
-          {/* 3. DỊCH VỤ KỸ THUẬT & PHÒNG LAB ĐO KIỂM PHẦN CỨNG (Có hình ảnh thực tế) */}
-          <ServicesSection
-            isEn={isEn}
-            t={t}
-          />
+                        {/* Content */}
+                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                          <div>
+                            <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-[#C0392B] transition-colors">
+                              {prod.name}
+                            </h3>
+                            <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
+                              {formatVND(prod.price)}
+                            </div>
+                            <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
+                              {prod.desc}
+                            </p>
 
-          {/* 4. QUY TRÌNH KIỂM ĐỊNH QC 4 BƯỚC */}
-          <QCProcessSection
-            isEn={isEn}
-            t={t}
-          />
+                            {/* Specs Grid */}
+                            <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                              <div className="flex items-center gap-2">
+                                <Cpu className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate font-mono">{prod.specs.cpu}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Zap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate font-mono">{prod.specs.ram}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <HardDrive className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate font-mono">{prod.specs.storage}</span>
+                              </div>
+                              <div className="flex items-center gap-2 pt-0.5">
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span className="truncate font-medium text-emerald-800">{prod.specs.highlight}</span>
+                              </div>
+                            </div>
 
-          {/* 5. BẰNG CHỨNG XÃ HỘI & ĐÁNH GIÁ KHÁCH HÀNG (SOCIAL PROOF & REVIEWS) */}
-          {displayReviews.length > 0 && (
-            <ReviewsSection
-              isEn={isEn}
-              t={t}
-            />
+                            {/* Gift badge */}
+                            {prod.specs.gift && (
+                              <div className="mt-3.5 p-2 rounded-lg bg-amber-50/80 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-1.5">
+                                <Gift className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                <span className="leading-snug">{prod.specs.gift}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions: Thông tin thiết bị & Đặt Mua Máy */}
+                          <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedProduct(prod)}
+                              className="flex-1 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                            >
+                              <ScanLine className="w-3.5 h-3.5 text-slate-500" />
+                              <span>{t.products.btnInspect}</span>
+                            </button>
+                            <Link
+                              href={`/mua-hang?device=${encodeURIComponent(prod.name)}&price=${prod.price}&tag=${encodeURIComponent(prod.serviceTag || '')}`}
+                              className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
+                            >
+                              <span>{t.products.btnOrder}</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
-          {/* 6. FAQ DẠNG COLLAPSED ACCORDION */}
-          <FAQSection
-            isEn={isEn}
-            t={t}
-          />
+          {/* 1.5. LINH KIỆN NÂNG CẤP (RAM, SSD CHÍNH HÃNG TRONG KHO HÀNG) */}
+          {(homeProductTab === 'all' || homeProductTab === 'components') && (
+            <div className="space-y-6 mb-10 pt-2 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
+                    {isEn ? 'GENUINE UPGRADE COMPONENTS (RAM, HIGH-SPEED SSD)' : 'LINH KIỆN NÂNG CẤP CHÍNH HÃNG (RAM, SSD CHUYÊN DỤNG)'}
+                  </h3>
+                </div>
+                <Link
+                  href="/danh-muc-san-pham?tab=components"
+                  className="text-xs font-bold text-[#C0392B] hover:underline uppercase cursor-pointer flex items-center gap-1"
+                >
+                  <span>{isEn ? 'All components →' : 'Xem toàn bộ linh kiện →'}</span>
+                </Link>
+              </div>
+
+              {featuredComponents.length === 0 ? (
+                <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
+                  {isEn ? 'Components are currently being replenished.' : 'Kho linh kiện RAM & SSD đang được cập nhật thêm.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {featuredComponents.map((part) => (
+                    <div
+                      key={part.id}
+                      className="group bg-white rounded-2xl border border-slate-200 hover:border-[#C0392B] shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+                    >
+                      {/* Image & Badges */}
+                      <div className="relative aspect-16/10 bg-slate-100 overflow-hidden">
+                        <Image
+                          src={getPartImage(part)}
+                          alt={part.part_name}
+                          fill
+                          unoptimized
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[85%]">
+                          <span className="px-2.5 py-1 rounded-md bg-emerald-700 text-white text-[11px] font-bold tracking-tight shadow-xs flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            <span>{isEn ? `IN STOCK (${part.quantity_in_stock})` : `SẴN KHO (${part.quantity_in_stock})`}</span>
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-[#2B1810]/90 backdrop-blur-xs text-white text-[10px] font-semibold">
+                            {part.warranty_months ? `BH ${part.warranty_months}T` : 'CHÍNH HÃNG'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase bg-[#FBE8DE] text-[#C0392B]">
+                              {part.part_type || 'LINH KIỆN'}
+                            </span>
+                            <span className="text-[11px] text-slate-500 font-medium">
+                              {part.condition === 'new' ? 'Mới 100% Chính Hãng' : 'Zin bóc máy'}
+                            </span>
+                          </div>
+                          <h3 className="text-base font-bold text-slate-900 line-clamp-2 group-hover:text-[#C0392B] transition-colors leading-snug">
+                            {part.part_name}
+                          </h3>
+                          <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1.5">
+                            {formatVND(part.unit_price)}
+                          </div>
+                          {part.notes && (
+                            <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
+                              {part.notes}
+                            </p>
+                          )}
+
+                          {/* Quick spec info */}
+                          <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>{isEn ? 'Warranty:' : 'Bảo hành:'} <strong>{part.warranty_months ? `${part.warranty_months} tháng (1 đổi 1)` : 'Chính hãng'}</strong></span>
+                            </div>
+                            {part.distributor && (
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">{isEn ? 'Distributor:' : 'Phân phối:'} {part.distributor}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
+                          <Link
+                            href="https://zalo.me/0961803623"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5 text-slate-500" />
+                            <span>{isEn ? 'Consult' : 'Tư vấn'}</span>
+                          </Link>
+                          <Link
+                            href={`/mua-hang?device=${encodeURIComponent(part.part_name)}&price=${part.unit_price}&tag=${encodeURIComponent(part.id)}`}
+                            className="flex-1 py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs text-center transition-colors shadow-2xs flex items-center justify-center gap-1"
+                          >
+                            <span>{t.products.btnOrder}</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Nút Xem Toàn Bộ Kho Hàng */}
+          <div className="pt-2 pb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="/danh-muc-san-pham"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center cursor-pointer"
+            >
+              <span>
+                {isEn ? 'View Entire Inventory' : 'Xem toàn bộ kho hàng'}
+              </span>
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+            </a>
+          </div>
+
+          {/* 2. PHẦN MỀM & KEY BẢN QUYỀN WINDOWS / OFFICE */}
+          {(homeProductTab === 'all' || homeProductTab === 'software') && (
+            <div className="space-y-4 mb-8 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
+                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (LIFETIME ON MOTHERBOARD)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (VĨNH VIỄN THEO MAINBOARD)'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHomeProductTab('software')}
+                  className="text-xs font-bold text-[#C0392B] hover:underline uppercase cursor-pointer"
+                >
+                  {isEn ? 'All License Keys →' : 'Xem toàn bộ kho key →'}
+                </button>
+              </div>
+
+              {availableSoftwareCategories.length === 0 ? (
+                <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
+                  {isEn ? 'License keys are temporarily being replenished.' : 'Các phiên bản key bản quyền đang được cập nhật thêm vào kho.'}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {availableSoftwareCategories.map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="group bg-white rounded-2xl border border-[#E8E2D9] hover:border-[#C0392B] shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between overflow-hidden p-6"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#FBE8DE] text-[#C0392B]">
+                            {cat.type === 'office' ? (isEn ? 'OFFICE SUITE' : 'ỨNG DỤNG VĂN PHÒNG') : (isEn ? 'OPERATING SYSTEM' : 'HỆ ĐIỀU HÀNH')}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>{isEn ? `${cat.availableStock} licenses available` : `Còn ${cat.availableStock} key`}</span>
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="text-base font-black text-[#2B1810] group-hover:text-[#C0392B] transition-colors uppercase">
+                            {cat.name}
+                          </h4>
+                          <div className="text-2xl font-black text-[#C0392B] font-mono tracking-tight mt-1">
+                            {formatVND(cat.price)}
+                          </div>
+                          <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                            {cat.description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] text-[#6E5D53]">
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{isEn ? 'Lifetime motherboard digital entitlement, never expires' : 'Kích hoạt vĩnh viễn theo máy, không hết hạn'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{isEn ? 'Official Microsoft security updates & genuine patches' : 'Cập nhật Windows / Office Update chính hãng'}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span>{isEn ? 'Remote activation & installation support included' : 'Hỗ trợ cài đặt từ xa qua UltraViewer / AnyDesk'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-5 mt-4 border-t border-slate-100 flex items-center gap-2">
+                        <Link
+                          href={`/mua-hang?device=${encodeURIComponent(cat.name)}&price=${cat.price}&tag=${encodeURIComponent(cat.type || 'KEY')}`}
+                          className="flex-1 py-2.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs transition-colors shadow-2xs text-center uppercase tracking-wider block"
+                        >
+                          {isEn ? 'BUY LICENSE DIRECTLY' : 'MUA KEY TRỰC TIẾP'}
+                        </Link>
+                        <a
+                          href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}?text=${encodeURIComponent(isEn ? `Hello Vi Tinh An Tam, I need consultation on license: ${cat.name}` : `Chào Vi Tính An Tâm, tôi cần tư vấn key bản quyền: ${cat.name}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="py-2.5 px-3.5 rounded-xl border border-[#E8E2D9] hover:bg-slate-50 text-[#2B1810] font-semibold text-xs transition-colors"
+                        >
+                          {isEn ? 'Chat Zalo' : 'Zalo'}
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
-        {/* QC & S/N INSPECTION MODAL */}
-        <QCModal
-          selectedProduct={selectedProduct}
-          setSelectedProduct={setSelectedProduct}
-          isEn={isEn}
-          t={t}
-          systemSettings={systemSettings}
-        />
+        {/* 3. DỊCH VỤ KỸ THUẬT & PHÒNG LAB ĐO KIỂM PHẦN CỨNG (Có hình ảnh thực tế) */}
+        <section className="bg-[#FAF7F2] border-y border-[#E8E2D9] py-16 scroll-mt-20" id="dich-vu-spa">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {/* Split Feature: Hardware Testing Lab Image & Technical Standards */}
+            <div className="bg-white rounded-2xl border border-[#E8E2D9] shadow-sm p-6 sm:p-10 mb-12">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                
+                {/* Tech Lab Image */}
+                <div className="lg:col-span-6 relative aspect-16/10 rounded-xl overflow-hidden shadow-md border border-slate-200 group">
+                  <Image
+                    src="/images/tech-service-lab.jpg"
+                    alt="Phòng Kỹ Thuật Kiểm Định Phần Cứng Vi Tính An Tâm"
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <span className="text-[10px] font-mono uppercase bg-[#C0392B] px-2 py-0.5 rounded font-bold">
+                      {isEn ? 'TECHNICAL STANDARD' : 'TIÊU CHUẨN KỸ THUẬT'}
+                    </span>
+                    <p className="text-xs font-semibold mt-1">
+                      {isEn ? 'Sonic cleaning • Arctic MX-4 paste • FurMark / AIDA64 load testing' : 'Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Technical Description */}
+                <div className="lg:col-span-6 space-y-4">
+                  <div className="inline-flex items-center px-3 py-1 rounded-md bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
+                    {t.services.tag}
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
+                    {t.services.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed">
+                    {isEn
+                      ? 'Every device serviced or delivered undergoes thorough inspection under realistic workloads. Original hardware, transparent pricing, zero hidden fees.'
+                      : 'An Tâm cam kết bo mạch chủ nguyên bản 100%, chưa từng qua sửa chữa. Toàn bộ quy trình kiểm định chất lượng được thực hiện thực tế qua các phần mềm đo kiểm chuyên dụng (stress test nhiệt độ, xung nhịp vi xử lý, sức khỏe ổ cứng) trước khi bàn giao.'}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
+                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Premium Thermal Compound' : 'Keo Tản Nhiệt Cao Cấp'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Authentic Arctic MX-4 paste, drops heat by 5 - 12°C.' : 'Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5 - 12°C.'}</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
+                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Digital OEM License' : 'Bản Quyền Số OEM'}</div>
+                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for business data.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho dữ liệu công việc.'}</div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* 3 Service Packages Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              {/* Gói 1 */}
+              <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      01
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg1Time || '⏱️ Xử lý 30 - 45 phút • Xem trực tiếp'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg1Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg1Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg1F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg1Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg1Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg1Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
+                </div>
+              </div>
+
+              {/* Gói 2 - Nổi Bật */}
+              <div className="p-6 rounded-2xl bg-[#FFFDF9] border-2 border-[#C0392B] shadow-md flex flex-col justify-between transition-all group relative">
+                <div className="absolute -top-3.5 right-6 px-3 py-1 rounded-md bg-[#C0392B] text-white font-bold text-[10px] tracking-wide shadow-xs">
+                  {t.services.pkg2Badge}
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FBE8DE] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#F2C4B2]">
+                      02
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 text-[11px] font-semibold border border-amber-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg2Time || '⏱️ Xử lý 45 - 60 phút • Lấy liền trong ngày'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg2Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg2Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg2F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg2Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg2Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg2Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
+                </div>
+              </div>
+
+              {/* Gói 3 */}
+              <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-col justify-between hover:border-[#C0392B] transition-all group">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="w-10 h-10 rounded-lg bg-[#FAF7F2] text-[#C0392B] flex items-center justify-center font-black text-sm border border-[#E8E2D9]">
+                      03
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-800 text-[11px] font-semibold border border-slate-200">
+                      <Clock className="w-3 h-3 text-[#C0392B]" />
+                      <span>{t.services.pkg3Time || '⏱️ Xử lý 20 - 40 phút • Bảo toàn dữ liệu'}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-[#2B1810]">{t.services.pkg3Title}</h3>
+                  <p className="text-xs text-[#6E5D53] leading-relaxed">
+                    {t.services.pkg3Desc}
+                  </p>
+                  <div className="pt-2 space-y-2 text-xs text-[#2B1810]">
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F1}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F2}</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
+                      <span>{t.services.pkg3F3}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-6 border-t border-[#E8E2D9] mt-6 space-y-3">
+                  <div>
+                    <div className="text-xs text-[#6E5D53] font-medium">{t.services.feeLabel}</div>
+                    <div className="text-lg font-bold text-[#C0392B]">{t.services.pkg3Price}</div>
+                    <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg3Sub}</div>
+                  </div>
+                  <Link
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg3Title)}`}
+                    className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
+                  >
+                    {t.services.btnBookPkg}
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency dispatch banner CTA */}
+            <div className="text-center">
+              <Link
+                href="/dat-lich"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#D9531E] hover:bg-[#C0392B] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#D9531E]/20 transition-all hover:scale-[1.02]"
+              >
+                <span>{t.services.btnBigDispatch}</span>
+                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. QUY TRÌNH KIỂM ĐỊNH QC 4 BƯỚC */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+            <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
+              {t.qcProcess.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6E5D53]">
+              {t.qcProcess.subtitle}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">01</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s1Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s1Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">02</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s2Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s2Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">03</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s3Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s3Desc}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
+              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">04</div>
+              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s4Title}</h3>
+              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
+                {t.qcProcess.s4Desc}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* 5. BẰNG CHỨNG XÃ HỘI & ĐÁNH GIÁ KHÁCH HÀNG (SOCIAL PROOF & REVIEWS) */}
+        {displayReviews.length > 0 && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20 border-t border-[#E8E2D9]" id="danh-gia">
+            <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold shadow-2xs">
+                <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span>{isEn ? 'Satisfied Corporate & Private Clients' : 'Khách Hàng Doanh Nghiệp & Cá Nhân Đã Đánh Giá'}</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
+                {t.reviews.title || (isEn ? 'CLIENT TESTIMONIALS & FEEDBACK' : 'NHẬN XÉT CỦA KHÁCH HÀNG')}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#6E5D53]">
+                {t.reviews.ratingText || (isEn ? 'From corporate & private clients across Long An - Tay Ninh' : 'Từ khách hàng doanh nghiệp & cá nhân tại Long An - Tây Ninh')}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {displayReviews.slice(0, 6).map((rev, idx) => (
+                <div
+                  key={rev.id || idx}
+                  className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div className="space-y-3">
+                    {/* Star Rating & Verified Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-0.5 text-amber-400">
+                        {[...Array(rev.rating || 5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <CheckCircle className="w-3 h-3 text-emerald-600" />
+                        <span>{isEn ? 'Verified' : 'Đã xác thực'}</span>
+                      </span>
+                    </div>
+
+                    {/* Comment Quote */}
+                    <p className="text-xs sm:text-sm text-[#2B1810] italic leading-relaxed pt-1">
+                      &ldquo;{rev.comment}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Author Info */}
+                  <div className="pt-4 border-t border-[#E8E2D9] mt-4 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-bold text-xs sm:text-sm text-[#2B1810] group-hover:text-[#C0392B] transition-colors">
+                        {rev.name}
+                      </div>
+                      <div className="text-[11px] text-[#6E5D53]">{rev.role}</div>
+                      <div className="text-[10px] text-slate-400 mt-0.5">{rev.location}</div>
+                    </div>
+                    {rev.service && (
+                      <div className="text-right shrink-0">
+                        <span className="inline-block px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E8E2D9] text-[10px] font-bold text-[#6E5D53]">
+                          {rev.service}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* 6. FAQ DẠNG COLLAPSED ACCORDION */}
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
+          <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+            <div className="text-xs uppercase tracking-widest text-[#C0392B] font-bold">
+              {t.faq.tag}
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
+              {t.faq.title}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6E5D53]">
+              {t.faq.subtitle}
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {activeFaqs.map((item, idx) => {
+              const isOpen = openFaqIndex === idx;
+              return (
+                <div
+                  key={idx}
+                  className="rounded-xl bg-white border border-[#E8E2D9] shadow-xs overflow-hidden transition-all"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-answer-${idx}`}
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-[#FAF7F2] transition-colors"
+                  >
+                    <span className="text-sm sm:text-base font-bold text-[#2B1810] leading-snug">
+                      {item.question}
+                    </span>
+                    <ChevronDown
+                      className={`w-5 h-5 text-[#6E5D53] transition-transform duration-200 shrink-0 ${
+                        isOpen ? 'rotate-180 text-[#C0392B]' : ''
+                      }`}
+                      strokeWidth={1.5}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div id={`faq-answer-${idx}`} role="region" aria-labelledby={`faq-question-${idx}`} className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#6E5D53] leading-relaxed border-t border-[#E8E2D9] bg-[#FFFDF9]">
+                      <p>{item.answer}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </main>
+
+      {/* QC & S/N INSPECTION MODAL */}
+      <Modal
+        open={!!selectedProduct}
+        onCancel={() => setSelectedProduct(null)}
+        footer={null}
+        centered
+        width={680}
+        title={null}
+        className="qc-detail-modal"
+      >
+        {selectedProduct && (
+          <div className="p-2 sm:p-4 space-y-6 font-inter">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-200 pb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 text-xs font-bold mb-1.5 border border-emerald-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
+                  <span>{t.qcModal.badge}</span>
+                </div>
+                <h3 className="text-xl font-bold text-slate-900">{selectedProduct.name}</h3>
+                <div className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+                  <span className="text-slate-500">{t.qcModal.serviceTag || (isEn ? 'QC Status:' : 'Trạng thái kiểm định:')}</span>
+                  <span className="font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                    {isEn ? '100% Factory Standard Passed' : '100% Đạt Chuẩn Xuất Xưởng'}
+                  </span>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-xs text-slate-500">{t.qcModal.priceLabel}</div>
+                <div className="text-xl font-bold text-[#C0392B] font-mono">{formatVND(selectedProduct.price)}</div>
+              </div>
+            </div>
+
+            {/* Hardware & Test Evidence Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <Cpu className="w-4 h-4 text-[#C0392B]" strokeWidth={1.5} />
+                  <span>{t.qcModal.cpuMemoryTitle}</span>
+                </div>
+                <p className="text-slate-600 font-mono">{selectedProduct.specs.cpu}</p>
+                <p className="text-slate-600 font-mono">{selectedProduct.specs.ram}</p>
+                <div className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 pt-1 border-t border-slate-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
+                  <span>{t.qcModal.stressTestGood}</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <HardDrive className="w-4 h-4 text-[#C0392B]" strokeWidth={1.5} />
+                  <span>{t.qcModal.storageTitle}</span>
+                </div>
+                <p className="text-slate-600 font-mono">{selectedProduct.specs.storage}</p>
+                <div className="text-[11px] text-emerald-800 font-medium flex items-center gap-1 pt-1 border-t border-slate-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" strokeWidth={1.5} />
+                  <span>{t.qcModal.diskInfoGood}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Warehouse Status Meta */}
+            <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-200 text-xs space-y-2">
+              <div className="font-bold text-slate-900 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <span>{t.qcModal.warehouseStatusTitle}</span>
+                </span>
+                <span className="px-2 py-0.5 rounded bg-[#C0392B] text-white text-[10px] font-bold">
+                  {t.qcModal.inWarehouseCount} {selectedProduct.stockCount} {t.qcModal.inWarehouseSuffix}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-slate-600 text-[11px]">
+                <div>
+                  • {t.qcModal.burnInDuration} <strong className="text-slate-900 font-mono">{selectedProduct.burnInDuration} {t.qcModal.minutes}</strong>
+                </div>
+                <div>
+                  • {t.qcModal.osLicense} <strong className="text-slate-900">{t.qcModal.osLicenseVal}</strong>
+                </div>
+                <div>
+                  • {t.qcModal.policy} <strong className="text-slate-900">{t.qcModal.policyVal}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link
+                href={`/mua-hang?device=${encodeURIComponent(selectedProduct.name)}&price=${selectedProduct.price}&tag=${encodeURIComponent(selectedProduct.serviceTag || '')}`}
+                onClick={() => setSelectedProduct(null)}
+                className="flex-1 py-3 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
+              >
+                <span>{t.products.btnOrder || 'Đặt Mua Máy'}</span>
+                <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+              </Link>
+              <a
+                href={`https://zalo.me/0909053058?text=${zaloMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
+                <span>{t.qcModal.btnZaloPhotos || (isEn ? 'Chat Zalo For Real Photos' : 'Chat Zalo Xem Thêm Ảnh Thật')}</span>
+              </a>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
