@@ -115,7 +115,6 @@ function ProductsCatalogContent() {
     return mainTab === 'laptop' ? laptopProducts : desktopProducts;
   }, [mainTab, laptopProducts, desktopProducts]);
 
-  // Ẩn các model máy có số lượng tồn kho = 0 khỏi danh sách hàng hóa
   const inStockCurrentCategory = useMemo(() => {
     return currentCategoryProducts.filter(
       (p) => !p.isSold && (typeof p.modelStockCount === 'number' ? p.modelStockCount > 0 : p.stockCount > 0)
@@ -571,9 +570,25 @@ function ProductsCatalogContent() {
                             {prod.name}
                           </h3>
                         </div>
-                        <div className="text-xl font-black text-[#C0392B] font-mono tracking-tight">
-                          {formatVND(prod.price)}
-                        </div>
+                        {prod.salePrice && prod.salePrice > 0 ? (
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            <span className="text-xl font-black text-[#C0392B] font-mono tracking-tight">
+                              {formatVND(prod.salePrice)}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-400 line-through font-mono">
+                              {formatVND(prod.originalPrice || prod.price)}
+                            </span>
+                            {prod.originalPrice && prod.originalPrice > prod.salePrice && (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                -{Math.round((1 - prod.salePrice / prod.originalPrice) * 100)}%
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-xl font-black text-[#C0392B] font-mono tracking-tight">
+                            {formatVND(prod.originalPrice || prod.price)}
+                          </div>
+                        )}
                         <p className="text-xs text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
                           {prod.desc}
                         </p>
@@ -916,7 +931,18 @@ function ProductsCatalogContent() {
               </div>
               <div className="text-right shrink-0">
                 <div className="text-xs text-slate-500">{t.qcModal.priceLabel}</div>
-                <div className="text-xl font-bold text-[#C0392B] font-mono">{formatVND(selectedProduct.price)}</div>
+                {selectedProduct.salePrice && selectedProduct.salePrice > 0 ? (
+                  <div className="flex items-baseline gap-2 justify-end">
+                    <div className="text-xl font-bold text-[#C0392B] font-mono">
+                      {formatVND(selectedProduct.salePrice)}
+                    </div>
+                    <div className="text-xs font-semibold text-slate-400 line-through font-mono">
+                      {formatVND(selectedProduct.originalPrice || selectedProduct.price)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xl font-bold text-[#C0392B] font-mono">{formatVND(selectedProduct.originalPrice || selectedProduct.price)}</div>
+                )}
               </div>
             </div>
 

@@ -10,10 +10,12 @@ import {
 } from '@/lib/supabase';
 import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import { SoldInventoryTab } from '@/components/admin/SoldInventoryTab';
-import { PricePreview } from '@/components/PricePreview';
+import { PricePreview, formatMoney } from '@/components/PricePreview';
+import { InventoryPriceDisplay } from '@/components/admin/InventoryPriceDisplay';
+import EditPriceModal from '@/components/admin/EditPriceModal';
 import Link from 'next/link';
 import { message, Modal } from 'antd';
-import { User, Ban, ShieldCheck, AlertCircle } from 'lucide-react';
+import { User, Ban, ShieldCheck, AlertCircle, Tag, Pencil, Sparkles } from 'lucide-react';
 
 
 export default function KhoMayPage() {
@@ -28,6 +30,7 @@ export default function KhoMayPage() {
     canEditStock,
     canUpdateRepairStatus,
     addInventoryItem,
+    updateInventoryItem,
     updateInventoryStock,
     updateQcStatus,
     deleteInventoryItem,
@@ -74,6 +77,8 @@ export default function KhoMayPage() {
     warranty_months: 36,
     distributor: 'Chính hãng',
     unit_cost: 450000,
+    original_price: 650000,
+    sale_price: 0,
     unit_price: 650000,
     shelf_location: 'Kệ Linh Kiện L1',
     notes: 'Mới 100% nguyên seal',
@@ -88,11 +93,6 @@ export default function KhoMayPage() {
     return d.toLocaleDateString('vi-VN');
   };
 
-
-
-
-
-
   // Modal states - Machines
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
@@ -101,6 +101,10 @@ export default function KhoMayPage() {
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [tempStockValue, setTempStockValue] = useState<number>(1);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+
+  // Price Edit Modals (Máy tính & Linh kiện)
+  const [editingPriceMachine, setEditingPriceMachine] = useState<InventoryItem | null>(null);
+  const [editingPricePart, setEditingPricePart] = useState<SparePart | null>(null);
 
   // Sales & Handover Modal States - Máy tính (Admin & Sales)
   const [sellingItem, setSellingItem] = useState<InventoryItem | null>(null);
@@ -147,8 +151,52 @@ export default function KhoMayPage() {
     const validMonths = [3, 6, 12, 36];
     const initialWarranty = validMonths.includes(item.warranty_months || 0) ? (item.warranty_months as number) : 12;
     setSellWarrantyMonths(initialWarranty);
-    setSellPrice(item.price ?? item.retail_price ?? 0);
+    const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
+    setSellPrice(effectiveItemPrice);
     setSellDate(new Date().toISOString().split('T')[0]);
+  };
+
+  // Xử lý lưu giá bán máy (giá gốc & giá giảm)
+  const handleSaveMachinePrice = async (data: {
+    originalPrice: number;
+    salePrice: number;
+    costPrice?: number;
+  }) => {
+    if (!editingPriceMachine) return;
+    const effectivePrice = data.salePrice > 0 ? data.salePrice : data.originalPrice;
+    const updatePayload: Partial<InventoryItem> = {
+      original_price: data.originalPrice,
+      sale_price: data.salePrice,
+      price: effectivePrice,
+      retail_price: effectivePrice,
+    };
+    if (typeof data.costPrice === 'number') {
+      updatePayload.import_price = data.costPrice;
+    }
+    await updateInventoryItem(editingPriceMachine.id, updatePayload);
+    message.success(`Đã cập nhật giá bán cho máy [${editingPriceMachine.service_tag}] thành công!`);
+    setEditingPriceMachine(null);
+  };
+
+  // Xử lý lưu giá bán linh kiện (giá gốc & giá giảm)
+  const handleSavePartPrice = async (data: {
+    originalPrice: number;
+    salePrice: number;
+    costPrice?: number;
+  }) => {
+    if (!editingPricePart) return;
+    const effectivePrice = data.salePrice > 0 ? data.salePrice : data.originalPrice;
+    const updatePayload: Partial<SparePart> = {
+      original_price: data.originalPrice,
+      sale_price: data.salePrice,
+      unit_price: effectivePrice,
+    };
+    if (typeof data.costPrice === 'number') {
+      updatePayload.unit_cost = data.costPrice;
+    }
+    await updateSparePart(editingPricePart.id, updatePayload);
+    message.success(`Đã cập nhật giá bán cho linh kiện [${editingPricePart.part_name}] thành công!`);
+    setEditingPricePart(null);
   };
 
   const handleConfirmSale = async (e: React.FormEvent) => {
@@ -197,7 +245,8 @@ export default function KhoMayPage() {
     const validMonths = [3, 6, 12, 36];
     const partWarranty = validMonths.includes(part.warranty_months || 0) ? (part.warranty_months as number) : 36;
     setSellPartWarrantyMonths(partWarranty);
-    setSellPartPrice(part.unit_price || 0);
+    const effectivePartPrice = part.sale_price && part.sale_price > 0 ? part.sale_price : (part.original_price || part.unit_price || 0);
+    setSellPartPrice(effectivePartPrice);
     setSellPartDate(new Date().toISOString().split('T')[0]);
   };
 
@@ -283,6 +332,8 @@ export default function KhoMayPage() {
     ssd_health: 98,
     import_price: 3500000,
     import_date: new Date().toISOString().slice(0, 10),
+    original_price: 4850000,
+    sale_price: 0,
     price: 4850000,
     stock_quantity: 1,
     shelf_location: 'Kệ A1-01',
@@ -507,6 +558,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     }
 
     try {
+      const orig = Number(newItem.original_price) || 0;
+      const sale = Number(newItem.sale_price) || 0;
+      const effectivePrice = sale > 0 ? sale : orig;
       await addInventoryItem({
         brand: newItem.brand,
         model: newItem.model,
@@ -518,7 +572,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ssd_health: Number(newItem.ssd_health),
         import_price: Number(newItem.import_price),
         import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
-        price: Number(newItem.price),
+        original_price: orig,
+        sale_price: sale,
+        price: effectivePrice,
+        retail_price: effectivePrice,
         stock_quantity: Number(newItem.stock_quantity),
         shelf_location: newItem.shelf_location,
         qc_status: newItem.qc_status,
@@ -542,6 +599,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ssd_health: 98,
         import_price: 3500000,
         import_date: new Date().toISOString().slice(0, 10),
+        original_price: 4850000,
+        sale_price: 0,
         price: 4850000,
         stock_quantity: 1,
         shelf_location: 'Kệ A1-01',
@@ -582,6 +641,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     }
 
     try {
+      const orig = Number(newPart.original_price) || 0;
+      const sale = Number(newPart.sale_price) || 0;
+      const effectivePrice = sale > 0 ? sale : orig;
       await addSparePart({
         part_name: newPart.part_name.trim(),
         part_type: newPart.part_type,
@@ -590,7 +652,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         warranty_months: Number(newPart.warranty_months),
         distributor: newPart.distributor,
         unit_cost: Number(newPart.unit_cost),
-        unit_price: Number(newPart.unit_price),
+        original_price: orig,
+        sale_price: sale,
+        unit_price: effectivePrice,
         shelf_location: newPart.shelf_location,
         notes: newPart.notes,
       });
@@ -608,6 +672,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         warranty_months: 36,
         distributor: 'Chính hãng',
         unit_cost: 450000,
+        original_price: 650000,
+        sale_price: 0,
         unit_price: 650000,
         shelf_location: 'Kệ Linh Kiện L1',
         notes: 'Mới 100% nguyên seal',
@@ -1183,19 +1249,25 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       </td>
 
                       {/* Sale Price */}
-                      <td className="py-3.5 px-4 text-right">
-                        {(item.price ?? item.retail_price ?? 0) <= 0 ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                            Liên hệ
-                          </span>
-                        ) : (
-                          <div className="font-bold text-slate-900 font-mono">
-                            {(item.price ?? item.retail_price ?? 0).toLocaleString('vi-VN')} đ
-                          </div>
-                        )}
-                        <div className="text-[11px] text-slate-400">
-                          Bảo hành {item.warranty_months}T
-                        </div>
+                      <td
+                        className={`py-3.5 px-4 text-right ${
+                          canSellAndEditWarranty()
+                            ? 'cursor-pointer hover:bg-blue-50/50 transition-colors'
+                            : ''
+                        }`}
+                        onClick={() => {
+                          if (canSellAndEditWarranty()) setEditingPriceMachine(item);
+                        }}
+                        title={canSellAndEditWarranty() ? 'Bấm để chỉnh sửa giá bán máy' : undefined}
+                      >
+                        <InventoryPriceDisplay
+                          originalPrice={item.original_price}
+                          salePrice={item.sale_price}
+                          fallbackPrice={item.price ?? item.retail_price ?? 0}
+                          warrantyMonths={item.warranty_months}
+                          canEdit={canSellAndEditWarranty()}
+                          onEdit={() => setEditingPriceMachine(item)}
+                        />
                       </td>
 
                       {/* Actions */}
@@ -1213,6 +1285,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             </button>
                           )}
 
+                          {/* Edit Price Button (Admin & Sales) */}
+                          {canSellAndEditWarranty() && (
+                            <button
+                              onClick={() => setEditingPriceMachine(item)}
+                              title="Chỉnh sửa giá gốc và giá giảm của máy"
+                              className="px-2 py-1 text-slate-700 hover:text-blue-700 hover:bg-blue-50 rounded-lg text-xs font-semibold transition-colors border border-slate-200 bg-white flex items-center gap-1 shadow-2xs"
+                            >
+                              <Tag className="w-3.5 h-3.5 text-blue-600" />
+                              Sửa giá
+                            </button>
+                          )}
+
                           {/* Sale Handover Button (Admin & Sales) */}
                           {canSellAndEditWarranty() && (
                             <button
@@ -1220,10 +1304,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                               title="Xuất bán máy, cấp mã KH & điều chỉnh bảo hành"
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                                 item.qc_status === 'sold'
-                                  ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                                  : isReserved
-                                  ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
+                                    ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                    : isReserved
+                                    ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
+                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
                               }`}
                             >
                               {item.qc_status === 'sold' ? 'Đã bán' : isReserved ? 'Bán máy' : 'Bán máy'}
@@ -1482,12 +1566,24 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           )}
 
                           {/* Retail Price */}
-                          <td className="py-3.5 px-4 text-right">
-                            <span className="font-bold text-slate-900 font-mono">
-                              {part.unit_price === 0
-                                ? 'Giá liên hệ'
-                                : new Intl.NumberFormat('vi-VN').format(part.unit_price) + ' đ'}
-                            </span>
+                          <td
+                            className={`py-3.5 px-4 text-right ${
+                              canSellAndEditWarranty()
+                                ? 'cursor-pointer hover:bg-blue-50/50 transition-colors'
+                                : ''
+                            }`}
+                            onClick={() => {
+                              if (canSellAndEditWarranty()) setEditingPricePart(part);
+                            }}
+                            title={canSellAndEditWarranty() ? 'Bấm để chỉnh sửa giá bán linh kiện' : undefined}
+                          >
+                            <InventoryPriceDisplay
+                              originalPrice={part.original_price}
+                              salePrice={part.sale_price}
+                              fallbackPrice={part.unit_price || 0}
+                              canEdit={canSellAndEditWarranty()}
+                              onEdit={() => setEditingPricePart(part)}
+                            />
                           </td>
 
                           {/* Warranty */}
@@ -1500,6 +1596,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           {/* Actions */}
                           <td className="py-3.5 px-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
+                              {/* Sửa giá LK */}
+                              {canSellAndEditWarranty() && (
+                                <button
+                                  onClick={() => setEditingPricePart(part)}
+                                  title="Chỉnh sửa giá gốc và giá giảm linh kiện"
+                                  className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-blue-700 bg-white hover:bg-blue-50 rounded border border-slate-200 transition-colors flex items-center gap-1 shadow-2xs"
+                                >
+                                  <Tag className="w-3 h-3 text-blue-600" />
+                                  Sửa giá
+                                </button>
+                              )}
                               {canSellAndEditWarranty() && (
                                 <button
                                   onClick={() => handleOpenSellPartModal(part)}
@@ -1721,41 +1828,121 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   />
                 </div>
 
-                {/* Price */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Giá Bán (VNĐ)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setNewItem({ ...newItem, price: 0 })}
-                      className={`text-[11px] px-2 py-0.5 rounded font-semibold transition-colors ${
-                        newItem.price === 0
-                          ? 'bg-amber-600 text-white'
-                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                      }`}
-                    >
-                      {newItem.price === 0 ? '✓ Giá Liên Hệ' : 'Đặt "Liên Hệ"'}
-                    </button>
+                {/* Giá Gốc & Giá Giảm */}
+                <div className="md:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-blue-600" />
+                      Quản lý giá bán (Giá gốc & Giá giảm)
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Nếu không giảm giá: để trống ô giá giảm
+                    </span>
                   </div>
-                  <PricePreview
-                    value={newItem.price}
-                    label="Giá bán"
-                    tone="emerald"
-                    emptyText="Giá liên hệ"
-                  />
-                  <input
-                    type="number"
-                    min={0}
-                    step={50000}
-                    value={newItem.price === 0 ? '' : newItem.price}
-                    placeholder={newItem.price === 0 ? 'Liên Hệ (0 đ)' : 'Nhập giá bán...'}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, price: e.target.value === '' ? 0 : Number(e.target.value) })
-                    }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Giá Gốc */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          Giá Gốc Niêm Yết (VNĐ) *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setNewItem({ ...newItem, original_price: 0, price: 0 })}
+                          className={`text-[11px] px-1.5 py-0.5 rounded font-semibold transition-colors ${
+                            newItem.original_price === 0
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                          }`}
+                        >
+                          {newItem.original_price === 0 ? '✓ Giá Liên Hệ' : 'Đặt "Liên Hệ"'}
+                        </button>
+                      </div>
+                      <PricePreview
+                        value={newItem.original_price}
+                        label="Giá gốc"
+                        tone="slate"
+                        emptyText="Giá liên hệ (0 ₫)"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={50000}
+                        value={newItem.original_price === 0 ? '' : newItem.original_price}
+                        placeholder={newItem.original_price === 0 ? 'Liên Hệ (0 đ)' : 'Nhập giá gốc...'}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setNewItem({ ...newItem, original_price: val, price: val });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Giá Giảm */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          Giá Giảm Khuyến Mãi (VNĐ)
+                        </label>
+                        {newItem.sale_price > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setNewItem({ ...newItem, sale_price: 0 })}
+                            className="text-[11px] text-rose-600 hover:underline font-semibold"
+                          >
+                            Xóa giảm giá
+                          </button>
+                        )}
+                      </div>
+                      <PricePreview
+                        value={newItem.sale_price}
+                        label="Giá giảm"
+                        tone="rose"
+                        emptyText="Không giảm (0 ₫)"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={50000}
+                        value={newItem.sale_price === 0 ? '' : newItem.sale_price}
+                        placeholder="Để trống hoặc 0 nếu không giảm..."
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setNewItem({ ...newItem, sale_price: val });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Live Preview Display Rule */}
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Hiển thị thực tế:</span>
+                    {newItem.sale_price > 0 ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-extrabold text-rose-600 font-mono text-sm">
+                          {formatMoney(newItem.sale_price)}
+                        </span>
+                        <span className="text-xs text-slate-400 line-through font-mono">
+                          {formatMoney(newItem.original_price)}
+                        </span>
+                        {newItem.original_price > newItem.sale_price && (
+                          <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                            -{Math.round(((newItem.original_price - newItem.sale_price) / newItem.original_price) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                    ) : newItem.original_price <= 0 ? (
+                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
+                        Liên hệ
+                      </span>
+                    ) : (
+                      <span className="font-bold text-slate-900 font-mono text-sm">
+                        {formatMoney(newItem.original_price)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* QC Status */}
@@ -2354,20 +2541,121 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   />
                 </div>
 
-                {/* Unit Price */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Giá Bán (VNĐ)
-                  </label>
-                  <PricePreview value={newPart.unit_price} label="Giá bán" tone="emerald" />
-                  <input
-                    type="number"
-                    min={0}
-                    step={10000}
-                    value={newPart.unit_price}
-                    onChange={(e) => setNewPart({ ...newPart, unit_price: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-bold text-emerald-700 font-mono"
-                  />
+                {/* Giá Gốc & Giá Giảm Linh Kiện */}
+                <div className="md:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-blue-600" />
+                      Quản lý giá bán linh kiện (Giá gốc & Giá giảm)
+                    </span>
+                    <span className="text-[11px] text-slate-500">
+                      Nếu không giảm giá: để trống ô giá giảm
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Giá Gốc */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          Giá Gốc Niêm Yết (VNĐ) *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setNewPart({ ...newPart, original_price: 0, unit_price: 0 })}
+                          className={`text-[11px] px-1.5 py-0.5 rounded font-semibold transition-colors ${
+                            newPart.original_price === 0
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-amber-100 text-amber-800 hover:bg-amber-200'
+                          }`}
+                        >
+                          {newPart.original_price === 0 ? '✓ Giá Liên Hệ' : 'Đặt "Liên Hệ"'}
+                        </button>
+                      </div>
+                      <PricePreview
+                        value={newPart.original_price}
+                        label="Giá gốc"
+                        tone="slate"
+                        emptyText="Giá liên hệ (0 ₫)"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={10000}
+                        value={newPart.original_price === 0 ? '' : newPart.original_price}
+                        placeholder={newPart.original_price === 0 ? 'Liên Hệ (0 đ)' : 'Nhập giá gốc...'}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setNewPart({ ...newPart, original_price: val, unit_price: val });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Giá Giảm */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs font-semibold text-slate-700">
+                          Giá Giảm Khuyến Mãi (VNĐ)
+                        </label>
+                        {newPart.sale_price > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setNewPart({ ...newPart, sale_price: 0 })}
+                            className="text-[11px] text-rose-600 hover:underline font-semibold"
+                          >
+                            Xóa giảm giá
+                          </button>
+                        )}
+                      </div>
+                      <PricePreview
+                        value={newPart.sale_price}
+                        label="Giá giảm"
+                        tone="rose"
+                        emptyText="Không giảm (0 ₫)"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        step={10000}
+                        value={newPart.sale_price === 0 ? '' : newPart.sale_price}
+                        placeholder="Để trống hoặc 0 nếu không giảm..."
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? 0 : Number(e.target.value);
+                          setNewPart({ ...newPart, sale_price: val });
+                        }}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">Hiển thị thực tế:</span>
+                    {newPart.sale_price > 0 ? (
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-extrabold text-rose-600 font-mono text-sm">
+                          {formatMoney(newPart.sale_price)}
+                        </span>
+                        <span className="text-xs text-slate-400 line-through font-mono">
+                          {formatMoney(newPart.original_price)}
+                        </span>
+                        {newPart.original_price > newPart.sale_price && (
+                          <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                            -{Math.round(((newPart.original_price - newPart.sale_price) / newPart.original_price) * 100)}%
+                          </span>
+                        )}
+                      </div>
+                    ) : newPart.original_price <= 0 ? (
+                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
+                        Liên hệ
+                      </span>
+                    ) : (
+                      <span className="font-bold text-slate-900 font-mono text-sm">
+                        {formatMoney(newPart.original_price)}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Notes */}
@@ -2650,9 +2938,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500">Giá bán niêm yết:</span>
-                    <div className="font-bold text-blue-700 mt-0.5 font-mono text-sm">
-                      {((viewingSpecsItem.price || viewingSpecsItem.retail_price) || 0).toLocaleString('vi-VN')} đ
+                    <span className="text-[10px] text-slate-500">Giá bán áp dụng:</span>
+                    <div className="mt-0.5">
+                      <InventoryPriceDisplay
+                        originalPrice={viewingSpecsItem.original_price}
+                        salePrice={viewingSpecsItem.sale_price}
+                        fallbackPrice={viewingSpecsItem.price ?? viewingSpecsItem.retail_price ?? 0}
+                        align="left"
+                      />
                     </div>
                   </div>
                 </div>
@@ -2666,7 +2959,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               </div>
             </div>
 
-                        {/* Modal Footer */}
+            {/* Modal Footer */}
             <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
               <button
                 type="button"
@@ -2689,6 +2982,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   >
                     <Ban className="w-3.5 h-3.5" />
                     Không mua (Trả về kho)
+                  </button>
+                )}
+                {canSellAndEditWarranty() && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = viewingSpecsItem;
+                      setViewingSpecsItem(null);
+                      setEditingPriceMachine(target);
+                    }}
+                    className="px-3.5 py-2 bg-white hover:bg-blue-50 border border-slate-300 text-blue-700 text-xs font-semibold rounded-lg shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-blue-600" />
+                    Sửa Giá Bán
                   </button>
                 )}
                 <button
@@ -2722,7 +3029,49 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-{/* Thermal Label Modal (50x30mm) */}
+      {/* Modal Chỉnh Sửa Giá Bán Máy */}
+      <EditPriceModal
+        isOpen={Boolean(editingPriceMachine)}
+        onClose={() => setEditingPriceMachine(null)}
+        title="Chỉnh sửa giá bán máy"
+        itemName={editingPriceMachine ? `${editingPriceMachine.brand} ${editingPriceMachine.model}` : ''}
+        itemSubtext={editingPriceMachine ? `Serial / Tag: ${editingPriceMachine.service_tag}` : ''}
+        costPrice={editingPriceMachine?.import_price || 0}
+        initialOriginalPrice={
+          editingPriceMachine?.original_price && editingPriceMachine.original_price > 0
+            ? editingPriceMachine.original_price
+            : editingPriceMachine?.price ?? editingPriceMachine?.retail_price ?? 0
+        }
+        initialSalePrice={editingPriceMachine?.sale_price || 0}
+        canEditCost={canEditStock()}
+        onSave={handleSaveMachinePrice}
+      />
+
+      {/* Modal Chỉnh Sửa Giá Bán Linh Kiện */}
+      <EditPriceModal
+        isOpen={Boolean(editingPricePart)}
+        onClose={() => setEditingPricePart(null)}
+        title="Chỉnh sửa giá bán linh kiện"
+        itemName={editingPricePart?.part_name || ''}
+        itemSubtext={
+          editingPricePart
+            ? `Loại: ${editingPricePart.part_type} • ${
+                editingPricePart.condition === 'new' ? 'Mới 100%' : 'Zin bóc máy'
+              }`
+            : ''
+        }
+        costPrice={editingPricePart?.unit_cost || 0}
+        initialOriginalPrice={
+          editingPricePart?.original_price && editingPricePart.original_price > 0
+            ? editingPricePart.original_price
+            : editingPricePart?.unit_price || 0
+        }
+        initialSalePrice={editingPricePart?.sale_price || 0}
+        canEditCost={canEditStock()}
+        onSave={handleSavePartPrice}
+      />
+
+      {/* Thermal Label Modal (50x30mm) */}
       <ThermalLabelModal
         isOpen={isLabelModalOpen}
         onClose={() => setIsLabelModalOpen(false)}

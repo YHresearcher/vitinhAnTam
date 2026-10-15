@@ -146,6 +146,8 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
 // DATABASE SCHEMA TYPES
 // ==========================================
 
+export type CustomerTierType = 'standard' | 'member' | 'loyal' | 'vip' | 'vvip';
+
 export interface Customer {
   id: string;
   customer_code?: string; // Mã khách hàng: DDMM + 4 số cuối SĐT (VD: 15055678)
@@ -155,7 +157,11 @@ export interface Customer {
   phone: string;
   address: string;
   area_zone?: string;
-  customer_tier?: 'Standard' | 'VIP' | 'Thân thiết';
+  customer_tier?: CustomerTierType | 'Standard' | 'VIP' | 'Thân thiết';
+  total_spent?: number; // Tổng chi tiêu tích lũy (VNĐ)
+  last_purchase_date?: string; // Ngày phát sinh đơn mua hàng/phiếu sửa chữa gần nhất
+  assigned_sales_id?: string; // ID nhân viên bán hàng phụ trách
+  assigned_sales_name?: string; // Tên nhân viên bán hàng phụ trách
   notes?: string;
   created_at?: string;
 }
@@ -192,6 +198,8 @@ export interface InventoryItem {
   import_date?: string; // YYYY-MM-DD - Ngày nhập hàng vào kho
   retail_price?: number;
   price?: number;
+  original_price?: number; // Giá gốc niêm yết (VNĐ)
+  sale_price?: number; // Giá giảm khuyến mãi (VNĐ) - nếu = 0 hoặc trống thì bán theo giá gốc
   stock_quantity?: number;
   quantity?: number;
   deposit_amount?: number;
@@ -250,6 +258,8 @@ export interface SparePart {
   distributor?: string;
   unit_cost?: number;
   unit_price: number;
+  original_price?: number; // Giá gốc niêm yết (VNĐ)
+  sale_price?: number; // Giá giảm khuyến mãi (VNĐ) - nếu = 0 hoặc trống thì bán theo giá gốc
   shelf_location?: string;
   notes?: string;
 }

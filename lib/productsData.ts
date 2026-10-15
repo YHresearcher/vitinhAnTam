@@ -14,6 +14,8 @@ export interface ShowcaseItem {
   subBadge: string;
   desc: string;
   price: number;
+  originalPrice?: number;
+  salePrice?: number;
   specs: {
     cpu: string;
     ram: string;
@@ -79,7 +81,13 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
 
     inventory.forEach((inv) => {
       if (inv.qc_status !== 'sold') {
-        const rawModel = (inv.device_model || inv.model || `${inv.brand || ''} ${inv.form_factor || ''}`.trim()).toLowerCase().replace(/\s+/g, ' ');
+        const rawModel = (
+          inv.device_model ||
+          inv.model ||
+          `${inv.brand || ''} ${inv.form_factor || ''}`.trim()
+        )
+          .toLowerCase()
+          .replace(/\s+/g, ' ');
         if (rawModel) {
           const qty = getInvItemStock(inv);
           modelStockMap.set(rawModel, (modelStockMap.get(rawModel) || 0) + qty);
@@ -128,20 +136,24 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         ? 'Shelf A1'
         : 'Kệ A1';
 
-      const rawModel = (item.device_model || item.model || `${item.brand || ''} ${item.form_factor || ''}`.trim());
+      const rawModel = item.device_model || item.model || `${item.brand || ''} ${item.form_factor || ''}`.trim();
       const normalizedModel = rawModel.toLowerCase().replace(/\s+/g, ' ');
       const rawItemQty = getInvItemStock(item);
-      const modelStockCount = isSold
-        ? 0
-        : (modelStockMap.get(normalizedModel) ?? rawItemQty);
+      const modelStockCount = isSold ? 0 : (modelStockMap.get(normalizedModel) ?? rawItemQty);
       const stockCount = isSold ? 0 : rawItemQty;
+
+      const rawOriginal = item.original_price || item.price || item.retail_price || 0;
+      const rawSale = item.sale_price && item.sale_price > 0 ? item.sale_price : 0;
+      const effectivePrice = rawSale > 0 ? rawSale : rawOriginal;
 
       return {
         id: item.id,
         serviceTag: item.service_tag,
         img: defaultImg,
         category,
-        price: item.retail_price || item.price || 0,
+        price: effectivePrice,
+        originalPrice: rawOriginal,
+        salePrice: rawSale,
         stockCount,
         modelStockCount,
         modelName: rawModel,

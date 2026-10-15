@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { Customer, InventoryItem, ServiceTicket, generateCustomerCode } from '@/lib/supabase';
 import { CrmAlertsPanel } from '@/components/admin/CrmAlertsPanel';
+import { CRM_TIER_CONFIG, calculateCustomerTier, normalizeCustomerTier } from '@/lib/crmTiers';
 // Lucide icons removed for minimalist text design
 
 
@@ -38,7 +39,7 @@ export default function KhachHangCrmPage() {
     birth_date: '1992-05-15',
     address: 'Long An - Tây Ninh',
     area_zone: 'Long An - Tây Ninh',
-    customer_tier: 'Standard' as 'Standard' | 'VIP' | 'Thân thiết',
+    customer_tier: 'standard' as string,
     notes: '',
   });
 
@@ -135,7 +136,7 @@ export default function KhachHangCrmPage() {
       birth_date: cust.birth_date || '1992-05-15',
       address: cust.address || '',
       area_zone: cust.area_zone || 'Long An - Tây Ninh',
-      customer_tier: cust.customer_tier || 'Standard',
+      customer_tier: (cust.customer_tier as string) || 'standard',
       notes: cust.notes || '',
     });
     setIsAddModalOpen(true);
@@ -157,7 +158,7 @@ export default function KhachHangCrmPage() {
         birth_date: formData.birth_date,
         address: formData.address.trim(),
         area_zone: formData.area_zone.trim(),
-        customer_tier: formData.customer_tier,
+        customer_tier: formData.customer_tier as any,
         notes: formData.notes.trim(),
       });
       showToast(`Đã cập nhật hồ sơ khách hàng ${formData.full_name}!`);
@@ -172,7 +173,7 @@ export default function KhachHangCrmPage() {
         birth_date: formData.birth_date,
         address: formData.address.trim(),
         area_zone: formData.area_zone.trim(),
-        customer_tier: formData.customer_tier,
+        customer_tier: formData.customer_tier as any,
         customer_code: newCode,
         notes: formData.notes.trim(),
       });
@@ -450,23 +451,27 @@ export default function KhachHangCrmPage() {
                         </div>
                       </td>
 
-                      {/* Tier Badge */}
+                      {/* Tier Badge & Sales Rep */}
                       <td className="py-3.5 px-4">
-                        {cust.customer_tier === 'VIP' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                            VIP
-                          </span>
-                        )}
-                        {cust.customer_tier === 'Thân thiết' && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                            Thân Thiết
-                          </span>
-                        )}
-                        {(!cust.customer_tier || cust.customer_tier === 'Standard') && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-                            Tiêu chuẩn
-                          </span>
-                        )}
+                        {(() => {
+                          const tierInfo = calculateCustomerTier(cust.total_spent, cust.last_purchase_date);
+                          const conf = CRM_TIER_CONFIG[tierInfo.effectiveTier];
+                          return (
+                            <div className="space-y-1">
+                              <span
+                                className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${conf.badgeBg} ${conf.badgeTextColor} ${conf.badgeBorder}`}
+                              >
+                                {conf.label} {conf.discountRate > 0 && `(-${conf.discountPercentText})`}
+                              </span>
+                              <div className="text-[10px] text-slate-500 font-medium">
+                                Sales:{' '}
+                                <span className="text-slate-800 font-semibold">
+                                  {cust.assigned_sales_name || 'Chưa gán'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Address & Zone */}
@@ -841,14 +846,16 @@ export default function KhachHangCrmPage() {
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        customer_tier: e.target.value as 'Standard' | 'VIP' | 'Thân thiết',
+                        customer_tier: e.target.value as any,
                       })
                     }
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   >
-                    <option value="Standard">Tiêu chuẩn (Standard)</option>
-                    <option value="Thân thiết">Khách Thân Thiết (Loyal)</option>
-                    <option value="VIP">Khách VIP (Doanh nghiệp/Đại lý)</option>
+                    <option value="standard">Tiêu chuẩn (Standard - Giảm 0%)</option>
+                    <option value="member">Thành viên (Member 3-10M - Giảm 0%)</option>
+                    <option value="loyal">Khách Thân Thiết (Loyal 11-18M - Giảm 1%)</option>
+                    <option value="vip">Khách VIP (VIP 19-30M - Giảm 3%)</option>
+                    <option value="vvip">Khách VVIP (VVIP &gt;30M - Giảm 5%)</option>
                   </select>
                 </div>
 

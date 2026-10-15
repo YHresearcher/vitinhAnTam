@@ -280,6 +280,9 @@ export type WebhookEventType =
   | 'key_release_success' // Phát hành/bán key bản quyền thành công -> bot chúc mừng đến nhóm
   | 'customer_zalo_order' // Gửi xác nhận đơn hàng đến Zalo khách hàng
   | 'customer_zalo_booking' // Gửi xác nhận đặt lịch hẹn đến Zalo khách hàng
+  | 'crm_birthday_alert' // Nhắc nhở sinh nhật khách hàng trước 3 ngày
+  | 'crm_followup_milestone' // Nhắc nhở sales hỏi thăm khách các mốc 1, 3, 6, 12 tháng
+  | 'crm_warranty_expiring' // Cảnh báo thiết bị sắp hết bảo hành trong 30 ngày
   | 'test_notification'; // Thông báo test từ admin
 
 /**
@@ -301,6 +304,9 @@ export async function dispatchSystemEvent(
     if (eventType === 'key_release_success' && settings.notifyOnSaleSuccess !== false) shouldNotifyZalo = true;
     if (eventType === 'customer_zalo_order') shouldNotifyZalo = true;
     if (eventType === 'customer_zalo_booking') shouldNotifyZalo = true;
+    if (eventType === 'crm_birthday_alert') shouldNotifyZalo = true;
+    if (eventType === 'crm_followup_milestone') shouldNotifyZalo = true;
+    if (eventType === 'crm_warranty_expiring') shouldNotifyZalo = true;
     if (eventType === 'test_notification') shouldNotifyZalo = true;
   }
 
@@ -425,6 +431,51 @@ export async function dispatchSystemEvent(
         `━━━━━━━━━━━━━━━━━━━\n` +
         (cleanPhone ? `👉 KTV bấm vào link để chat Zalo ngay với khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
         `💬 KTV trực ca vui lòng liên hệ xác nhận lịch hẹn cho khách nhé!`;
+    } else if (eventType === 'crm_birthday_alert') {
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
+      const days = payload.daysRemaining !== undefined ? payload.daysRemaining : 3;
+      const daysText = days === 0 ? 'HÔM NAY' : `CÒN ${days} NGÀY NỮA`;
+      formattedText = `🎂 [CRM: NHẮC NHỞ SINH NHẬT KHÁCH HÀNG — ${daysText}]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📅 Ngày sinh: ${payload.birthDateFormatted || payload.birthDate || 'N/A'}\n` +
+        `🎖️ Hạng thành viên: ${payload.tierLabel || 'Thành viên'} (Chiết khấu: ${payload.discountPercent || '0%'})\n` +
+        `💼 Sales phụ trách: ${payload.salesName || 'Vi Tính An Tâm'}\n` +
+        `📞 Số điện thoại: ${payload.customerPhone || 'N/A'}\n` +
+        (payload.totalSpent ? `💰 Tổng tích lũy: ${typeof payload.totalSpent === 'number' ? payload.totalSpent.toLocaleString('vi-VN') + ' đ' : payload.totalSpent}\n` : '') +
+        `⏱️ Thời gian nhắc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        (cleanPhone ? `👉 Sales bấm link để chat Zalo gửi lời chúc & quà tặng ngay:\nhttps://zalo.me/${cleanPhone}\n` : '') +
+        `💬 Hãy mở trang Quản Trị CRM để sao chép lời nhắn mẫu chỉ với 1 click!`;
+    } else if (eventType === 'crm_followup_milestone') {
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
+      formattedText = `🔔 [CRM: NHẮC SALES CHĂM SÓC KHÁCH — MỐC ${payload.milestoneText || '1 THÁNG'}]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 Điện thoại: ${payload.customerPhone || 'N/A'}\n` +
+        `💻 Thiết bị đã mua: ${payload.deviceName || 'Máy tính'}\n` +
+        (payload.serviceTag ? `🏷️ Service Tag: ${payload.serviceTag}\n` : '') +
+        (payload.purchaseDate ? `📅 Ngày mua: ${payload.purchaseDate}\n` : '') +
+        `💼 Sales phụ trách: ${payload.salesName || 'Vi Tính An Tâm'}\n` +
+        `⏱️ Cảnh báo lúc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        (cleanPhone ? `👉 Sales bấm link để chat Zalo hỏi thăm khách:\nhttps://zalo.me/${cleanPhone}\n` : '') +
+        `💬 Gợi ý: Hãy mở trang Quản Trị CRM để sao chép tin nhắn mẫu chăm sóc khách hàng!`;
+    } else if (eventType === 'crm_warranty_expiring') {
+      const cleanPhone = String(payload.customerPhone || '').replace(/\D/g, '');
+      const days = payload.expiryDaysRemaining ?? 30;
+      formattedText = `🛡️ [CRM: CẢNH BÁO MÁY SẮP HẾT HẠN BẢO HÀNH — CÒN ${days} NGÀY]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
+        `📞 Điện thoại: ${payload.customerPhone || 'N/A'}\n` +
+        `💻 Thiết bị: ${payload.deviceName || 'Máy tính'}\n` +
+        (payload.serviceTag ? `🏷️ Service Tag: ${payload.serviceTag}\n` : '') +
+        `🛡️ Hạn bảo hành đến: ${payload.warrantyExpiryDate || 'Trong 30 ngày tới'}\n` +
+        `💼 Phụ trách: ${payload.salesName || 'Vi Tính An Tâm'}\n` +
+        `⏱️ Cảnh báo lúc: ${nowStr}\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        (cleanPhone ? `👉 Sales bấm link để chat Zalo mời khách kiểm tra máy trước hạn:\nhttps://zalo.me/${cleanPhone}\n` : '') +
+        `💬 Mời khách ghé bảo dưỡng tổng thể miễn phí hoặc tư vấn gia hạn gói bảo hành!`;
     } else {
       formattedText = `🧪 [THÔNG BÁO TEST KẾT NỐI ZALO BOT]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +

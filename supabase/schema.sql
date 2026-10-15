@@ -165,6 +165,8 @@ ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS ssd_health INT;
 ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS serial_number TEXT;
 ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS import_price NUMERIC DEFAULT 0;
 ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS price NUMERIC DEFAULT 0;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS original_price NUMERIC DEFAULT 0;
+ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS sale_price NUMERIC DEFAULT 0;
 ALTER TABLE inventory_items ADD COLUMN IF NOT EXISTS stock_quantity INT NOT NULL DEFAULT 1;
 ALTER TABLE inventory_items ALTER COLUMN device_model DROP NOT NULL;
 ALTER TABLE inventory_items ALTER COLUMN warranty_months SET NOT NULL;
@@ -173,6 +175,8 @@ ALTER TABLE inventory_items ALTER COLUMN shelf_location SET NOT NULL;
 ALTER TABLE spare_parts ADD COLUMN IF NOT EXISTS condition TEXT DEFAULT 'new';
 ALTER TABLE spare_parts ADD COLUMN IF NOT EXISTS shelf_location TEXT;
 ALTER TABLE spare_parts ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE spare_parts ADD COLUMN IF NOT EXISTS original_price NUMERIC DEFAULT 0;
+ALTER TABLE spare_parts ADD COLUMN IF NOT EXISTS sale_price NUMERIC DEFAULT 0;
 
 ALTER TABLE service_tickets ADD COLUMN IF NOT EXISTS service_tag TEXT;
 ALTER TABLE service_tickets ADD COLUMN IF NOT EXISTS device_model TEXT;
