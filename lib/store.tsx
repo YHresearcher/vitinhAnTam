@@ -1374,6 +1374,15 @@ export function StoreProvider({
 
     if (status === 'sold' && item && item.qc_status !== 'sold') {
       try {
+        const soldPrice = item.price || item.retail_price || 0;
+        const costPrice = item.cost_price || item.import_price || 0;
+        const netProfit = Math.max(0, soldPrice - costPrice);
+        const sellerCommission = Math.round(netProfit * 0.15);
+        const lenderBonus = Math.round(netProfit * 0.05);
+        const lenderTotal = costPrice + lenderBonus;
+        const warrantyReserve = Math.round(netProfit * 0.05);
+        const remainingProfit = Math.max(0, netProfit - sellerCommission - lenderBonus - warrantyReserve);
+
         fetch('/api/webhook/notify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1387,7 +1396,14 @@ export function StoreProvider({
               customerName: item.customer_name || 'Khách mua tại kho',
               customerPhone: item.customer_phone || '---',
               customerCode: item.customer_code,
-              soldPrice: item.price || item.retail_price || 0,
+              soldPrice,
+              costPrice,
+              netProfit,
+              sellerCommission,
+              lenderTotal,
+              lenderBonus,
+              warrantyReserve,
+              remainingProfit,
               warrantyMonths: item.warranty_months || 12,
               shelfLocation: item.shelf_location,
             },
@@ -3000,6 +3016,12 @@ export function StoreProvider({
 
     // 5. Tự động gửi tin nhắn chúc mừng bán hàng qua Bot đến nhóm cài đặt sẵn
     try {
+      const sellerCommission = Math.round(netProfit * 0.15);
+      const lenderBonus = Math.round(netProfit * 0.05);
+      const lenderTotal = finalCostPrice + lenderBonus;
+      const warrantyReserve = provisionAmount;
+      const remainingProfit = Math.max(0, netProfit - sellerCommission - lenderBonus - warrantyReserve);
+
       fetch('/api/webhook/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3014,8 +3036,16 @@ export function StoreProvider({
             customerPhone: params.customerPhone.trim(),
             customerCode,
             soldPrice: finalSoldPrice,
+            costPrice: finalCostPrice,
+            netProfit,
+            sellerCommission,
+            lenderTotal,
+            lenderBonus,
+            warrantyReserve,
+            remainingProfit,
             warrantyMonths: params.warrantyMonths,
             shelfLocation: item.shelf_location,
+            notes: params.notes,
           },
         }),
       }).catch((err) => console.warn('Bot sale notification error:', err));

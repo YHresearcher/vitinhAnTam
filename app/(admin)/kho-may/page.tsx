@@ -16,19 +16,9 @@ import EditPriceModal from '@/components/admin/EditPriceModal';
 import Link from 'next/link';
 import { message, Modal } from 'antd';
 import { User, Ban, ShieldCheck, AlertCircle, Tag, Pencil, Sparkles, Coins, Landmark, ArrowRight } from 'lucide-react';
+import CashflowSaleConfirmModal, { CashflowSaleConfirmData } from '@/components/admin/CashflowSaleConfirmModal';
 
-interface CashflowSaleConfirm {
-  item: InventoryItem;
-  customerName: string;
-  customerPhone: string;
-  customerBirthDate: string;
-  customerAddress: string;
-  serialNumber: string;
-  warrantyMonths: number;
-  soldPrice: number;
-  saleDate: string;
-  costPrice: number;
-}
+type CashflowSaleConfirm = CashflowSaleConfirmData;
 
 export default function KhoMayPage() {
   const searchParams = useSearchParams();
@@ -274,8 +264,8 @@ export default function KhoMayPage() {
         itemId: item.id,
         customerName,
         customerPhone,
-        birthDate: customerBirthDate,
-        customerAddress,
+        birthDate: customerBirthDate || '',
+        customerAddress: customerAddress || '',
         serialNumber,
         warrantyMonths,
         soldPrice,

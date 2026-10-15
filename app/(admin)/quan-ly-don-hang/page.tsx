@@ -21,6 +21,7 @@ import {
 import { useViTinhAnTamStore } from '@/lib/store';
 import { supabase, isSupabaseConfigured, type InventoryItem } from '@/lib/supabase';
 import { CRM_TIER_CONFIG, calculateCustomerTier } from '@/lib/crmTiers';
+import CashflowSaleConfirmModal, { CashflowSaleConfirmData } from '@/components/admin/CashflowSaleConfirmModal';
 
 interface Order {
   id: string;
@@ -47,11 +48,13 @@ const STATUSES = [
 ];
 
 export default function OrderManagementPage() {
-  const { currentUser, inventory, customers, sellInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
+  const { currentUser, inventory, customers, sellInventoryItem, updateInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [executingOrder, setExecutingOrder] = useState<Order | null>(null);
+  const [cashflowOrderData, setCashflowOrderData] = useState<CashflowSaleConfirmData | null>(null);
+  const [isSubmittingOrderSale, setIsSubmittingOrderSale] = useState(false);
 
   // Chỉ 1 trong 3 người: admin, sales_manager, tech_manager có quyền xác nhận đơn hàng
   const canConfirmOrder = Boolean(
@@ -176,23 +179,59 @@ export default function OrderManagementPage() {
     }
   };
 
-  const executeSale = async (order: Order, matchedItem: InventoryItem, warrantyMonths: number) => {
+  const executeSale = (order: Order, matchedItem: InventoryItem, warrantyMonths: number) => {
+    const currentCost = Number(matchedItem.import_price || matchedItem.cost_price || 0);
+    setCashflowOrderData({
+      item: matchedItem,
+      customerName: order.customer_name,
+      customerPhone: order.customer_phone,
+      customerAddress: order.customer_address || '',
+      serialNumber: matchedItem.serial_number || matchedItem.service_tag,
+      warrantyMonths,
+      soldPrice: Number(order.device_price) || 0,
+      costPrice: currentCost,
+      orderCode: order.order_code,
+      notes: `Từ đơn online: ${order.order_code}. ${order.note || ''}`,
+    });
+  };
+
+  const handleFinalizeOrderSale = async (finalData: CashflowSaleConfirmData) => {
+    if (!executingOrder || isSubmittingOrderSale) return;
+    setIsSubmittingOrderSale(true);
+
     try {
+      const { item, costPrice, soldPrice, warrantyMonths } = finalData;
+
+      // Đồng bộ giá vốn nếu có điều chỉnh
+      if (costPrice !== (item.import_price || item.cost_price || 0)) {
+        await updateInventoryItem(item.id, { import_price: costPrice });
+      }
+
+      const profit = Math.max(0, soldPrice - costPrice);
+      const sellerBonus = Math.round(profit * 0.15);
+      const lenderBonus = Math.round(profit * 0.05);
+      const lenderTotal = costPrice + lenderBonus;
+      const warrantyReserve = Math.round(profit * 0.05);
+      const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
+
+      const cashflowNote = `[Đơn online: ${executingOrder.order_code}] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Sales (15%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (75%): ${remainingProfit.toLocaleString('vi-VN')}₫. ${executingOrder.note || ''}`;
+
       const res = await sellInventoryItem({
-        itemId: matchedItem.id,
-        customerName: order.customer_name,
-        customerPhone: order.customer_phone,
+        itemId: item.id,
+        customerName: executingOrder.customer_name,
+        customerPhone: executingOrder.customer_phone,
         birthDate: '',
-        customerAddress: order.customer_address || '',
-        serialNumber: matchedItem.serial_number || matchedItem.service_tag,
+        customerAddress: executingOrder.customer_address || '',
+        serialNumber: item.serial_number || item.service_tag,
         warrantyMonths,
-        soldPrice: order.device_price,
-        notes: `Từ đơn online: ${order.order_code}. ${order.note || ''}`,
+        soldPrice,
+        notes: cashflowNote,
       });
 
       if (res.success) {
-        await changeStatus(order.id, 'completed');
-        message.success(`Đã xuất kho & kích hoạt bảo hành cho ${order.customer_name}!`);
+        await changeStatus(executingOrder.id, 'completed');
+        message.success(`Đã xuất kho, phân bổ dòng tiền & kích hoạt bảo hành cho ${executingOrder.customer_name}!`);
+        setCashflowOrderData(null);
         setExecutingOrder(null);
       } else {
         message.error(res.message || 'Lỗi khi xuất kho thiết bị!');
@@ -200,6 +239,8 @@ export default function OrderManagementPage() {
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : 'Lỗi khi xuất kho';
       message.error(errorMsg);
+    } finally {
+      setIsSubmittingOrderSale(false);
     }
   };
 
@@ -437,6 +478,16 @@ export default function OrderManagementPage() {
       {executingOrder && (
         <ExecuteOrderModal order={executingOrder} inventory={inventory} onClose={() => setExecutingOrder(null)} onConfirm={(i, m) => executeSale(executingOrder, i, m)} />
       )}
+
+      {cashflowOrderData && (
+        <CashflowSaleConfirmModal
+          data={cashflowOrderData}
+          onClose={() => setCashflowOrderData(null)}
+          onConfirm={handleFinalizeOrderSale}
+          isSubmitting={isSubmittingOrderSale}
+          actionTitle="Xác Nhận & Xuất Kho Ngay"
+        />
+      )}
     </div>
   );
 }
@@ -559,8 +610,8 @@ function ExecuteOrderModal({
             }}
             className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
           >
-            <ShieldCheck className="w-4 h-4" />
-            <span>Xác nhận xuất kho &amp; Kích hoạt BH</span>
+            <span>Tiếp tục: Phân bổ dòng tiền</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

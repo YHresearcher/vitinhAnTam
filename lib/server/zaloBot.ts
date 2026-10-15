@@ -370,9 +370,41 @@ export async function dispatchSystemEvent(
         `👉 Vui lòng duyệt cấp key trên phần mềm!`;
     } else if (eventType === 'sale_success') {
       const soldPriceStr = typeof payload.soldPrice === 'number'
-        ? payload.soldPrice.toLocaleString('vi-VN') + ' đ'
-        : (payload.soldPrice || '0 đ');
-      formattedText = `🎉 [CHÚC MỪNG BÁN HÀNG THÀNH CÔNG!]\n` +
+        ? payload.soldPrice.toLocaleString('vi-VN') + ' ₫'
+        : (payload.soldPrice || '0 ₫');
+      const costPriceStr = typeof payload.costPrice === 'number'
+        ? payload.costPrice.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+      const profitStr = typeof payload.netProfit === 'number'
+        ? payload.netProfit.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+      const sellerStr = typeof payload.sellerCommission === 'number'
+        ? payload.sellerCommission.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+      const lenderStr = typeof payload.lenderTotal === 'number'
+        ? payload.lenderTotal.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+      const warrantyReserveStr = typeof payload.warrantyReserve === 'number'
+        ? payload.warrantyReserve.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+      const remainingProfitStr = typeof payload.remainingProfit === 'number'
+        ? payload.remainingProfit.toLocaleString('vi-VN') + ' ₫'
+        : undefined;
+
+      let cashflowSection = '';
+      if (profitStr) {
+        cashflowSection = `📥 Giá vốn nhập: ${costPriceStr || '0 ₫'}\n` +
+          `📈 Lợi nhuận gộp: ${profitStr}\n` +
+          `━━━━━━━━━━━━━━━━━━━\n` +
+          `📊 PHÂN BỔ DÒNG TIỀN:\n` +
+          `• 🧑‍💼 Người bán (15% LN): ${sellerStr || '0 ₫'}\n` +
+          `• 🏦 Hoàn người cho vay (Vốn + 5% LN): ${lenderStr || '0 ₫'}\n` +
+          `• 🛡️ Trích lập dự phòng (5% LN): ${warrantyReserveStr || '0 ₫'}\n` +
+          `• 💎 Lợi nhuận còn lại (75% LN): ${remainingProfitStr || '0 ₫'}\n` +
+          `━━━━━━━━━━━━━━━━━━━\n`;
+      }
+
+      formattedText = `🎉 [CHÚC MỪNG XUẤT KHO & BÁN HÀNG THÀNH CÔNG!]\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `🏆 Người chốt đơn: ${payload.sellerName || 'Admin'}\n` +
         `💻 Thiết bị: ${payload.deviceName || 'Máy tính'}\n` +
@@ -380,7 +412,8 @@ export async function dispatchSystemEvent(
         `👤 Khách hàng: ${payload.customerName || 'N/A'}\n` +
         `📞 SĐT: ${payload.customerPhone || 'N/A'}\n` +
         (payload.customerCode ? `🎫 Mã khách hàng: ${payload.customerCode}\n` : '') +
-        `💰 Giá trị: ${soldPriceStr}\n` +
+        `💰 Giá bán ra: ${soldPriceStr}\n` +
+        cashflowSection +
         `🛡️ Bảo hành: ${payload.warrantyMonths || 12} tháng\n` +
         (payload.shelfLocation ? `📍 Kệ xuất kho: ${payload.shelfLocation}\n` : '') +
         `⏱️ Hoàn tất lúc: ${nowStr}\n` +
