@@ -27,6 +27,7 @@ import {
   MOCK_BLOG_CATEGORIES,
   createId,
   isUuid,
+  generateReferralCode,
 } from './supabase';
 import {
   initialUsers,
@@ -715,9 +716,11 @@ export function StoreProvider({
   const addUser = async (userData: Omit<UserAccount, 'id' | 'created_at'>): Promise<UserAccount> => {
     const { password, ...rest } = userData;
     const cleanUsername = rest.username ? rest.username.trim().toLowerCase() : rest.email.split('@')[0].toLowerCase();
+    const existingCodes = users.map((u) => u.referral_code).filter(Boolean) as string[];
     const newUser: UserAccount = {
       ...rest,
       username: cleanUsername,
+      referral_code: rest.referral_code || generateReferralCode(cleanUsername || rest.name, existingCodes),
       password_changed: false,
       id: `u-${Date.now()}`,
       created_at: new Date().toISOString(),
@@ -907,6 +910,9 @@ export function StoreProvider({
               currentUsersList = parsed.map((item: Partial<UserAccount>) => {
                 const safe: Partial<UserAccount> = { ...item };
                 delete safe.password;
+                if (!safe.referral_code) {
+                  safe.referral_code = generateReferralCode(safe.username || safe.name);
+                }
                 return safe as UserAccount;
               });
               setUsers(currentUsersList);

@@ -29,7 +29,6 @@ export default function CreateOrderModal({
   const [deviceTag, setDeviceTag] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'qr' | 'cash'>('qr');
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery'>('pickup');
-  const [referralCode, setReferralCode] = useState('');
   const [note, setNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,7 +72,6 @@ export default function CreateOrderModal({
     }
 
     setIsSubmitting(true);
-    const effectiveReferral = referralCode.trim() || 'Khách vãng lai';
 
     try {
       const res = await fetch('/api/orders', {
@@ -91,7 +89,7 @@ export default function CreateOrderModal({
           device_tag: deviceTag.trim(),
           payment_method: paymentMethod,
           delivery_method: deliveryMethod,
-          referral_code: effectiveReferral,
+          referral_code: currentUser.referral_code || currentUser.name,
           note: note.trim(),
           created_by_id: currentUser.id,
           created_by_name: currentUser.name,
@@ -246,40 +244,18 @@ export default function CreateOrderModal({
             </div>
           </div>
 
-          {/* Service Tag & Người giới thiệu */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Service Tag / Serial (nếu có)
-              </label>
-              <input
-                type="text"
-                value={deviceTag}
-                onChange={(e) => setDeviceTag(e.target.value)}
-                placeholder="VD: DEL-7490-01"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
-                <span>Mã người giới thiệu</span>
-                <span className="text-[10px] text-slate-400 font-normal">Trống = Khách vãng lai</span>
-              </label>
-              <input
-                type="text"
-                value={referralCode}
-                onChange={(e) => setReferralCode(e.target.value)}
-                placeholder="Để trống nếu là Khách vãng lai"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500"
-              />
-              <p className="text-[10px] text-slate-500 mt-0.5">
-                {referralCode.trim() ? (
-                  <span className="text-purple-700 font-semibold">Ghi nhận: {referralCode.trim()}</span>
-                ) : (
-                  <span>Ghi nhận là &quot;Khách vãng lai&quot; (15% hoa hồng gộp vào lợi nhuận chung)</span>
-                )}
-              </p>
-            </div>
+          {/* Service Tag */}
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">
+              Service Tag / Serial (nếu có)
+            </label>
+            <input
+              type="text"
+              value={deviceTag}
+              onChange={(e) => setDeviceTag(e.target.value)}
+              placeholder="VD: DEL-7490-01"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 focus:bg-white focus:outline-none focus:border-blue-500"
+            />
           </div>
 
           {/* Phương thức thanh toán & Giao hàng */}

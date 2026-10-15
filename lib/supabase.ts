@@ -41,6 +41,7 @@ export interface UserProfile {
   avatarBg: string;
   email?: string;
   phone?: string;
+  referral_code?: string;
 }
 
 export interface UserAccount extends UserProfile {
@@ -77,6 +78,33 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 /** Chỉ id dạng UUID mới được đẩy lên Supabase (dữ liệu mock `inv-1` không tồn tại ở đó). */
 export const isUuid = (value: string): boolean => UUID_PATTERN.test(value);
+
+/**
+ * Tự động tạo mã người giới thiệu độc nhất cho nhân viên / người dùng (VD: AT-TP88, AT-SALES01, AT-7K9M)
+ */
+export const generateReferralCode = (nameOrUsername?: string, existingCodes: string[] = []): string => {
+  let prefix = 'AT';
+  if (nameOrUsername) {
+    const slug = nameOrUsername
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase();
+    if (slug.length >= 2) {
+      prefix = `AT${slug.slice(0, 3)}`;
+    }
+  }
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  for (let attempt = 0; attempt < 100; attempt++) {
+    let suffix = '';
+    for (let i = 0; i < 4; i++) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const code = `${prefix}-${suffix}`;
+    if (!existingCodes.includes(code)) return code;
+  }
+  return `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`;
+};
 
 
 export const MOCK_USERS: Record<UserRole, UserProfile> = {

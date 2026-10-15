@@ -88,7 +88,7 @@ export default function OrderDetailModal({
   const tierConf = CRM_TIER_CONFIG[tierKey];
   const discountAmount = Math.round((Number(order.device_price) || 0) * tierConf.discountRate);
 
-  const isWalkIn = !order.referral_code || order.referral_code === 'Khách vãng lai';
+  const isWalkIn = (!order.referral_code || order.referral_code === 'Khách vãng lai') && !order.seller_name;
 
   const handleSaveCare = async () => {
     if (!isAdmin) return;

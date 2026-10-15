@@ -52,12 +52,11 @@ export default function CashflowSaleConfirmModal({
   const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
   const isProfitable = profit > 0;
 
-  // Khách vãng lai: không có mã giới thiệu / để trống trên web -> 15% hoa hồng sales gộp vào lợi nhuận chung
+  // Khách vãng lai: không có mã giới thiệu / để trống trên web và không có người bán -> 15% hoa hồng sales gộp vào lợi nhuận chung
   const isWalkIn =
     Boolean(data.isWalkIn) ||
-    data.referralCode === 'Khách vãng lai' ||
-    data.sellerName === 'Khách vãng lai' ||
-    (!data.referralCode && !data.sellerName);
+    ((!data.referralCode || data.referralCode === 'Khách vãng lai') &&
+     (!data.sellerName || data.sellerName === 'Khách vãng lai'));
 
   // 1. Tiền cho người bán (15% lợi nhuận) — Nếu là khách vãng lai, hoa hồng = 0₫
   const sellerCommission = isProfitable && !isWalkIn ? Math.round(profit * 0.15) : 0;

@@ -217,7 +217,7 @@ export default function OrderManagementPage() {
 
   const executeSale = (order: Order, matchedItem: InventoryItem, warrantyMonths: number) => {
     const currentCost = Number(matchedItem.import_price || matchedItem.cost_price || 0);
-    const isWalkIn = !order.referral_code || order.referral_code === 'Khách vãng lai';
+    const isWalkIn = (!order.referral_code || order.referral_code === 'Khách vãng lai') && !order.seller_name;
     setCashflowOrderData({
       item: matchedItem,
       customerName: order.customer_name,
@@ -382,7 +382,7 @@ export default function OrderManagementPage() {
                     </div>
                   ) : (
                     list.map((order) => {
-                      const isWalkIn = !order.referral_code || order.referral_code === 'Khách vãng lai';
+                      const isWalkIn = (!order.referral_code || order.referral_code === 'Khách vãng lai') && !order.seller_name;
                       return (
                         <div
                           key={order.id}
@@ -427,10 +427,10 @@ export default function OrderManagementPage() {
 
                           {/* Dòng 4: Tag Nguồn & CSKH ngắn gọn */}
                           <div className="flex items-center gap-1 flex-wrap text-[10px]">
-                            <span className={`px-1.5 py-0.2 rounded font-medium border ${
+                            <span className={`px-1.5 py-0.2 rounded font-medium border truncate max-w-[140px] ${
                               isWalkIn ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-purple-50 text-purple-700 border-purple-200'
                             }`}>
-                              {isWalkIn ? 'Vãng lai' : `Mã: ${order.referral_code}`}
+                              {isWalkIn ? 'Vãng lai' : (order.seller_name ? `Bán: ${order.seller_name}` : `Mã: ${order.referral_code}`)}
                             </span>
                             <span className="px-1.5 py-0.2 rounded font-medium bg-blue-50 text-blue-700 border border-blue-200 truncate max-w-[120px]">
                               CSKH: {order.assigned_care_name || 'Chưa gán'}

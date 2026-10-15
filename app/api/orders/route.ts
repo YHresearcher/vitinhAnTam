@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 import { dispatchSystemEvent } from '@/lib/server/zaloBot';
+import { loadUsersAsync } from '@/lib/server/users';
 
 
 // ---------------------------------------------------------------------------
@@ -197,10 +198,27 @@ export async function POST(request: NextRequest) {
     const referralCode = (body.referral_code || '').trim() || 'Khách vãng lai';
     const createdById = body.created_by_id || null;
     const createdByName = body.created_by_name || null;
-    const sellerId = body.seller_id || createdById || null;
-    const sellerName = body.seller_name || createdByName || (referralCode !== 'Khách vãng lai' ? referralCode : null);
-    const assignedCareId = body.assigned_care_id || createdById || null;
-    const assignedCareName = body.assigned_care_name || createdByName || null;
+
+    let matchedUser = null;
+    if (referralCode !== 'Khách vãng lai' && (!body.seller_id || !body.seller_name)) {
+      try {
+        const allUsers = await loadUsersAsync();
+        const codeClean = referralCode.trim().toLowerCase();
+        matchedUser = allUsers.find(
+          (u) =>
+            (u.referral_code && u.referral_code.toLowerCase() === codeClean) ||
+            (u.username && u.username.toLowerCase() === codeClean) ||
+            (u.id && u.id.toLowerCase() === codeClean)
+        );
+      } catch (err) {
+        console.warn('Lỗi tìm kiếm nhân viên theo mã giới thiệu:', err);
+      }
+    }
+
+    const sellerId = body.seller_id || createdById || (matchedUser ? matchedUser.id : null);
+    const sellerName = body.seller_name || createdByName || (matchedUser ? matchedUser.name : (referralCode !== 'Khách vãng lai' ? referralCode : null));
+    const assignedCareId = body.assigned_care_id || createdById || (matchedUser ? matchedUser.id : null);
+    const assignedCareName = body.assigned_care_name || createdByName || (matchedUser ? matchedUser.name : null);
 
     const extraTags = [
       `[Người GT: ${referralCode}]`,

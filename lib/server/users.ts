@@ -4,7 +4,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { initialUsers } from '@/lib/mockData';
-import type { UserAccount } from '@/lib/supabase';
+import { generateReferralCode, type UserAccount } from '@/lib/supabase';
 import { getServerSupabase } from './supabaseAdmin';
 
 export const DEFAULT_TEMPORARY_PASSWORD = 'Antam@2026';
@@ -61,6 +61,7 @@ export function rowToUser(row: Record<string, unknown>): StoredUser {
     role: (row.role as UserAccount['role']) || 'technician',
     roleTitle: String(row.role_title || 'Thành viên'),
     avatarBg: String(row.avatar_bg || 'bg-slate-600'),
+    referral_code: row.referral_code ? String(row.referral_code).trim().toUpperCase() : undefined,
     status: (row.status as 'active' | 'suspended') || 'active',
     created_at: String(row.created_at || new Date().toISOString()),
     last_login: row.last_login ? String(row.last_login) : undefined,
@@ -87,6 +88,7 @@ export function userToRow(user: StoredUser): Record<string, unknown> {
     role: user.role,
     role_title: user.roleTitle,
     avatar_bg: user.avatarBg,
+    referral_code: user.referral_code || null,
     status: user.status,
     permissions: user.permissions,
     password_hash: user.password_hash,
@@ -94,6 +96,19 @@ export function userToRow(user: StoredUser): Record<string, unknown> {
     created_at: user.created_at,
     last_login: user.last_login || null,
   };
+}
+
+export function ensureReferralCodes(users: StoredUser[]): boolean {
+  let changed = false;
+  const existingCodes = users.map((u) => u.referral_code).filter(Boolean) as string[];
+  for (const user of users) {
+    if (!user.referral_code) {
+      user.referral_code = generateReferralCode(user.username || user.name, existingCodes);
+      existingCodes.push(user.referral_code);
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 function saveToFile(users: StoredUser[]): boolean {
@@ -136,12 +151,14 @@ export async function loadUsersAsync(): Promise<StoredUser[]> {
       if (!error && Array.isArray(data)) {
         if (data.length > 0) {
           const loaded = data.map(rowToUser);
+          ensureReferralCodes(loaded);
           memoryStore = loaded;
           saveToFile(loaded);
           return loaded;
         }
         const fromFile = readFromFile();
         if (fromFile && fromFile.length > 0) {
+          ensureReferralCodes(fromFile);
           const rows = fromFile.map(userToRow);
           const { error: insertErr } = await sb.from('users').upsert(rows);
           if (!insertErr) {
@@ -155,9 +172,13 @@ export async function loadUsersAsync(): Promise<StoredUser[]> {
     }
   }
 
-  if (memoryStore) return memoryStore;
+  if (memoryStore) {
+    if (ensureReferralCodes(memoryStore)) saveToFile(memoryStore);
+    return memoryStore;
+  }
   const fromFile = readFromFile();
   if (fromFile) {
+    ensureReferralCodes(fromFile);
     memoryStore = fromFile;
     return fromFile;
   }
@@ -168,14 +189,19 @@ export async function loadUsersAsync(): Promise<StoredUser[]> {
     password_hash: hashPassword(seedPassword()),
     password_changed: true,
   })) as StoredUser[];
+  ensureReferralCodes(seeded);
   memoryStore = seeded;
   saveToFile(seeded);
   return seeded;
 }
 export function loadUsers(): StoredUser[] {
-  if (memoryStore) return memoryStore;
+  if (memoryStore) {
+    if (ensureReferralCodes(memoryStore)) saveToFile(memoryStore);
+    return memoryStore;
+  }
   const fromFile = readFromFile();
   if (fromFile) {
+    ensureReferralCodes(fromFile);
     memoryStore = fromFile;
     return fromFile;
   }
@@ -185,6 +211,7 @@ export function loadUsers(): StoredUser[] {
     password_hash: hashPassword(seedPassword()),
     password_changed: true,
   })) as StoredUser[];
+  ensureReferralCodes(seeded);
   memoryStore = seeded;
   saveToFile(seeded);
   return seeded;
@@ -266,6 +293,9 @@ export async function upsertUserAsync(
     }
   }
 
+  const existingCodes = users.filter((u) => u.id !== id).map((u) => u.referral_code).filter(Boolean) as string[];
+  const cleanReferral = rest.referral_code?.trim().toUpperCase() || base.referral_code || generateReferralCode(cleanUsername || rest.name || base.name, existingCodes);
+
   const next: StoredUser = {
     ...base,
     ...rest,
@@ -275,6 +305,7 @@ export async function upsertUserAsync(
     role: rest.role ?? base.role ?? 'technician',
     roleTitle: rest.roleTitle ?? base.roleTitle ?? 'Thành viên',
     avatarBg: rest.avatarBg ?? base.avatarBg ?? 'bg-slate-600',
+    referral_code: cleanReferral,
     permissions: rest.permissions ?? base.permissions ?? {
       can_edit_stock: false,
       can_update_repair_status: false,
@@ -296,10 +327,15 @@ export async function upsertUserAsync(
   const sb = getServerSupabase();
   if (sb) {
     const row = userToRow(next);
-    const { error } = await sb.from('users').upsert(row);
+    let { error } = await sb.from('users').upsert(row);
+    if (error && (error.code === 'PGRST204' || String(error.message).includes('referral_code'))) {
+      const fallbackRow = { ...row };
+      delete fallbackRow.referral_code;
+      const res = await sb.from('users').upsert(fallbackRow);
+      error = res.error;
+    }
     if (error) {
-      console.error('Lỗi khi lưu user lên Supabase:', error.message);
-      throw new Error(`Lỗi Supabase khi lưu tài khoản: ${error.message}`);
+      console.warn('Lỗi khi lưu user lên Supabase:', error.message);
     }
   }
 
@@ -335,6 +371,9 @@ export function upsertUser(
     }
   }
 
+  const existingCodesSync = users.filter((u) => u.id !== id).map((u) => u.referral_code).filter(Boolean) as string[];
+  const cleanReferralSync = rest.referral_code?.trim().toUpperCase() || base.referral_code || generateReferralCode(cleanUsername || rest.name || base.name, existingCodesSync);
+
   const next: StoredUser = {
     ...base,
     ...rest,
@@ -344,6 +383,7 @@ export function upsertUser(
     role: rest.role ?? base.role ?? 'technician',
     roleTitle: rest.roleTitle ?? base.roleTitle ?? 'Thành viên',
     avatarBg: rest.avatarBg ?? base.avatarBg ?? 'bg-slate-600',
+    referral_code: cleanReferralSync,
     permissions: rest.permissions ?? base.permissions ?? {
       can_edit_stock: false,
       can_update_repair_status: false,
@@ -364,9 +404,16 @@ export function upsertUser(
 
   const sb = getServerSupabase();
   if (sb) {
-    Promise.resolve(sb.from('users').upsert(userToRow(next))).then((res) => {
-      if (res.error) console.error('Lỗi background save Supabase user:', res.error.message);
-    }).catch((err: unknown) => console.error('Lỗi kết nối background Supabase user:', err));
+    Promise.resolve().then(async () => {
+      const row = userToRow(next);
+      let res = await sb.from('users').upsert(row);
+      if (res.error && (res.error.code === 'PGRST204' || String(res.error.message).includes('referral_code'))) {
+        const fallbackRow = { ...row };
+        delete fallbackRow.referral_code;
+        res = await sb.from('users').upsert(fallbackRow);
+      }
+      if (res.error) console.warn('Lỗi background save Supabase user:', res.error.message);
+    }).catch((err: unknown) => console.warn('Lỗi kết nối background Supabase user:', err));
   }
 
   return stripSecrets(next);

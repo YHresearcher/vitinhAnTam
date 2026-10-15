@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Drawer } from 'antd';
+import { Drawer, message } from 'antd';
 import {
   LayoutDashboard,
   CircleDollarSign,
@@ -41,6 +41,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canManageUsers,
     canAccessSettings,
     canAccessCRM,
+    currentUser,
     logout,
     pendingOrdersCount,
   } = useViTinhAnTamStore();
@@ -280,6 +281,35 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             <span>Đăng xuất</span>
           </button>
         </nav>
+      </div>
+
+      {/* User Info & Referral Card */}
+      <div className="p-3 mx-3 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+        <div className="flex items-center gap-2.5">
+          <div className={`w-8 h-8 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0`}>
+            {currentUser.name.charAt(0)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{currentUser.name}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">{currentUser.roleTitle}</div>
+          </div>
+        </div>
+        {currentUser.referral_code && (
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard?.writeText(currentUser.referral_code || '');
+              message.success(`Đã sao chép mã GT: ${currentUser.referral_code}`);
+            }}
+            title="Mã giới thiệu bán hàng của bạn (Click để sao chép gửi khách)"
+            className="w-full mt-2 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors text-left"
+          >
+            <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">Mã giới thiệu:</span>
+            <span className="text-xs font-mono font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1">
+              {currentUser.referral_code} 📋
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Footer Info */}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { message } from 'antd';
 import { Search, KeyRound, Menu } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
@@ -236,13 +237,29 @@ export default function AdminLayout({
               >
                 {currentUser.name.charAt(0)}
               </div>
-              <div className="flex flex-col leading-tight text-left min-w-0 max-w-[85px] xs:max-w-[120px] sm:max-w-[160px] md:max-w-none">
+              <div className="flex flex-col leading-tight text-left min-w-0 max-w-[110px] xs:max-w-[145px] sm:max-w-[185px] md:max-w-none">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
                   {currentUser.name}
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">
-                  {currentUser.roleTitle}
-                </span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">
+                    {currentUser.roleTitle}
+                  </span>
+                  {currentUser.referral_code && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard?.writeText(currentUser.referral_code || '');
+                        message.success(`Đã sao chép mã GT: ${currentUser.referral_code}`);
+                      }}
+                      title="Mã người giới thiệu của bạn (Click để sao chép)"
+                      className="inline-flex items-center gap-0.5 text-[9.5px] font-mono font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950/70 border border-amber-300 dark:border-amber-800/80 px-1 py-0.2 rounded hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors cursor-pointer select-all shrink-0"
+                    >
+                      Mã GT: {currentUser.referral_code}
+                    </button>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
