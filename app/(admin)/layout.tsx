@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { message } from 'antd';
-import { Search, KeyRound, Menu } from 'lucide-react';
+import { Search, Menu, Home, LogOut } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DeadlineTrackingWidget } from '@/components/admin/DeadlineTrackingWidget';
 import { NewOrderNotificationWidget } from '@/components/admin/NewOrderNotificationWidget';
@@ -117,6 +117,37 @@ export default function AdminLayout({
     router.push('/login');
   };
 
+  // Tự động đăng xuất sau 30 phút không hoạt động
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 phút
+    let timer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        message.warning('Phiên đăng nhập đã hết hạn do không hoạt động trong 30 phút.');
+        logout();
+        router.push('/login');
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isLoggedIn, logout, router]);
+
   // Màn hình chờ đang tải dữ liệu / kiểm tra phiên
   if (isLoading) {
     return (
@@ -186,16 +217,18 @@ export default function AdminLayout({
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* Quick Key Navigation - Desktop / Tablet */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* View public website icon button */}
             <Link
-              href="/quan-ly-key"
+              href="/"
               prefetch={true}
-              className="hidden lg:flex items-center gap-1.5 h-8.5 px-2.5 rounded-lg border transition-all text-xs font-bold bg-[#FFFDF9] dark:bg-slate-800 text-[#2B1810] dark:text-slate-200 border-[#E8E2D9] dark:border-slate-700 hover:border-[#C0392B] dark:hover:border-red-500 hover:bg-red-50/30 dark:hover:bg-red-950/30 shrink-0"
-              title="Kho Key Bản Quyền"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+              title="Xem trang chủ website khách"
+              aria-label="Xem trang chủ"
             >
-              <KeyRound className="w-3.5 h-3.5 text-[#C0392B] dark:text-red-400" />
-              <span className="font-mono">KHO KEY</span>
+              <Home className="w-4 h-4" />
             </Link>
 
             {/* Language Switcher - Hide on very small screens to preserve user space */}
@@ -266,9 +299,10 @@ export default function AdminLayout({
                 type="button"
                 onClick={handleLogout}
                 title="Đăng xuất khỏi hệ thống"
-                className="px-1.5 sm:px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded text-xs font-semibold transition-colors cursor-pointer shrink-0"
+                className="p-1.5 sm:p-2 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer shrink-0"
+                aria-label="Đăng xuất"
               >
-                Thoát
+                <LogOut className="w-4 h-4 text-rose-500" />
               </button>
             </div>
           </div>

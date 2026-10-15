@@ -19,13 +19,10 @@ export default function FAQSection({ isEn, t }: FAQSectionProps) {
     if (faqs && faqs.length > 0) {
       return faqs.map((f) => ({ question: f.question, answer: f.answer }));
     }
-    return [
-      {
-        question: 'Máy tính tại Vi Tính An Tâm được kiểm tra như thế nào?',
-        answer: 'Toàn bộ máy được tuyển chọn kỹ lưỡng, kiểm định bằng phần mềm chuyên dụng như FurMark, AIDA64, CrystalDiskInfo trước khi bàn giao.'
-      },
-    ];
+    return [];
   }, [isEn, faqs]);
+
+  if (activeFaqs.length === 0) return null;
 
   return (
     <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">

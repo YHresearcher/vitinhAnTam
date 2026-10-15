@@ -20,6 +20,8 @@ export default function ReviewsSection({ isEn, t }: ReviewsSectionProps) {
     return initialCustomerReviews;
   }, [isEn, reviews]);
 
+  if (displayReviews.length === 0) return null;
+
   return (
     <section className="bg-[#FAF7F2] border-y border-[#E8E2D9] py-16 scroll-mt-20" id="danh-gia">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

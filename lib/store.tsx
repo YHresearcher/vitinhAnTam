@@ -23,8 +23,6 @@ import {
   CustomerOrder,
   BlogPost,
   BlogCategory,
-  MOCK_BLOG_POSTS,
-  MOCK_BLOG_CATEGORIES,
   createId,
   isUuid,
   generateReferralCode,
@@ -33,9 +31,6 @@ import {
   initialUsers,
   FaqItem,
   CustomerReview,
-  initialFaqs,
-  initialKeyCategories,
-  initialLicenseKeys,
   initialKeyEmailTemplate,
 } from './mockData';
 import { calculateCustomerTier } from './crmTiers';
@@ -388,7 +383,7 @@ export function StoreProvider({
   // Collections (Khởi tạo mảng rỗng để không có dữ liệu mockup gây ảnh hưởng đến hiệu quả hệ thống)
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [faqs, setFaqs] = useState<FaqItem[]>(initialFaqs);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
   const [reviews, setReviews] = useState<CustomerReview[]>([]);
   const [tickets, setTickets] = useState<ServiceTicket[]>([]);
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
@@ -396,8 +391,8 @@ export function StoreProvider({
   const [onsiteDispatches, setOnsiteDispatches] = useState<OnsiteDispatch[]>([]);
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>([]);
   const [pendingOrders, setPendingOrders] = useState<CustomerOrder[]>([]);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>(MOCK_BLOG_POSTS);
-  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>(MOCK_BLOG_CATEGORIES);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [blogCategories, setBlogCategories] = useState<BlogCategory[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
     if (initialSettings && typeof initialSettings === 'object') {
       return { ...initialSystemSettings, ...initialSettings };
@@ -469,8 +464,8 @@ export function StoreProvider({
   }, []);
 
   // Windows & Office Keys Pool, Categories, Requests & Email Template
-  const [keyCategories, setKeyCategories] = useState<KeyCategory[]>(initialKeyCategories);
-  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>(initialLicenseKeys);
+  const [keyCategories, setKeyCategories] = useState<KeyCategory[]>([]);
+  const [licenseKeys, setLicenseKeys] = useState<LicenseKeyItem[]>([]);
   const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>([]);
   const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
 
@@ -957,10 +952,10 @@ export function StoreProvider({
         }
         setInventory((invResult.data as InventoryItem[]) || []);
         if (spResult.data) setSpareParts(spResult.data as SparePart[]);
-        if (blogPostRes.data && !blogPostRes.error && (blogPostRes.data as BlogPost[]).length > 0) {
+        if (blogPostRes.data && !blogPostRes.error) {
           setBlogPosts(blogPostRes.data as BlogPost[]);
         }
-        if (blogCatRes.data && !blogCatRes.error && (blogCatRes.data as BlogCategory[]).length > 0) {
+        if (blogCatRes.data && !blogCatRes.error) {
           setBlogCategories(blogCatRes.data as BlogCategory[]);
         }
 
@@ -1006,10 +1001,10 @@ export function StoreProvider({
           if (keysRes.ok) {
             const keysJson = await keysRes.json();
             if (keysJson.success) {
-              if (Array.isArray(keysJson.categories) && keysJson.categories.length > 0) {
+              if (Array.isArray(keysJson.categories)) {
                 setKeyCategories(keysJson.categories);
               }
-              if (Array.isArray(keysJson.keys) && keysJson.keys.length > 0) {
+              if (Array.isArray(keysJson.keys)) {
                 setLicenseKeys(keysJson.keys);
               }
               if (Array.isArray(keysJson.requests)) {
@@ -1076,47 +1071,27 @@ export function StoreProvider({
         readJson<FaqItem[]>(STORAGE_KEYS.faqs, setFaqs);
         readJson<CustomerReview[]>(STORAGE_KEYS.reviews, setReviews);
         readJson<KeyCategory[]>(STORAGE_KEYS.keyCategories, (parsed) => {
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const merged = [...parsed];
-            for (const initCat of initialKeyCategories) {
-              const found = merged.find((c) => c.id === initCat.id);
-              if (found) {
-                found.description = initCat.description;
-              } else {
-                merged.push(initCat);
-              }
-            }
-            setKeyCategories(merged);
-          } else {
-            setKeyCategories(initialKeyCategories);
+          if (Array.isArray(parsed)) {
+            setKeyCategories(parsed);
           }
         });
 
         readJson<LicenseKeyItem[]>(STORAGE_KEYS.licenseKeys, (parsed) => {
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const existingCodes = new Set(parsed.map((k) => k.license_code.toUpperCase()));
-            const missing = initialLicenseKeys.filter((k) => !existingCodes.has(k.license_code.toUpperCase()));
-            const merged = [...parsed, ...missing];
-            setLicenseKeys(merged);
-          } else {
-            setLicenseKeys(initialLicenseKeys);
+          if (Array.isArray(parsed)) {
+            setLicenseKeys(parsed);
           }
         });
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
         readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
         readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, (parsed) => {
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             setBlogPosts(parsed);
-          } else {
-            setBlogPosts(MOCK_BLOG_POSTS);
           }
         });
         readJson<BlogCategory[]>(STORAGE_KEYS.blogCategories, (parsed) => {
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             setBlogCategories(parsed);
-          } else {
-            setBlogCategories(MOCK_BLOG_CATEGORIES);
           }
         });
 

@@ -197,18 +197,7 @@ export default function HomePage() {
     if (faqs && faqs.length > 0) {
       return faqs.map((f) => ({ question: f.question, answer: f.answer }));
     }
-    return [
-      {
-        question: 'Máy tính tại Vi Tính An Tâm được kiểm tra và tuyển chọn như thế nào?',
-        answer:
-          'Toàn bộ máy tính tại Vi Tính An Tâm cam kết bo mạch nguyên bản 100%, chưa từng qua sửa chữa. Trước khi giao, kỹ thuật viên kiểm tra toàn diện bằng phần mềm test tải chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) để đảm bảo máy vận hành êm mát, ổn định và bền bỉ.',
-      },
-      {
-        question: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
-        answer:
-          'An Tâm áp dụng chính sách bảo hành chu đáo, đổi mới linh kiện nhanh chóng. Cửa hàng hỗ trợ xử lý kỹ thuật tận nơi hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk để công việc của bạn luôn được thông suốt.',
-      },
-    ];
+    return [];
   }, [isEn, faqs]);
 
   // Danh sách đánh giá khách hàng (Được khôi phục và tối ưu hóa)
@@ -1097,55 +1086,57 @@ export default function HomePage() {
         )}
 
         {/* 6. FAQ DẠNG COLLAPSED ACCORDION */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
-          <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
-            <div className="text-xs uppercase tracking-widest text-[#C0392B] font-bold">
-              {t.faq.tag}
+        {activeFaqs.length > 0 && (
+          <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-14 scroll-mt-20" id="faq-an-tam">
+            <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+              <div className="text-xs uppercase tracking-widest text-[#C0392B] font-bold">
+                {t.faq.tag}
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
+                {t.faq.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#6E5D53]">
+                {t.faq.subtitle}
+              </p>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
-              {t.faq.title}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#6E5D53]">
-              {t.faq.subtitle}
-            </p>
-          </div>
 
-          <div className="space-y-3">
-            {activeFaqs.map((item, idx) => {
-              const isOpen = openFaqIndex === idx;
-              return (
-                <div
-                  key={idx}
-                  className="rounded-xl bg-white border border-[#E8E2D9] shadow-xs overflow-hidden transition-all"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    aria-expanded={isOpen}
-                    aria-controls={`faq-answer-${idx}`}
-                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-[#FAF7F2] transition-colors"
+            <div className="space-y-3">
+              {activeFaqs.map((item, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-xl bg-white border border-[#E8E2D9] shadow-xs overflow-hidden transition-all"
                   >
-                    <span className="text-sm sm:text-base font-bold text-[#2B1810] leading-snug">
-                      {item.question}
-                    </span>
-                    <ChevronDown
-                      className={`w-5 h-5 text-[#6E5D53] transition-transform duration-200 shrink-0 ${
-                        isOpen ? 'rotate-180 text-[#C0392B]' : ''
-                      }`}
-                      strokeWidth={1.5}
-                    />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      aria-controls={`faq-answer-${idx}`}
+                      className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 hover:bg-[#FAF7F2] transition-colors"
+                    >
+                      <span className="text-sm sm:text-base font-bold text-[#2B1810] leading-snug">
+                        {item.question}
+                      </span>
+                      <ChevronDown
+                        className={`w-5 h-5 text-[#6E5D53] transition-transform duration-200 shrink-0 ${
+                          isOpen ? 'rotate-180 text-[#C0392B]' : ''
+                        }`}
+                        strokeWidth={1.5}
+                      />
+                    </button>
 
-                  {isOpen && (
-                    <div id={`faq-answer-${idx}`} role="region" aria-labelledby={`faq-question-${idx}`} className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#6E5D53] leading-relaxed border-t border-[#E8E2D9] bg-[#FFFDF9]">
-                      <p>{item.answer}</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
+                    {isOpen && (
+                      <div id={`faq-answer-${idx}`} role="region" aria-labelledby={`faq-question-${idx}`} className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#6E5D53] leading-relaxed border-t border-[#E8E2D9] bg-[#FFFDF9]">
+                        <p>{item.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* QC & S/N INSPECTION MODAL */}

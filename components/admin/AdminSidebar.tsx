@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Drawer, message } from 'antd';
+import { Drawer } from 'antd';
 import {
   LayoutDashboard,
   CircleDollarSign,
@@ -16,13 +16,10 @@ import {
   UserCog,
   Sliders,
   FileText,
-  ExternalLink,
   ShieldCheck,
-  LogOut,
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useViTinhAnTamStore } from '@/lib/store';
 
 interface AdminSidebarProps {
@@ -41,8 +38,6 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canManageUsers,
     canAccessSettings,
     canAccessCRM,
-    currentUser,
-    logout,
     pendingOrdersCount,
   } = useViTinhAnTamStore();
 
@@ -251,66 +246,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>Tra cứu bảo hành</span>
           </Link>
-
-          <Link
-            href="/"
-            prefetch={true}
-            onClick={handleNavClick}
-            className="flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors text-xs font-medium"
-          >
-            <div className="flex items-center gap-2.5">
-              <ExternalLink className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-              <span>Xem trang chủ khách</span>
-            </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Web</span>
-          </Link>
-
-          <div className="pt-1 px-1">
-            <ThemeToggle variant="pill" className="w-full justify-between" />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              handleNavClick();
-              logout();
-            }}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-700 dark:hover:text-rose-300 transition-colors text-xs font-semibold w-full text-left mt-1 cursor-pointer"
-          >
-            <LogOut className="w-4 h-4 text-rose-500 shrink-0" />
-            <span>Đăng xuất</span>
-          </button>
         </nav>
-      </div>
-
-      {/* User Info & Referral Card */}
-      <div className="p-3 mx-3 mb-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-        <div className="flex items-center gap-2.5">
-          <div className={`w-8 h-8 rounded-full ${currentUser.avatarBg} text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0`}>
-            {currentUser.name.charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{currentUser.name}</div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate font-medium">{currentUser.roleTitle}</div>
-          </div>
-        </div>
-        {(currentUser.referral_code || currentUser.username) && (
-          <button
-            type="button"
-            onClick={() => {
-              const id = currentUser.referral_code || currentUser.username || '';
-              navigator.clipboard?.writeText(id);
-              message.success(`Đã sao chép mã ID: ${id}`);
-            }}
-            title="Mã ID nhân viên / Giới thiệu bán hàng (Click để sao chép)"
-            className="w-full mt-2 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-colors text-left"
-          >
-            <span className="text-[10px] text-amber-800 dark:text-amber-300 font-medium">Mã ID giới thiệu:</span>
-            <span className="text-xs font-mono font-bold text-amber-950 dark:text-amber-200 flex items-center gap-1">
-              @{currentUser.referral_code || currentUser.username} 📋
-            </span>
-          </button>
-        )}
       </div>
 
       {/* Footer Info */}
