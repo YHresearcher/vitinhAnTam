@@ -70,7 +70,7 @@ export const RAW_PRODUCTS: RawProduct[] = [];
 export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = []): ShowcaseItem[] {
   if (inventory && inventory.length > 0) {
     const getInvItemStock = (i: InventoryItem): number => {
-      if (i.qc_status === 'sold') return 0;
+      if (i.qc_status === 'sold' || i.qc_status === 'dealer_sold') return 0;
       if (typeof i.stock_quantity === 'number') return Math.max(0, i.stock_quantity);
       if (typeof i.quantity === 'number') return Math.max(0, i.quantity);
       return 1;
@@ -80,7 +80,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
     const modelStockMap = new Map<string, number>();
 
     inventory.forEach((inv) => {
-      if (inv.qc_status !== 'sold') {
+      if (inv.qc_status !== 'sold' && inv.qc_status !== 'dealer_sold') {
         const rawModel = (
           inv.device_model ||
           inv.model ||
@@ -98,7 +98,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
     return inventory.map((item) => {
       const rawMatch = RAW_PRODUCTS.find((p) => p.serviceTag === item.service_tag);
       const en = rawMatch ? ENGLISH_PRODUCT_DETAILS[rawMatch.id] : null;
-      const isSold = item.qc_status === 'sold';
+      const isSold = item.qc_status === 'sold' || item.qc_status === 'dealer_sold';
       const category: 'office' | 'laptop' | 'workstation' =
         item.form_factor === 'Laptop'
           ? 'laptop'

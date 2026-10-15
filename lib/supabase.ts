@@ -191,7 +191,9 @@ export interface InventoryItem {
   ssd_capacity?: string;
   ssd_health?: number;
   serial_number?: string;
-  qc_status: 'pending_test' | 'testing' | 'ready_to_sell' | 'sold' | 'reserved';
+  qc_status: 'pending_test' | 'testing' | 'ready_to_sell' | 'sold' | 'reserved' | 'dealer_sold';
+  dealer_name?: string;
+  dealer_sold_at?: string;
   burn_in_duration?: number;
   cost_price?: number;
   import_price?: number;
@@ -217,6 +219,7 @@ export interface InventoryItem {
   reserved_delivery_method?: 'pickup' | 'delivery' | string;
   reserved_at?: string;
   reserved_note?: string;
+  notes?: string;
 }
 
 export interface WarrantyProvision {

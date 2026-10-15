@@ -90,7 +90,7 @@ export function calculateFinancialSummary(
   const roiRate = totalExpense > 0 ? Math.round((netProfit / totalExpense) * 100) : 0;
 
   const warehouseCapital = inventory
-    .filter((i) => i.qc_status !== 'sold')
+    .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
     .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
   const sparePartsCapital = spareParts.reduce((sum, p) => sum + (p.unit_cost || 0) * (p.quantity_in_stock || 1), 0);
   const keysCapital = licenseKeys

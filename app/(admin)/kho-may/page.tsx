@@ -38,18 +38,19 @@ export default function KhoMayPage() {
     cancelReservationItem,
     canSellAndEditWarranty,
     sellInventoryItem,
+    markItemAsDealerSold,
     sellSparePart,
     customers,
   } = useStore();
 
-  // Navigation tab state: Máy bộ, Laptop, Linh kiện, Máy đã bán
-  const [activeTab, setActiveTab] = useState<'may-bo' | 'laptop' | 'components' | 'sold'>('may-bo');
+  // Navigation tab state: Máy bộ, Laptop, Linh kiện, Máy đã bán, Đã bán bởi dealer
+  const [activeTab, setActiveTab] = useState<'may-bo' | 'laptop' | 'components' | 'sold' | 'dealer_sold'>('may-bo');
 
   // Filter & Search states - Machines
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBrand, setSelectedBrand] = useState<'all' | 'Dell' | 'HP' | 'Lenovo' | 'other'>('all');
   const [selectedStatus, setSelectedStatus] = useState<
-    'all' | 'ready_to_sell' | 'testing' | 'sold' | 'reserved' | 'aging_warning'
+    'all' | 'ready_to_sell' | 'testing' | 'sold' | 'reserved' | 'aging_warning' | 'dealer_sold'
   >('all');
 
   // Đồng bộ URL params (khi bấm từ Widget "Xem trong kho")
@@ -230,6 +231,45 @@ export default function KhoMayPage() {
     }
   };
 
+  const handleMarkDealerSold = async (item: InventoryItem) => {
+    Modal.confirm({
+      title: 'Xác nhận: Đã bán bởi Dealer?',
+      icon: <AlertCircle className="w-5 h-5 text-orange-500" />,
+      content: (
+        <div className="text-xs text-slate-600 space-y-2 pt-1 font-sans">
+          <p>
+            Bạn đang đánh dấu thiết bị <strong className="text-slate-900 font-mono">{item.service_tag}</strong> ({item.model || item.device_model}) là <strong>hàng trading đã được Dealer bán mất máy</strong>.
+          </p>
+          <div className="text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200 space-y-1">
+            <p className="font-bold flex items-center gap-1">
+              <span>⚠️ Lưu ý quan trọng về doanh thu:</span>
+            </p>
+            <p>
+              • Thiết bị sẽ chuyển sang trạng thái <strong>Đã bán bởi dealer</strong> (ngừng bán, tồn kho = 0).
+            </p>
+            <p>
+              • <strong>Doanh thu máy này sẽ KHÔNG được cộng vào doanh thu tổng</strong> và không phát sinh quỹ bảo hành hay tích lũy khách hàng.
+            </p>
+          </div>
+        </div>
+      ),
+      okText: 'Xác nhận Dealer đã bán',
+      okButtonProps: { className: '!bg-orange-600 hover:!bg-orange-700 !text-white' },
+      cancelText: 'Hủy',
+      onOk: async () => {
+        const res = await markItemAsDealerSold(item.id);
+        if (res.success) {
+          message.success(res.message);
+          setActionNotice(res.message);
+          if (sellingItem?.id === item.id) setSellingItem(null);
+          setTimeout(() => setActionNotice(null), 4000);
+        } else {
+          message.error(res.message);
+        }
+      },
+    });
+  };
+
   // Mở modal bán linh kiện
   const handleOpenSellPartModal = (part: SparePart) => {
     if (!canSellAndEditWarranty()) {
@@ -352,7 +392,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const nowTimestamp = useMemo(() => Date.now(), []);
 
-  // Filtered inventory - Machines (Máy bộ vs Laptop)
+  // Filtered inventory - Machines (Máy bộ vs Laptop vs Dealer sold)
   const filteredInventory = useMemo(() => {
     return inventory.filter((item) => {
       // Phân tách Máy Bộ vs Laptop
@@ -361,8 +401,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         (item.model || '').toLowerCase().includes('laptop') ||
         (item.device_model || '').toLowerCase().includes('laptop');
 
-      if (activeTab === 'may-bo' && isLaptop) return false;
-      if (activeTab === 'laptop' && !isLaptop) return false;
+      if (activeTab === 'dealer_sold') {
+        if (item.qc_status !== 'dealer_sold') return false;
+      } else {
+        if (activeTab === 'may-bo' && isLaptop) return false;
+        if (activeTab === 'laptop' && !isLaptop) return false;
+        // Trong tab may-bo và laptop tồn kho, mặc định ẩn máy dealer_sold trừ khi chọn lọc riêng
+        if (selectedStatus === 'all' && item.qc_status === 'dealer_sold') return false;
+      }
 
       const model = item.model || item.device_model || '';
       const matchesSearch =
@@ -381,7 +427,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       let matchesStatus = true;
       if (selectedStatus === 'aging_warning') {
         const days = calculateDaysInStock(item, nowTimestamp);
-        matchesStatus = days >= 50 && item.qc_status !== 'sold';
+        matchesStatus = days >= 50 && item.qc_status !== 'sold' && item.qc_status !== 'dealer_sold';
       } else if (selectedStatus !== 'all') {
         matchesStatus = item.qc_status === selectedStatus;
       }
@@ -415,13 +461,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     const ready = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
     const testing = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
 
-    // Phân loại Máy Bộ vs Laptop
+    // Phân loại Máy Bộ vs Laptop (loại trừ đã bán và dealer đã bán)
     const mayBoTotal = inventory.filter((i) => {
       const isLaptop =
         (i.form_factor || '').toLowerCase() === 'laptop' ||
         (i.model || '').toLowerCase().includes('laptop') ||
         (i.device_model || '').toLowerCase().includes('laptop');
-      return !isLaptop && i.qc_status !== 'sold';
+      return !isLaptop && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     }).reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
 
     const laptopTotal = inventory.filter((i) => {
@@ -429,7 +475,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         (i.form_factor || '').toLowerCase() === 'laptop' ||
         (i.model || '').toLowerCase().includes('laptop') ||
         (i.device_model || '').toLowerCase().includes('laptop');
-      return isLaptop && i.qc_status !== 'sold';
+      return isLaptop && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     }).reduce((acc, curr) => acc + (curr.stock_quantity ?? curr.quantity ?? 1), 0);
 
     // Linh kiện (Mới & Cũ bóc máy)
@@ -441,17 +487,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       .filter((p) => p.condition === 'used')
       .reduce((acc, p) => acc + (p.quantity_in_stock || 0), 0);
 
-    // Thiết bị cảnh báo tồn kho lâu (Aging Warning: 50-55d Yellow, 56-60d+ Red)
+    // Thiết bị cảnh báo tồn kho lâu (Aging Warning: 50-55d Yellow, 56-60d+ Red - loại trừ đã bán & dealer bán)
     const agingYellow = inventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 50 && days < 56 && i.qc_status !== 'sold';
+      return days >= 50 && days < 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     }).length;
     const agingRed = inventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 56 && i.qc_status !== 'sold';
+      return days >= 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     }).length;
     const agingTotal = agingYellow + agingRed;
     const sold = inventory.filter((i) => i.qc_status === 'sold' || Boolean(i.handover_date)).length;
+    const dealerSold = inventory.filter((i) => i.qc_status === 'dealer_sold').length;
     const reserved = inventory.filter((i) => i.qc_status === 'reserved').length;
 
     return {
@@ -462,6 +509,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       reserved,
       testing,
       sold,
+      dealerSold,
       agingYellow,
       agingRed,
       agingTotal,
@@ -781,11 +829,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             {activeTab === 'may-bo' && 'Kho Máy Bộ'}
             {activeTab === 'laptop' && 'Kho Laptop'}
             {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
+            {activeTab === 'dealer_sold' && 'Máy Đã Bán Bởi Dealer (Trading)'}
             {activeTab === 'components' && 'Kho Linh Kiện'}
             <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
               {activeTab === 'may-bo' && `${stats.mayBoTotal} máy bộ`}
               {activeTab === 'laptop' && `${stats.laptopTotal} laptop`}
               {activeTab === 'sold' && `${stats.sold} máy đã bán`}
+              {activeTab === 'dealer_sold' && `${stats.dealerSold} máy dealer bán`}
               {activeTab === 'components' && `${spareParts.length} mục`}
             </span>
           </h1>
@@ -883,6 +933,22 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             {stats.sold}
           </span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('dealer_sold')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'dealer_sold'
+              ? 'bg-white text-orange-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <span>Đã bán bởi Dealer</span>
+          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
+            activeTab === 'dealer_sold' ? 'bg-orange-100 text-orange-800' : 'bg-slate-200 text-slate-700'
+          }`}>
+            {stats.dealerSold}
+          </span>
+        </button>
       </div>
 
       {/* RBAC Notice (Compact) */}
@@ -893,7 +959,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       )}
 
       {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'may-bo' ? 'bg-blue-50/50 border-blue-300' : 'bg-white border-slate-200'
         }`}>
@@ -919,6 +985,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
 
         <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
+          activeTab === 'dealer_sold' ? 'bg-orange-50/50 border-orange-300' : 'bg-white border-slate-200'
+        }`}>
+          <div className="text-[11px] text-slate-500 truncate">Dealer Đã Bán</div>
+          <div className="text-base font-bold text-orange-700 font-mono mt-0.5">{stats.dealerSold} máy</div>
+          <div className="text-[10px] text-slate-400 font-medium">Không cộng doanh thu</div>
+        </div>
+
+        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
           activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
         }`}>
           <div className="text-[11px] text-slate-500 truncate">Linh Kiện Tồn Kho</div>
@@ -930,9 +1004,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       </div>
 
       {/* ========================================================================= */}
-      {/* TAB 1: MÁY TÍNH & LAPTOP */}
+      {/* TAB 1: MÁY TÍNH, LAPTOP & ĐÃ BÁN BỞI DEALER */}
       {/* ========================================================================= */}
-      {(activeTab === 'may-bo' || activeTab === 'laptop') && (
+      {(activeTab === 'may-bo' || activeTab === 'laptop' || activeTab === 'dealer_sold') && (
         <>
           {/* Search & Filter Toolbar */}
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -991,7 +1065,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               { id: 'ready_to_sell', label: 'RTS (Sẵn bán)' },
               { id: 'reserved', label: `Đang đợi bán (${stats.reserved})` },
               { id: 'testing', label: 'QC' },
-              { id: 'sold', label: 'Sold' },
+              { id: 'sold', label: `Đã bán (${stats.sold})` },
+              { id: 'dealer_sold', label: `Dealer đã bán (${stats.dealerSold})` },
             ] as const
           ).map((s) => (
             <button
@@ -1001,9 +1076,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 selectedStatus === s.id
                   ? s.id === 'reserved'
                     ? 'bg-purple-600 text-white shadow-xs font-bold'
+                    : s.id === 'dealer_sold'
+                    ? 'bg-orange-600 text-white shadow-xs font-bold'
                     : 'bg-blue-600 text-white'
                   : s.id === 'reserved' && stats.reserved > 0
                   ? 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 font-bold'
+                  : s.id === 'dealer_sold' && stats.dealerSold > 0
+                  ? 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 font-bold'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -1061,9 +1140,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
                   const isReserved = item.qc_status === 'reserved';
+                  const isDealerSold = item.qc_status === 'dealer_sold';
                   const daysInStock = calculateDaysInStock(item, nowTimestamp);
-                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved;
-                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved;
+                  const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved && !isDealerSold;
+                  const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved && !isDealerSold;
 
                   return (
                     <tr
@@ -1071,6 +1151,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       className={`transition-colors ${
                         isReserved
                           ? 'bg-purple-50/50 hover:bg-purple-50/80'
+                          : isDealerSold
+                          ? 'bg-orange-50/40 hover:bg-orange-50/70'
                           : isRedAging
                           ? 'bg-rose-50/40 hover:bg-rose-50/70'
                           : isYellowAging
@@ -1088,6 +1170,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             {item.form_factor}
                           </span>
                         </div>
+                        {isDealerSold && (
+                          <div className="mt-1.5 p-1.5 bg-orange-100/70 border border-orange-200 rounded-md text-[11px] text-orange-900 max-w-xs">
+                            <span className="font-bold">Đã bán bởi Dealer</span>
+                            <span className="text-[10px] text-orange-700 block">Trading — Không cộng doanh thu</span>
+                          </div>
+                        )}
                         {isReserved && (
                           <div className="mt-1.5 p-1.5 bg-purple-100/70 border border-purple-200 rounded-md text-[11px] text-purple-900 max-w-xs">
                             <div className="font-semibold flex items-center gap-1 text-purple-800">
@@ -1166,6 +1254,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer focus:outline-none focus:ring-1 ${
                               isReserved
                                 ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                : isDealerSold
+                                ? 'bg-orange-50 text-orange-700 border-orange-200'
                                 : isReady
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : isTesting
@@ -1176,13 +1266,16 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             <option value="ready_to_sell">Sẵn bán (RTS)</option>
                             <option value="reserved">Đang đợi bán</option>
                             <option value="testing">Đang QC</option>
-                            <option value="sold">Đã bán</option>
+                            <option value="sold">Đã bán (Shop)</option>
+                            <option value="dealer_sold">Đã bán bởi dealer</option>
                           </select>
                         ) : (
                           <span
                             className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${
                               isReserved
                                 ? 'bg-purple-100 text-purple-800'
+                                : isDealerSold
+                                ? 'bg-orange-100 text-orange-800 border border-orange-200'
                                 : isReady
                                 ? 'bg-emerald-100 text-emerald-800'
                                 : isTesting
@@ -1190,7 +1283,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                                 : 'bg-slate-100 text-slate-700'
                             }`}
                           >
-                            {isReserved ? 'Đang đợi bán' : isReady ? 'Sẵn sàng bán' : isTesting ? 'Đang kiểm tra' : 'Đã bán'}
+                            {isReserved
+                              ? 'Đang đợi bán'
+                              : isDealerSold
+                              ? 'Đã bán bởi dealer'
+                              : isReady
+                              ? 'Sẵn sàng bán'
+                              : isTesting
+                              ? 'Đang kiểm tra'
+                              : 'Đã bán'}
                           </span>
                         )}
                       </td>
@@ -1301,16 +1402,28 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           {canSellAndEditWarranty() && (
                             <button
                               onClick={() => handleOpenSellModal(item)}
-                              title="Xuất bán máy, cấp mã KH & điều chỉnh bảo hành"
+                              title={
+                                item.qc_status === 'dealer_sold'
+                                  ? 'Hàng trading đã bán bởi dealer (Không ghi nhận doanh thu)'
+                                  : 'Xuất bán máy, cấp mã KH & điều chỉnh bảo hành'
+                              }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
                                 item.qc_status === 'sold'
-                                    ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                                    : isReserved
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
-                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
+                                  ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                                  : item.qc_status === 'dealer_sold'
+                                  ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
+                                  : isReserved
+                                  ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
                               }`}
                             >
-                              {item.qc_status === 'sold' ? 'Đã bán' : isReserved ? 'Bán máy' : 'Bán máy'}
+                              {item.qc_status === 'sold'
+                                ? 'Đã bán'
+                                : item.qc_status === 'dealer_sold'
+                                ? 'Dealer đã bán'
+                                : isReserved
+                                ? 'Bán máy'
+                                : 'Bán máy'}
                             </button>
                           )}
 
@@ -2161,20 +2274,31 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200">
                 <button
                   type="button"
-                  onClick={() => setSellingItem(null)}
-                  className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                  onClick={() => handleMarkDealerSold(sellingItem)}
+                  title="Sản phẩm trading lấy thông tin từ dealer, dealer đã bán mất máy nên không cộng doanh thu"
+                  className="w-full sm:w-auto px-3.5 py-2 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-300 text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Hủy
+                  <Ban className="w-3.5 h-3.5 text-orange-600" />
+                  <span>Đã Bán Bởi Dealer (Trading)</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
-                >
-                  Xác Nhận Bán Máy
-                </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSellingItem(null)}
+                    className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm transition-all"
+                  >
+                    Xác Nhận Bán Máy (Shop)
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -2882,11 +3006,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     <div className="font-bold text-slate-800 mt-0.5">
                       {viewingSpecsItem.qc_status === 'reserved'
                         ? 'Đang đợi bán (Khách đặt)'
+                        : viewingSpecsItem.qc_status === 'dealer_sold'
+                        ? 'Đã bán bởi dealer (Trading)'
                         : viewingSpecsItem.qc_status === 'ready_to_sell'
                         ? 'Sẵn bán (RTS)'
                         : viewingSpecsItem.qc_status === 'testing'
                         ? 'Đang QC / Test'
-                        : 'Đã xuất bán'}
+                        : 'Đã xuất bán (Shop)'}
                     </div>
                   </div>
                   <div>
@@ -2917,7 +3043,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       {(() => {
                         const days = calculateDaysInStock(viewingSpecsItem, nowTimestamp);
                         if (viewingSpecsItem.qc_status === 'sold') {
-                          return <span className="text-slate-400 font-mono">Đã bán</span>;
+                          return <span className="text-slate-400 font-mono">Đã bán (Shop)</span>;
+                        }
+                        if (viewingSpecsItem.qc_status === 'dealer_sold') {
+                          return <span className="text-orange-600 font-mono font-bold">Dealer đã bán (Trading)</span>;
                         }
                         if (days >= 56) {
                           return (

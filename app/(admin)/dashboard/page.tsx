@@ -60,16 +60,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     const rts = inventory.filter((i) => i.qc_status === 'ready_to_sell').length;
     const qc = inventory.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length;
     const sold = inventory.filter((i) => i.qc_status === 'sold').length;
-    const other = Math.max(0, total - rts - qc - sold);
+    const dealerSold = inventory.filter((i) => i.qc_status === 'dealer_sold').length;
+    const other = Math.max(0, total - rts - qc - sold - dealerSold);
 
-    // Aging alerts: 50-55d Yellow, 56-60d+ Red
+    // Aging alerts: 50-55d Yellow, 56-60d+ Red (loại trừ đã bán và dealer đã bán)
     const agingYellowItems = inventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 50 && days < 56 && i.qc_status !== 'sold';
+      return days >= 50 && days < 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     });
     const agingRedItems = inventory.filter((i) => {
       const days = calculateDaysInStock(i, nowTimestamp);
-      return days >= 56 && i.qc_status !== 'sold';
+      return days >= 56 && i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold';
     });
     const allAgingItems = [...agingRedItems, ...agingYellowItems].sort(
       (a, b) => calculateDaysInStock(b, nowTimestamp) - calculateDaysInStock(a, nowTimestamp)
@@ -89,12 +90,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     ).length;
     const otherBrandCount = Math.max(0, total - dellCount - hpCount - thinkpadCount);
 
-    // Tổng giá trị kho (ước tính)
+    // Tổng giá trị kho (ước tính - loại trừ đã bán và dealer bán)
     const inventoryValue = inventory
-      .filter((i) => i.qc_status !== 'sold')
+      .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
       .reduce((sum, i) => sum + (i.price || i.retail_price || 4500000), 0);
     const inventoryCapital = inventory
-      .filter((i) => i.qc_status !== 'sold')
+      .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
       .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
 
     return {
@@ -102,6 +103,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       rts,
       qc,
       sold,
+      dealerSold,
       other,
       agingYellowItems,
       agingRedItems,
@@ -733,6 +735,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             <span>•</span>
             <span className="text-amber-700 font-semibold">{deviceStats.qc} QC</span>
             <span>•</span>
+            {deviceStats.dealerSold > 0 && (
+              <>
+                <span className="text-orange-700 font-semibold">{deviceStats.dealerSold} dealer bán</span>
+                <span>•</span>
+              </>
+            )}
             {deviceStats.allAgingItems.length > 0 ? (
               <span className="text-rose-600 font-bold">⚠️ {deviceStats.allAgingItems.length} tồn lâu</span>
             ) : (

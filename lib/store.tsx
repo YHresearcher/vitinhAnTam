@@ -195,6 +195,7 @@ interface StoreContextType {
     notes?: string;
     saleDate?: string;
   }) => Promise<{ success: boolean; customerCode: string; message: string }>;
+  markItemAsDealerSold: (itemId: string, dealerNote?: string) => Promise<{ success: boolean; message: string }>;
 
   sellSparePart: (params: {
     partId: string;
@@ -1362,6 +1363,10 @@ export function StoreProvider({
 
   const updateQcStatus = async (id: string, status: InventoryItem['qc_status']) => {
     if (!canUpdateRepairStatus()) {
+      return;
+    }
+    if (status === 'dealer_sold') {
+      await markItemAsDealerSold(id);
       return;
     }
     const item = inventory.find((i) => i.id === id);
@@ -3025,6 +3030,58 @@ export function StoreProvider({
     };
   };
 
+  const markItemAsDealerSold = async (
+    itemId: string,
+    dealerNote?: string
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!canSellAndEditWarranty()) {
+      return {
+        success: false,
+        message: 'Bạn không có quyền cập nhật trạng thái bán của thiết bị!',
+      };
+    }
+
+    const item = inventory.find((i) => i.id === itemId);
+    if (!item) {
+      return { success: false, message: 'Không tìm thấy thiết bị trong kho!' };
+    }
+
+    const nowIso = new Date().toISOString();
+    const updatedItem: InventoryItem = {
+      ...item,
+      qc_status: 'dealer_sold',
+      sold_by: 'Dealer',
+      dealer_sold_at: nowIso,
+      handover_date: nowIso,
+      stock_quantity: 0,
+      quantity: 0,
+      reserved_order_code: undefined,
+      reserved_order_id: undefined,
+      reserved_at: undefined,
+      notes: dealerNote
+        ? `${item.notes ? item.notes + ' | ' : ''}Đã bán bởi dealer: ${dealerNote}`
+        : `${item.notes ? item.notes + ' | ' : ''}Đã bán bởi dealer (Trading - không cộng doanh thu)`,
+    };
+
+    setInventory((prev) => {
+      const next = prev.map((i) => (i.id === itemId ? updatedItem : i));
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      await runSupabaseWrite(
+        () => supabase!.from('inventory_items').update(updatedItem).eq('id', itemId),
+        'Cập nhật thiết bị (Đã bán bởi dealer)'
+      );
+    }
+
+    return {
+      success: true,
+      message: `Đã đánh dấu máy ${item.service_tag} là "Đã bán bởi dealer" (không cộng doanh thu).`,
+    };
+  };
+
   const sellSparePart = async (params: {
     partId: string;
     customerName: string;
@@ -3540,6 +3597,7 @@ export function StoreProvider({
       canSellAndEditWarranty,
       canAccessCRM,
       sellInventoryItem,
+      markItemAsDealerSold,
       sellSparePart,
       updateUser,
       changeUserPassword,
