@@ -53,43 +53,6 @@ export function SalesDailyReminderModal({
     currentUser && ['admin', 'sales_manager', 'tech_manager'].includes(currentUser.role)
   );
 
-  // Mở tự động 1 lần mỗi ngày khi Sales vào hệ thống
-  useEffect(() => {
-    if (forceOpen) {
-      setIsOpen(true);
-      return;
-    }
-
-    if (typeof window !== 'undefined') {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      const dismissedDate = localStorage.getItem(`vtat_sales_reminder_dismissed_${currentUser.id}`);
-      if (dismissedDate !== todayStr) {
-        // Trì hoãn nhẹ 1 giây để trang tải xong giao diện chính
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 1200);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [forceOpen, currentUser.id]);
-
-  const handleDismissToday = () => {
-    if (typeof window !== 'undefined') {
-      const todayStr = new Date().toISOString().slice(0, 10);
-      localStorage.setItem(`vtat_sales_reminder_dismissed_${currentUser.id}`, todayStr);
-    }
-    setIsOpen(false);
-    if (onClose) onClose();
-  };
-
-  const handleCopy = (text: string, id: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(text);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2500);
-    }
-  };
-
   // Danh sách nhân viên bán hàng để quản lý lọc
   const salesList = useMemo(() => {
     const list = new Set<string>();
@@ -268,9 +231,54 @@ export function SalesDailyReminderModal({
     return result.sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [customers, inventory, selectedSalesFilter, currentUser, isManagerOrAdmin]);
 
+  // Tổng số lượng nhắc việc cần chăm sóc hôm nay
   const totalActionCount = upcomingBirthdays.length + followUpMilestones.length + expiringWarranties.length;
 
-  if (!isOpen) return null;
+  // Mở tự động 1 lần mỗi ngày khi Sales vào hệ thống - CHỈ HIỂN THỊ KHI CÓ NHẮC VIỆC
+  useEffect(() => {
+    // Nếu không có nhắc nhở nào, không cần mở
+    if (totalActionCount === 0) {
+      setIsOpen(false);
+      return;
+    }
+
+    if (forceOpen) {
+      setIsOpen(true);
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const dismissedDate = localStorage.getItem(`vtat_sales_reminder_dismissed_${currentUser.id}`);
+      if (dismissedDate !== todayStr) {
+        // Trì hoãn nhẹ 1 giây để trang tải xong giao diện chính
+        const timer = setTimeout(() => {
+          setIsOpen(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [forceOpen, currentUser.id, totalActionCount]);
+
+  const handleDismissToday = () => {
+    if (typeof window !== 'undefined') {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(`vtat_sales_reminder_dismissed_${currentUser.id}`, todayStr);
+    }
+    setIsOpen(false);
+    if (onClose) onClose();
+  };
+
+  const handleCopy = (text: string, id: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2500);
+    }
+  };
+
+  // NẾU KHÔNG CÓ BẤT KỲ NHẮC NHỞ NÀO, HOẶC MODAL KHÔNG MỞ -> KHÔNG HIỂN THỊ
+  if (!isOpen || totalActionCount === 0) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-fade-in font-sans">
