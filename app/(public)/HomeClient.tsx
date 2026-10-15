@@ -198,6 +198,13 @@ export default function HomePage() {
     return [];
   }, [isEn, reviews]);
 
+  const safeZaloLink = useMemo(() => {
+    const fallback = 'https://zalo.me/0909053058';
+    const raw = (systemSettings.zaloLink || '').trim();
+    if (!raw) return fallback;
+    return /^https:\/\/zalo\.me(\/|$)/i.test(raw) ? raw : fallback;
+  }, [systemSettings.zaloLink]);
+
   return (
     <div className="w-full relative selection:bg-[#C0392B] selection:text-white">
       {/* Toast Notification */}
@@ -1215,7 +1222,7 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
               <a
-                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name}` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name}, vui lòng gửi thêm hình ảnh thực tế`)}`}
+                href={`${safeZaloLink}?text=${encodeURIComponent(isEn ? `Hello An Tam, I would like photos and details for ${selectedProduct.name}` : `Chào An Tâm, tôi quan tâm máy ${selectedProduct.name}, vui lòng gửi thêm hình ảnh thực tế`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
