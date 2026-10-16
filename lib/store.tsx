@@ -188,6 +188,7 @@ interface StoreContextType {
     customerAddress: string;
     serialNumber: string;
     warrantyMonths: number;
+    quantity?: number; // Số lượng máy bán trong 1 giao dịch (mặc định 1)
     soldPrice?: number;
     notes?: string;
     saleDate?: string;
@@ -2864,6 +2865,7 @@ export function StoreProvider({
     customerAddress: string;
     serialNumber: string;
     warrantyMonths: number;
+    quantity?: number; // Số lượng máy bán trong 1 giao dịch (mặc định 1)
     soldPrice?: number;
     notes?: string;
     saleDate?: string;
@@ -2891,28 +2893,139 @@ export function StoreProvider({
       .filter((code): code is string => Boolean(code));
     const customerCode = generateCustomerCode(params.birthDate, params.customerPhone, existingCustomerCodes);
 
-    // 1. Update Inventory Item
-    const updatedItem: InventoryItem = {
+    // ==========================================
+    // 1. TÍNH TOÁN SỐ LƯỢNG & TÁCH BẢN GHI BÁN HÀNG
+    //    Một dòng inventory có thể đại diện cho N máy (stock_quantity > 1).
+    //    Bán 1 máy phải TRỪ TỒN KHO của dòng; chỉ chuyển dòng sang "sold" khi bán HẾT lô.
+    //    Máy xuất bán được tách thành bản ghi riêng (1 bản ghi = 1 máy) để tab
+    //    "Máy đã bán", CRM, bảo hành & tài chính vẫn ghi nhận đúng từng máy.
+    //    (Máy đã bán trước đó chỉ được CHỈNH SỬA thông tin — không trừ kho.)
+    // ==========================================
+    const isAlreadySold = item.qc_status === 'sold';
+    const currentStock = Math.max(0, item.stock_quantity ?? item.quantity ?? 1);
+    const requestedQty = Math.floor(Number(params.quantity ?? 1));
+
+    if (!isAlreadySold) {
+      if (!Number.isFinite(requestedQty) || requestedQty < 1) {
+        return {
+          success: false,
+          customerCode: '',
+          message: 'Số lượng bán không hợp lệ (phải là số nguyên lớn hơn 0)!',
+        };
+      }
+      if (currentStock <= 0) {
+        return { success: false, customerCode: '', message: 'Máy này đã hết tồn kho!' };
+      }
+      if (requestedQty > currentStock) {
+        return {
+          success: false,
+          customerCode: '',
+          message: `Số lượng bán vượt quá tồn kho (còn ${currentStock} máy)!`,
+        };
+      }
+    }
+
+    const sellQty = isAlreadySold ? 1 : requestedQty;
+    const remainingStock = isAlreadySold ? currentStock : currentStock - sellQty;
+    const serial = params.serialNumber.trim() || item.serial_number || item.service_tag;
+    const unitSoldPrice = params.soldPrice || item.retail_price || item.price || 0;
+
+    // service_tag trong DB là UNIQUE — tag máy tách ra từ lô phải khác tag gốc
+    const takenTags = new Set(inventory.map((i) => i.service_tag));
+    takenTags.add(item.service_tag);
+    const nextUniqueTag = (): string => {
+      let n = 2;
+      let candidate = `${item.service_tag}-${n}`;
+      while (takenTags.has(candidate)) {
+        n += 1;
+        candidate = `${item.service_tag}-${n}`;
+      }
+      takenTags.add(candidate);
+      return candidate;
+    };
+
+    // Thông tin chung cho bản ghi máy ĐÃ XUẤT BÁN (1 bản ghi = 1 máy)
+    const buildSoldRecord = (soldTag: string): InventoryItem => ({
       ...item,
+      id: createId(),
+      service_tag: soldTag,
       qc_status: 'sold',
+      stock_quantity: 1,
+      quantity: 1,
       customer_name: params.customerName.trim(),
       customer_phone: params.customerPhone.trim(),
       customer_code: customerCode,
       sold_by: currentUser.name,
-      serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
+      serial_number: serial,
       warranty_months: params.warrantyMonths,
       handover_date: saleDateTime.toISOString(),
-      retail_price: params.soldPrice || item.retail_price || item.price,
-    };
+      retail_price: unitSoldPrice,
+      reserved_order_code: '',
+      reserved_order_id: '',
+      reserved_delivery_method: undefined,
+      reserved_at: '',
+      reserved_note: '',
+    });
+
+    let updatedItem: InventoryItem;
+    const soldRecords: InventoryItem[] = [];
+
+    if (isAlreadySold) {
+      // Chỉnh sửa thông tin máy ĐÃ BÁN — GIỮ NGUYÊN tồn kho & trạng thái (hành vi cũ)
+      updatedItem = {
+        ...item,
+        customer_name: params.customerName.trim(),
+        customer_phone: params.customerPhone.trim(),
+        customer_code: customerCode,
+        sold_by: currentUser.name,
+        serial_number: serial,
+        warranty_months: params.warrantyMonths,
+        handover_date: saleDateTime.toISOString(),
+        retail_price: unitSoldPrice,
+      };
+    } else if (remainingStock > 0) {
+      // Bán MỘT PHẦN lô: dòng gốc giữ máy chưa bán (trừ tồn kho), máy bán tách thành bản ghi riêng
+      updatedItem = {
+        ...item,
+        stock_quantity: remainingStock,
+        quantity: remainingStock,
+        // Lô đang giữ đơn đặt hàng mà đã giao máy → nhả trạng thái đặt cọc
+        ...(item.qc_status === 'reserved'
+          ? {
+              qc_status: 'ready_to_sell' as const,
+              customer_name: '',
+              customer_phone: '',
+              customer_code: '',
+              reserved_order_code: '',
+              reserved_order_id: '',
+              reserved_delivery_method: undefined,
+              reserved_at: '',
+              reserved_note: '',
+            }
+          : {}),
+      };
+      for (let i = 0; i < sellQty; i += 1) {
+        soldRecords.push(buildSoldRecord(nextUniqueTag()));
+      }
+    } else {
+      // Bán HẾT lô: dòng gốc chuyển thành 1 máy đã bán, các máy còn lại tách thành bản ghi riêng
+      updatedItem = {
+        ...buildSoldRecord(item.service_tag),
+        id: item.id,
+      };
+      for (let i = 1; i < sellQty; i += 1) {
+        soldRecords.push(buildSoldRecord(nextUniqueTag()));
+      }
+    }
 
     setInventory((prev) => {
-      const next = prev.map((i) => (i.id === params.itemId ? updatedItem : i));
+      const next = prev.flatMap((i) => (i.id === params.itemId ? [updatedItem, ...soldRecords] : [i]));
       saveToLocal(STORAGE_KEYS.inventory, next);
       return next;
     });
 
     // 2. Add or Update Customer with Customer Code, Birth Date, Total Spent & Tier
-    const saleAmount = params.soldPrice || item.retail_price || item.price || 0;
+    const saleAmount = unitSoldPrice * sellQty;
     const cleanPhone = params.customerPhone.trim().replace(/\D/g, '');
     const existingCust = customers.find((c) => c.phone.replace(/\D/g, '') === cleanPhone);
 
@@ -2961,33 +3074,41 @@ export function StoreProvider({
       });
     }
 
-    // 3. Create a Service Ticket record for warranty lookup
-    const warrantyTicket: ServiceTicket = {
+    // 3. Create Service Ticket records for warranty lookup (1 phiếu bảo hành / 1 máy xuất bán)
+    const soldUnitTags = isAlreadySold
+      ? [item.service_tag]
+      : remainingStock > 0
+        ? soldRecords.map((r) => r.service_tag)
+        : [item.service_tag, ...soldRecords.map((r) => r.service_tag)];
+
+    const warrantyTickets: ServiceTicket[] = soldUnitTags.map((soldTag, idx) => ({
       id: createId(),
-      ticket_code: `#HD-${customerCode}-${item.service_tag.slice(-4)}`,
+      ticket_code: `#HD-${customerCode}-${soldTag.slice(-4)}`,
       customer_name: params.customerName.trim(),
       customer_phone: params.customerPhone.trim(),
       customer_address: params.customerAddress.trim(),
-      device_service_tag: item.service_tag,
+      device_service_tag: soldTag,
       device_name: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
       technician_name: currentUser.name,
       status: 'delivered',
       visual_condition: 'Máy chuẩn A bàn giao mới 100% nguyên bản',
-      technician_note: `Bán hàng thành công. Serial: ${params.serialNumber}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
-      estimated_cost: params.soldPrice || item.retail_price || item.price || 0,
-      total_amount: params.soldPrice || item.retail_price || item.price || 0,
+      technician_note: `Bán hàng thành công${
+        sellQty > 1 ? ` (Máy ${idx + 1}/${sellQty})` : ''
+      }. Serial: ${serial}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
+      estimated_cost: unitSoldPrice,
+      total_amount: unitSoldPrice,
       created_at: saleDateTime.toISOString(),
       warranty_until: warrantyUntilDate.toISOString(),
       warranty_duration_months: params.warrantyMonths,
-    };
+    }));
 
     setTickets((prev) => {
-      const next = [warrantyTicket, ...prev];
+      const next = [...warrantyTickets, ...prev];
       saveToLocal(STORAGE_KEYS.tickets, next);
       return next;
     });
 
-    // Sync bán hàng lên Supabase (inventory + customer + ticket)
+    // Sync bán hàng lên Supabase (cập nhật dòng gốc + bản ghi máy tách + khách + phiếu BH)
     if (isUsingSupabase && supabase) {
       const client = supabase;
       const itemId = params.itemId;
@@ -2996,6 +3117,12 @@ export function StoreProvider({
           () => client.from('inventory_items').update(updatedItem).eq('id', itemId),
           'Cập nhật thiết bị (bán hàng)'
         ),
+        soldRecords.length > 0
+          ? runSupabaseWrite(
+              () => client.from('inventory_items').insert(soldRecords),
+              'Tách bản ghi máy đã bán'
+            )
+          : Promise.resolve(true),
         existingCust
           ? runSupabaseWrite(
               () => client.from('customers').update(customerToPersist).eq('id', existingCust.id),
@@ -3006,16 +3133,16 @@ export function StoreProvider({
               'Thêm khách hàng (bán hàng)'
             ),
         runSupabaseWrite(
-          () => client.from('service_tickets').insert([warrantyTicket]),
+          () => client.from('service_tickets').insert(warrantyTickets),
           'Tạo phiếu bảo hành (bán hàng)'
         ),
       ]);
     }
 
-    // 4. Calculate 5% Warranty Provision Fund from Net Profit
-    const finalSoldPrice = params.soldPrice || item.retail_price || item.price || 0;
+    // 4. Calculate 5% Warranty Provision Fund from Net Profit (theo TỔNG số máy bán ra)
+    const finalSoldPrice = unitSoldPrice * sellQty;
     const finalCostPrice = item.cost_price || item.import_price || 0;
-    const netProfit = Math.max(0, finalSoldPrice - finalCostPrice);
+    const netProfit = Math.max(0, finalSoldPrice - finalCostPrice * sellQty);
     const provisionAmount = Math.max(0, Math.round(netProfit * 0.05));
 
     if (provisionAmount > 0) {
@@ -3034,7 +3161,7 @@ export function StoreProvider({
         warranty_months: params.warrantyMonths,
         warranty_expiry_date: expiryDate,
         sale_price: finalSoldPrice,
-        cost_price: finalCostPrice,
+        cost_price: finalCostPrice * sellQty,
         net_profit: netProfit,
         provision_rate: 0.05,
         provision_amount: provisionAmount,
@@ -3103,10 +3230,11 @@ export function StoreProvider({
             sellerName: currentUser.name,
             deviceName: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
             serviceTag: item.service_tag,
-            serialNumber: params.serialNumber.trim() || item.serial_number || item.service_tag,
+            serialNumber: serial,
             customerName: params.customerName.trim(),
             customerPhone: params.customerPhone.trim(),
             customerCode,
+            quantity: sellQty,
             soldPrice: finalSoldPrice,
             costPrice: finalCostPrice,
             netProfit,
@@ -3128,7 +3256,9 @@ export function StoreProvider({
     return {
       success: true,
       customerCode,
-      message: `Bán máy thành công! Mã khách hàng: ${customerCode} (Trích 5% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
+      message: `Bán máy thành công${sellQty > 1 ? ` ${sellQty} máy` : ''}${
+        !isAlreadySold && remainingStock > 0 ? ` (Còn ${remainingStock} máy trong kho)` : ''
+      }! Mã khách hàng: ${customerCode} (Trích 5% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
     };
   };
 

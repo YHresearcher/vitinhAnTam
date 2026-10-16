@@ -121,6 +121,7 @@ export default function KhoMayPage() {
   const [sellDate, setSellDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [cashflowConfirmData, setCashflowConfirmData] = useState<CashflowSaleConfirm | null>(null);
   const [isSubmittingSale, setIsSubmittingSale] = useState(false);
+  const [sellQuantity, setSellQuantity] = useState<number>(1);
 
   // Sales Modal States - Linh Kiện (Admin & Sales)
   const [sellingPart, setSellingPart] = useState<SparePart | null>(null);
@@ -158,6 +159,7 @@ export default function KhoMayPage() {
     setSellWarrantyMonths(initialWarranty);
     const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
     setSellPrice(effectiveItemPrice);
+    setSellQuantity(1);
     setSellDate(new Date().toISOString().split('T')[0]);
   };
 
@@ -222,6 +224,7 @@ export default function KhoMayPage() {
       customerAddress: sellCustomerAddress.trim(),
       serialNumber: sellSerialNumber.trim(),
       warrantyMonths: sellWarrantyMonths,
+      quantity: sellQuantity,
       soldPrice: Number(sellPrice) || 0,
       saleDate: sellDate,
       costPrice: initialCost,
@@ -244,6 +247,7 @@ export default function KhoMayPage() {
         soldPrice,
         saleDate,
         costPrice,
+        quantity,
       } = cashflowConfirmData;
 
       // Đồng bộ giá vốn nếu người dùng điều chỉnh trong popup
@@ -268,6 +272,7 @@ export default function KhoMayPage() {
         customerAddress: customerAddress || '',
         serialNumber,
         warrantyMonths,
+        quantity,
         soldPrice,
         saleDate,
         notes: cashflowNote,
@@ -2145,6 +2150,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   </div>
                   <div className="text-slate-500 mt-0.5 flex items-center gap-2">
                     <span>Tag: <strong className="text-blue-700 font-mono">{sellingItem.service_tag}</strong></span>
+                    {sellingItem.qc_status !== 'sold' && (
+                      <span>
+                        Tồn kho: <strong className="text-emerald-700 font-mono">{sellingItem.stock_quantity ?? sellingItem.quantity ?? 1} máy</strong>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
@@ -2282,6 +2292,42 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     />
                   </div>
                 </div>
+
+                {/* SALE QUANTITY (lô nhiều máy) */}
+                {sellingItem.qc_status !== 'sold' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        Số Lượng Bán (Tối đa {sellingItem.stock_quantity ?? sellingItem.quantity ?? 1} máy) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={sellingItem.stock_quantity ?? sellingItem.quantity ?? 1}
+                        value={sellQuantity}
+                        onChange={(e) => setSellQuantity(Number(e.target.value))}
+                        className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
+                      />
+                      <span className="block text-[11px] text-slate-500 mt-1">
+                        Sau khi bán còn lại:{' '}
+                        {Math.max(
+                          0,
+                          (sellingItem.stock_quantity ?? sellingItem.quantity ?? 1) - (sellQuantity || 0)
+                        )}{' '}
+                        máy trong kho
+                      </span>
+                    </div>
+                    <div className="flex items-end">
+                      <div className="w-full p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">
+                        <span className="text-emerald-700 font-semibold">Tổng tiền {sellQuantity || 0} máy:</span>
+                        <div className="font-bold text-emerald-800 font-mono mt-0.5">
+                          {((sellPrice || 0) * (sellQuantity || 0)).toLocaleString('vi-VN')} đ
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Live Warranty Calculation */}
                 <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1">
