@@ -14,12 +14,16 @@ import { FinanceWarrantyFundTab } from '@/components/finance/FinanceWarrantyFund
 import { FinanceLedgerTab } from '@/components/finance/FinanceLedgerTab';
 import { FinancePayrollTab } from '@/components/finance/FinancePayrollTab';
 import { FinanceDebtTab } from '@/components/finance/FinanceDebtTab';
+import { FinanceAdminDeductionsTab } from '@/components/finance/FinanceAdminDeductionsTab';
 
 export default function TaiChinhPage() {
-  const { canAccessPayroll, warrantyProvisions } = useViTinhAnTamStore();
+  const { canAccessPayroll, warrantyProvisions, currentUser, getAdminDeductions } = useViTinhAnTamStore();
   const hasAccess = canAccessPayroll();
+  const isAdmin = currentUser.role === 'admin';
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt'>('overview');
+  const adminDeductionsList = useMemo(() => getAdminDeductions(), [getAdminDeductions]);
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions'>('overview');
   const [timeframe, setTimeframe] = useState<TimeframeOption>('month');
 
   const [ledgerSearch, setLedgerSearch] = useState('');
@@ -104,6 +108,8 @@ export default function TaiChinhPage() {
         ledgerCount={filteredLedgerList.length}
         debtCount={debtCustomersList.length}
         warrantyCount={warrantyProvisions.length}
+        adminDeductionsCount={adminDeductionsList.length}
+        isAdmin={isAdmin}
         onExportCSV={handleExportCSV}
       />
 
@@ -138,6 +144,7 @@ export default function TaiChinhPage() {
         />
       )}
       {activeTab === 'debt' && <FinanceDebtTab debtCustomersList={debtCustomersList} />}
+      {activeTab === 'admin_deductions' && <FinanceAdminDeductionsTab />}
     </div>
   );
 }

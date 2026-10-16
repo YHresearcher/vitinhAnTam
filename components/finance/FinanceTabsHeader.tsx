@@ -3,11 +3,13 @@
 import React from 'react';
 
 interface Props {
-  activeTab: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt';
-  onTabChange: (t: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt') => void;
+  activeTab: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions';
+  onTabChange: (t: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions') => void;
   ledgerCount: number;
   debtCount: number;
   warrantyCount?: number;
+  adminDeductionsCount?: number;
+  isAdmin?: boolean;
   onExportCSV: () => void;
 }
 
@@ -17,6 +19,8 @@ export function FinanceTabsHeader({
   ledgerCount,
   debtCount,
   warrantyCount,
+  adminDeductionsCount,
+  isAdmin = true,
   onExportCSV,
 }: Props) {
   return (
@@ -108,6 +112,43 @@ export function FinanceTabsHeader({
           </svg>
           <span>Công Nợ ({debtCount})</span>
         </button>
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => onTabChange('admin_deductions')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'admin_deductions'
+                ? 'bg-purple-700 text-white shadow-xs'
+                : 'text-purple-700 hover:text-purple-900 hover:bg-purple-50'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span>Trích Quỹ Admin (10% Key / 5% Máy)</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === 'admin_deductions'
+                  ? 'bg-purple-900 text-purple-100'
+                  : 'bg-purple-100 text-purple-800'
+              }`}
+            >
+              Admin
+            </span>
+            {typeof adminDeductionsCount === 'number' && adminDeductionsCount > 0 && (
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  activeTab === 'admin_deductions'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-purple-100 text-purple-900'
+                }`}
+              >
+                {adminDeductionsCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

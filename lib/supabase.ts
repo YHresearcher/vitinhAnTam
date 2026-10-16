@@ -305,6 +305,26 @@ export interface WarrantyProvision {
   created_at: string;
 }
 
+export interface AdminDeductionItem {
+  id: string;
+  product_name: string; // Tên thiết bị / sản phẩm bán ra
+  product_type: 'machine' | 'key' | 'spare_part'; // Phân loại sản phẩm (Thiết bị máy tính / Key bản quyền / Linh kiện)
+  sale_date: string; // Ngày bán
+  sale_price: number; // Giá bán
+  cost_price: number; // Tiền vốn nhập
+  net_profit: number; // Lợi nhuận = Giá bán - Tiền vốn
+  admin_rate: number; // 0.05 (5% đối với máy tính/linh kiện) hoặc 0.10 (10% đối với key)
+  admin_deduction: number; // Số tiền được trích cho admin
+  capital_refund: number; // Tiền vốn hoàn trả = Tiền vốn nhập + 5% lợi nhuận (cho người cho vay vốn)
+  customer_name?: string;
+  customer_phone?: string;
+  seller_name?: string;
+  order_code?: string;
+  serial_number?: string;
+  notes?: string;
+  created_at?: string;
+}
+
 
 export interface SparePart {
   id: string;

@@ -20,6 +20,7 @@ import {
   KeyReleaseRequest,
   KeyEmailTemplateConfig,
   WarrantyProvision,
+  AdminDeductionItem,
   CustomerOrder,
   BlogPost,
   BlogCategory,
@@ -329,6 +330,11 @@ interface StoreContextType {
   unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
   settleUnlockedWarrantyProvisionsYearEnd: () => Promise<{ settledCount: number; settledTotal: number }>;
 
+  // Admin Deduction (Trích quỹ Admin 10% Key / 5% Máy & Hoàn vốn vay)
+  adminDeductions: AdminDeductionItem[];
+  addAdminDeduction: (item: Omit<AdminDeductionItem, 'id' | 'created_at'>) => Promise<AdminDeductionItem>;
+  getAdminDeductions: () => AdminDeductionItem[];
+
   // Blog & SEO Content System
   blogPosts: BlogPost[];
   blogCategories: BlogCategory[];
@@ -364,6 +370,7 @@ const STORAGE_KEYS = {
   keyReleaseRequests: 'vtat_key_release_requests_v3',
   keyEmailTemplate: 'vtat_key_email_template_v3',
   warrantyProvisions: 'vtat_warranty_provisions_v3',
+  adminDeductions: 'vtat_admin_deductions_v3',
   blogPosts: 'vtat_blog_posts_v3',
   blogCategories: 'vtat_blog_categories_v3',
 };
@@ -471,6 +478,9 @@ export function StoreProvider({
 
   // 5% Warranty Provision Fund State
   const [warrantyProvisions, setWarrantyProvisions] = useState<WarrantyProvision[]>([]);
+
+  // Admin Deductions Fund State (10% Key / 5% Machine)
+  const [adminDeductions, setAdminDeductions] = useState<AdminDeductionItem[]>([]);
 
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
@@ -1084,6 +1094,11 @@ export function StoreProvider({
         readJson<KeyReleaseRequest[]>(STORAGE_KEYS.keyReleaseRequests, setKeyReleaseRequests);
         readJson<KeyEmailTemplateConfig>(STORAGE_KEYS.keyEmailTemplate, setKeyEmailTemplate);
         readJson<WarrantyProvision[]>(STORAGE_KEYS.warrantyProvisions, setWarrantyProvisions);
+        readJson<AdminDeductionItem[]>(STORAGE_KEYS.adminDeductions, (parsed) => {
+          if (Array.isArray(parsed)) {
+            setAdminDeductions(parsed);
+          }
+        });
         readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, (parsed) => {
           if (Array.isArray(parsed)) {
             setBlogPosts(parsed);
@@ -1160,6 +1175,8 @@ export function StoreProvider({
         setKeyCategories(JSON.parse(e.newValue));
       } else if (e.key === STORAGE_KEYS.tickets) {
         setTickets(JSON.parse(e.newValue));
+      } else if (e.key === STORAGE_KEYS.adminDeductions) {
+        setAdminDeductions(JSON.parse(e.newValue));
       }
     } catch {}
   };
@@ -2429,6 +2446,45 @@ export function StoreProvider({
       updated_at: emailSentTime,
     } }, 'PATCH');
 
+    // 3b. Ghi nhận dòng tiền trích Admin (10% đối với Key bản quyền) & Hoàn vốn vay (Vốn + 5% LN)
+    try {
+      const keyItem = licenseKeys.find((k) => k.id === req.released_key_id);
+      const salePrice = Number(keyItem?.unit_price || 350000);
+      const costPrice = Number(keyItem?.import_price || 50000);
+      const netProfit = Math.max(0, salePrice - costPrice);
+      const adminRate = 0.10; // 10% trích riêng cho Admin khi bán Key bản quyền
+      const adminDeduction = Math.round(netProfit * adminRate);
+      const capitalRefund = costPrice + Math.round(netProfit * 0.05);
+
+      const newKeyDeduction: AdminDeductionItem = {
+        id: createId(),
+        product_name: `Key ${req.category_name}`,
+        product_type: 'key',
+        sale_date: emailSentTime,
+        sale_price: salePrice,
+        cost_price: costPrice,
+        net_profit: netProfit,
+        admin_rate: adminRate,
+        admin_deduction: adminDeduction,
+        capital_refund: capitalRefund,
+        customer_name: req.customer_name,
+        customer_phone: req.customer_phone,
+        seller_name: req.requester_name || currentUser.name,
+        serial_number: req.released_key_code || req.assigned_key_code,
+        order_code: req.request_code,
+        notes: `Cấp & kích hoạt Key bản quyền (${req.category_name})`,
+        created_at: emailSentTime,
+      };
+
+      setAdminDeductions((prev) => {
+        const next = [newKeyDeduction, ...prev];
+        saveToLocal(STORAGE_KEYS.adminDeductions, next);
+        return next;
+      });
+    } catch (e) {
+      console.warn('Error recording key admin deduction:', e);
+    }
+
     // 4. Gửi thông báo phát hành Key thành công qua Bot đến nhóm đã cài đặt sẵn
     try {
       fetch('/api/webhook/notify', {
@@ -2995,6 +3051,41 @@ export function StoreProvider({
       });
     }
 
+    // 4b. Ghi nhận dòng tiền trích Admin (10% đối với Key, 5% đối với Máy tính) & Hoàn vốn vay (Vốn + 5% LN)
+    try {
+      const isKeyItem = /key|bản quyền|windows|office/i.test(item.device_model || item.model || '');
+      const adminRate = isKeyItem ? 0.10 : 0.05;
+      const adminDeduction = Math.round(netProfit * adminRate);
+      const capitalRefund = finalCostPrice + Math.round(netProfit * 0.05);
+
+      const newAdminDeduction: AdminDeductionItem = {
+        id: createId(),
+        product_name: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+        product_type: isKeyItem ? 'key' : 'machine',
+        sale_date: saleDateTime.toISOString(),
+        sale_price: finalSoldPrice,
+        cost_price: finalCostPrice,
+        net_profit: netProfit,
+        admin_rate: adminRate,
+        admin_deduction: adminDeduction,
+        capital_refund: capitalRefund,
+        customer_name: params.customerName.trim(),
+        customer_phone: params.customerPhone.trim(),
+        seller_name: currentUser.name,
+        serial_number: params.serialNumber.trim() || item.serial_number || item.service_tag,
+        notes: params.notes,
+        created_at: saleDateTime.toISOString(),
+      };
+
+      setAdminDeductions((prev) => {
+        const next = [newAdminDeduction, ...prev];
+        saveToLocal(STORAGE_KEYS.adminDeductions, next);
+        return next;
+      });
+    } catch (e) {
+      console.warn('Error recording admin deduction in sellInventoryItem:', e);
+    }
+
     // 5. Tự động gửi tin nhắn chúc mừng bán hàng qua Bot đến nhóm cài đặt sẵn
     try {
       const sellerCommission = Math.round(netProfit * 0.15);
@@ -3284,6 +3375,107 @@ export function StoreProvider({
     return { settledCount: count, settledTotal: total };
   };
 
+  // Dòng tiền trích riêng cho Quản trị viên (Admin Deductions: 10% Key / 5% Máy & Hoàn vốn vay)
+  const addAdminDeduction = async (
+    item: Omit<AdminDeductionItem, 'id' | 'created_at'>
+  ): Promise<AdminDeductionItem> => {
+    const newItem: AdminDeductionItem = {
+      ...item,
+      id: createId(),
+      created_at: new Date().toISOString(),
+    };
+    setAdminDeductions((prev) => {
+      const next = [newItem, ...prev];
+      saveToLocal(STORAGE_KEYS.adminDeductions, next);
+      return next;
+    });
+    return newItem;
+  };
+
+  const getAdminDeductions = (): AdminDeductionItem[] => {
+    const explicitMap = new Map<string, AdminDeductionItem>();
+    adminDeductions.forEach((d) => {
+      explicitMap.set(d.id, d);
+      if (d.serial_number) explicitMap.set(d.serial_number, d);
+      if (d.order_code) explicitMap.set(d.order_code, d);
+    });
+
+    const combined: AdminDeductionItem[] = [...adminDeductions];
+
+    // Bổ sung thiết bị máy tính đã xuất bán từ kho chưa có bản ghi
+    inventory
+      .filter((i) => i.qc_status === 'sold')
+      .forEach((item) => {
+        const key = item.serial_number || item.service_tag || item.id;
+        if (!explicitMap.has(key) && !explicitMap.has(item.id)) {
+          const isKey = /key|bản quyền|windows|office/i.test(item.device_model || item.model || '');
+          const soldPrice = Number(item.retail_price || item.price || 0);
+          const costPrice = Number(item.import_price || item.cost_price || 0);
+          const profit = Math.max(0, soldPrice - costPrice);
+          const adminRate = isKey ? 0.10 : 0.05;
+          const adminDeduction = Math.round(profit * adminRate);
+          const capitalRefund = costPrice + Math.round(profit * 0.05);
+
+          combined.push({
+            id: `deduct-inv-${item.id}`,
+            product_name: item.device_model || item.model || `${item.brand} ${item.form_factor}`,
+            product_type: isKey ? 'key' : 'machine',
+            sale_date: item.handover_date || item.created_at || new Date().toISOString(),
+            sale_price: soldPrice,
+            cost_price: costPrice,
+            net_profit: profit,
+            admin_rate: adminRate,
+            admin_deduction: adminDeduction,
+            capital_refund: capitalRefund,
+            customer_name: item.customer_name || 'Khách hàng',
+            customer_phone: item.customer_phone,
+            seller_name: item.sold_by || 'Cửa hàng',
+            serial_number: item.serial_number || item.service_tag,
+            notes: 'Thiết bị xuất kho hoàn tất',
+            created_at: item.handover_date || item.created_at || new Date().toISOString(),
+          });
+        }
+      });
+
+    // Bổ sung các key bản quyền đã duyệt cấp & kích hoạt thành công
+    keyReleaseRequests
+      .filter((r) => r.status === 'active_confirmed' || r.status === 'activated')
+      .forEach((req) => {
+        const key = req.released_key_code || req.id;
+        if (!explicitMap.has(key) && !explicitMap.has(req.id)) {
+          const matchedKey = licenseKeys.find((k) => k.id === req.released_key_id);
+          const salePrice = Number(matchedKey?.unit_price || 350000);
+          const costPrice = Number(matchedKey?.import_price || 50000);
+          const profit = Math.max(0, salePrice - costPrice);
+          const adminRate = 0.10; // 10% trích riêng cho Admin khi bán Key
+          const adminDeduction = Math.round(profit * adminRate);
+          const capitalRefund = costPrice + Math.round(profit * 0.05);
+
+          combined.push({
+            id: `deduct-key-${req.id}`,
+            product_name: `Key ${req.category_name}`,
+            product_type: 'key',
+            sale_date: req.email_sent_at || req.updated_at || req.created_at || new Date().toISOString(),
+            sale_price: salePrice,
+            cost_price: costPrice,
+            net_profit: profit,
+            admin_rate: adminRate,
+            admin_deduction: adminDeduction,
+            capital_refund: capitalRefund,
+            customer_name: req.customer_name,
+            customer_phone: req.customer_phone,
+            seller_name: req.requester_name || 'Nhân viên',
+            order_code: req.request_code,
+            serial_number: req.released_key_code || req.assigned_key_code,
+            notes: `Cấp & kích hoạt Key ${req.category_name}`,
+            created_at: req.email_sent_at || req.updated_at || req.created_at || new Date().toISOString(),
+          });
+        }
+      });
+
+    return combined.sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime());
+  };
+
   // CRM Customer Management
   const addCustomer = async (customerData: Omit<Customer, 'id' | 'created_at'>): Promise<Customer> => {
     const existingCodes = customers
@@ -3559,6 +3751,7 @@ export function StoreProvider({
     setLicenseKeys([]);
     setKeyReleaseRequests([]);
     setWarrantyProvisions([]);
+    setAdminDeductions([]);
     setBlogPosts([]);
     setBlogCategories([]);
     if (typeof window !== 'undefined') {
@@ -3574,6 +3767,7 @@ export function StoreProvider({
       localStorage.removeItem(STORAGE_KEYS.licenseKeys);
       localStorage.removeItem(STORAGE_KEYS.keyReleaseRequests);
       localStorage.removeItem(STORAGE_KEYS.warrantyProvisions);
+      localStorage.removeItem(STORAGE_KEYS.adminDeductions);
       localStorage.removeItem(STORAGE_KEYS.blogPosts);
       localStorage.removeItem(STORAGE_KEYS.blogCategories);
     }
@@ -3652,6 +3846,9 @@ export function StoreProvider({
       approveWarrantyProvision,
       unlockMaturedWarrantyProvisions,
       settleUnlockedWarrantyProvisionsYearEnd,
+      adminDeductions,
+      addAdminDeduction,
+      getAdminDeductions,
       addSoftwareKeys,
       assignSoftwareKey,
       updateSoftwareKeyStatus,
@@ -3720,6 +3917,7 @@ export function StoreProvider({
       keyReleaseRequests,
       keyEmailTemplate,
       warrantyProvisions,
+      adminDeductions,
       onsiteDispatches,
       shiftLogs,
       pendingOrders,

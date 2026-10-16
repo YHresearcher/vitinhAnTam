@@ -20,6 +20,7 @@ export interface CashflowSaleConfirmData {
   referralCode?: string;
   sellerName?: string;
   isWalkIn?: boolean;
+  productType?: 'machine' | 'key' | 'part';
 }
 
 interface CashflowSaleConfirmModalProps {
@@ -52,6 +53,16 @@ export default function CashflowSaleConfirmModal({
   const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
   const isProfitable = profit > 0;
 
+  // Nhận diện sản phẩm Key vs Máy tính/Linh kiện
+  const isKey =
+    data.productType === 'key' ||
+    (item && (
+      Boolean((item as any).category_name) ||
+      Boolean((item as any).license_code) ||
+      /key|bản quyền|windows|office/i.test(item.device_model || item.model || '')
+    )) ||
+    Boolean(data.notes && /key|bản quyền|windows|office/i.test(data.notes));
+
   // Khách vãng lai: không có mã giới thiệu / để trống trên web và không có người bán -> 15% hoa hồng sales gộp vào lợi nhuận chung
   const isWalkIn =
     Boolean(data.isWalkIn) ||
@@ -64,11 +75,13 @@ export default function CashflowSaleConfirmModal({
   const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
   // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
   const lenderTotal = costPrice + lenderBonus;
-  // 3. 5% tiền trích lập dự phòng
-  const warrantyReserve = isProfitable ? Math.round(profit * 0.05) : 0;
-  // 4. Lợi nhuận còn lại (75% thông thường, hoặc 90% nếu là khách vãng lai gộp vào lợi nhuận chung)
+  // 3. Số tiền trích cho Admin: 10% nếu là Key, 5% nếu là thiết bị máy tính/linh kiện
+  const adminRate = isKey ? 0.10 : 0.05;
+  const adminDeduction = isProfitable ? Math.round(profit * adminRate) : 0;
+  const warrantyReserve = adminDeduction; // Giữ để tương thích biểu đồ
+  // 4. Lợi nhuận còn lại của cửa hàng
   const remainingProfit = isProfitable
-    ? profit - sellerCommission - lenderBonus - warrantyReserve
+    ? profit - sellerCommission - lenderBonus - adminDeduction
     : profit;
 
   const handleConfirm = () => {
@@ -254,22 +267,24 @@ export default function CashflowSaleConfirmModal({
               </p>
             </div>
 
-            {/* Khoản 3: 5% trích lập dự phòng */}
-            <div className="p-3 bg-rose-50/60 border border-rose-200 rounded-xl space-y-1">
+            {/* Khoản 3: Trích cho Admin (10% cho Key, 5% cho Thiết bị máy tính) */}
+            <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
-                  <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
-                  <span>5% trích lập dự phòng</span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900">
+                  <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+                  <span>{isKey ? 'Tiền trích cho Admin (Key bản quyền)' : 'Tiền trích cho Admin (Thiết bị)'}</span>
                 </div>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">
-                  5% LN
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 font-mono">
+                  {isKey ? '10% LN (Key)' : '5% LN (Máy)'}
                 </span>
               </div>
-              <div className="text-base font-black text-rose-950 font-mono">
-                {warrantyReserve.toLocaleString('vi-VN')} ₫
+              <div className="text-base font-black text-purple-950 font-mono">
+                {adminDeduction.toLocaleString('vi-VN')} ₫
               </div>
-              <p className="text-[11px] text-rose-700">
-                Quỹ dự phòng rủi ro bảo hành thiết bị
+              <p className="text-[11px] text-purple-700">
+                {isKey
+                  ? 'Khoản trích 10% lợi nhuận dành riêng cho Admin đối với sản phẩm Key'
+                  : 'Khoản trích 5% lợi nhuận dành riêng cho Admin đối với thiết bị/linh kiện'}
               </p>
             </div>
 
@@ -281,7 +296,9 @@ export default function CashflowSaleConfirmModal({
                   <span>{isWalkIn ? 'Lợi nhuận chung doanh nghiệp' : 'Lợi nhuận còn lại'}</span>
                 </div>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-                  {isWalkIn ? '90% LN (gồm 15% vãng lai)' : '75% LN'}
+                  {isKey
+                    ? (isWalkIn ? '85% LN (gồm 15% vãng lai)' : '70% LN')
+                    : (isWalkIn ? '90% LN (gồm 15% vãng lai)' : '75% LN')}
                 </span>
               </div>
               <div className="text-base font-black text-emerald-950 font-mono">
@@ -289,7 +306,7 @@ export default function CashflowSaleConfirmModal({
               </div>
               <p className="text-[11px] text-emerald-700">
                 {isWalkIn
-                  ? 'Lợi nhuận ròng cửa hàng (hưởng trọn 90% do không có người giới thiệu)'
+                  ? `Lợi nhuận ròng cửa hàng (hưởng trọn ${isKey ? '85%' : '90%'} do không có người giới thiệu)`
                   : 'Lợi nhuận ròng giữ lại cho cửa hàng'}
               </p>
             </div>
@@ -322,9 +339,9 @@ export default function CashflowSaleConfirmModal({
                   title={`Người bán: ${sellerCommission.toLocaleString('vi-VN')}₫`}
                 />
                 <div
-                  style={{ width: `${Math.max(3, (warrantyReserve / soldPrice) * 100)}%` }}
-                  className="bg-rose-500 h-full transition-all"
-                  title={`Quỹ dự phòng: ${warrantyReserve.toLocaleString('vi-VN')}₫`}
+                  style={{ width: `${Math.max(3, (adminDeduction / soldPrice) * 100)}%` }}
+                  className="bg-purple-500 h-full transition-all"
+                  title={`Trích Admin (${isKey ? '10%' : '5%'}): ${adminDeduction.toLocaleString('vi-VN')}₫`}
                 />
                 <div
                   style={{ width: `${Math.max(4, (remainingProfit / soldPrice) * 100)}%` }}
@@ -342,10 +359,10 @@ export default function CashflowSaleConfirmModal({
               <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> {isWalkIn ? 'Vãng lai (0% gộp)' : 'Người bán (15%)'}
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
+              <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" /> {isKey ? 'Trích Admin (10%)' : 'Trích Admin (5%)'}
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> {isWalkIn ? 'LN chung (90%)' : 'LN còn lại (75%)'}
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> {isKey ? (isWalkIn ? 'LN chung (85%)' : 'LN còn lại (70%)') : (isWalkIn ? 'LN chung (90%)' : 'LN còn lại (75%)')}
             </span>
           </div>
         </div>

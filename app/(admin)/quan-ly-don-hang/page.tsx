@@ -218,6 +218,10 @@ export default function OrderManagementPage() {
   const executeSale = (order: Order, matchedItem: InventoryItem, warrantyMonths: number) => {
     const currentCost = Number(matchedItem.import_price || matchedItem.cost_price || 0);
     const isWalkIn = (!order.referral_code || order.referral_code === 'Khách vãng lai') && !order.seller_name;
+    const isKeyOrder =
+      /key|bản quyền|windows|office/i.test(order.device_name || '') ||
+      /key|bản quyền|windows|office/i.test(matchedItem?.device_model || matchedItem?.model || '');
+
     setCashflowOrderData({
       item: matchedItem,
       customerName: order.customer_name,
@@ -231,6 +235,7 @@ export default function OrderManagementPage() {
       referralCode: order.referral_code || 'Khách vãng lai',
       sellerName: order.seller_name || (isWalkIn ? 'Khách vãng lai' : order.referral_code),
       isWalkIn,
+      productType: isKeyOrder ? 'key' : 'machine',
       notes: `Từ đơn online: ${order.order_code}. ${order.note || ''}`,
     });
   };
@@ -247,20 +252,32 @@ export default function OrderManagementPage() {
         await updateInventoryItem(item.id, { import_price: costPrice });
       }
 
+      const isKey =
+        finalData.productType === 'key' ||
+        /key|bản quyền|windows|office/i.test(executingOrder.device_name || '') ||
+        /key|bản quyền|windows|office/i.test(item.device_model || item.model || '');
+
       const isWalkIn = Boolean(finalData.isWalkIn) || finalData.referralCode === 'Khách vãng lai';
       const profit = Math.max(0, soldPrice - costPrice);
       // Nếu là khách vãng lai, hoa hồng sales = 0₫ và gộp trọn vào lợi nhuận chung
       const sellerBonus = isWalkIn ? 0 : Math.round(profit * 0.15);
       const lenderBonus = Math.round(profit * 0.05);
       const lenderTotal = costPrice + lenderBonus;
-      const warrantyReserve = Math.round(profit * 0.05);
-      const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
+      // Trích cho Admin: 10% đối với Key, 5% đối với máy tính/linh kiện
+      const adminRate = isKey ? 0.10 : 0.05;
+      const adminDeduction = Math.round(profit * adminRate);
+      const remainingProfit = profit - sellerBonus - lenderBonus - adminDeduction;
+
+      const adminRateLabel = isKey ? '10%' : '5%';
+      const remainingPercentLabel = isKey
+        ? (isWalkIn ? '85%' : '70%')
+        : (isWalkIn ? '90%' : '75%');
 
       const sellerLabel = isWalkIn
         ? 'Khách vãng lai (15% hoa hồng gộp vào lợi nhuận chung)'
         : `${finalData.sellerName || executingOrder.seller_name || 'Sale'} (15%: ${sellerBonus.toLocaleString('vi-VN')}₫)`;
 
-      const cashflowNote = `[Đơn online: ${executingOrder.order_code}] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Nguồn: ${sellerLabel} | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | ${isWalkIn ? 'LN chung doanh nghiệp (90%)' : 'LN còn lại (75%)'}: ${remainingProfit.toLocaleString('vi-VN')}₫. ${executingOrder.note || ''}`;
+      const cashflowNote = `[Đơn online: ${executingOrder.order_code}] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Nguồn: ${sellerLabel} | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Trích Admin (${adminRateLabel}): ${adminDeduction.toLocaleString('vi-VN')}₫ | ${isWalkIn ? `LN chung doanh nghiệp (${remainingPercentLabel})` : `LN còn lại (${remainingPercentLabel})`}: ${remainingProfit.toLocaleString('vi-VN')}₫. ${executingOrder.note || ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
