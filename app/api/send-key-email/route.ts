@@ -88,8 +88,11 @@ export async function POST(req: Request) {
 </html>`;
 
     const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+    const resendReplyTo = process.env.RESEND_REPLY_TO || 'p.nhatthanh87@gmail.com';
     if (resendApiKey) {
       try {
+        const fromAddress = resendFromEmail || (senderEmail ? `${senderName} <${senderEmail}>` : 'Vi Tính An Tâm <hotro@vitinhantam.com>');
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -97,8 +100,9 @@ export async function POST(req: Request) {
             Authorization: `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: `${senderName} <${senderEmail.includes('@vitinhantam.com') ? 'onboarding@resend.dev' : senderEmail}>`,
+            from: fromAddress,
             to: [customer_email],
+            reply_to: resendReplyTo,
             subject: subject,
             html: htmlContent,
           }),

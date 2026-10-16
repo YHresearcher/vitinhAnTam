@@ -98,7 +98,7 @@ async function notifyStaffByEmail(order: Record<string, unknown>): Promise<void>
 
   // Lấy email nhân sự từ Supabase (nếu có), fallback danh sách mặc định
   let recipients: string[] = [
-    'thanhphan@vitinhantam.com',
+    process.env.RESEND_REPLY_TO || 'p.nhatthanh87@gmail.com',
     'sales01@vitinhantam.com',
     'tech01@vitinhantam.com',
   ];
@@ -149,8 +149,9 @@ async function notifyStaffByEmail(order: Record<string, unknown>): Promise<void>
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Vi Tính An Tâm <onboarding@resend.dev>',
+        from: process.env.RESEND_FROM_EMAIL || 'Vi Tính An Tâm <hotro@vitinhantam.com>',
         to: recipients,
+        reply_to: process.env.RESEND_REPLY_TO || 'p.nhatthanh87@gmail.com',
         subject,
         html,
       }),

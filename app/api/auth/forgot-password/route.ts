@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         from,
         to: [user.email],
+        reply_to: process.env.RESEND_REPLY_TO || 'p.nhatthanh87@gmail.com',
         subject: '[Vi Tính An Tâm] Khôi phục mật khẩu',
         html: `<p>Xin chào ${escapeHtml(user.name)},</p><p>Nhấn vào nút dưới đây để đặt mật khẩu mới. Liên kết có hiệu lực trong 30 phút và chỉ sử dụng được một lần.</p><p><a href="${escapeHtml(resetUrl)}" style="display:inline-block;padding:12px 18px;background:#C0392B;color:#fff;text-decoration:none;border-radius:8px">Đặt lại mật khẩu</a></p><p>Nếu bạn không yêu cầu, hãy bỏ qua email này.</p>`,
       }),
