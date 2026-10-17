@@ -8,7 +8,6 @@ import {
   generateCustomerCode,
   SparePart,
 } from '@/lib/supabase';
-import ThermalLabelModal from '@/components/admin/ThermalLabelModal';
 import { SoldInventoryTab } from '@/components/admin/SoldInventoryTab';
 import { PricePreview, formatMoney } from '@/components/PricePreview';
 import { InventoryPriceDisplay } from '@/components/admin/InventoryPriceDisplay';
@@ -98,12 +97,12 @@ export default function KhoMayPage() {
 
   // Modal states - Machines
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
   const [viewingSpecsItem, setViewingSpecsItem] = useState<InventoryItem | null>(null);
-  const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [tempStockValue, setTempStockValue] = useState<number>(1);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  // Trạng thái mở/đóng nhóm dòng máy trong bảng kho (mặc định: lô 1 máy mở, lô nhiều máy thu gọn)
+  const [machineGroupToggles, setMachineGroupToggles] = useState<Record<string, boolean>>({});
 
   // Price Edit Modals (Máy tính & Linh kiện)
   const [editingPriceMachine, setEditingPriceMachine] = useState<InventoryItem | null>(null);
@@ -450,6 +449,23 @@ export default function KhoMayPage() {
     warranty_months: 12,
   });
 
+  // Danh sách máy trong lô nhập: mỗi máy có S/N và sức khỏe SSD riêng
+  const [batchUnits, setBatchUnits] = useState<{ serialNumber: string; ssdHealth: number }[]>([
+    { serialNumber: '', ssdHealth: 98 },
+  ]);
+  const setBatchQty = (qty: number) => {
+    const n = Math.max(1, Math.min(50, Math.floor(Number(qty)) || 1));
+    setBatchUnits((prev) =>
+      Array.from({ length: n }, (_, i) => prev[i] || { serialNumber: '', ssdHealth: prev[prev.length - 1]?.ssdHealth ?? 98 })
+    );
+  };
+  const addBatchUnit = () =>
+    setBatchUnits((prev) => [...prev, { serialNumber: '', ssdHealth: prev[prev.length - 1]?.ssdHealth ?? 98 }]);
+  const removeBatchUnit = (idx: number) =>
+    setBatchUnits((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
+  const updateBatchUnit = (idx: number, patch: Partial<{ serialNumber: string; ssdHealth: number }>) =>
+    setBatchUnits((prev) => prev.map((u, i) => (i === idx ? { ...u, ...patch } : u)));
+
 // Helper tính số ngày tồn kho
 function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number {
   const dateStr = item.import_date || item.created_at;
@@ -461,9 +477,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const nowTimestamp = useMemo(() => Date.now(), []);
 
-  // Filtered inventory - Machines (Máy bộ vs Laptop)
+  // Filtered inventory - Machines (Máy bộ vs Laptop), sắp xếp theo nhóm trạng thái: Sẵn bán → Đang QC → Đã bán
   const filteredInventory = useMemo(() => {
-    return inventory.filter((item) => {
+    const STATUS_ORDER: Record<string, number> = {
+      ready_to_sell: 0,
+      reserved: 0,
+      testing: 1,
+      pending_test: 1,
+      sold: 2,
+      dealer_sold: 2,
+    };
+    return inventory
+      .filter((item) => {
       // Máy đã bán bởi dealer không còn hiển thị trong hệ thống
       if (item.qc_status === 'dealer_sold') return false;
 
@@ -499,8 +524,99 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       }
 
       return matchesSearch && matchesBrand && matchesStatus;
-    });
+      })
+      .sort((a, b) => (STATUS_ORDER[a.qc_status] ?? 9) - (STATUS_ORDER[b.qc_status] ?? 9));
   }, [inventory, activeTab, searchQuery, selectedBrand, selectedStatus, nowTimestamp]);
+
+  // ==========================================
+  // Hiển thị bảng kho theo NHÓM DÒNG MÁY (cùng dòng máy + cấu hình):
+  // - Dòng nhóm: hiện model, cấu hình gộp và TỔNG TỒN KHO của cả lô
+  // - Bấm để mở rộng ra từng máy (S/N riêng, trạng thái riêng)
+  // - Máy đã bán hiển thị phẳng cuối bảng (chỉ xem)
+  // ==========================================
+  type MachineDisplayRow =
+    | {
+        kind: 'group';
+        key: string;
+        model: string;
+        config: string;
+        size: number;
+        totalQty: number;
+        readyCount: number;
+        testingCount: number;
+        reservedCount: number;
+        isQcBucket: boolean;
+      }
+    | { kind: 'item'; item: InventoryItem };
+
+  const isMachineGroupOpen = (key: string, size: number) =>
+    key in machineGroupToggles ? machineGroupToggles[key] : size === 1;
+
+  const toggleMachineGroup = (key: string, size: number) =>
+    setMachineGroupToggles((prev) => ({ ...prev, [key]: !isMachineGroupOpen(key, size) }));
+
+  const machineDisplayRows = useMemo<MachineDisplayRow[]>(() => {
+    const orderOf = (s: InventoryItem['qc_status']) =>
+      s === 'ready_to_sell' || s === 'reserved' ? 0 : s === 'testing' || s === 'pending_test' ? 1 : 2;
+
+    const groupMap = new Map<
+      string,
+      { model: string; config: string; statusOrder: number; isQcBucket: boolean; items: InventoryItem[] }
+    >();
+    const soldRows: MachineDisplayRow[] = [];
+
+    filteredInventory.forEach((item) => {
+      if (item.qc_status === 'sold') {
+        soldRows.push({ kind: 'item', item });
+        return;
+      }
+      const model = item.model || item.device_model || `${item.brand} ${item.form_factor}`;
+      const cpu = item.cpu || item.specs?.cpu || '';
+      const ram = item.ram || item.specs?.ram || '';
+      const ssd = item.ssd_capacity || item.specs?.ssd || '';
+      const isQcBucket = item.qc_status === 'testing' || item.qc_status === 'pending_test';
+      const key = `${isQcBucket ? 'qc' : 'ready'}::${item.brand}|${model}|${item.form_factor}|${cpu}|${ram}|${ssd}`.toLowerCase();
+      const g = groupMap.get(key) || {
+        model,
+        config: [cpu, ram, ssd].filter(Boolean).join(' • '),
+        statusOrder: orderOf(item.qc_status),
+        isQcBucket,
+        items: [] as InventoryItem[],
+      };
+      g.items.push(item);
+      groupMap.set(key, g);
+    });
+
+    const groupAndItems: MachineDisplayRow[] = [...groupMap.entries()]
+      .sort((a, b) => a[1].statusOrder - b[1].statusOrder || a[1].model.localeCompare(b[1].model))
+      .flatMap(([key, g]) => {
+        const header: MachineDisplayRow = {
+          kind: 'group',
+          key,
+          model: g.model,
+          config: g.config,
+          size: g.items.length,
+          totalQty: g.items.reduce((s, i) => s + (i.stock_quantity ?? i.quantity ?? 1), 0),
+          readyCount: g.items.filter((i) => i.qc_status === 'ready_to_sell').length,
+          testingCount: g.items.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length,
+          reservedCount: g.items.filter((i) => i.qc_status === 'reserved').length,
+          isQcBucket: g.isQcBucket,
+        };
+        const open = key in machineGroupToggles ? machineGroupToggles[key] : g.items.length === 1;
+        const items: MachineDisplayRow[] = open
+          ? [...g.items]
+              .sort(
+                (a, b) =>
+                  orderOf(a.qc_status) - orderOf(b.qc_status) ||
+                  (a.serial_number || a.service_tag).localeCompare(b.serial_number || b.service_tag)
+              )
+              .map((item) => ({ kind: 'item' as const, item }))
+          : [];
+        return [header, ...items];
+      });
+
+    return [...groupAndItems, ...soldRows];
+  }, [filteredInventory, machineGroupToggles]);
 
   // Filtered Spare Parts - Linh kiện
   const filteredSpareParts = useMemo(() => {
@@ -648,11 +764,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
 
 
-  const handleOpenLabelModal = (item: InventoryItem) => {
-    setSelectedItemForLabel(item);
-    setIsLabelModalOpen(true);
-  };
-
   const handleStockEditSave = async (id: string) => {
     if (!canEditStock()) {
       alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền điều chỉnh số lượng tồn kho!');
@@ -666,8 +777,38 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const handleCreateNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItem.service_tag || !newItem.model) {
-      alert('Vui lòng nhập đầy đủ Model và Số Serial (Serial Number)!');
+    const baseTag = newItem.service_tag.toUpperCase().trim();
+    if (!newItem.model) {
+      alert('Vui lòng nhập Model!');
+      return;
+    }
+    if (!baseTag) {
+      alert('Vui lòng nhập Mã quản lý lô (Tag gốc)!');
+      return;
+    }
+
+    // Tag duy nhất cho từng máy trong lô: máy 1 = Tag gốc, máy 2..N = Tag gốc-2, -3...
+    const takenTags = new Set(inventory.map((i) => i.service_tag.toUpperCase()));
+    if (takenTags.has(baseTag)) {
+      alert(`Tag gốc [${baseTag}] đã tồn tại trong kho — vui lòng dùng Tag khác!`);
+      return;
+    }
+    const uniqueTagFor = (index: number): string => {
+      if (index === 0) return baseTag;
+      let n = index + 1;
+      let candidate = `${baseTag}-${n}`;
+      while (takenTags.has(candidate)) {
+        n += 1;
+        candidate = `${baseTag}-${n}`;
+      }
+      takenTags.add(candidate);
+      return candidate;
+    };
+
+    // S/N không được trùng trong lô
+    const serials = batchUnits.map((u) => u.serialNumber.trim().toUpperCase()).filter(Boolean);
+    if (new Set(serials).size !== serials.length) {
+      alert('Có S/N bị trùng trong lô — mỗi máy phải có S/N riêng!');
       return;
     }
 
@@ -675,30 +816,40 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const orig = Number(newItem.original_price) || 0;
       const sale = Number(newItem.sale_price) || 0;
       const effectivePrice = sale > 0 ? sale : orig;
-      await addInventoryItem({
-        brand: newItem.brand,
-        model: newItem.model,
-        form_factor: newItem.form_factor,
-        service_tag: newItem.service_tag.toUpperCase().trim(),
-        cpu: newItem.cpu,
-        ram: newItem.ram,
-        ssd_capacity: newItem.ssd_capacity,
-        ssd_health: Number(newItem.ssd_health),
-        import_price: Number(newItem.import_price),
-        import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
-        original_price: orig,
-        sale_price: sale,
-        price: effectivePrice,
-        retail_price: effectivePrice,
-        stock_quantity: Number(newItem.stock_quantity),
-        shelf_location: newItem.shelf_location,
-        qc_status: newItem.qc_status,
-        warranty_months: Number(newItem.warranty_months),
-        specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${newItem.ssd_health}%)`,
-      });
+
+      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N & sức khỏe SSD riêng theo lô
+      for (let i = 0; i < batchUnits.length; i += 1) {
+        const unit = batchUnits[i];
+        const tag = uniqueTagFor(i);
+        const health = Math.max(1, Math.min(100, Number(unit.ssdHealth) || 98));
+        const serial = unit.serialNumber.trim() || tag;
+        await addInventoryItem({
+          brand: newItem.brand,
+          model: newItem.model,
+          form_factor: newItem.form_factor,
+          service_tag: tag,
+          serial_number: serial,
+          cpu: newItem.cpu,
+          ram: newItem.ram,
+          ssd_capacity: newItem.ssd_capacity,
+          ssd_health: health,
+          import_price: Number(newItem.import_price),
+          import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
+          original_price: orig,
+          sale_price: sale,
+          price: effectivePrice,
+          retail_price: effectivePrice,
+          stock_quantity: 1,
+          quantity: 1,
+          shelf_location: newItem.shelf_location,
+          qc_status: newItem.qc_status,
+          warranty_months: Number(newItem.warranty_months),
+          specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)`,
+        });
+      }
 
       setIsAddModalOpen(false);
-      setActionNotice(`Đã thêm thiết bị mới [${newItem.service_tag.toUpperCase()}] vào kho!`);
+      setActionNotice(`Đã nhập ${batchUnits.length} máy vào kho (lô [${baseTag}])!`);
       setTimeout(() => setActionNotice(null), 3000);
 
       // Reset form
@@ -721,6 +872,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         qc_status: 'testing',
         warranty_months: 12,
       });
+      setBatchUnits([{ serialNumber: '', ssdHealth: 98 }]);
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm máy'));
     }
@@ -892,16 +1044,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            {activeTab === 'may-bo' && 'Kho Máy Bộ'}
-            {activeTab === 'laptop' && 'Kho Laptop'}
-            {activeTab === 'sold' && 'Máy Đã Bán & Bảo Hành'}
-            {activeTab === 'components' && 'Kho Linh Kiện'}
-            <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md font-mono">
-              {activeTab === 'may-bo' && `${stats.mayBoTotal} máy bộ`}
-              {activeTab === 'laptop' && `${stats.laptopTotal} laptop`}
-              {activeTab === 'sold' && `${stats.sold} máy đã bán`}
-              {activeTab === 'components' && `${spareParts.length} mục`}
-            </span>
+            {activeTab === 'may-bo' && `Kho Máy Bộ (${stats.mayBoTotal} máy)`}
+            {activeTab === 'laptop' && `Kho Laptop (${stats.laptopTotal} laptop)`}
+            {activeTab === 'sold' && `Máy Đã Bán & Bảo Hành (${stats.sold} máy)`}
+            {activeTab === 'components' && `Kho Linh Kiện (${spareParts.length} mục)`}
           </h1>
         </div>
 
@@ -942,7 +1088,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Máy bộ tồn kho</span>
+          <span>Máy bộ</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'may-bo' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700'
           }`}>
@@ -958,7 +1104,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Laptop tồn kho</span>
+          <span>Laptop</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'laptop' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-700'
           }`}>
@@ -974,7 +1120,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <span>Kho linh kiện</span>
+          <span>Linh kiện</span>
           <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-semibold font-mono ${
             activeTab === 'components' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'
           }`}>
@@ -1006,21 +1152,16 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
-          activeTab === 'may-bo' ? 'bg-blue-50/50 border-blue-300' : 'bg-white border-slate-200'
-        }`}>
-          <div className="text-[11px] text-slate-500 truncate">Máy Bộ Tồn Kho</div>
-          <div className="text-base font-bold text-blue-800 font-mono mt-0.5">{stats.mayBoTotal} máy</div>
-        </div>
-
-        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
-          activeTab === 'laptop' ? 'bg-indigo-50/50 border-indigo-300' : 'bg-white border-slate-200'
-        }`}>
-          <div className="text-[11px] text-slate-500 truncate">Laptop Tồn Kho</div>
-          <div className="text-base font-bold text-indigo-800 font-mono mt-0.5">{stats.laptopTotal} máy</div>
-        </div>
+      {/* KPI tối giản: Tồn kho theo nhóm trạng thái (Sẵn bán → Đang QC → Đã bán) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {(activeTab === 'may-bo' || activeTab === 'laptop') && (
+          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="text-[11px] text-slate-500 truncate">Tồn Kho (Chưa Bán)</div>
+            <div className="text-base font-bold text-blue-800 font-mono mt-0.5">
+              {(activeTab === 'may-bo' ? stats.mayBoTotal : stats.laptopTotal)} máy
+            </div>
+          </div>
+        )}
 
         <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
           <div className="text-[11px] text-slate-500 truncate">Sẵn Bán (RTS)</div>
@@ -1032,14 +1173,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <div className="text-base font-bold text-amber-700 font-mono mt-0.5">{stats.testing} máy</div>
         </div>
 
-        <div className={`p-3 rounded-xl border shadow-2xs transition-colors ${
-          activeTab === 'components' ? 'bg-emerald-50/50 border-emerald-300' : 'bg-white border-slate-200'
-        }`}>
-          <div className="text-[11px] text-slate-500 truncate">Linh Kiện Tồn Kho</div>
-          <div className="text-base font-bold text-emerald-800 font-mono mt-0.5">{stats.componentsTotal} món</div>
-          <div className="text-[10px] text-slate-500 font-medium">
-            Mới {stats.componentsNew} • Cũ {stats.componentsUsed}
-          </div>
+        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="text-[11px] text-slate-500 truncate">Đã Bán</div>
+          <div className="text-base font-bold text-purple-700 font-mono mt-0.5">{stats.sold} máy</div>
         </div>
       </div>
 
@@ -1156,22 +1292,91 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4">Model</th>
                 <th className="py-3 px-4">Serial Number</th>
-                <th className="py-3 px-4">Ngày Nhập &amp; Tuổi Kho</th>
                 <th className="py-3 px-4">Trạng Thái</th>
                 <th className="py-3 px-4">Tồn Kho</th>
-                <th className="py-3 px-4 text-right">Giá Bán</th>
                 <th className="py-3 px-4 text-center">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-sm">
               {filteredInventory.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={5} className="py-12 text-center text-slate-400">
                     Không tìm thấy thiết bị nào phù hợp với bộ lọc.
                   </td>
                 </tr>
               ) : (
-                filteredInventory.map((item) => {
+                machineDisplayRows.map((row) => {
+                  if (row.kind === 'group') {
+                    const open = isMachineGroupOpen(row.key, row.size);
+                    return (
+                      <tr
+                        key={row.key}
+                        className={`transition-colors border-y border-slate-200/80 ${
+                          row.isQcBucket ? 'bg-amber-50/70 hover:bg-amber-50' : 'bg-blue-50/60 hover:bg-blue-50'
+                        }`}
+                      >
+                        <td colSpan={5} className="py-2.5 px-4">
+                          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+                            <button
+                              type="button"
+                              onClick={() => toggleMachineGroup(row.key, row.size)}
+                              className="flex items-center gap-2 text-left cursor-pointer group"
+                              title={open ? 'Thu gọn dòng máy này' : 'Mở rộng xem từng máy'}
+                            >
+                              <span
+                                className={`inline-flex items-center justify-center w-5 h-5 rounded text-xs font-bold transition-transform ${
+                                  row.isQcBucket
+                                    ? 'bg-amber-100 text-amber-700 border border-amber-300'
+                                    : 'bg-blue-100 text-blue-700 border border-blue-300'
+                                } ${open ? 'rotate-90' : ''}`}
+                              >
+                                ›
+                              </span>
+                              <span className="text-sm font-bold text-slate-900 group-hover:text-blue-800">
+                                {row.model}
+                              </span>
+                              {row.config && (
+                                <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
+                                  {row.config}
+                                </span>
+                              )}
+                            </button>
+
+                            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+                              {row.readyCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono">
+                                  Sẵn bán {row.readyCount}
+                                </span>
+                              )}
+                              {row.reservedCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 border border-purple-200 font-mono">
+                                  Đang đợi {row.reservedCount}
+                                </span>
+                              )}
+                              {row.testingCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 font-mono">
+                                  Đang QC {row.testingCount}
+                                </span>
+                              )}
+                              <span className="px-2 py-0.5 rounded bg-slate-900 text-white font-mono">
+                                Tồn kho: {row.totalQty} máy
+                              </span>
+                              {row.size > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => toggleMachineGroup(row.key, row.size)}
+                                  className="px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-600 hover:text-blue-700 hover:border-blue-300 font-semibold cursor-pointer"
+                                >
+                                  {open ? 'Thu gọn' : `Xem ${row.size} máy`}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+                  const item = row.item;
                   const isReady = item.qc_status === 'ready_to_sell';
                   const isTesting = item.qc_status === 'testing';
                   const isReserved = item.qc_status === 'reserved';
@@ -1239,39 +1444,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         </button>
                       </td>
 
-                      {/* Ngày nhập & Tuổi kho (Aging Alerts) */}
+                      {/* QC Status — máy đã bán: chỉ xem (khóa select) */}
                       <td className="py-3.5 px-4">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs font-mono text-slate-700 font-semibold">
-                            {item.import_date
-                              ? new Date(item.import_date).toLocaleDateString('vi-VN')
-                              : item.created_at
-                              ? new Date(item.created_at).toLocaleDateString('vi-VN')
-                              : 'Chưa ghi nhận'}
-                          </span>
-                          {item.qc_status === 'sold' ? (
-                            <span className="text-[11px] text-slate-400 font-mono">
-                              Đã xuất bán
-                            </span>
-                          ) : isRedAging ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 w-fit">
-                              🚨 {daysInStock} ngày (Thanh lý gấp)
-                            </span>
-                          ) : isYellowAging ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 w-fit">
-                              ⚠️ {daysInStock} ngày (Tồn lâu)
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-slate-500 font-mono">
-                              Tồn: {daysInStock} ngày
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* QC Status */}
-                      <td className="py-3.5 px-4">
-                        {canUpdateRepairStatus() ? (
+                        {canUpdateRepairStatus() && item.qc_status !== 'sold' ? (
                           <select
                             value={item.qc_status}
                             onChange={(e) => {
@@ -1321,9 +1496,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         )}
                       </td>
 
-                      {/* Stock Quantity (RBAC PROTECTED) */}
+                      {/* Stock Quantity (RBAC PROTECTED) — máy đã bán: chỉ xem */}
                       <td className="py-3.5 px-4">
-                        {canEditStock() ? (
+                        {canEditStock() && item.qc_status !== 'sold' ? (
                           editingStockId === item.id ? (
                             <div className="flex items-center gap-1.5">
                               <input
@@ -1374,29 +1549,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         )}
                       </td>
 
-                      {/* Sale Price */}
-                      <td
-                        className={`py-3.5 px-4 text-right ${
-                          canSellAndEditWarranty()
-                            ? 'cursor-pointer hover:bg-blue-50/50 transition-colors'
-                            : ''
-                        }`}
-                        onClick={() => {
-                          if (canSellAndEditWarranty()) setEditingPriceMachine(item);
-                        }}
-                        title={canSellAndEditWarranty() ? 'Bấm để chỉnh sửa giá bán máy' : undefined}
-                      >
-                        <InventoryPriceDisplay
-                          originalPrice={item.original_price}
-                          salePrice={item.sale_price}
-                          fallbackPrice={item.price ?? item.retail_price ?? 0}
-                          warrantyMonths={item.warranty_months}
-                          canEdit={canSellAndEditWarranty()}
-                          onEdit={() => setEditingPriceMachine(item)}
-                        />
-                      </td>
-
-                      {/* Actions */}
+                      {/* Actions: máy đã bán bị khóa mọi thao tác (xem trong tab Đã bán) */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center justify-center gap-1.5">
                           {/* Khách không mua - Huỷ đặt trước & trả máy về kho */}
@@ -1411,8 +1564,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             </button>
                           )}
 
-                          {/* Edit Price Button (Admin & Sales) */}
-                          {canSellAndEditWarranty() && (
+                          {/* Edit Price Button (Admin & Sales) — khóa với máy đã bán */}
+                          {canSellAndEditWarranty() && item.qc_status !== 'sold' && item.qc_status !== 'dealer_sold' && (
                             <button
                               onClick={() => setEditingPriceMachine(item)}
                               title="Chỉnh sửa giá gốc và giá giảm của máy"
@@ -1423,8 +1576,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             </button>
                           )}
 
-                          {/* Sale Handover Button (Admin & Sales) */}
-                          {canSellAndEditWarranty() && (
+                          {/* Sale Handover Button (Admin & Sales) — khóa với máy đã bán */}
+                          {canSellAndEditWarranty() && item.qc_status !== 'sold' && (
                             <button
                               onClick={() => handleOpenSellModal(item)}
                               title={
@@ -1433,18 +1586,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                                   : 'Xuất bán máy, cấp mã KH & điều chỉnh bảo hành'
                               }
                               className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
-                                item.qc_status === 'sold'
-                                  ? 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-                                  : item.qc_status === 'dealer_sold'
+                                item.qc_status === 'dealer_sold'
                                   ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100'
                                   : isReserved
                                   ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-700 shadow-xs'
                                   : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300 shadow-xs'
                               }`}
                             >
-                              {item.qc_status === 'sold'
-                                ? 'Đã bán'
-                                : item.qc_status === 'dealer_sold'
+                              {item.qc_status === 'dealer_sold'
                                 ? 'Dealer đã bán'
                                 : isReserved
                                 ? 'Bán máy'
@@ -1452,17 +1601,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             </button>
                           )}
 
-                          {/* Print 50x30mm Label */}
-                          <button
-                            onClick={() => handleOpenLabelModal(item)}
-                            title="In tem nhiệt 50x30mm (Xprinter)"
-                            className="px-2 py-1 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-semibold transition-colors border border-blue-200 bg-blue-50"
-                          >
-                            In tem
-                          </button>
-
-                          {/* Admin Only Delete */}
-                          {canEditStock() && (
+                          {/* Admin Only Delete — khóa với máy đã bán */}
+                          {canEditStock() && item.qc_status !== 'sold' && (
                             <button
                               onClick={() => handleDeleteItem(item.id, item.service_tag)}
                               title="Xóa máy khỏi kho (Chỉ Admin)"
@@ -1470,6 +1610,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             >
                               Xóa
                             </button>
+                          )}
+                          {(item.qc_status === 'sold' || item.qc_status === 'dealer_sold') && (
+                            <span className="text-[11px] text-slate-400 font-mono">Đã khóa thao tác</span>
                           )}
                         </div>
                       </td>
@@ -1485,12 +1628,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
   )}
 
       {/* ========================================================================= */}
-      {/* TAB: MÁY ĐÃ BÁN & BẢO HÀNH THỜI GIAN THỰC */}
+      {/* TAB: MÁY ĐÃ BÁN & BẢO HÀNH THỜI GIAN THỰC (chỉ xem + Admin đổi NV phụ trách) */}
       {/* ========================================================================= */}
       {activeTab === 'sold' && (
         <SoldInventoryTab
           soldMachines={soldMachines}
-          onPrintLabel={handleOpenLabelModal}
           getRealtimeWarrantyStatus={getRealtimeWarrantyStatus}
         />
       )}
@@ -1784,7 +1926,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
             <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900">Nhập Máy Mới</h3>
+                <h3 className="text-base font-bold text-slate-900">Nhập Lô Máy Mới</h3>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Cùng 1 dòng máy / cấu hình — S/N và sức khỏe SSD nhập riêng cho từng máy.
+                </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -1829,15 +1974,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   />
                 </div>
 
-                {/* Serial Number */}
+                {/* Tag gốc của lô (mã quản lý dòng máy) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số Serial (Serial Number) *
+                    Mã Quản Lý Lô (Tag Gốc) *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="VD: ST-99214X"
+                    placeholder="VD: ST-99214X (máy 1; máy 2: -2, máy 3: -3...)"
                     value={newItem.service_tag}
                     onChange={(e) => setNewItem({ ...newItem, service_tag: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -1903,34 +2048,69 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   />
                 </div>
 
-                {/* SSD Health */}
+                {/* Số lượng máy trong lô */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Sức Khỏe SSD (%)
+                    Số Lượng Máy Trong Lô *
                   </label>
                   <input
                     type="number"
                     min={1}
-                    max={100}
-                    value={newItem.ssd_health}
-                    onChange={(e) => setNewItem({ ...newItem, ssd_health: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    max={50}
+                    value={batchUnits.length}
+                    onChange={(e) => setBatchQty(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold"
                   />
                 </div>
 
 
-                {/* Initial Stock */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Số Lượng
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={newItem.stock_quantity}
-                    onChange={(e) => setNewItem({ ...newItem, stock_quantity: Number(e.target.value) })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold"
-                  />
+                {/* Danh sách S/N & Sức khỏe SSD từng máy trong lô */}
+                <div className="md:col-span-2 p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-indigo-900">
+                      S/N &amp; Sức khỏe SSD từng máy trong lô
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono">{batchUnits.length} máy</span>
+                  </div>
+                  {batchUnits.map((unit, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="w-6 text-[11px] font-mono font-bold text-slate-500 shrink-0">#{idx + 1}</span>
+                      <input
+                        type="text"
+                        value={unit.serialNumber}
+                        onChange={(e) => updateBatchUnit(idx, { serialNumber: e.target.value })}
+                        placeholder={`S/N máy ${idx + 1} (để trống = lấy Tag)`}
+                        className="flex-1 min-w-0 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={unit.ssdHealth}
+                        onChange={(e) => updateBatchUnit(idx, { ssdHealth: Number(e.target.value) })}
+                        title="Sức khỏe SSD (%)"
+                        className="w-20 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                      />
+                      <span className="text-[11px] text-slate-400 font-mono shrink-0">SSD %</span>
+                      {batchUnits.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeBatchUnit(idx)}
+                          title="Xóa máy này khỏi lô"
+                          className="text-slate-400 hover:text-rose-600 text-xs font-bold px-1 shrink-0"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addBatchUnit}
+                    className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900"
+                  >
+                    + Thêm 1 máy vào lô
+                  </button>
                 </div>
 
                 {/* Giá đầu vào (vốn nhập kho) */}
@@ -2113,7 +2293,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm"
                 >
-                  Lưu Máy Mới
+                  Lưu Lô Máy ({batchUnits.length} máy)
                 </button>
               </div>
             </form>
@@ -3496,17 +3676,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 <button
                   type="button"
                   onClick={() => {
-                    setSelectedItemForLabel(viewingSpecsItem);
-                    setIsLabelModalOpen(true);
-                    setViewingSpecsItem(null);
-                  }}
-                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 text-xs font-semibold rounded-lg shadow-2xs transition-colors cursor-pointer"
-                >
-                  In Tem Nhiệt (50x30mm)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
                     handleOpenSellModal(viewingSpecsItem);
                     setViewingSpecsItem(null);
                   }}
@@ -3566,12 +3735,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         onSave={handleSavePartPrice}
       />
 
-      {/* Thermal Label Modal (50x30mm) */}
-      <ThermalLabelModal
-        isOpen={isLabelModalOpen}
-        onClose={() => setIsLabelModalOpen(false)}
-        item={selectedItemForLabel}
-      />
     </div>
   );
 }

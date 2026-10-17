@@ -2,10 +2,11 @@
 
 import React, { useState, useMemo } from "react";
 import { InventoryItem } from "@/lib/supabase";
+import { useViTinhAnTamStore } from "@/lib/store";
+import { message } from "antd";
 
 interface Props {
   soldMachines: InventoryItem[];
-  onPrintLabel: (item: InventoryItem) => void;
   getRealtimeWarrantyStatus: (d?: string, m?: number) => {
     isExpired: boolean;
     isNearExpiry: boolean;
@@ -15,9 +16,37 @@ interface Props {
   };
 }
 
-export function SoldInventoryTab({ soldMachines, onPrintLabel, getRealtimeWarrantyStatus }: Props) {
+// Tab máy đã bán: CHỈ XEM thông tin (khóa mọi nút thao tác).
+// Ngoại lệ duy nhất: Admin được phép đổi "người chăm sóc khách hàng" (NV phụ trách CRM).
+export function SoldInventoryTab({ soldMachines, getRealtimeWarrantyStatus }: Props) {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "near_expiry" | "expired">("all");
+  const { customers, users, currentUser, updateCustomer } = useViTinhAnTamStore();
+
+  const isAdmin = currentUser.role === "admin";
+  const careOptions = useMemo(
+    () => users.filter((u) => u.role !== "outsourced"),
+    [users]
+  );
+
+  const findCustomerFor = (item: InventoryItem) => {
+    const phone = (item.customer_phone || "").replace(/\D/g, "");
+    if (!phone) return undefined;
+    return customers.find((c) => c.phone.replace(/\D/g, "") === phone);
+  };
+
+  const handleChangeCaregiver = async (customerId: string, salesId: string) => {
+    const u = users.find((x) => x.id === salesId);
+    const ok = await updateCustomer(customerId, {
+      assigned_sales_id: u?.id || "",
+      assigned_sales_name: u?.name || "",
+    });
+    if (ok) {
+      message.success(`Đã đổi người chăm sóc thành ${u?.name || "Chưa gán"}!`);
+    } else {
+      message.error("Không đổi được người chăm sóc — vui lòng thử lại!");
+    }
+  };
 
   const filtered = useMemo(() => {
     return soldMachines.filter((item) => {
@@ -89,7 +118,7 @@ export function SoldInventoryTab({ soldMachines, onPrintLabel, getRealtimeWarran
                 <th className="py-3 px-4">Ngày Bán</th>
                 <th className="py-3 px-4">Bảo Hành Còn Lại (Realtime)</th>
                 <th className="py-3 px-4 text-right">Giá Bán</th>
-                <th className="py-3 px-4 text-center">In Tem</th>
+                <th className="py-3 px-4">Người Chăm Sóc (Admin sửa)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-xs">
@@ -139,14 +168,32 @@ export function SoldInventoryTab({ soldMachines, onPrintLabel, getRealtimeWarran
                       <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
                         {(item.retail_price || item.price || 0).toLocaleString("vi-VN")}₫
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <button
-                          type="button"
-                          onClick={() => onPrintLabel(item)}
-                          className="px-2.5 py-1 text-purple-700 hover:bg-purple-100 rounded-lg font-bold border border-purple-200 bg-purple-50 cursor-pointer"
-                        >
-                          In tem
-                        </button>
+                      <td className="py-3 px-4">
+                        {(() => {
+                          const cust = findCustomerFor(item);
+                          if (isAdmin && cust) {
+                            return (
+                              <select
+                                value={cust.assigned_sales_id || ""}
+                                onChange={(e) => handleChangeCaregiver(cust.id, e.target.value)}
+                                title="Chỉ Admin mới được đổi người chăm sóc khách hàng"
+                                className="px-2 py-1 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer"
+                              >
+                                <option value="">Chưa gán</option>
+                                {careOptions.map((u) => (
+                                  <option key={u.id} value={u.id}>
+                                    {u.name}
+                                  </option>
+                                ))}
+                              </select>
+                            );
+                          }
+                          return (
+                            <span className="text-xs font-semibold text-slate-700">
+                              {cust?.assigned_sales_name || "Chưa gán"}
+                            </span>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );

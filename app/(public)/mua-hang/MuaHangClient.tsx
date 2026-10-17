@@ -522,13 +522,7 @@ export default function MuaHangClient() {
                       <span className="text-emerald-700 font-semibold">
                         ✓ Ghi nhận người giới thiệu: {referralCode.trim()}
                       </span>
-                    ) : (
-                      <span>
-                        {isEn
-                          ? 'If left blank, this order is recorded as "Walk-in customer".'
-                          : 'Nếu để trống, hệ thống sẽ tự động ghi nhận là "Khách vãng lai".'}
-                      </span>
-                    )}
+                    ) : null}
                   </p>
                 </div>
               </div>

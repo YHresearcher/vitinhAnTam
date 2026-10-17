@@ -1418,6 +1418,11 @@ export function StoreProvider({
     if (!canEditStock()) {
       return false;
     }
+    // Không bao giờ cho xóa máy đã bán / dealer_sold (giữ hồ sơ bảo hành & doanh thu)
+    const target = inventory.find((i) => i.id === id);
+    if (target && (target.qc_status === 'sold' || target.qc_status === 'dealer_sold')) {
+      return false;
+    }
     setInventory((prev) => {
       const next = prev.filter((item) => item.id !== id);
       saveToLocal(STORAGE_KEYS.inventory, next);
