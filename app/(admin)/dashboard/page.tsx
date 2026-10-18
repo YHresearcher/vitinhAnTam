@@ -90,13 +90,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     ).length;
     const otherBrandCount = Math.max(0, total - dellCount - hpCount - thinkpadCount);
 
-    // Tổng giá trị kho (ước tính - loại trừ đã bán)
+    // Tổng giá trị kho (loại trừ đã bán)
     const inventoryValue = activeInventory
       .filter((i) => i.qc_status !== 'sold')
-      .reduce((sum, i) => sum + (i.price || i.retail_price || 4500000), 0);
+      .reduce((sum, i) => sum + (i.sale_price && i.sale_price > 0 ? i.sale_price : (i.price ?? i.retail_price ?? i.original_price ?? 0)), 0);
     const inventoryCapital = activeInventory
       .filter((i) => i.qc_status !== 'sold')
-      .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
+      .reduce((sum, i) => sum + (i.import_price ?? i.cost_price ?? 0), 0);
 
     return {
       total,

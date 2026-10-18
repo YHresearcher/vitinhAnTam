@@ -93,7 +93,7 @@ export default function TaoPhieuSuaChuaPage() {
   const [warrantyMonths, setWarrantyMonths] = useState<number>(3);
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('Long An - Tây Ninh');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [deviceModel, setDeviceModel] = useState('');
   const [serviceTag, setServiceTag] = useState('');
   const [windowsPin, setWindowsPin] = useState('');

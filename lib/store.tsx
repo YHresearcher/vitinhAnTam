@@ -249,7 +249,7 @@ interface StoreContextType {
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
   splitInventoryItem: (
     id: string,
-    unitSerials?: Array<{ serviceTag: string; serialNumber: string; ssdHealth?: number }>
+    unitSerials?: Array<{ serviceTag?: string; serialNumber: string; ssdHealth?: number }>
   ) => Promise<boolean>; // Tách lô gom chung S/N thành từng máy độc lập với S/N thực tế
   updateQcStatus: (id: string, status: InventoryItem['qc_status']) => Promise<void>; // Tech & Admin
   deleteInventoryItem: (id: string) => Promise<boolean>; // Restricted to Admin
@@ -1368,7 +1368,7 @@ export function StoreProvider({
 
   const splitInventoryItem = async (
     id: string,
-    unitSerials?: Array<{ serviceTag: string; serialNumber: string; ssdHealth?: number }>
+    unitSerials?: Array<{ serviceTag?: string; serialNumber: string; ssdHealth?: number }>
   ): Promise<boolean> => {
     if (!canEditStock()) {
       return false;
@@ -1395,10 +1395,17 @@ export function StoreProvider({
 
     // Máy gốc (unit 0)
     const originalUnit = unitSerials && unitSerials[0];
+    const originalSerial = originalUnit?.serialNumber?.trim()
+      ? originalUnit.serialNumber.trim().toUpperCase()
+      : (target.serial_number || target.service_tag);
+    const originalTag = originalUnit?.serviceTag?.trim()
+      ? originalUnit.serviceTag.trim().toUpperCase()
+      : originalSerial;
+
     const updatedOriginal: InventoryItem = {
       ...target,
-      service_tag: originalUnit?.serviceTag?.trim() ? originalUnit.serviceTag.trim().toUpperCase() : target.service_tag,
-      serial_number: originalUnit?.serialNumber?.trim() ? originalUnit.serialNumber.trim().toUpperCase() : (target.serial_number || target.service_tag),
+      service_tag: originalTag,
+      serial_number: originalSerial,
       ssd_health: typeof originalUnit?.ssdHealth === 'number' ? originalUnit.ssdHealth : target.ssd_health,
       stock_quantity: 1,
       quantity: 1,
@@ -1407,12 +1414,12 @@ export function StoreProvider({
     const newItems: InventoryItem[] = [];
     for (let i = 1; i < currentStock; i++) {
       const customUnit = unitSerials && unitSerials[i];
-      const tag = customUnit?.serviceTag?.trim()
-        ? customUnit.serviceTag.trim().toUpperCase()
-        : uniqueTagFor(i);
       const serial = customUnit?.serialNumber?.trim()
         ? customUnit.serialNumber.trim().toUpperCase()
         : `${baseSerial}-${i + 1}`;
+      const tag = customUnit?.serviceTag?.trim()
+        ? customUnit.serviceTag.trim().toUpperCase()
+        : serial;
       const health = typeof customUnit?.ssdHealth === 'number'
         ? customUnit.ssdHealth
         : target.ssd_health;

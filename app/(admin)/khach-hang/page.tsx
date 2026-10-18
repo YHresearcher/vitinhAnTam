@@ -36,9 +36,9 @@ export default function KhachHangCrmPage() {
   const [formData, setFormData] = useState({
     full_name: '',
     phone: '',
-    birth_date: '1992-05-15',
-    address: 'Long An - Tây Ninh',
-    area_zone: 'Long An - Tây Ninh',
+    birth_date: '',
+    address: '',
+    area_zone: '',
     customer_tier: 'standard' as string,
     notes: '',
   });

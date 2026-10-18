@@ -24,13 +24,13 @@ export default function TienCongPage() {
 
   // New Shift form state
   const [newShift, setNewShift] = useState({
-    technician_name: 'Trịnh Minh Tuấn (KTV Trưởng)',
+    technician_name: '',
     shift_date: new Date().toISOString().split('T')[0],
     shift_type: 'full_day' as ShiftLog['shift_type'],
-    base_wage: 350000,
-    tickets_completed: 4,
-    bonus: 100000,
-    notes: 'Hoàn thành 3 máy OptiPlex + 1 ca cứu hộ',
+    base_wage: 300000,
+    tickets_completed: 0,
+    bonus: 0,
+    notes: '',
   });
 
   // RESTRICTED SCREEN IF NOT ADMIN
