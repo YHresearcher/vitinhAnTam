@@ -247,7 +247,10 @@ interface StoreContextType {
   addInventoryItem: (item: Omit<InventoryItem, 'id' | 'created_at'>) => Promise<InventoryItem>;
   updateInventoryItem: (id: string, data: Partial<InventoryItem>) => Promise<void>;
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
-  splitInventoryItem: (id: string) => Promise<boolean>; // Tách lô gom chung S/N thành từng máy độc lập
+  splitInventoryItem: (
+    id: string,
+    unitSerials?: Array<{ serviceTag: string; serialNumber: string; ssdHealth?: number }>
+  ) => Promise<boolean>; // Tách lô gom chung S/N thành từng máy độc lập với S/N thực tế
   updateQcStatus: (id: string, status: InventoryItem['qc_status']) => Promise<void>; // Tech & Admin
   deleteInventoryItem: (id: string) => Promise<boolean>; // Restricted to Admin
   reserveInventoryItem: (params: {
@@ -1363,7 +1366,10 @@ export function StoreProvider({
     return true;
   };
 
-  const splitInventoryItem = async (id: string): Promise<boolean> => {
+  const splitInventoryItem = async (
+    id: string,
+    unitSerials?: Array<{ serviceTag: string; serialNumber: string; ssdHealth?: number }>
+  ): Promise<boolean> => {
     if (!canEditStock()) {
       return false;
     }
@@ -1372,7 +1378,7 @@ export function StoreProvider({
     const currentStock = Math.max(0, target.stock_quantity ?? target.quantity ?? 1);
     if (currentStock <= 1) return true;
 
-    const takenTags = new Set(inventory.map((i) => i.service_tag.toUpperCase()));
+    const takenTags = new Set(inventory.filter((i) => i.id !== id).map((i) => i.service_tag.toUpperCase()));
     const baseTag = target.service_tag.toUpperCase();
     const baseSerial = (target.serial_number || target.service_tag).toUpperCase();
 
@@ -1387,21 +1393,36 @@ export function StoreProvider({
       return candidate;
     };
 
+    // Máy gốc (unit 0)
+    const originalUnit = unitSerials && unitSerials[0];
     const updatedOriginal: InventoryItem = {
       ...target,
+      service_tag: originalUnit?.serviceTag?.trim() ? originalUnit.serviceTag.trim().toUpperCase() : target.service_tag,
+      serial_number: originalUnit?.serialNumber?.trim() ? originalUnit.serialNumber.trim().toUpperCase() : (target.serial_number || target.service_tag),
+      ssd_health: typeof originalUnit?.ssdHealth === 'number' ? originalUnit.ssdHealth : target.ssd_health,
       stock_quantity: 1,
       quantity: 1,
     };
 
     const newItems: InventoryItem[] = [];
     for (let i = 1; i < currentStock; i++) {
-      const tag = uniqueTagFor(i);
-      const serial = `${baseSerial}-${i + 1}`;
+      const customUnit = unitSerials && unitSerials[i];
+      const tag = customUnit?.serviceTag?.trim()
+        ? customUnit.serviceTag.trim().toUpperCase()
+        : uniqueTagFor(i);
+      const serial = customUnit?.serialNumber?.trim()
+        ? customUnit.serialNumber.trim().toUpperCase()
+        : `${baseSerial}-${i + 1}`;
+      const health = typeof customUnit?.ssdHealth === 'number'
+        ? customUnit.ssdHealth
+        : target.ssd_health;
+
       newItems.push({
         ...target,
         id: createId(),
         service_tag: tag,
         serial_number: serial,
+        ssd_health: health,
         stock_quantity: 1,
         quantity: 1,
       });
@@ -1416,7 +1437,17 @@ export function StoreProvider({
     if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
-        () => client.from('inventory_items').update({ stock_quantity: 1, quantity: 1 }).eq('id', id),
+        () =>
+          client
+            .from('inventory_items')
+            .update({
+              service_tag: updatedOriginal.service_tag,
+              serial_number: updatedOriginal.serial_number,
+              ssd_health: updatedOriginal.ssd_health,
+              stock_quantity: 1,
+              quantity: 1,
+            })
+            .eq('id', id),
         'Tách lô kho máy: Cập nhật máy gốc'
       );
       await runSupabaseWrite(

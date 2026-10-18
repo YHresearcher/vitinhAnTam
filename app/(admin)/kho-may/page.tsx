@@ -133,6 +133,10 @@ export default function KhoMayPage() {
   const [sellPartPrice, setSellPartPrice] = useState<number>(0);
   const [sellPartDate, setSellPartDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
+  // Split Batch Modal States (Định danh S/N thực tế từ nhà máy cho từng máy)
+  const [splittingBatchItem, setSplittingBatchItem] = useState<InventoryItem | null>(null);
+  const [splittingUnits, setSplittingUnits] = useState<Array<{ serviceTag: string; serialNumber: string; ssdHealth: number }>>([]);
+
   const existingCustomerCodes = customers
     .map((c) => c.customer_code)
     .filter((code): code is string => Boolean(code));
@@ -767,24 +771,86 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
 
 
-  const handleSplitBatch = async (item: InventoryItem) => {
+  const handleSplitBatch = (item: InventoryItem) => {
     if (!canEditStock()) {
       alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền tách lô máy!');
       return;
     }
     const currentStock = Math.max(0, item.stock_quantity ?? item.quantity ?? 1);
     if (currentStock <= 1) return;
-    if (
-      !confirm(
-        `Xác nhận tách lô [${item.service_tag}] gồm ${currentStock} máy thành ${currentStock} máy riêng biệt?\n\nMỗi máy sẽ có 1 số Serial (S/N) và Service Tag độc lập để quản lý bảo hành, QC và dán tem riêng.`
-      )
-    ) {
+
+    const units: Array<{ serviceTag: string; serialNumber: string; ssdHealth: number }> = [];
+    // Máy 1: Lấy thông tin máy gốc hiện hành
+    units.push({
+      serviceTag: item.service_tag,
+      serialNumber: item.serial_number || item.service_tag,
+      ssdHealth: item.ssd_health ?? 98,
+    });
+    // Các máy còn lại trong lô: Chờ người dùng quét/nhập tem thực tế từ vỏ máy
+    for (let i = 1; i < currentStock; i++) {
+      units.push({
+        serviceTag: '',
+        serialNumber: '',
+        ssdHealth: item.ssd_health ?? 98,
+      });
+    }
+    setSplittingUnits(units);
+    setSplittingBatchItem(item);
+  };
+
+  const handleConfirmSplitBatch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!splittingBatchItem) return;
+
+    for (let i = 0; i < splittingUnits.length; i++) {
+      const u = splittingUnits[i];
+      if (!u.serviceTag.trim()) {
+        alert(`Vui lòng nhập Service Tag cho Máy #${i + 1} (Tem dán từ nhà sản xuất)!`);
+        return;
+      }
+      if (!u.serialNumber.trim()) {
+        alert(`Vui lòng nhập Serial Number (S/N) cho Máy #${i + 1}!`);
+        return;
+      }
+    }
+
+    const tags = splittingUnits.map((u) => u.serviceTag.trim().toUpperCase());
+    const serials = splittingUnits.map((u) => u.serialNumber.trim().toUpperCase());
+    if (new Set(tags).size !== tags.length) {
+      alert('Có Service Tag bị trùng lặp giữa các máy trong lô đang tách! Vui lòng kiểm tra tem từng máy.');
       return;
     }
-    const ok = await splitInventoryItem(item.id);
+    if (new Set(serials).size !== serials.length) {
+      alert('Có Serial Number (S/N) bị trùng lặp giữa các máy trong lô đang tách! Vui lòng kiểm tra tem từng máy.');
+      return;
+    }
+
+    const existingTags = new Set(
+      inventory.filter((i) => i.id !== splittingBatchItem.id).map((i) => i.service_tag.toUpperCase())
+    );
+    const existingSerials = new Set(
+      inventory.filter((i) => i.id !== splittingBatchItem.id).map((i) => (i.serial_number || i.service_tag).toUpperCase())
+    );
+
+    for (let i = 0; i < splittingUnits.length; i++) {
+      const t = tags[i];
+      const s = serials[i];
+      if (existingTags.has(t)) {
+        alert(`Service Tag [${t}] của Máy #${i + 1} đã tồn tại ở máy khác trong kho! Vui lòng kiểm tra lại.`);
+        return;
+      }
+      if (existingSerials.has(s)) {
+        alert(`Serial Number [${s}] của Máy #${i + 1} đã tồn tại ở máy khác trong kho! Vui lòng kiểm tra lại.`);
+        return;
+      }
+    }
+
+    const ok = await splitInventoryItem(splittingBatchItem.id, splittingUnits);
     if (ok) {
-      setActionNotice(`Đã tách thành công thành ${currentStock} máy độc lập với số Serial riêng!`);
+      setActionNotice(`Đã định danh và tách thành công ${splittingUnits.length} máy vật lý với S/N từ nhà máy!`);
       setTimeout(() => setActionNotice(null), 3500);
+      setSplittingBatchItem(null);
+      setSplittingUnits([]);
     }
   };
 
@@ -3788,6 +3854,158 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         canEditCost={canEditStock()}
         onSave={handleSavePartPrice}
       />
+
+      {/* Modal Định Danh Service Tag / S/N Nhà Máy Khi Tách Lô */}
+      {splittingBatchItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 sm:px-6 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-lg">
+                  🏷️
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-white">
+                    Định Danh Service Tag / Serial Cho {splittingUnits.length} Máy
+                  </h3>
+                  <p className="text-xs text-blue-200 mt-0.5">
+                    Model: <strong className="text-white">{splittingBatchItem.brand} {splittingBatchItem.model || splittingBatchItem.device_model}</strong>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSplittingBatchItem(null)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Instruction Notice */}
+            <div className="p-4 bg-blue-50/80 border-b border-blue-100 flex items-start gap-2.5 text-xs text-blue-950 shrink-0">
+              <span className="text-base shrink-0 mt-0.5">💡</span>
+              <div className="space-y-1">
+                <p className="font-bold">
+                  Không tự động tạo mã ngẫu nhiên: Quản lý bảo hành dựa trên mã thực tế của nhà máy!
+                </p>
+                <p className="text-blue-800 leading-relaxed">
+                  Mỗi thân máy vật lý xuất xưởng (Dell, HP, Lenovo) đều có dán sẵn tem <strong>Service Tag</strong> (7 ký tự) hoặc <strong>Serial Number (S/N)</strong> ở mặt sau / đáy máy. Vui lòng quét bằng máy đọc mã vạch (Barcode Scanner) hoặc gõ đúng tem của từng máy vào danh sách dưới đây để bảo hành và tra cứu chuẩn xác.
+                </p>
+              </div>
+            </div>
+
+            {/* Scrollable Units Form */}
+            <form onSubmit={handleConfirmSplitBatch} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+              {splittingUnits.map((unit, idx) => (
+                <div
+                  key={idx}
+                  className={`p-4 rounded-xl border transition-all ${
+                    idx === 0
+                      ? 'bg-slate-50/80 border-slate-200'
+                      : 'bg-white border-blue-200 shadow-2xs hover:border-blue-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200/80">
+                    <span className="font-bold text-xs uppercase tracking-wide flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-mono flex items-center justify-center font-bold">
+                        {idx + 1}
+                      </span>
+                      <span className="text-slate-900">Chiếc máy #{idx + 1}</span>
+                      {idx === 0 && (
+                        <span className="text-[10px] px-2 py-0.5 bg-slate-200 text-slate-700 rounded font-semibold normal-case">
+                          Dòng máy gốc hiện tại
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      1 máy vật lý = 1 Serial
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        Service Tag (Tem vỏ máy) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={unit.serviceTag}
+                        placeholder="VD: 7G4K8X2"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSplittingUnits((prev) =>
+                            prev.map((u, i) => (i === idx ? { ...u, serviceTag: val } : u))
+                          );
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold uppercase text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        Serial Number (S/N) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={unit.serialNumber}
+                        placeholder="VD: SN-DELL-7060-001"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSplittingUnits((prev) =>
+                            prev.map((u, i) => (i === idx ? { ...u, serialNumber: val } : u))
+                          );
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold uppercase text-slate-900 focus:ring-1 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">
+                        Sức khỏe SSD (%)
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={unit.ssdHealth}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setSplittingUnits((prev) =>
+                            prev.map((u, i) => (i === idx ? { ...u, ssdHealth: val } : u))
+                          );
+                        }}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-mono font-bold text-emerald-700 focus:ring-1 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Modal Footer */}
+              <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSplittingBatchItem(null)}
+                  className="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg text-xs transition-colors cursor-pointer"
+                >
+                  Hủy Bỏ
+                </button>
+
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-xs shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span>✓ Lưu Định Danh &amp; Tách {splittingUnits.length} Máy Riêng Biệt</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
