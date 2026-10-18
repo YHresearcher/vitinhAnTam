@@ -446,6 +446,11 @@ export async function PATCH(request: NextRequest) {
       matched_device_tag?: string;
       assigned_care_id?: string;
       assigned_care_name?: string;
+      delivery_method?: string;
+      delivery_staff_id?: string;
+      delivery_staff_name?: string;
+      delivery_fee?: number;
+      note?: string;
     };
 
     if (!body.id) {
@@ -486,6 +491,21 @@ export async function PATCH(request: NextRequest) {
     }
     if (body.assigned_care_name !== undefined) {
       patchData.assigned_care_name = body.assigned_care_name;
+    }
+    if (body.delivery_method !== undefined) {
+      patchData.delivery_method = body.delivery_method;
+    }
+    if (body.delivery_staff_id !== undefined) {
+      patchData.delivery_staff_id = body.delivery_staff_id;
+    }
+    if (body.delivery_staff_name !== undefined) {
+      patchData.delivery_staff_name = body.delivery_staff_name;
+    }
+    if (body.delivery_fee !== undefined) {
+      patchData.delivery_fee = body.delivery_fee;
+    }
+    if (body.note !== undefined) {
+      patchData.note = body.note;
     }
 
     const db = getDb();
@@ -570,6 +590,21 @@ export async function PATCH(request: NextRequest) {
           }
           if (body.assigned_care_name !== undefined) {
             target.assigned_care_name = body.assigned_care_name;
+          }
+          if (body.delivery_method !== undefined) {
+            target.delivery_method = body.delivery_method;
+          }
+          if (body.delivery_staff_id !== undefined) {
+            target.delivery_staff_id = body.delivery_staff_id;
+          }
+          if (body.delivery_staff_name !== undefined) {
+            target.delivery_staff_name = body.delivery_staff_name;
+          }
+          if (body.delivery_fee !== undefined) {
+            target.delivery_fee = body.delivery_fee;
+          }
+          if (body.note !== undefined) {
+            target.note = body.note;
           }
           writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
         }

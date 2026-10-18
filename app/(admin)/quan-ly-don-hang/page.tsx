@@ -21,7 +21,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { supabase, isSupabaseConfigured, type InventoryItem } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, type InventoryItem, type UserAccount } from '@/lib/supabase';
 import { CRM_TIER_CONFIG, calculateCustomerTier } from '@/lib/crmTiers';
 import CashflowSaleConfirmModal, { CashflowSaleConfirmData } from '@/components/admin/CashflowSaleConfirmModal';
 import CreateOrderModal from '@/components/admin/CreateOrderModal';
@@ -36,7 +36,17 @@ const STATUSES = [
 ];
 
 export default function OrderManagementPage() {
-  const { currentUser, inventory, customers, users, sellInventoryItem, updateInventoryItem, reserveInventoryItem, cancelReservationItem } = useViTinhAnTamStore();
+  const {
+    currentUser,
+    inventory,
+    customers,
+    users,
+    sellInventoryItem,
+    updateInventoryItem,
+    reserveInventoryItem,
+    cancelReservationItem,
+    creditTechnicianPayroll,
+  } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -215,18 +225,33 @@ export default function OrderManagementPage() {
     }
   };
 
-  const executeSale = (order: Order, matchedItem: InventoryItem, warrantyMonths: number) => {
+  const executeSale = (
+    order: Order,
+    matchedItem: InventoryItem,
+    warrantyMonths: number,
+    deliveryInfo: {
+      deliveryMethod: 'pickup' | 'delivery';
+      deliveryStaffId?: string;
+      deliveryStaffName?: string;
+      deliveryFee?: number;
+      shippingAddress?: string;
+    }
+  ) => {
     const currentCost = Number(matchedItem.import_price || matchedItem.cost_price || 0);
     const isWalkIn = (!order.referral_code || order.referral_code === 'Khách vãng lai') && !order.seller_name;
     const isKeyOrder =
       /key|bản quyền|windows|office/i.test(order.device_name || '') ||
       /key|bản quyền|windows|office/i.test(matchedItem?.device_model || matchedItem?.model || '');
 
+    const deliveryNote = deliveryInfo.deliveryMethod === 'delivery'
+      ? `[Giao tận nơi: ${deliveryInfo.deliveryStaffName || 'KTV'} - Thù lao: ${Number(deliveryInfo.deliveryFee || 0).toLocaleString('vi-VN')}₫]`
+      : '[Khách nhận tại quầy]';
+
     setCashflowOrderData({
       item: matchedItem,
       customerName: order.customer_name,
       customerPhone: order.customer_phone,
-      customerAddress: order.customer_address || '',
+      customerAddress: deliveryInfo.shippingAddress || order.customer_address || '',
       serialNumber: matchedItem.serial_number || matchedItem.service_tag,
       warrantyMonths,
       soldPrice: Number(order.device_price) || 0,
@@ -236,7 +261,11 @@ export default function OrderManagementPage() {
       sellerName: order.seller_name || (isWalkIn ? 'Khách vãng lai' : order.referral_code),
       isWalkIn,
       productType: isKeyOrder ? 'key' : 'machine',
-      notes: `Từ đơn online: ${order.order_code}. ${order.note || ''}`,
+      deliveryMethod: deliveryInfo.deliveryMethod,
+      deliveryStaffId: deliveryInfo.deliveryStaffId,
+      deliveryStaffName: deliveryInfo.deliveryStaffName,
+      deliveryFee: deliveryInfo.deliveryFee,
+      notes: `Từ đơn online: ${order.order_code}. ${deliveryNote}. ${order.note || ''}`,
     });
   };
 
@@ -277,14 +306,18 @@ export default function OrderManagementPage() {
         ? 'Khách vãng lai (15% hoa hồng gộp vào lợi nhuận chung)'
         : `${finalData.sellerName || executingOrder.seller_name || 'Sale'} (15%: ${sellerBonus.toLocaleString('vi-VN')}₫)`;
 
-      const cashflowNote = `[Đơn online: ${executingOrder.order_code}] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Nguồn: ${sellerLabel} | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Trích Admin (${adminRateLabel}): ${adminDeduction.toLocaleString('vi-VN')}₫ | ${isWalkIn ? `LN chung doanh nghiệp (${remainingPercentLabel})` : `LN còn lại (${remainingPercentLabel})`}: ${remainingProfit.toLocaleString('vi-VN')}₫. ${executingOrder.note || ''}`;
+      const deliveryNote = finalData.deliveryMethod === 'delivery'
+        ? `[Giao tận nơi: ${finalData.deliveryStaffName || 'KTV'} - Thù lao: ${Number(finalData.deliveryFee || 0).toLocaleString('vi-VN')}₫]`
+        : '[Khách nhận tại quầy]';
+
+      const cashflowNote = `[Đơn online: ${executingOrder.order_code}] ${deliveryNote} | Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Nguồn: ${sellerLabel} | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Trích Admin (${adminRateLabel}): ${adminDeduction.toLocaleString('vi-VN')}₫ | ${isWalkIn ? `LN chung doanh nghiệp (${remainingPercentLabel})` : `LN còn lại (${remainingPercentLabel})`}: ${remainingProfit.toLocaleString('vi-VN')}₫. ${executingOrder.note || ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
         customerName: executingOrder.customer_name,
         customerPhone: executingOrder.customer_phone,
         birthDate: '',
-        customerAddress: executingOrder.customer_address || '',
+        customerAddress: finalData.customerAddress || executingOrder.customer_address || '',
         serialNumber: item.serial_number || item.service_tag,
         warrantyMonths,
         soldPrice,
@@ -292,8 +325,54 @@ export default function OrderManagementPage() {
       });
 
       if (res.success) {
+        // Tự động ghi nhận tiền công cho nhân viên đi giao hàng (như điều phối ca dịch vụ)
+        if (
+          finalData.deliveryMethod === 'delivery' &&
+          finalData.deliveryStaffName &&
+          finalData.deliveryFee &&
+          finalData.deliveryFee > 0
+        ) {
+          await creditTechnicianPayroll(
+            finalData.deliveryStaffName,
+            finalData.deliveryFee,
+            `Giao đơn hàng [${executingOrder.order_code}] đến ${executingOrder.customer_name}`
+          );
+        }
+
         await changeStatus(executingOrder.id, 'completed');
-        message.success(`Đã xuất kho, phân bổ dòng tiền & kích hoạt bảo hành cho ${executingOrder.customer_name}!`);
+
+        // Cập nhật thông tin giao hàng trên đơn hàng
+        try {
+          await fetch('/api/orders', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: executingOrder.id,
+              status: 'completed',
+              delivery_method: finalData.deliveryMethod,
+              delivery_staff_id: finalData.deliveryStaffId,
+              delivery_staff_name: finalData.deliveryStaffName,
+              delivery_fee: finalData.deliveryFee,
+              note: `${executingOrder.note || ''} • ${deliveryNote}`.trim(),
+            }),
+          });
+        } catch {
+          // best-effort
+        }
+
+        if (
+          finalData.deliveryMethod === 'delivery' &&
+          finalData.deliveryStaffName &&
+          finalData.deliveryFee &&
+          finalData.deliveryFee > 0
+        ) {
+          message.success(
+            `Đã xuất kho & tự động ghi nhận ${finalData.deliveryFee.toLocaleString('vi-VN')}₫ tiền công cho ${finalData.deliveryStaffName}!`
+          );
+        } else {
+          message.success(`Đã xuất kho (khách nhận tại quầy) & kích hoạt bảo hành cho ${executingOrder.customer_name}!`);
+        }
+
         setCashflowOrderData(null);
         setExecutingOrder(null);
       } else {
@@ -535,7 +614,13 @@ export default function OrderManagementPage() {
       )}
 
       {executingOrder && (
-        <ExecuteOrderModal order={executingOrder} inventory={inventory} onClose={() => setExecutingOrder(null)} onConfirm={(i, m) => executeSale(executingOrder, i, m)} />
+        <ExecuteOrderModal
+          order={executingOrder}
+          inventory={inventory}
+          users={users}
+          onClose={() => setExecutingOrder(null)}
+          onConfirm={(i, m, deliveryInfo) => executeSale(executingOrder, i, m, deliveryInfo)}
+        />
       )}
 
       {cashflowOrderData && (
@@ -550,16 +635,29 @@ export default function OrderManagementPage() {
     </div>
   );
 }
+
 function ExecuteOrderModal({
   order,
   inventory,
+  users,
   onClose,
   onConfirm,
 }: {
   order: Order;
   inventory: InventoryItem[];
+  users: UserAccount[];
   onClose: () => void;
-  onConfirm: (i: InventoryItem, months: number) => void;
+  onConfirm: (
+    i: InventoryItem,
+    months: number,
+    deliveryInfo: {
+      deliveryMethod: 'pickup' | 'delivery';
+      deliveryStaffId?: string;
+      deliveryStaffName?: string;
+      deliveryFee?: number;
+      shippingAddress?: string;
+    }
+  ) => void;
 }) {
   const matchedItem = order.device_tag
     ? inventory.find((i) => i.service_tag === order.device_tag && i.qc_status !== 'sold')
@@ -567,23 +665,60 @@ function ExecuteOrderModal({
   const [selectedTag, setSelectedTag] = useState<string>(matchedItem?.service_tag || '');
   const [months, setMonths] = useState(12);
 
+  // Giao hàng tận nơi vs Khách đến lấy
+  const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery'>(
+    order.delivery_method === 'delivery' ? 'delivery' : 'pickup'
+  );
+  const [shippingAddress, setShippingAddress] = useState<string>(order.customer_address || '');
+  const [deliveryStaffId, setDeliveryStaffId] = useState<string>(order.delivery_staff_id || '');
+  const [deliveryFee, setDeliveryFee] = useState<number>(order.delivery_fee ?? 50000);
+
   const availableMachines = useMemo(
     () => inventory.filter((i) => i.qc_status !== 'sold'),
     [inventory]
   );
 
+  const activeStaffList = useMemo(
+    () => users.filter((u) => u.status === 'active'),
+    [users]
+  );
+
+  const handleContinue = () => {
+    if (!selectedTag) {
+      message.warning('Vui lòng chọn máy xuất từ kho!');
+      return;
+    }
+    const item = inventory.find((i) => i.service_tag === selectedTag);
+    if (!item) return;
+
+    if (deliveryMethod === 'delivery' && !deliveryStaffId) {
+      message.warning('Vui lòng chỉ định nhân viên / KTV đi giao hàng!');
+      return;
+    }
+
+    const assignedStaff = activeStaffList.find((u) => u.id === deliveryStaffId);
+
+    onConfirm(item, months, {
+      deliveryMethod,
+      deliveryStaffId: deliveryMethod === 'delivery' ? deliveryStaffId : undefined,
+      deliveryStaffName: deliveryMethod === 'delivery' ? assignedStaff?.name : undefined,
+      deliveryFee: deliveryMethod === 'delivery' ? deliveryFee : 0,
+      shippingAddress: deliveryMethod === 'delivery' ? shippingAddress : undefined,
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 p-6 animate-scale-up">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1">
+      <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-200 p-6 animate-scale-up max-h-[92vh] flex flex-col">
+        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 mb-1 shrink-0">
           <ShieldCheck className="w-5 h-5 text-emerald-600" />
           <span>Hoàn Tất &amp; Xuất Kho Đơn: {order.order_code}</span>
         </h2>
-        <p className="text-xs text-slate-500 mb-4">
-          Hệ thống sẽ cập nhật trừ tồn kho, lưu hồ sơ CRM khách hàng và kích hoạt bảo hành điện tử.
+        <p className="text-xs text-slate-500 mb-4 shrink-0">
+          Hệ thống sẽ cập nhật trừ tồn kho, kiểm tra hình thức giao hàng và kích hoạt bảo hành điện tử.
         </p>
 
-        <div className="space-y-4 mb-6">
+        <div className="space-y-4 overflow-y-auto pr-1 flex-1">
           <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs space-y-1">
             <div className="text-slate-800">
               Khách hàng: <strong className="font-bold">{order.customer_name}</strong> • SĐT: <strong className="font-mono">{order.customer_phone}</strong>
@@ -650,9 +785,122 @@ function ExecuteOrderModal({
               </div>
             </div>
           </div>
+
+          {/* Hình thức nhận hàng: Giao hàng tận nơi vs Khách đến lấy */}
+          <div className="pt-3 border-t border-slate-200">
+            <label className="block text-xs font-bold text-slate-800 mb-2">
+              Hình thức giao nhận hàng (*)
+            </label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('pickup')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                  deliveryMethod === 'pickup'
+                    ? 'bg-blue-50/90 border-blue-500 ring-2 ring-blue-500/20 text-blue-950 font-bold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-xl shrink-0">🏪</span>
+                <div>
+                  <div className="text-xs font-bold">Khách đến lấy</div>
+                  <div className="text-[10px] text-slate-500 font-normal">Nhận tại cửa hàng</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setDeliveryMethod('delivery')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                  deliveryMethod === 'delivery'
+                    ? 'bg-amber-50/90 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 font-bold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-xl shrink-0">🚚</span>
+                <div>
+                  <div className="text-xs font-bold">Giao hàng tận nơi</div>
+                  <div className="text-[10px] text-slate-500 font-normal">Chỉ định KTV đi giao</div>
+                </div>
+              </button>
+            </div>
+
+            {deliveryMethod === 'delivery' && (
+              <div className="mt-3 p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-3 text-xs animate-in fade-in duration-150">
+                <div>
+                  <label className="block font-semibold text-slate-800 mb-1">
+                    Địa chỉ giao hàng
+                  </label>
+                  <input
+                    type="text"
+                    value={shippingAddress}
+                    onChange={(e) => setShippingAddress(e.target.value)}
+                    placeholder="Số nhà, tên đường, phường/xã..."
+                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-slate-800 mb-1">
+                    Chỉ định nhân viên đi giao (*)
+                  </label>
+                  <select
+                    value={deliveryStaffId}
+                    onChange={(e) => setDeliveryStaffId(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  >
+                    <option value="">-- Chọn nhân viên / KTV đi giao hàng --</option>
+                    {activeStaffList.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.roleTitle || u.role})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-800">
+                      Chi phí tiền công cho nhân viên (₫)
+                    </label>
+                    <span className="text-[10px] text-emerald-700 font-bold">
+                      ⚡ Tự động ghi nhận như điều phối dịch vụ
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      step={10000}
+                      value={deliveryFee}
+                      onChange={(e) => setDeliveryFee(Math.max(0, Number(e.target.value) || 0))}
+                      className="flex-1 px-3 py-1.5 bg-white border border-amber-300 rounded-lg text-xs font-mono font-bold text-emerald-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="VD: 50.000"
+                    />
+                    <div className="flex items-center gap-1">
+                      {[30000, 50000, 70000, 100000].map((fee) => (
+                        <button
+                          key={fee}
+                          type="button"
+                          onClick={() => setDeliveryFee(fee)}
+                          className={`px-2 py-1 rounded text-[11px] font-semibold border cursor-pointer transition-all ${
+                            deliveryFee === fee
+                              ? 'bg-amber-200 border-amber-400 text-amber-900 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {fee / 1000}k
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 shrink-0">
           <button
             type="button"
             onClick={onClose}
@@ -662,11 +910,7 @@ function ExecuteOrderModal({
           </button>
           <button
             type="button"
-            disabled={!selectedTag}
-            onClick={() => {
-              const item = inventory.find((i) => i.service_tag === selectedTag);
-              if (item) onConfirm(item, months);
-            }}
+            onClick={handleContinue}
             className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
           >
             <span>Tiếp tục: Phân bổ dòng tiền</span>

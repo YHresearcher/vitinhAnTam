@@ -22,6 +22,10 @@ export interface CashflowSaleConfirmData {
   sellerName?: string;
   isWalkIn?: boolean;
   productType?: 'machine' | 'key' | 'part';
+  deliveryMethod?: 'pickup' | 'delivery';
+  deliveryStaffId?: string;
+  deliveryStaffName?: string;
+  deliveryFee?: number;
 }
 
 interface CashflowSaleConfirmModalProps {
@@ -145,6 +149,35 @@ export default function CashflowSaleConfirmModal({
             </div>
           </div>
         </div>
+
+        {data.deliveryMethod && (
+          <div className={`p-2.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+            data.deliveryMethod === 'delivery'
+              ? 'bg-amber-50/90 border-amber-200 text-amber-950'
+              : 'bg-slate-50 border-slate-200 text-slate-700'
+          }`}>
+            <div className="flex items-center gap-2">
+              <span className="text-base shrink-0">{data.deliveryMethod === 'delivery' ? '🚚' : '🏪'}</span>
+              <div>
+                <span className="font-semibold text-slate-600">Hình thức nhận: </span>
+                <strong className="font-bold text-slate-900">
+                  {data.deliveryMethod === 'delivery' ? 'Giao hàng tận nơi' : 'Khách đến lấy tại cửa hàng'}
+                </strong>
+                {data.deliveryMethod === 'delivery' && data.deliveryStaffName && (
+                  <span className="text-slate-600">
+                    {' • '}Nhân viên giao: <strong className="text-blue-900">{data.deliveryStaffName}</strong>
+                  </span>
+                )}
+              </div>
+            </div>
+            {data.deliveryMethod === 'delivery' && Boolean(data.deliveryFee && data.deliveryFee > 0) && (
+              <span className="inline-flex items-center gap-1 font-mono font-bold text-emerald-800 bg-white/90 border border-emerald-200 px-2.5 py-0.5 rounded-lg text-[11px] self-start sm:self-auto shrink-0 shadow-2xs">
+                <span>Tiền công KTV:</span>
+                <span>+{Number(data.deliveryFee).toLocaleString('vi-VN')}₫</span>
+              </span>
+            )}
+          </div>
+        )}
 
         {/* 3 Chỉ số nền tảng: Giá bán ra - Giá vốn nhập - Lợi nhuận gộp */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

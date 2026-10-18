@@ -32,6 +32,9 @@ export interface Order {
   device_tag?: string;
   payment_method: 'qr' | 'cash';
   delivery_method: 'pickup' | 'delivery';
+  delivery_staff_id?: string;
+  delivery_staff_name?: string;
+  delivery_fee?: number;
   note?: string;
   status: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   created_at?: string;
@@ -148,7 +151,11 @@ export default function OrderDetailModal({
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-mono">
               {order.device_tag && <span>Tag / Serial: <strong className="text-blue-700">{order.device_tag}</strong></span>}
               <span>•</span>
-              <span className="capitalize">{order.delivery_method === 'delivery' ? 'Giao tận nơi' : 'Nhận tại cửa hàng'}</span>
+              <span className="capitalize">
+                {order.delivery_method === 'delivery'
+                  ? `Giao tận nơi${order.delivery_staff_name ? ` (${order.delivery_staff_name}${order.delivery_fee ? ` • +${order.delivery_fee.toLocaleString('vi-VN')}₫` : ''})` : ''}`
+                  : 'Nhận tại cửa hàng'}
+              </span>
             </div>
           </div>
           <div className="text-right shrink-0">
