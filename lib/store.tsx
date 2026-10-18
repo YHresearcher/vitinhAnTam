@@ -247,6 +247,7 @@ interface StoreContextType {
   addInventoryItem: (item: Omit<InventoryItem, 'id' | 'created_at'>) => Promise<InventoryItem>;
   updateInventoryItem: (id: string, data: Partial<InventoryItem>) => Promise<void>;
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
+  splitInventoryItem: (id: string) => Promise<boolean>; // Tách lô gom chung S/N thành từng máy độc lập
   updateQcStatus: (id: string, status: InventoryItem['qc_status']) => Promise<void>; // Tech & Admin
   deleteInventoryItem: (id: string) => Promise<boolean>; // Restricted to Admin
   reserveInventoryItem: (params: {
@@ -281,9 +282,11 @@ interface StoreContextType {
 
   // Onsite dispatch actions
   updateDispatchStatus: (id: string, status: OnsiteDispatch['status']) => Promise<void>;
+  updateDispatchDetails: (id: string, updates: Partial<OnsiteDispatch>) => Promise<boolean>;
 
   // Shift & Payroll (Admin Only)
   addShiftLog: (shift: Omit<ShiftLog, 'id' | 'created_at'>) => Promise<ShiftLog>;
+  creditTechnicianPayroll: (technicianName: string, amount: number, caseNote: string) => Promise<boolean>;
 
   // FAQ & Reviews (Admin Management)
   faqs: FaqItem[];
@@ -1357,6 +1360,70 @@ export function StoreProvider({
       return false;
     }
     await updateInventoryItem(id, { stock_quantity: newQuantity, quantity: newQuantity });
+    return true;
+  };
+
+  const splitInventoryItem = async (id: string): Promise<boolean> => {
+    if (!canEditStock()) {
+      return false;
+    }
+    const target = inventory.find((i) => i.id === id);
+    if (!target) return false;
+    const currentStock = Math.max(0, target.stock_quantity ?? target.quantity ?? 1);
+    if (currentStock <= 1) return true;
+
+    const takenTags = new Set(inventory.map((i) => i.service_tag.toUpperCase()));
+    const baseTag = target.service_tag.toUpperCase();
+    const baseSerial = (target.serial_number || target.service_tag).toUpperCase();
+
+    const uniqueTagFor = (index: number): string => {
+      let n = index + 1;
+      let candidate = `${baseTag}-${n}`;
+      while (takenTags.has(candidate)) {
+        n += 1;
+        candidate = `${baseTag}-${n}`;
+      }
+      takenTags.add(candidate);
+      return candidate;
+    };
+
+    const updatedOriginal: InventoryItem = {
+      ...target,
+      stock_quantity: 1,
+      quantity: 1,
+    };
+
+    const newItems: InventoryItem[] = [];
+    for (let i = 1; i < currentStock; i++) {
+      const tag = uniqueTagFor(i);
+      const serial = `${baseSerial}-${i + 1}`;
+      newItems.push({
+        ...target,
+        id: createId(),
+        service_tag: tag,
+        serial_number: serial,
+        stock_quantity: 1,
+        quantity: 1,
+      });
+    }
+
+    setInventory((prev) => {
+      const next = prev.map((item) => (item.id === id ? updatedOriginal : item)).concat(newItems);
+      saveToLocal(STORAGE_KEYS.inventory, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('inventory_items').update({ stock_quantity: 1, quantity: 1 }).eq('id', id),
+        'Tách lô kho máy: Cập nhật máy gốc'
+      );
+      await runSupabaseWrite(
+        () => client.from('inventory_items').insert(newItems),
+        'Tách lô kho máy: Thêm máy thành viên'
+      );
+    }
     return true;
   };
 
@@ -2741,20 +2808,135 @@ export function StoreProvider({
     return newTicket;
   };
 
+  // Tự động kết chuyển thù lao/tiền công vào bảng lương KTV (ShiftLog)
+  const creditTechnicianPayroll = async (
+    technicianName: string,
+    amount: number,
+    caseNote: string
+  ): Promise<boolean> => {
+    if (!technicianName || amount <= 0) return false;
+    const today = new Date().toISOString().split('T')[0];
+
+    const existingLog = shiftLogs.find(
+      (s) =>
+        (s.technician_name?.toLowerCase().trim() === technicianName.toLowerCase().trim() ||
+          s.ktv_name?.toLowerCase().trim() === technicianName.toLowerCase().trim()) &&
+        s.shift_date === today
+    );
+
+    if (existingLog) {
+      const updatedBonus = (existingLog.bonus || existingLog.bonus_amount || 0) + amount;
+      const updatedTickets = (existingLog.tickets_completed || 0) + 1;
+      const updatedNotes = existingLog.notes
+        ? `${existingLog.notes} • ${caseNote} (+${amount.toLocaleString('vi-VN')}đ)`
+        : `${caseNote} (+${amount.toLocaleString('vi-VN')}đ)`;
+
+      setShiftLogs((prev) => {
+        const next = prev.map((s) =>
+          s.id === existingLog.id
+            ? {
+                ...s,
+                bonus: updatedBonus,
+                bonus_amount: updatedBonus,
+                tickets_completed: updatedTickets,
+                notes: updatedNotes,
+              }
+            : s
+        );
+        saveToLocal(STORAGE_KEYS.shiftLogs, next);
+        return next;
+      });
+
+      if (isUsingSupabase && supabase && isUuid(existingLog.id)) {
+        const client = supabase;
+        await runSupabaseWrite(
+          () =>
+            client
+              .from('shift_logs')
+              .update({
+                bonus: updatedBonus,
+                tickets_completed: updatedTickets,
+                notes: updatedNotes,
+              })
+              .eq('id', existingLog.id),
+          'Cộng dồn thù lao KTV vào ca trực hôm nay'
+        );
+      }
+    } else {
+      const newShift: ShiftLog = {
+        id: createId(),
+        technician_name: technicianName,
+        shift_date: today,
+        shift_type: 'full_day',
+        base_wage: 0,
+        tickets_completed: 1,
+        bonus: amount,
+        bonus_amount: amount,
+        notes: `Tự động kết chuyển: ${caseNote} (+${amount.toLocaleString('vi-VN')}đ)`,
+        created_at: new Date().toISOString(),
+      };
+
+      setShiftLogs((prev) => {
+        const next = [newShift, ...prev];
+        saveToLocal(STORAGE_KEYS.shiftLogs, next);
+        return next;
+      });
+
+      if (isUsingSupabase && supabase) {
+        const client = supabase;
+        await runSupabaseWrite(
+          () => client.from('shift_logs').insert([newShift]),
+          'Tự động lập ca & kết chuyển tiền công KTV'
+        );
+      }
+    }
+
+    return true;
+  };
+
   const updateTicketStatus = async (id: string, status: ServiceTicket['status']): Promise<boolean> => {
     if (!canUpdateRepairStatus()) {
       return false;
     }
+
+    let synced = false;
+    const target = tickets.find((t) => t.id === id);
+    if (
+      (status === 'completed' || status === 'delivered') &&
+      target &&
+      target.technician_name &&
+      target.technician_fee &&
+      target.technician_fee > 0 &&
+      !target.fee_synced_to_payroll
+    ) {
+      synced = true;
+      await creditTechnicianPayroll(
+        target.technician_name,
+        target.technician_fee,
+        `Phiếu sửa chữa [${target.ticket_code || target.customer_name}]`
+      );
+    }
+
     setTickets((prev) => {
-      const next = prev.map((t) => (t.id === id ? { ...t, status } : t));
+      const next = prev.map((t) =>
+        t.id === id
+          ? {
+              ...t,
+              status,
+              ...(synced ? { fee_synced_to_payroll: true } : {}),
+            }
+          : t
+      );
       saveToLocal(STORAGE_KEYS.tickets, next);
       return next;
     });
 
     if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
+      const updatePayload: Partial<ServiceTicket> = { status };
+      if (synced) updatePayload.fee_synced_to_payroll = true;
       await runSupabaseWrite(
-        () => client.from('service_tickets').update({ status }).eq('id', id),
+        () => client.from('service_tickets').update(updatePayload).eq('id', id),
         'Cập nhật trạng thái phiếu'
       );
     }
@@ -2762,8 +2944,31 @@ export function StoreProvider({
   };
 
   const updateTicketDetails = async (id: string, updates: Partial<ServiceTicket>): Promise<boolean> => {
+    let synced = false;
+    const target = tickets.find((t) => t.id === id);
+    const effectiveStatus = updates.status || target?.status;
+    const effectiveTech = updates.technician_name || target?.technician_name;
+    const effectiveFee = updates.technician_fee !== undefined ? updates.technician_fee : target?.technician_fee;
+    const alreadySynced = target?.fee_synced_to_payroll || updates.fee_synced_to_payroll;
+
+    if (
+      (effectiveStatus === 'completed' || effectiveStatus === 'delivered') &&
+      effectiveTech &&
+      effectiveFee &&
+      effectiveFee > 0 &&
+      !alreadySynced
+    ) {
+      synced = true;
+      await creditTechnicianPayroll(
+        effectiveTech,
+        effectiveFee,
+        `Phiếu sửa chữa [${target?.ticket_code || target?.customer_name || 'SC'}]`
+      );
+      updates.fee_synced_to_payroll = true;
+    }
+
     setTickets((prev) => {
-      const next = prev.map((t) => (t.id === id ? { ...t, ...updates } : t));
+      const next = prev.map((t) => (t.id === id ? { ...t, ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) } : t));
       saveToLocal(STORAGE_KEYS.tickets, next);
       return next;
     });
@@ -2771,7 +2976,7 @@ export function StoreProvider({
     if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
-        () => client.from('service_tickets').update(updates).eq('id', id),
+        () => client.from('service_tickets').update({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }).eq('id', id),
         'Cập nhật thông tin phiếu'
       );
     }
@@ -2800,20 +3005,88 @@ export function StoreProvider({
 
   // Onsite dispatch actions
   const updateDispatchStatus = async (id: string, status: OnsiteDispatch['status']) => {
+    let synced = false;
+    const target = onsiteDispatches.find((d) => d.id === id);
+
+    if (
+      status === 'completed' &&
+      target &&
+      target.technician_name &&
+      target.technician_fee &&
+      target.technician_fee > 0 &&
+      !target.fee_synced_to_payroll
+    ) {
+      synced = true;
+      await creditTechnicianPayroll(
+        target.technician_name,
+        target.technician_fee,
+        `Ca cứu hộ Onsite [${target.address || target.customer_name}]`
+      );
+    }
+
     setOnsiteDispatches((prev) => {
-      const next = prev.map((d) => (d.id === id ? { ...d, status } : d));
+      const next = prev.map((d) =>
+        d.id === id
+          ? {
+              ...d,
+              status,
+              ...(synced ? { fee_synced_to_payroll: true } : {}),
+            }
+          : d
+      );
       saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
       return next;
     });
 
-    // Trước đây chỉ ghi localStorage -> bật Supabase là mất trạng thái sau khi refresh
     if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
+      const updatePayload: Partial<OnsiteDispatch> = { status };
+      if (synced) updatePayload.fee_synced_to_payroll = true;
       await runSupabaseWrite(
-        () => client.from('onsite_dispatches').update({ status }).eq('id', id),
+        () => client.from('onsite_dispatches').update(updatePayload).eq('id', id),
         'Cập nhật trạng thái cứu hộ'
       );
     }
+  };
+
+  const updateDispatchDetails = async (id: string, updates: Partial<OnsiteDispatch>): Promise<boolean> => {
+    let synced = false;
+    const target = onsiteDispatches.find((d) => d.id === id);
+    const effectiveStatus = updates.status || target?.status;
+    const effectiveTech = updates.technician_name || target?.technician_name;
+    const effectiveFee = updates.technician_fee !== undefined ? updates.technician_fee : target?.technician_fee;
+    const alreadySynced = target?.fee_synced_to_payroll || updates.fee_synced_to_payroll;
+
+    if (
+      effectiveStatus === 'completed' &&
+      effectiveTech &&
+      effectiveFee &&
+      effectiveFee > 0 &&
+      !alreadySynced
+    ) {
+      synced = true;
+      await creditTechnicianPayroll(
+        effectiveTech,
+        effectiveFee,
+        `Cứu hộ Onsite [${target?.customer_name || 'Khách'}]`
+      );
+      updates.fee_synced_to_payroll = true;
+    }
+
+    setOnsiteDispatches((prev) => {
+      const next = prev.map((d) => (d.id === id ? { ...d, ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) } : d));
+      saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase && isUuid(id)) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('onsite_dispatches').update({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }).eq('id', id),
+        'Cập nhật chi tiết ca cứu hộ Onsite'
+      );
+    }
+    return true;
   };
 
   const assignDispatchTechnician = async (id: string, technicianName: string): Promise<boolean> => {
@@ -4015,6 +4288,7 @@ export function StoreProvider({
       addInventoryItem,
       updateInventoryItem,
       updateInventoryStock,
+      splitInventoryItem,
       updateQcStatus,
       deleteInventoryItem,
       reserveInventoryItem,
@@ -4024,8 +4298,10 @@ export function StoreProvider({
       updateTicketDetails,
       assignTicketTechnician,
       updateDispatchStatus,
+      updateDispatchDetails,
       assignDispatchTechnician,
       addShiftLog,
+      creditTechnicianPayroll,
       pendingOrders,
       pendingOrdersCount: pendingOrders.length,
       fetchPendingOrders,

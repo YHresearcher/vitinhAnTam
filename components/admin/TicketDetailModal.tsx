@@ -53,6 +53,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
   const [status, setStatus] = useState<ServiceTicket['status']>('received');
   const [technicianName, setTechnicianName] = useState('');
   const [technicianNote, setTechnicianNote] = useState('');
+  const [technicianFee, setTechnicianFee] = useState<number>(0);
   const [actualCost, setActualCost] = useState<number>(0);
   const [estimatedCost, setEstimatedCost] = useState<number>(0);
   const [estimatedCompletion, setEstimatedCompletion] = useState('');
@@ -73,6 +74,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
       setStatus(ticket.status || 'received');
       setTechnicianName(ticket.technician_name || '');
       setTechnicianNote(ticket.technician_note || '');
+      setTechnicianFee(ticket.technician_fee ?? 0);
       setActualCost(ticket.actual_cost ?? ticket.total_amount ?? 0);
       setEstimatedCost(ticket.estimated_cost ?? 0);
       setEstimatedCompletion(ticket.estimated_completion || '');
@@ -170,6 +172,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
         status,
         technician_name: technicianName,
         technician_note: technicianNote,
+        technician_fee: technicianFee,
         actual_cost: actualCost,
         estimated_cost: estimatedCost,
         estimated_completion: estimatedCompletion,
@@ -436,6 +439,60 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                 placeholder="Ghi chú kỹ thuật, linh kiện kiểm tra..."
                 className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs text-slate-800"
               />
+            </div>
+
+            {/* KTV Technician Fee Setting & Auto-Payroll Sync */}
+            <div className="bg-emerald-50/80 border border-emerald-200 p-2.5 rounded-xl space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                  <span>💵 Tiền công / Thù lao KTV ({technicianName || 'Chưa chọn'}):</span>
+                  {ticket.fee_synced_to_payroll ? (
+                    <span className="text-[10px] px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded-full font-bold border border-emerald-300">
+                      ✓ Đã cộng vào bảng lương
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-emerald-700 font-medium">
+                      Tự động cộng khi hoàn tất
+                    </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="relative w-36">
+                  <input
+                    type="number"
+                    step={10000}
+                    min={0}
+                    disabled={ticket.fee_synced_to_payroll}
+                    value={technicianFee}
+                    onChange={(e) => setTechnicianFee(Number(e.target.value))}
+                    className="w-full pl-2.5 pr-6 py-1 bg-white border border-emerald-300 rounded-lg text-xs font-mono font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                  />
+                  <span className="absolute right-2 top-1 text-[11px] font-bold text-emerald-700 pointer-events-none">
+                    đ
+                  </span>
+                </div>
+
+                {!ticket.fee_synced_to_payroll && (
+                  <div className="flex items-center gap-1">
+                    {[0, 50000, 100000, 150000, 200000].map((fee) => (
+                      <button
+                        key={fee}
+                        type="button"
+                        onClick={() => setTechnicianFee(fee)}
+                        className={`px-2 py-1 text-[10px] font-bold rounded border transition-colors ${
+                          technicianFee === fee
+                            ? 'bg-emerald-700 text-white border-emerald-700'
+                            : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                        }`}
+                      >
+                        {fee === 0 ? '0 đ' : `${fee / 1000}k`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

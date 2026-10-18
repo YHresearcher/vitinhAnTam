@@ -105,6 +105,7 @@ export default function TaoPhieuSuaChuaPage() {
   const [serviceNotes, setServiceNotes] = useState<Record<string, string>>({});
   const [serviceWarranties, setServiceWarranties] = useState<Record<string, number>>({});
   const [customCost, setCustomCost] = useState<number>(0);
+  const [technicianFee, setTechnicianFee] = useState<number>(50000);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-fill customer if phone matches
@@ -189,6 +190,7 @@ export default function TaoPhieuSuaChuaPage() {
         device_model: deviceModel,
         service_tag: serviceTag.toUpperCase() || undefined,
         technician_name: assignedTechnician || currentUser.name,
+        technician_fee: technicianFee,
         ticket_type: ticketType,
         service_category: serviceCategory,
         estimated_completion: estimatedCompletion,
@@ -573,6 +575,57 @@ export default function TaoPhieuSuaChuaPage() {
               <span className="text-[11px] text-slate-500">
                 Admin và KTV Trưởng có thể điều phối linh hoạt cho nhân viên nội bộ hoặc KTV thuê ngoài.
               </span>
+            </div>
+          </div>
+
+          {/* Thiết Lập Thù Lao / Tiền Công Cho KTV */}
+          <div className="bg-emerald-50/80 border border-emerald-200 p-4 rounded-xl space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+              <label className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
+                <span>💵 Tiền Công / Thù Lao Chi Trả Cho KTV ({assignedTechnician || 'KTV'}):</span>
+                <span className="text-[10px] px-2 py-0.5 bg-emerald-200 text-emerald-800 rounded font-semibold">
+                  Tự động cộng vào lương
+                </span>
+              </label>
+              <span className="text-[11px] text-emerald-700">
+                Tự động kết chuyển vào bảng lương khi hoàn tất / bàn giao máy
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="relative w-full sm:w-56">
+                <input
+                  type="number"
+                  step={10000}
+                  min={0}
+                  value={technicianFee}
+                  onChange={(e) => setTechnicianFee(Number(e.target.value))}
+                  placeholder="0"
+                  className="w-full pl-3 pr-8 py-2 bg-white border border-emerald-300 rounded-lg text-sm font-mono font-bold text-emerald-950 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-bold text-emerald-700 pointer-events-none">
+                  đ
+                </span>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] text-emerald-800 font-medium">Chọn nhanh:</span>
+                {[0, 50000, 100000, 150000, 200000].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setTechnicianFee(val)}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${
+                      technicianFee === val
+                        ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                        : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {val === 0 ? '0 đ' : `${val / 1000}k`}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -522,6 +522,8 @@ export interface ServiceTicket {
   warranty_deadline?: string;
   completed_at?: string;
   warranty_until?: string;
+  technician_fee?: number; // Tiền công / thù lao trả cho KTV cho phiếu này (VNĐ)
+  fee_synced_to_payroll?: boolean; // Đã tự động kết chuyển sang bảng lương KTV chưa
   use_zalo?: boolean;
   created_at?: string;
 }
@@ -552,6 +554,8 @@ export interface OnsiteDispatch {
   issue_summary?: string;
   issue_description?: string;
   technician_name: string;
+  technician_fee?: number; // Tiền công / thù lao trả cho KTV ca này (VNĐ)
+  fee_synced_to_payroll?: boolean; // Đã tự động kết chuyển sang bảng lương KTV chưa
   created_at?: string;
 }
 

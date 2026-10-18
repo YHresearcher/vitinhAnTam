@@ -89,6 +89,7 @@ export default function OnsiteDispatchTab() {
     canAssignTasks,
     updateDispatchStatus,
     assignDispatchTechnician,
+    updateDispatchDetails,
     addServiceTicket,
     currentUser,
   } = useStore();
@@ -122,6 +123,12 @@ export default function OnsiteDispatchTab() {
       setNotice(`Đã điều động KTV ${technicianName} phụ trách ca cứu hộ!`);
       setTimeout(() => setNotice(null), 3000);
     }
+  };
+
+  const handleUpdateTechnicianFee = async (dispatchId: string, fee: number) => {
+    await updateDispatchDetails(dispatchId, { technician_fee: fee });
+    setNotice(`Đã cập nhật thù lao KTV: ${fee.toLocaleString('vi-VN')} đ`);
+    setTimeout(() => setNotice(null), 2500);
   };
 
   const handleConvertToTicket = async (data: { device_name: string; device_service_tag: string; note: string }) => {
@@ -444,6 +451,61 @@ export default function OnsiteDispatchTab() {
                   ) : (
                     <span className="font-semibold text-slate-800 block">{dispatch.technician_name || 'Chưa gán KTV'}</span>
                   )}
+                </div>
+
+                {/* Technician Fee (Thù lao / Tiền công ca) */}
+                <div className="bg-emerald-50/70 border border-emerald-200 p-2.5 rounded-xl text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-emerald-900 flex items-center gap-1">
+                      <span>💵 Tiền công KTV:</span>
+                    </span>
+                    {dispatch.fee_synced_to_payroll ? (
+                      <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-200 text-emerald-900 rounded-full border border-emerald-300 flex items-center gap-1">
+                        ✓ Đã cộng vào lương
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-emerald-700 font-medium">
+                        Tự cộng khi Hoàn tất
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="number"
+                        step="10000"
+                        min="0"
+                        value={dispatch.technician_fee ?? 0}
+                        onChange={(e) => handleUpdateTechnicianFee(dispatch.id, Number(e.target.value))}
+                        disabled={dispatch.fee_synced_to_payroll}
+                        placeholder="0"
+                        className="w-full pl-2 pr-7 py-1 bg-white border border-emerald-300 rounded-lg text-xs font-mono font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                      />
+                      <span className="absolute right-2 top-1 text-[11px] font-bold text-emerald-700 pointer-events-none">
+                        đ
+                      </span>
+                    </div>
+
+                    {!dispatch.fee_synced_to_payroll && (
+                      <div className="flex items-center gap-1">
+                        {[50000, 100000, 150000].map((fee) => (
+                          <button
+                            key={fee}
+                            type="button"
+                            onClick={() => handleUpdateTechnicianFee(dispatch.id, fee)}
+                            className={`px-1.5 py-1 text-[10px] font-bold rounded border transition-colors ${
+                              dispatch.technician_fee === fee
+                                ? 'bg-emerald-700 text-white border-emerald-700'
+                                : 'bg-white text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                            }`}
+                          >
+                            {fee / 1000}k
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

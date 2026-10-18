@@ -33,6 +33,7 @@ export default function KhoMayPage() {
     addInventoryItem,
     updateInventoryItem,
     updateInventoryStock,
+    splitInventoryItem,
     updateQcStatus,
     deleteInventoryItem,
     reserveInventoryItem,
@@ -546,6 +547,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         testingCount: number;
         reservedCount: number;
         isQcBucket: boolean;
+        firstItem?: InventoryItem;
       }
     | { kind: 'item'; item: InventoryItem };
 
@@ -601,6 +603,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           testingCount: g.items.filter((i) => i.qc_status === 'testing' || i.qc_status === 'pending_test').length,
           reservedCount: g.items.filter((i) => i.qc_status === 'reserved').length,
           isQcBucket: g.isQcBucket,
+          firstItem: g.items[0],
         };
         const open = key in machineGroupToggles ? machineGroupToggles[key] : g.items.length === 1;
         const items: MachineDisplayRow[] = open
@@ -764,10 +767,40 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
 
 
+  const handleSplitBatch = async (item: InventoryItem) => {
+    if (!canEditStock()) {
+      alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền tách lô máy!');
+      return;
+    }
+    const currentStock = Math.max(0, item.stock_quantity ?? item.quantity ?? 1);
+    if (currentStock <= 1) return;
+    if (
+      !confirm(
+        `Xác nhận tách lô [${item.service_tag}] gồm ${currentStock} máy thành ${currentStock} máy riêng biệt?\n\nMỗi máy sẽ có 1 số Serial (S/N) và Service Tag độc lập để quản lý bảo hành, QC và dán tem riêng.`
+      )
+    ) {
+      return;
+    }
+    const ok = await splitInventoryItem(item.id);
+    if (ok) {
+      setActionNotice(`Đã tách thành công thành ${currentStock} máy độc lập với số Serial riêng!`);
+      setTimeout(() => setActionNotice(null), 3500);
+    }
+  };
+
   const handleStockEditSave = async (id: string) => {
     if (!canEditStock()) {
       alert('Quyền bị từ chối: Chỉ Quản trị viên (Admin) mới có quyền điều chỉnh số lượng tồn kho!');
       return;
+    }
+    if (tempStockValue > 1) {
+      if (
+        !confirm(
+          `Cảnh báo nghiệp vụ:\nThiết bị máy tính (máy bộ/laptop) được quản lý theo số Serial (S/N) duy nhất cho từng máy vật lý.\n\nNếu bạn nhập số lượng ${tempStockValue} máy trên dòng này, hệ thống sẽ gộp ${tempStockValue} máy vào chung 1 Serial. Bạn vẫn muốn lưu số lượng này chứ? (Khuyên dùng: Dùng chức năng 'Nhập lô máy' để có S/N riêng cho từng con máy)`
+        )
+      ) {
+        return;
+      }
     }
     await updateInventoryStock(id, tempStockValue);
     setEditingStockId(null);
@@ -1290,17 +1323,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Model</th>
-                <th className="py-3 px-4">Serial Number</th>
-                <th className="py-3 px-4">Trạng Thái</th>
-                <th className="py-3 px-4">Tồn Kho</th>
+                <th className="py-3 px-4">Model & Kiểu Dáng</th>
+                <th className="py-3 px-4">Serial Number (S/N) / Tag</th>
+                <th className="py-3 px-4 text-right">Giá Bán</th>
+                <th className="py-3 px-4">Trạng Thái QC</th>
+                <th className="py-3 px-4 text-center">Định Danh / Tồn</th>
                 <th className="py-3 px-4 text-center">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-sm">
               {filteredInventory.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
                     Không tìm thấy thiết bị nào phù hợp với bộ lọc.
                   </td>
                 </tr>
@@ -1315,7 +1349,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           row.isQcBucket ? 'bg-amber-50/70 hover:bg-amber-50' : 'bg-blue-50/60 hover:bg-blue-50'
                         }`}
                       >
-                        <td colSpan={5} className="py-2.5 px-4">
+                        <td colSpan={6} className="py-2.5 px-4">
                           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
                             <button
                               type="button"
@@ -1359,15 +1393,27 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                                 </span>
                               )}
                               <span className="px-2 py-0.5 rounded bg-slate-900 text-white font-mono">
-                                Tồn kho: {row.totalQty} máy
+                                Tổng cấu hình: {row.totalQty} máy
                               </span>
+                              {row.size === 1 && row.totalQty > 1 && canEditStock() && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (row.firstItem) handleSplitBatch(row.firstItem);
+                                  }}
+                                  title="Tách lô gộp nhiều máy chung 1 S/N thành từng máy độc lập"
+                                  className="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-600 text-white font-bold cursor-pointer text-[11px] shadow-2xs"
+                                >
+                                  ⚠️ Lô {row.totalQty} máy chung S/N • Bấm tách ngay
+                                </button>
+                              )}
                               {row.size > 1 && (
                                 <button
                                   type="button"
                                   onClick={() => toggleMachineGroup(row.key, row.size)}
                                   className="px-2 py-0.5 rounded border border-slate-300 bg-white text-slate-600 hover:text-blue-700 hover:border-blue-300 font-semibold cursor-pointer"
                                 >
-                                  {open ? 'Thu gọn' : `Xem ${row.size} máy`}
+                                  {open ? 'Thu gọn' : `Xem chi tiết ${row.size} máy`}
                                 </button>
                               )}
                             </div>
@@ -1383,6 +1429,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   const daysInStock = calculateDaysInStock(item, nowTimestamp);
                   const isYellowAging = daysInStock >= 50 && daysInStock < 56 && item.qc_status !== 'sold' && !isReserved;
                   const isRedAging = daysInStock >= 56 && item.qc_status !== 'sold' && !isReserved;
+                  const currentItemStock = Math.max(0, item.stock_quantity ?? item.quantity ?? 1);
+                  const effectivePrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
 
                   return (
                     <tr
@@ -1427,21 +1475,49 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         )}
                       </td>
 
-                      {/* Serial Number (Clickable to view detailed specs) */}
+                      {/* Serial Number & Device Identity */}
                       <td className="py-3.5 px-4">
-                        <button
-                          type="button"
-                          onClick={() => setViewingSpecsItem(item)}
-                          className="group inline-flex flex-col text-left cursor-pointer"
-                          title="Bấm để xem cấu hình chi tiết thiết bị"
-                        >
-                          <span className="inline-flex items-center font-mono font-bold text-xs bg-blue-50 text-blue-700 group-hover:bg-blue-600 group-hover:text-white px-2.5 py-1 rounded-md border border-blue-200 group-hover:border-blue-600 transition-all shadow-2xs">
-                            {item.serial_number || item.service_tag}
-                          </span>
-                          <span className="text-[10px] text-blue-600 group-hover:underline mt-0.5 font-medium">
-                            Xem cấu hình chi tiết →
-                          </span>
-                        </button>
+                        <div className="flex flex-col gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setViewingSpecsItem(item)}
+                            className="group inline-flex flex-col text-left cursor-pointer"
+                            title="Bấm để xem cấu hình chi tiết thiết bị"
+                          >
+                            <span className="inline-flex items-center font-mono font-bold text-xs bg-blue-50 text-blue-700 group-hover:bg-blue-600 group-hover:text-white px-2.5 py-1 rounded-md border border-blue-200 group-hover:border-blue-600 transition-all shadow-2xs">
+                              {item.serial_number || item.service_tag}
+                            </span>
+                            <span className="text-[10px] text-blue-600 group-hover:underline mt-0.5 font-medium">
+                              Xem cấu hình chi tiết →
+                            </span>
+                          </button>
+                          {item.ssd_health !== undefined && (
+                            <span className="text-[10px] font-mono text-slate-500">
+                              SSD Health:{' '}
+                              <strong className={item.ssd_health >= 90 ? 'text-emerald-700' : 'text-amber-700'}>
+                                {item.ssd_health}%
+                              </strong>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Price Column */}
+                      <td className="py-3.5 px-4 text-right">
+                        {item.sale_price && item.sale_price > 0 && (item.original_price || item.price) && (item.original_price || item.price)! > item.sale_price ? (
+                          <div>
+                            <div className="font-bold text-blue-700 font-mono text-xs">
+                              {item.sale_price.toLocaleString('vi-VN')}₫
+                            </div>
+                            <div className="text-[10px] text-slate-400 line-through font-mono">
+                              {((item.original_price || item.price) ?? 0).toLocaleString('vi-VN')}₫
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="font-bold text-slate-900 font-mono text-xs">
+                            {effectivePrice.toLocaleString('vi-VN')}₫
+                          </div>
+                        )}
                       </td>
 
                       {/* QC Status — máy đã bán: chỉ xem (khóa select) */}
@@ -1496,55 +1572,31 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         )}
                       </td>
 
-                      {/* Stock Quantity (RBAC PROTECTED) — máy đã bán: chỉ xem */}
-                      <td className="py-3.5 px-4">
-                        {canEditStock() && item.qc_status !== 'sold' ? (
-                          editingStockId === item.id ? (
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                type="number"
-                                min={0}
-                                value={tempStockValue}
-                                onChange={(e) => setTempStockValue(Number(e.target.value))}
-                                className="w-16 px-2 py-1 text-xs border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold"
-                              />
+                      {/* Machine Identity & Stock Column (1 máy = 1 Serial Number) */}
+                      <td className="py-3.5 px-4 text-center">
+                        {currentItemStock > 1 ? (
+                          <div className="inline-flex flex-col items-center gap-1">
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold font-mono"
+                              title="Lỗi dữ liệu cũ: 1 số Serial nhưng lại lưu số lượng nhiều máy"
+                            >
+                              ⚠️ {currentItemStock} máy / 1 S/N
+                            </span>
+                            {canEditStock() && (
                               <button
-                                onClick={() => handleStockEditSave(item.id)}
-                                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded"
+                                type="button"
+                                onClick={() => handleSplitBatch(item)}
+                                title="Bấm để tách thành từng máy riêng biệt, mỗi máy có 1 S/N và Tag riêng"
+                                className="px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold transition-all shadow-2xs cursor-pointer"
                               >
-                                Lưu
+                                Tách {currentItemStock} máy riêng →
                               </button>
-                              <button
-                                onClick={() => setEditingStockId(null)}
-                                className="px-2 py-1 text-slate-500 hover:text-slate-700 text-xs font-semibold"
-                              >
-                                Hủy
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-slate-900 text-sm font-mono">
-                                {item.stock_quantity ?? item.quantity ?? 1}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  setEditingStockId(item.id);
-                                  setTempStockValue(item.stock_quantity ?? item.quantity ?? 1);
-                                }}
-                                title="Admin: Sửa số lượng tồn kho"
-                                className="text-blue-600 hover:text-blue-800 text-xs px-1.5 py-0.5 rounded hover:bg-blue-50 transition-colors font-medium"
-                              >
-                                Sửa
-                              </button>
-                            </div>
-                          )
+                            )}
+                          </div>
                         ) : (
-                          // Read-Only Display for Technician & Sales
-                          <div
-                            className="inline-flex items-center px-2 py-1 bg-slate-100 rounded text-slate-700 text-xs font-semibold font-mono"
-                            title="Chỉ Admin mới có quyền điều chỉnh số lượng tồn kho"
-                          >
-                            <span>{item.stock_quantity ?? item.quantity ?? 1} cái</span>
+                          <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 rounded-md text-slate-700 text-xs font-semibold font-mono">
+                            <span>1 máy</span>
+                            <span className="text-[10px] text-slate-400 font-normal">(Đơn chiếc)</span>
                           </div>
                         )}
                       </td>
@@ -3568,9 +3620,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     </div>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-500">Tồn kho hiện tại:</span>
+                    <span className="text-[10px] text-slate-500">Định danh máy:</span>
                     <div className="font-bold text-slate-800 mt-0.5 font-mono">
-                      {viewingSpecsItem.stock_quantity ?? viewingSpecsItem.quantity ?? 1} bộ máy
+                      {(viewingSpecsItem.stock_quantity ?? viewingSpecsItem.quantity ?? 1) === 1
+                        ? '1 máy (Định danh theo S/N riêng)'
+                        : `⚠️ ${viewingSpecsItem.stock_quantity ?? viewingSpecsItem.quantity} máy (Đang gộp chung 1 S/N - Cần tách)`}
                     </div>
                   </div>
                   <div>
