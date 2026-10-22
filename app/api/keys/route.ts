@@ -1,23 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
-import { SESSION_COOKIE, verifySession } from '@/lib/session';
+import { requireStaff } from '@/lib/server/auth';
 
-const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
-
+// Chỉ chấp nhận session cookie đã ký. KHÔNG tin x-staff-role/Referer:
+// cả hai đều giả được bằng curl và từng khiến toàn bộ kho key bị lộ.
 function isStaff(request: NextRequest): boolean {
-  const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  if (session && STAFF_ROLES.includes(session.role)) {
-    return true;
-  }
-  const staffRoleHeader = request.headers.get('x-staff-role');
-  if (staffRoleHeader && STAFF_ROLES.includes(staffRoleHeader)) {
-    return true;
-  }
-  const referer = request.headers.get('referer') || '';
-  if (/\/(quan-ly-key|dashboard|cai-dat)/.test(referer)) {
-    return true;
-  }
-  return false;
+  return requireStaff(request) !== null;
 }
 
 // GET /api/keys — Tải toàn bộ danh mục key, kho key, và yêu cầu cấp key từ Supabase

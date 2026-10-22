@@ -45,7 +45,7 @@ export default function MemberManagementPage() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Trigger Reset Password to Default 'Antam@2026'
+  // Trigger Reset Password: cấp mật khẩu tạm ngẫu nhiên mới
   const handleConfirmResetPassword = async () => {
     if (!resetModalUser) return;
     setIsResetting(true);
@@ -54,7 +54,7 @@ export default function MemberManagementPage() {
       if (res.ok) {
         showToast(
           res.message ||
-            `Đã reset mật khẩu của ${resetModalUser.name} về mặc định "Antam@2026" (yêu cầu đổi mật khẩu ở lần đăng nhập tới)!`
+            `Đã reset mật khẩu của ${resetModalUser.name} (yêu cầu đổi mật khẩu ở lần đăng nhập tới)!`
         );
         setResetModalUser(null);
       } else {
@@ -178,7 +178,7 @@ export default function MemberManagementPage() {
 
     setIsSubmittingAdd(true);
     try {
-      await addUser({
+      const createdUser = await addUser({
         username: finalUsername,
         referral_code: finalUsername,
         name: newUserForm.name.trim(),
@@ -204,7 +204,12 @@ export default function MemberManagementPage() {
         },
       });
 
-      showToast(`Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mã ID: @${finalUsername}, Mật khẩu mặc định: Antam@2026)!`);
+      const tempPw = (createdUser as { temporaryPassword?: string }).temporaryPassword;
+      showToast(
+        tempPw
+          ? `Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mã ID: @${finalUsername}). Mật khẩu tạm (chỉ hiện 1 lần): ${tempPw}`
+          : `Đã thêm thành viên mới: ${newUserForm.name.trim()} (Mã ID: @${finalUsername})!`
+      );
       setIsAddingUser(false);
       setNewUserForm({
         name: '',
@@ -460,7 +465,7 @@ export default function MemberManagementPage() {
                   <div className="pt-1">
                     {member.password_changed === false ? (
                       <div className="px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-medium flex items-center justify-between">
-                        <span>⚠️ Mật khẩu: Antam@2026</span>
+                        <span>⚠️ Mật khẩu tạm chưa đổi</span>
                         <span className="font-bold text-[10px] text-amber-900 uppercase">Chưa đổi</span>
                       </div>
                     ) : (
@@ -508,11 +513,11 @@ export default function MemberManagementPage() {
                     Sửa thông tin
                   </button>
 
-                  {/* Reset Password to Default Antam@2026 */}
+                  {/* Reset Password: cấp mật khẩu tạm ngẫu nhiên */}
                   <button
                     onClick={() => setResetModalUser(member)}
                     className="flex-1 px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold flex items-center justify-center border border-amber-200 transition-colors"
-                    title="Reset mật khẩu về mặc định Antam@2026"
+                    title="Reset mật khẩu (cấp mật khẩu tạm ngẫu nhiên)"
                   >
                     Reset Mật Khẩu
                   </button>
@@ -575,10 +580,7 @@ export default function MemberManagementPage() {
 
               <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 space-y-1">
                 <div className="font-bold flex items-center gap-1.5">
-                  <span>⚠️</span> Mật khẩu sẽ được đặt lại về:
-                </div>
-                <div className="font-mono text-base font-black text-amber-950 py-1 tracking-wider bg-white/70 px-2.5 rounded-lg border border-amber-300">
-                  Antam@2026
+                  <span>⚠️</span> Hệ thống sẽ cấp một mật khẩu tạm NGẪU NHIÊN mới (chỉ hiển thị 1 lần sau khi xác nhận).
                 </div>
                 <p className="text-[11px] text-amber-800 leading-relaxed pt-1">
                   Nhân viên bắt buộc phải đổi mật khẩu cá nhân mới ngay trong lần đăng nhập đầu tiên tiếp theo.
@@ -943,9 +945,9 @@ export default function MemberManagementPage() {
 
               <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
                 <div className="flex items-center gap-2 font-bold">
-                  <span>🔒 Mật khẩu mặc định khởi tạo:</span>
+                  <span>🔒 Mật khẩu tạm khởi tạo:</span>
                   <span className="font-mono bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-950">
-                    Antam@2026
+                    Sinh ngẫu nhiên, hiển thị 1 lần sau khi tạo
                   </span>
                 </div>
                 <p className="text-[11px] text-amber-800">

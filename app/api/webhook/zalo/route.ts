@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
   try {
     const config = getZaloBotConfig();
 
-    // 1. Kiểm tra secret_token nếu có cấu hình
+    // 1. Kiểm tra secret_token nếu có cấu hình.
+    // BẮT BUỘC phải có header và khớp — trước đây thiếu header vẫn cho qua,
+    // khiến việc kiểm tra secret vô hiệu.
     if (config.secretToken) {
       const headerSecret =
         req.headers.get('x-telegram-bot-api-secret-token') ||
@@ -26,7 +28,7 @@ export async function POST(req: NextRequest) {
         req.headers.get('x-zalo-secret') ||
         req.headers.get('authorization')?.replace('Bearer ', '');
 
-      if (headerSecret && headerSecret !== config.secretToken) {
+      if (!headerSecret || headerSecret !== config.secretToken) {
         return NextResponse.json({ error: 'Unauthorized: Secret token không hợp lệ' }, { status: 401 });
       }
     }

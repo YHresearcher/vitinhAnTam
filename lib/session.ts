@@ -21,8 +21,14 @@ let cachedSecret: string | null = null;
 
 /**
  * Lấy secret dùng để ký session.
- * Ưu tiên SESSION_SECRET từ env; nếu thiếu thì tự sinh và lưu vào .data/session-secret
- * (không bao giờ hardcode secret trong source).
+ * Thứ tự ưu tiên:
+ * 1. SESSION_SECRET từ env (cách chuẩn trên production).
+ * 2. File .data/session-secret (môi trường dev/local có quyền ghi).
+ * 3. Môi trường serverless read-only: suy ra secret ổn định từ khóa máy chủ
+ *    khác (SUPABASE_SERVICE_ROLE_KEY / SUPABASE_SECRET_KEY) — các khóa này chỉ
+ *    nằm ở server, không có trong source, nên session vẫn không giả mạo được.
+ * 4. Không có nguồn nào: ném lỗi (fail-closed). TUYỆT ĐỐI không dùng secret
+ *    hardcode trong source — ai đọc được source cũng ký được cookie admin.
  */
 function getSecret(): string {
   const fromEnv = process.env.SESSION_SECRET?.trim();
@@ -44,10 +50,16 @@ function getSecret(): string {
     cachedSecret = generated;
     return generated;
   } catch {
-    // Môi trường read-only (serverless / Vercel): dùng secret đồng nhất để không bị lệch giữa các lambda
-    const fallback = 'vtat-crm-session-secret-fallback-production-2026-key';
-    cachedSecret = fallback;
-    return fallback;
+    // Serverless read-only: suy ra từ khóa máy chủ (chỉ server biết).
+    const serverKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_SECRET_KEY?.trim();
+    if (serverKey) {
+      const derived = createHmac('sha256', serverKey).update('vtat-session-secret-derivation-v1').digest('hex');
+      cachedSecret = derived;
+      return derived;
+    }
+    throw new Error(
+      'Thiếu SESSION_SECRET: hãy đặt biến môi trường SESSION_SECRET (và/hoặc SUPABASE_SERVICE_ROLE_KEY) cho production.'
+    );
   }
 }
 

@@ -3,17 +3,14 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
-import { SESSION_COOKIE, verifySession } from '@/lib/session';
+import { requireStaff } from '@/lib/server/auth';
+import { rateLimit } from '@/lib/server/rateLimit';
 import { dispatchSystemEvent } from '@/lib/server/zaloBot';
 
-const STAFF = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
-
+// Chỉ tin session cookie đã ký. Header x-user-role/x-staff-role và Referer
+// đều do client tự đặt được — không dùng làm căn cứ xác thực nữa.
 function isStaff(req: NextRequest): boolean {
-  const sess = verifySession(req.cookies.get(SESSION_COOKIE)?.value);
-  if (sess && STAFF.includes(sess.role)) return true;
-  const role = req.headers.get('x-user-role') || req.headers.get('x-staff-role');
-  if (role && STAFF.includes(role)) return true;
-  return /\/(dashboard|quan-ly-don-hang|kho-may|phieu-sua-chua|cuu-ho-onsite|tai-chinh)/.test(req.headers.get('referer') || '');
+  return requireStaff(req) !== null;
 }
 
 function getDb() {
@@ -61,11 +58,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit(req, 'ticket-create', 10, 10 * 60 * 1000)) {
+    return NextResponse.json({ success: false, error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau.' }, { status: 429 });
+  }
   try {
     const body = await req.json().catch(() => ({}));
     if (!body.customer_name || !body.customer_phone) {
       return NextResponse.json({ success: false, error: 'Thiếu tên hoặc SĐT' }, { status: 400 });
     }
+    // Khách công khai chỉ được tạo phiếu ở trạng thái tiếp nhận, không được
+    // tự gán kỹ thuật viên/trạng thái xử lý. Nhân viên có session thì giữ nguyên.
+    const staff = isStaff(req);
     const code = body.ticket_code || `#TK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const ticket: Record<string, unknown> = {
       id: body.id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `tk-${Date.now()}`),
@@ -80,9 +83,9 @@ export async function POST(req: NextRequest) {
       estimated_cost: Number(body.estimated_cost) || 100000,
       total_amount: Number(body.total_amount) || Number(body.estimated_cost) || 100000,
       dispatch_address: body.ticket_type === 'onsite' ? (body.customer_address || '') : undefined,
-      technician_name: body.technician_name || 'KTV Trực ca Tiếp nhận',
+      technician_name: staff ? body.technician_name || 'KTV Trực ca Tiếp nhận' : 'KTV Trực ca Tiếp nhận',
       visual_condition: body.visual_condition || 'Tiếp nhận qua hệ thống đặt lịch Online',
-      status: body.status || 'received',
+      status: staff ? body.status || 'received' : 'received',
       technician_note: body.technician_note || '',
       estimated_completion: body.estimated_completion || '',
       created_at: new Date().toISOString(),

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, sessionCookieOptions, signSession } from '@/lib/session';
 import { authenticateAsync, stripSecrets } from '@/lib/server/users';
+import { rateLimit } from '@/lib/server/rateLimit';
 
 export async function POST(request: NextRequest) {
+  // Chống brute-force: tối đa 20 lần thử / 10 phút / IP
+  if (!rateLimit(request, 'login', 20, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { success: false, message: 'Quá nhiều lần thử đăng nhập. Vui lòng đợi ít phút rồi thử lại.' },
+      { status: 429 }
+    );
+  }
   let body: { identifier?: unknown; password?: unknown };
   try {
     body = await request.json();

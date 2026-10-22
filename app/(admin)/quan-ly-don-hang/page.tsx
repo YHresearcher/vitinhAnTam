@@ -67,7 +67,6 @@ export default function OrderManagementPage() {
       const res = await fetch('/api/orders?limit=100', {
         cache: 'no-store',
         headers: {
-          'x-staff-role': currentUser?.role || 'admin',
         },
       });
       if (res.ok) {
@@ -194,7 +193,6 @@ export default function OrderManagementPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-role': currentUser.role,
         },
         body: JSON.stringify({
           id: orderId,

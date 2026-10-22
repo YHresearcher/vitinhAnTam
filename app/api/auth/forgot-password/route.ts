@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRecoveryToken } from '@/lib/server/password-recovery';
 import { loadUsers } from '@/lib/server/users';
+import { rateLimit } from '@/lib/server/rateLimit';
 
 const GENERIC_MESSAGE = 'Nếu email tồn tại trong hệ thống, hướng dẫn khôi phục đã được gửi. Vui lòng kiểm tra hộp thư và thư mục spam.';
 
@@ -13,6 +14,10 @@ function escapeHtml(value: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Chống bom thư + huỷ token hợp lệ của nạn nhân: tối đa 5 yêu cầu / 15 phút / IP
+  if (!rateLimit(request, 'forgot-password', 5, 15 * 60 * 1000)) {
+    return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
+  }
   let body: { email?: unknown };
   try {
     body = await request.json();

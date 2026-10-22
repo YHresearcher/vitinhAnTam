@@ -19,6 +19,7 @@ const PROTECTED_PAGES = [
   '/cuu-ho-onsite',
   '/quan-ly-key',
   '/quan-ly-don-hang',
+  '/bai-viet',
 ];
 
 const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
@@ -96,6 +97,7 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/tai-chinh/:path*',
     '/kho-may/:path*',
     '/phieu-sua-chua/:path*',
     '/khach-hang/:path*',
@@ -105,6 +107,7 @@ export const config = {
     '/cuu-ho-onsite/:path*',
     '/quan-ly-key/:path*',
     '/quan-ly-don-hang/:path*',
+    '/bai-viet/:path*',
     '/api/inventory/:path*',
     '/api/tickets/:path*',
   ],

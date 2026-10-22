@@ -7,7 +7,33 @@ import { initialUsers } from '@/lib/mockData';
 import { generateReferralCode, type UserAccount } from '@/lib/supabase';
 import { getServerSupabase } from './supabaseAdmin';
 
-export const DEFAULT_TEMPORARY_PASSWORD = 'Antam@2026';
+/**
+ * Mật khẩu tạm cho tài khoản mới / sau reset: SINH NGẪU NHIÊN cho từng tài
+ * khoản, chỉ hiển thị 1 lần cho admin qua API. Trước đây dùng một mật khẩu
+ * mặc định cố định in trong source — ai đọc được source cũng biết.
+ */
+export function generateTemporaryPassword(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const bytes = randomBytes(12);
+  let core = '';
+  for (let i = 0; i < 10; i++) core += alphabet[bytes[i] % alphabet.length];
+  const digit = String(bytes[10] % 10);
+  const symbol = '@#%'.charAt(bytes[11] % 3);
+  return `Vt${core}${digit}${symbol}`;
+}
+
+// Mật khẩu tạm vừa cấp, tra theo user id — chỉ đọc được đúng 1 lần (consume).
+const issuedTempPasswords = new Map<string, string>();
+export function issueTemporaryPassword(userId: string): string {
+  const plain = generateTemporaryPassword();
+  issuedTempPasswords.set(userId, plain);
+  return plain;
+}
+export function consumeTemporaryPassword(userId: string): string | null {
+  const plain = issuedTempPasswords.get(userId) ?? null;
+  if (plain) issuedTempPasswords.delete(userId);
+  return plain;
+}
 
 export type SafeUser = Omit<UserAccount, 'password'>;
 
@@ -280,8 +306,8 @@ export async function upsertUserAsync(
   let pChanged = base.password_changed;
 
   if (index < 0) {
-    // Tạo mới tài khoản: mặc định 'Antam@2026', password_changed = false (bắt buộc đổi MK lần đầu)
-    pHash = hashPassword(password || DEFAULT_TEMPORARY_PASSWORD);
+    // Tạo mới tài khoản: mật khẩu tạm ngẫu nhiên, password_changed = false (bắt buộc đổi MK lần đầu)
+    pHash = hashPassword(password || issueTemporaryPassword(id));
     pChanged = false;
   } else {
     // Cập nhật tài khoản cũ
@@ -315,7 +341,7 @@ export async function upsertUserAsync(
     },
     status: rest.status ?? base.status ?? 'active',
     created_at: base.created_at ?? new Date().toISOString(),
-    password_hash: pHash || hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_hash: pHash || hashPassword(issueTemporaryPassword(id)),
     password_changed: pChanged === false ? false : true,
   };
 
@@ -360,7 +386,7 @@ export function upsertUser(
   let pChanged = base.password_changed;
 
   if (index < 0) {
-    pHash = hashPassword(password || DEFAULT_TEMPORARY_PASSWORD);
+    pHash = hashPassword(password || issueTemporaryPassword(id));
     pChanged = false;
   } else {
     if (password) {
@@ -393,7 +419,7 @@ export function upsertUser(
     },
     status: rest.status ?? base.status ?? 'active',
     created_at: base.created_at ?? new Date().toISOString(),
-    password_hash: pHash || hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_hash: pHash || hashPassword(issueTemporaryPassword(id)),
     password_changed: pChanged === false ? false : true,
   };
 
@@ -420,7 +446,7 @@ export function upsertUser(
   return stripSecrets(next);
 }
 
-/** Admin đặt lại mật khẩu về mặc định 'Antam@2026' và yêu cầu đổi mật khẩu ở lần đăng nhập tới */
+/** Admin đặt lại mật khẩu: cấp mật khẩu tạm NGẪU NHIÊN mới và yêu cầu đổi ở lần đăng nhập tới */
 export async function resetUserPasswordAsync(id: string): Promise<SafeUser | null> {
   const users = await loadUsersAsync();
   const index = users.findIndex((u) => u.id === id);
@@ -428,7 +454,7 @@ export async function resetUserPasswordAsync(id: string): Promise<SafeUser | nul
 
   const next: StoredUser = {
     ...users[index],
-    password_hash: hashPassword(DEFAULT_TEMPORARY_PASSWORD),
+    password_hash: hashPassword(issueTemporaryPassword(id)),
     password_changed: false,
   };
   const updated = [...users];
@@ -464,16 +490,12 @@ export async function changePasswordWithVerificationAsync(
     return { success: false, message: 'Mật khẩu hiện tại không chính xác. Vui lòng kiểm tra lại!' };
   }
 
-  if (!newPlain || newPlain.length < 6) {
-    return { success: false, message: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' };
+  if (!newPlain || newPlain.length < 8) {
+    return { success: false, message: 'Mật khẩu mới phải có tối thiểu 8 ký tự!' };
   }
 
   if (newPlain === currentPlain) {
     return { success: false, message: 'Mật khẩu mới không được trùng với mật khẩu hiện tại!' };
-  }
-
-  if (newPlain === DEFAULT_TEMPORARY_PASSWORD) {
-    return { success: false, message: 'Mật khẩu mới không được trùng mật khẩu mặc định (Antam@2026)!' };
   }
 
   const nextHash = hashPassword(newPlain);

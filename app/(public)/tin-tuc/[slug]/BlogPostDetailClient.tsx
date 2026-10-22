@@ -6,6 +6,7 @@ import {
   Clock, Calendar, Share2, Tag,
   HelpCircle, ChevronRight, PhoneCall
 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import TableOfContents from '@/components/blog/TableOfContents';
 import { BlogPost, formatDateVN } from '@/lib/supabase';
 import { useViTinhAnTamStore } from '@/lib/store';
@@ -91,10 +92,10 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
             </div>
           </div>
 
-          {/* Rich HTML Content */}
+          {/* Rich HTML Content — bắt buộc sanitize để chống stored XSS */}
           <div
             className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-base leading-relaxed space-y-4"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
           />
 
           {/* Tags footer */}

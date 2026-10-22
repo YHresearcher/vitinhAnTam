@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
+import { getSession, requireStaff } from '@/lib/server/auth';
+import { rateLimit } from '@/lib/server/rateLimit';
 import { dispatchSystemEvent } from '@/lib/server/zaloBot';
 import { loadUsersAsync } from '@/lib/server/users';
 
@@ -37,23 +39,10 @@ const VALID_PAYMENT = ['qr', 'cash'];
 const VALID_DELIVERY = ['pickup', 'delivery'];
 const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
 
-/** Chỉ staff (admin/sales/technician) đã đăng nhập mới được xem danh sách đơn. */
+/** Chỉ staff đã đăng nhập bằng session hợp lệ mới được xem/cập nhật đơn.
+ *  KHÔNG tin x-staff-role/Referer — giả được bằng curl, từng làm lộ đơn hàng. */
 function isStaff(request: NextRequest): boolean {
-  const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  if (session && STAFF_ROLES.includes(session.role)) {
-    return true;
-  }
-  // Cho phép xác thực qua header role từ store client
-  const staffRoleHeader = request.headers.get('x-staff-role');
-  if (staffRoleHeader && STAFF_ROLES.includes(staffRoleHeader)) {
-    return true;
-  }
-  // Cho phép các truy vấn nội bộ từ khu vực quản trị Admin
-  const referer = request.headers.get('referer') || '';
-  if (/\/(dashboard|quan-ly-don-hang|kho-may|phieu-sua-chua|tai-chinh|cai-dat)/.test(referer)) {
-    return true;
-  }
-  return false;
+  return requireStaff(request) !== null;
 }
 
 /**
@@ -166,6 +155,12 @@ async function notifyStaffByEmail(order: Record<string, unknown>): Promise<void>
 // POST /api/orders — Khách hàng đặt đơn (công khai)
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
+  if (!rateLimit(request, 'order-create', 10, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { success: false, message: 'Bạn đã gửi quá nhiều đơn trong thời gian ngắn. Vui lòng thử lại sau.' },
+      { status: 429 }
+    );
+  }
   try {
     const body = (await request.json()) as OrderPayload;
 
@@ -216,10 +211,46 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const sellerId = body.seller_id || createdById || (matchedUser ? matchedUser.id : null);
-    const sellerName = body.seller_name || createdByName || (matchedUser ? matchedUser.name : (referralCode !== 'Khách vãng lai' ? referralCode : null));
-    const assignedCareId = body.assigned_care_id || createdById || (matchedUser ? matchedUser.id : null);
-    const assignedCareName = body.assigned_care_name || createdByName || (matchedUser ? matchedUser.name : null);
+    // Chỉ nhân viên đã đăng nhập mới được tự khai người bán/CSKH.
+    // Khách công khai chỉ ghi nhận được qua mã giới thiệu khớp với nhân viên thật —
+    // tránh giả mạo ghi công bán hàng cho người khác.
+    const staffSession = getSession(request);
+    const sellerId = staffSession
+      ? body.seller_id || createdById || (matchedUser ? matchedUser.id : null)
+      : matchedUser
+        ? matchedUser.id
+        : null;
+    const sellerName = staffSession
+      ? body.seller_name || createdByName || (matchedUser ? matchedUser.name : referralCode !== 'Khách vãng lai' ? referralCode : null)
+      : matchedUser
+        ? matchedUser.name
+        : null;
+    const assignedCareId = staffSession ? body.assigned_care_id || createdById || (matchedUser ? matchedUser.id : null) : matchedUser ? matchedUser.id : null;
+    const assignedCareName = staffSession ? body.assigned_care_name || createdByName || (matchedUser ? matchedUser.name : null) : matchedUser ? matchedUser.name : null;
+
+    // Giá bán KHÔNG tin dữ liệu client: nếu có mã máy (device_tag) khớp kho,
+    // luôn lấy giá thật từ DB (giá khuyến mãi nếu có, không thì giá niêm yết).
+    let verifiedPrice = Number(body.device_price) || 0;
+    const deviceTag = (body.device_tag || '').trim();
+    if (deviceTag) {
+      const priceDb = getDb();
+      if (priceDb) {
+        try {
+          const { data: inv } = await priceDb
+            .from('inventory_items')
+            .select('retail_price, sale_price, price')
+            .eq('service_tag', deviceTag)
+            .limit(1)
+            .maybeSingle();
+          if (inv) {
+            const dbPrice = Number(inv.sale_price) > 0 ? Number(inv.sale_price) : Number(inv.retail_price) || Number(inv.price) || 0;
+            if (dbPrice > 0) verifiedPrice = dbPrice;
+          }
+        } catch (err) {
+          console.warn('Không đối chiếu được giá từ kho:', err);
+        }
+      }
+    }
 
     const extraTags = [
       `[Người GT: ${referralCode}]`,
@@ -239,8 +270,8 @@ export async function POST(request: NextRequest) {
       customer_phone: customerPhone,
       customer_address: (body.customer_address || '').trim(),
       device_name: deviceName,
-      device_price: Number(body.device_price) || 0,
-      device_tag: (body.device_tag || '').trim(),
+      device_price: verifiedPrice,
+      device_tag: deviceTag,
       payment_method: body.payment_method,
       delivery_method: body.delivery_method,
       note: finalNote,
@@ -269,8 +300,8 @@ export async function POST(request: NextRequest) {
             customer_phone: customerPhone,
             customer_address: (body.customer_address || '').trim(),
             device_name: deviceName,
-            device_price: Number(body.device_price) || 0,
-            device_tag: (body.device_tag || '').trim(),
+            device_price: verifiedPrice,
+            device_tag: deviceTag,
             payment_method: body.payment_method,
             delivery_method: body.delivery_method,
             note: finalNote,
@@ -470,8 +501,7 @@ export async function PATCH(request: NextRequest) {
 
     // Kiểm tra quyền: Chỉ admin mới có quyền thay đổi người chăm sóc khách hàng
     const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-    const staffRoleHeader = request.headers.get('x-staff-role');
-    const isAdmin = session?.role === 'admin' || staffRoleHeader === 'admin';
+    const isAdmin = session?.role === 'admin';
 
     if ((body.assigned_care_id !== undefined || body.assigned_care_name !== undefined) && !isAdmin) {
       return NextResponse.json(

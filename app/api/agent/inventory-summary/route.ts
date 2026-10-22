@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isValidAgentKey } from '@/lib/server/agentAuth';
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get('x-agent-key') || req.headers.get('authorization');
-    const validKey = process.env.AGENT_API_SECRET || 'antam_agent_secure_2026';
-
-    const cleanToken = authHeader?.replace('Bearer ', '');
-    if (!cleanToken || cleanToken !== validKey) {
+    if (!isValidAgentKey(req)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Invalid x-agent-key.' },
         { status: 401 }

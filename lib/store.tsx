@@ -750,8 +750,15 @@ export function StoreProvider({
 
     const response = await callUsersApi({ action: 'create', user: newUser });
     if (response?.ok) {
-      const created = (await response.json().catch(() => null)) as { user?: UserAccount } | null;
+      const created = (await response.json().catch(() => null)) as {
+        user?: UserAccount;
+        temporaryPassword?: string | null;
+      } | null;
       if (created?.user) Object.assign(newUser, created.user);
+      // Mật khẩu tạm ngẫu nhiên do server cấp — chỉ hiện 1 lần cho admin
+      if (created?.temporaryPassword) {
+        (newUser as UserAccount & { temporaryPassword?: string }).temporaryPassword = created.temporaryPassword;
+      }
     } else {
       const errData = (await response?.json().catch(() => null)) as { message?: string } | null;
       console.warn('Lỗi thêm tài khoản:', errData?.message);
@@ -1012,9 +1019,7 @@ export function StoreProvider({
 
         // 4. Đồng bộ Kho Key Bản Quyền từ Supabase
         try {
-          const keysRes = await fetch('/api/keys', {
-            headers: { 'x-staff-role': 'admin' },
-          });
+          const keysRes = await fetch('/api/keys');
           if (keysRes.ok) {
             const keysJson = await keysRes.json();
             if (keysJson.success) {
@@ -1608,7 +1613,6 @@ export function StoreProvider({
       const res = await fetch('/api/orders?status=pending', {
         cache: 'no-store',
         headers: {
-          'x-staff-role': currentUser?.role || 'admin',
         },
       });
       if (res.ok) {
@@ -1674,7 +1678,6 @@ export function StoreProvider({
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-role': currentUser?.role || 'admin',
         },
         body: JSON.stringify({
           id: order.id,
@@ -1720,7 +1723,6 @@ export function StoreProvider({
       const res = await fetch('/api/tickets', {
         cache: 'no-store',
         headers: {
-          'x-staff-role': currentUser?.role || 'admin',
         },
       });
       if (res.ok) {
@@ -1760,7 +1762,6 @@ export function StoreProvider({
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-role': currentUser?.role || 'admin',
         },
         body: JSON.stringify({
           id: ticketId,

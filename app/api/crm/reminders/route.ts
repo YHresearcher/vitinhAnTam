@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireStaff } from '@/lib/server/auth';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 import { supabase, isSupabaseConfigured, Customer, InventoryItem } from '@/lib/supabase';
 import { dispatchSystemEvent } from '@/lib/server/zaloBot';
@@ -17,6 +18,10 @@ function getDb() {
 }
 
 export async function GET(request: NextRequest) {
+  // Endpoint chứa PII khách hàng + có thể bắn tin Zalo: bắt buộc đăng nhập nhân viên.
+  if (!requireStaff(request)) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const db = getDb();
     if (!db) {

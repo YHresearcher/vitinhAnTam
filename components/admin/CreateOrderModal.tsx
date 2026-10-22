@@ -78,7 +78,6 @@ export default function CreateOrderModal({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-staff-role': currentUser.role,
         },
         body: JSON.stringify({
           customer_name: customerName.trim(),

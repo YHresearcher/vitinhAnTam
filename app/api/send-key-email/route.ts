@@ -1,6 +1,19 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireStaff } from '@/lib/server/auth';
 
-export async function POST(req: Request) {
+const escapeHtml = (v: unknown): string =>
+  String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+export async function POST(req: NextRequest) {
+  // Gửi email bàn giao key chỉ dành cho nhân viên đã đăng nhập — trước đây ai
+  // cũng gọi được và dùng hạ tầng email của shop để gửi tới địa chỉ tuỳ ý.
+  if (!requireStaff(req)) {
+    return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const body = await req.json();
     const {
@@ -60,28 +73,28 @@ export async function POST(req: Request) {
       <p>Bàn Giao Bản Quyền Phần Mềm Chính Hãng</p>
     </div>
     <div class="content">
-      <p>Xin chào <strong>${customer_name || 'Quý khách'}</strong>,</p>
+      <p>Xin chào <strong>${escapeHtml(customer_name || 'Quý khách')}</strong>,</p>
       <p>Vi Tính An Tâm xin gửi đến quý khách thông tin mã bản quyền phần mềm chính hãng đã kích hoạt thành công:</p>
       <div class="key-box">
         <div class="key-label">🔑 MÃ KEY BẢN QUYỀN:</div>
-        <div class="key-code">${license_code || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'}</div>
+        <div class="key-code">${escapeHtml(license_code || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX')}</div>
       </div>
       <table class="info-table">
-        <tr><td class="label">Sản phẩm:</td><td class="val">${category_name || 'Bản quyền phần mềm'}</td></tr>
-        <tr><td class="label">Khách hàng:</td><td class="val">${customer_name || 'Quý khách'} ${customer_phone ? `(${customer_phone})` : ''}</td></tr>
-        <tr><td class="label">Bảo hành:</td><td class="val" style="color: #16a34a;">${warrantyInfo}</td></tr>
+        <tr><td class="label">Sản phẩm:</td><td class="val">${escapeHtml(category_name || 'Bản quyền phần mềm')}</td></tr>
+        <tr><td class="label">Khách hàng:</td><td class="val">${escapeHtml(customer_name || 'Quý khách')} ${customer_phone ? `(${escapeHtml(customer_phone)})` : ''}</td></tr>
+        <tr><td class="label">Bảo hành:</td><td class="val" style="color: #16a34a;">${escapeHtml(warrantyInfo)}</td></tr>
         <tr><td class="label">Thời gian cấp:</td><td class="val">${new Date().toLocaleString('vi-VN')}</td></tr>
       </table>
       <div class="instruction-box">
         <strong>📌 LƯU Ý KHI SỬ DỤNG:</strong><br>
         • Vui lòng lưu lại email này để sử dụng làm căn cứ bảo hành.<br>
         • Mỗi mã key chỉ sử dụng cho 01 thiết bị duy nhất.<br>
-        • Hotline hỗ trợ kỹ thuật: <strong>${supportPhone}</strong>
+        • Hotline hỗ trợ kỹ thuật: <strong>${escapeHtml(supportPhone)}</strong>
       </div>
     </div>
     <div class="footer">
-      <p style="margin: 0 0 4px 0; font-weight: 600; color: #334155;">${customFooter}</p>
-      <p style="margin: 0;">Người gửi: <strong>${senderName}</strong> (&lt;${senderEmail}&gt;)</p>
+      <p style="margin: 0 0 4px 0; font-weight: 600; color: #334155;">${escapeHtml(customFooter)}</p>
+      <p style="margin: 0;">Người gửi: <strong>${escapeHtml(senderName)}</strong> (&lt;${escapeHtml(senderEmail)}&gt;)</p>
     </div>
   </div>
 </body>

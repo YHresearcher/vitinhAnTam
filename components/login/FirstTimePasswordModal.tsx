@@ -17,7 +17,7 @@ export function FirstTimePasswordModal({
   onSuccess,
   onCancel,
 }: FirstTimePasswordModalProps) {
-  const [currentPassword, setCurrentPassword] = useState(userAccount.currentPassword || 'Antam@2026');
+  const [currentPassword, setCurrentPassword] = useState(userAccount.currentPassword || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,17 +29,17 @@ export function FirstTimePasswordModal({
     setErrorMessage('');
 
     if (!currentPassword.trim()) {
-      setErrorMessage('Vui lòng nhập mật khẩu hiện tại (mặc định: Antam@2026).');
+      setErrorMessage('Vui lòng nhập mật khẩu hiện tại (mật khẩu tạm do Admin cấp).');
       return;
     }
 
-    if (!newPassword.trim() || newPassword.trim().length < 6) {
-      setErrorMessage('Mật khẩu mới phải có tối thiểu 6 ký tự.');
+    if (!newPassword.trim() || newPassword.trim().length < 8) {
+      setErrorMessage('Mật khẩu mới phải có tối thiểu 8 ký tự.');
       return;
     }
 
-    if (newPassword.trim() === 'Antam@2026') {
-      setErrorMessage('Mật khẩu mới không được trùng với mật khẩu mặc định (Antam@2026).');
+    if (newPassword.trim() === currentPassword.trim()) {
+      setErrorMessage('Mật khẩu mới không được trùng với mật khẩu hiện tại.');
       return;
     }
 
@@ -122,14 +122,14 @@ export function FirstTimePasswordModal({
           {/* Current Password */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Mật Khẩu Hiện Tại (Mặc định: Antam@2026) *
+              Mật Khẩu Hiện Tại (mật khẩu tạm do Admin cấp) *
             </label>
             <input
               type="text"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Antam@2026"
+              placeholder="Nhập mật khẩu tạm"
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500 transition-all"
             />
           </div>

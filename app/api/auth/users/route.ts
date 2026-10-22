@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
 import {
+  consumeTemporaryPassword,
   findUserByIdAsync,
   loadUsersAsync,
   removeUserAsync,
@@ -59,15 +60,19 @@ export async function POST(request: NextRequest) {
     }
     let created;
     try {
-      // Mật khẩu được khởi tạo tự động là 'Antam@2026', password_changed = false
+      // Mật khẩu tạm được sinh ngẫu nhiên riêng cho tài khoản này, password_changed = false
       created = await upsertUserAsync(user);
     } catch (err) {
       return serverError(err);
     }
+    const temporaryPassword = consumeTemporaryPassword(created.id);
     return NextResponse.json({
       success: true,
       user: created,
-      message: 'Tạo tài khoản thành công! Mật khẩu khởi tạo là Antam@2026 (yêu cầu đổi mật khẩu ở lần đăng nhập đầu tiên).',
+      temporaryPassword,
+      message: temporaryPassword
+        ? `Tạo tài khoản thành công! Mật khẩu tạm (chỉ hiện 1 lần): ${temporaryPassword} — hãy gửi cho thành viên, họ sẽ phải đổi ở lần đăng nhập đầu tiên.`
+        : 'Tạo tài khoản thành công!',
     }, { status: 201 });
   }
 
@@ -78,8 +83,33 @@ export async function POST(request: NextRequest) {
     if (!id || !existing) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản.' }, { status: 404 });
     }
-    const safePatch: Partial<UserAccount> = { ...patch };
-    delete safePatch.password; // Admin không nhập mật khẩu bằng tay
+    // Whitelist trường được sửa qua endpoint này.
+    const ALLOWED_FIELDS: Array<keyof UserAccount> = [
+      'name', 'username', 'email', 'phone', 'roleTitle', 'avatarBg', 'referral_code',
+    ];
+    const safePatch: Partial<UserAccount> = {};
+    for (const field of ALLOWED_FIELDS) {
+      if (patch[field] !== undefined) {
+        (safePatch as Record<string, unknown>)[field] = patch[field];
+      }
+    }
+    // Trường nhạy cảm (vai trò / quyền hạn / trạng thái): chỉ admin thật mới đổi được,
+    // tránh người được uỷ quyền quản lý user tự leo quyền thành admin.
+    const SENSITIVE_FIELDS: Array<keyof UserAccount> = ['role', 'permissions', 'status'];
+    const touchesSensitive = SENSITIVE_FIELDS.some((f) => patch[f] !== undefined);
+    if (touchesSensitive) {
+      if (guard.session?.role !== 'admin') {
+        return NextResponse.json(
+          { success: false, message: 'Chỉ Admin mới được thay đổi vai trò, quyền hạn hoặc trạng thái tài khoản.' },
+          { status: 403 }
+        );
+      }
+      for (const field of SENSITIVE_FIELDS) {
+        if (patch[field] !== undefined) {
+          (safePatch as Record<string, unknown>)[field] = patch[field];
+        }
+      }
+    }
     let updated;
     try {
       updated = await upsertUserAsync(safePatch, { id });
@@ -103,18 +133,22 @@ export async function POST(request: NextRequest) {
     if (!updated) {
       return NextResponse.json({ success: false, message: 'Không tìm thấy tài khoản để reset mật khẩu.' }, { status: 404 });
     }
+    const temporaryPassword = consumeTemporaryPassword(updated.id);
     return NextResponse.json({
       success: true,
       user: updated,
-      message: 'Đã reset mật khẩu về mặc định "Antam@2026". Thành viên sẽ được yêu cầu đổi mật khẩu khi đăng nhập!',
+      temporaryPassword,
+      message: temporaryPassword
+        ? `Đã reset mật khẩu. Mật khẩu tạm mới (chỉ hiện 1 lần): ${temporaryPassword} — hãy gửi cho thành viên, họ sẽ được yêu cầu đổi mật khẩu khi đăng nhập!`
+        : 'Đã reset mật khẩu. Thành viên sẽ được yêu cầu đổi mật khẩu khi đăng nhập!',
     });
   }
 
   if (action === 'password') {
     const id = typeof body.id === 'string' ? body.id : '';
     const password = typeof body.password === 'string' ? body.password : '';
-    if (password.length < 4) {
-      return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 4 ký tự!' }, { status: 400 });
+    if (password.length < 8) {
+      return NextResponse.json({ success: false, message: 'Mật khẩu phải có tối thiểu 8 ký tự!' }, { status: 400 });
     }
     let updated;
     try {
