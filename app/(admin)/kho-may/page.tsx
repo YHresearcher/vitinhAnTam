@@ -1243,32 +1243,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       )}
 
-      {/* KPI tối giản: Tồn kho theo nhóm trạng thái (Sẵn bán → Đang QC → Đã bán) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {(activeTab === 'may-bo' || activeTab === 'laptop') && (
-          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-            <div className="text-[11px] text-slate-500 truncate">Tồn Kho (Chưa Bán)</div>
-            <div className="text-base font-bold text-blue-800 font-mono mt-0.5">
-              {(activeTab === 'may-bo' ? stats.mayBoTotal : stats.laptopTotal)} máy
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-[11px] text-slate-500 truncate">Sẵn Bán (RTS)</div>
-          <div className="text-base font-bold text-emerald-700 font-mono mt-0.5">{stats.ready} máy</div>
-        </div>
-
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-[11px] text-slate-500 truncate">Đang QC</div>
-          <div className="text-base font-bold text-amber-700 font-mono mt-0.5">{stats.testing} máy</div>
-        </div>
-
-        <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-[11px] text-slate-500 truncate">Đã Bán</div>
-          <div className="text-base font-bold text-purple-700 font-mono mt-0.5">{stats.sold} máy</div>
-        </div>
-      </div>
+      {/* (Đã bỏ hàng thẻ KPI: số lượng theo trạng thái đã hiển thị ở
+          tab điều hướng và chip lọc ngay dưới đây — tránh lặp 3 lần.) */}
 
       {/* ========================================================================= */}
       {/* TAB 1: MÁY TÍNH & LAPTOP */}

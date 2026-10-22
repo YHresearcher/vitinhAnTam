@@ -39,7 +39,7 @@ export function FinanceTabsHeader({
             <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
             <path d="M22 12A10 10 0 0 0 12 2v10z" />
           </svg>
-          <span>Cơ Cấu 4 Mảng</span>
+          <span>Cơ cấu</span>
         </button>
 
         <button
@@ -54,7 +54,7 @@ export function FinanceTabsHeader({
           <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-          <span>Quỹ Bảo Hành 5%</span>
+          <span>Quỹ bảo hành</span>
           {typeof warrantyCount === 'number' && warrantyCount > 0 && (
             <span className="px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 text-[10px] font-mono">
               {warrantyCount}
@@ -77,7 +77,12 @@ export function FinanceTabsHeader({
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
-          <span>Sổ Quỹ ({ledgerCount})</span>
+          <span>Sổ quỹ</span>
+          {ledgerCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 text-[10px] font-mono">
+              {ledgerCount}
+            </span>
+          )}
         </button>
 
         <button
@@ -93,7 +98,7 @@ export function FinanceTabsHeader({
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <span>Tiền Công KTV</span>
+          <span>Tiền công</span>
         </button>
 
         <button
@@ -110,7 +115,12 @@ export function FinanceTabsHeader({
             <line x1="12" y1="8" x2="12" y2="12" />
             <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <span>Công Nợ ({debtCount})</span>
+          <span>Công nợ</span>
+          {debtCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 text-[10px] font-mono">
+              {debtCount}
+            </span>
+          )}
         </button>
 
         {isAdmin && (
@@ -126,16 +136,7 @@ export function FinanceTabsHeader({
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            <span>Trích Quỹ Admin (10% Key / 5% Máy)</span>
-            <span
-              className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                activeTab === 'admin_deductions'
-                  ? 'bg-purple-900 text-purple-100'
-                  : 'bg-purple-100 text-purple-800'
-              }`}
-            >
-              Admin
-            </span>
+            <span>Quỹ Admin</span>
             {typeof adminDeductionsCount === 'number' && adminDeductionsCount > 0 && (
               <span
                 className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${

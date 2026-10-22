@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Wrench, Bike, Plus } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import CounterRepairTab from '@/components/admin/CounterRepairTab';
 import OnsiteDispatchTab from '@/components/admin/OnsiteDispatchTab';
+import { SlaHealthDashboardChart } from '@/components/dashboard/SlaHealthDashboardChart';
 
 function CuuHoOnsiteContent() {
   const searchParams = useSearchParams();
@@ -24,6 +25,38 @@ function CuuHoOnsiteContent() {
     (t) => t.status === 'received' || t.status === 'diagnosing' || t.status === 'in_progress' || t.status === 'processing'
   ).length;
   const pendingDispatchesCount = onsiteDispatches.filter((d) => d.status !== 'completed').length;
+
+  // SLA Health Data (chuyển từ Dashboard sang đây — đúng ngữ cảnh vận hành dịch vụ)
+  const slaHealthData = useMemo(() => {
+    const now = new Date();
+    let overdue = 0;
+    let nearDeadline = 0;
+    let onTrack = 0;
+    let readyDeliver = 0;
+    let completed = 0;
+
+    tickets.forEach((t) => {
+      if (t.status === 'completed') {
+        completed++;
+      } else if (t.status === 'ready' || t.status === 'ready_deliver') {
+        readyDeliver++;
+      } else if (t.status === 'cancelled') {
+        // Skip
+      } else {
+        const est = t.estimated_completion ? new Date(t.estimated_completion) : null;
+        const diffHours = est && !isNaN(est.getTime()) ? (est.getTime() - now.getTime()) / (1000 * 60 * 60) : 48;
+        if (diffHours < 0) {
+          overdue++;
+        } else if (diffHours < 24) {
+          nearDeadline++;
+        } else {
+          onTrack++;
+        }
+      }
+    });
+
+    return { overdue, nearDeadline, onTrack, readyDeliver, completed };
+  }, [tickets]);
 
   useEffect(() => {
     if (ticketIdParam) {
@@ -118,6 +151,11 @@ function CuuHoOnsiteContent() {
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>Tạo Phiếu Mới</span>
         </Link>
+      </div>
+
+      {/* Sức khỏe SLA dịch vụ (trước đây ở Dashboard) */}
+      <div className="max-w-xl">
+        <SlaHealthDashboardChart slaData={slaHealthData} />
       </div>
 
       {/* Tab Panels */}

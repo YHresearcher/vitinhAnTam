@@ -41,7 +41,7 @@ export function PaymentQrSettingsSection({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-100 dark:border-slate-800 pb-2 mb-4">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
           <QrCode className="w-4 h-4 text-[#C0392B]" />
-          4. Mã QR Thanh Toán &amp; Tài Khoản Ngân Hàng (Hiển thị khi mua hàng)
+          IV. Mã QR Thanh Toán &amp; Tài Khoản Ngân Hàng (Hiển thị khi mua hàng)
         </h3>
         <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
           Tự động hiển thị khi khách chọn thanh toán QR Code / Chuyển khoản

@@ -436,9 +436,6 @@ export default function QuanLyKeyPage() {
       {/* HEADER SECTION */}
       <div className="bg-[#FFFDF9] p-6 rounded-2xl border border-[#E8E2D9] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#C0392B] mb-1">
-            {isAdmin ? 'QUẢN LÝ KHO KEY & PHÊ DUYỆT XUẤT KHO' : 'YÊU CẦU CẤP KEY BẢN QUYỀN GỬI ADMIN DUYỆT'}
-          </div>
           <h1 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
             QUẢN LÝ KHO KEY BẢN QUYỀN WINDOWS &amp; OFFICE
           </h1>
@@ -480,8 +477,9 @@ export default function QuanLyKeyPage() {
         </div>
       </div>
 
-      {/* STATS OVERVIEW CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      {/* STATS OVERVIEW CARDS — 2 thẻ vận hành (đã kích hoạt / key lỗi)
+          chỉ hiện khi có số liệu, tránh hàng thẻ toàn số 0 */}
+      <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${stats.activated > 0 || stats.faulty > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-2 max-w-2xl'}`}>
         <div className="bg-[#FFFDF9] p-4 rounded-xl border border-[#E8E2D9] shadow-xs">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#6E5D53]">
             TỔNG KEY TRONG KHO
@@ -506,29 +504,33 @@ export default function QuanLyKeyPage() {
           </div>
         </div>
 
-        <div className="bg-[#FFFDF9] p-4 rounded-xl border border-blue-200 shadow-xs">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
-            ĐÃ KÍCH HOẠT THÀNH CÔNG
+        {stats.activated > 0 && (
+          <div className="bg-[#FFFDF9] p-4 rounded-xl border border-blue-200 shadow-xs">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
+              ĐÃ KÍCH HOẠT THÀNH CÔNG
+            </div>
+            <div className="text-2xl font-black text-blue-700 font-mono mt-1">
+              {stats.activated}
+            </div>
+            <div className="text-[11px] text-blue-800 mt-0.5">
+              Đã gửi email cho khách
+            </div>
           </div>
-          <div className="text-2xl font-black text-blue-700 font-mono mt-1">
-            {stats.activated}
-          </div>
-          <div className="text-[11px] text-blue-800 mt-0.5">
-            Đã gửi email cho khách
-          </div>
-        </div>
+        )}
 
-        <div className="bg-[#FFFDF9] p-4 rounded-xl border border-rose-200 shadow-xs">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
-            KEY BÁO LỖI / XIN ĐỔI
+        {stats.faulty > 0 && (
+          <div className="bg-[#FFFDF9] p-4 rounded-xl border border-rose-200 shadow-xs">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
+              KEY BÁO LỖI / XIN ĐỔI
+            </div>
+            <div className="text-2xl font-black text-rose-700 font-mono mt-1">
+              {stats.faulty}
+            </div>
+            <div className="text-[11px] text-rose-800 mt-0.5">
+              Lưu vết để bảo hành
+            </div>
           </div>
-          <div className="text-2xl font-black text-rose-700 font-mono mt-1">
-            {stats.faulty}
-          </div>
-          <div className="text-[11px] text-rose-800 mt-0.5">
-            Lưu vết để bảo hành
-          </div>
-        </div>
+        )}
       </div>
 
       {/* NAVIGATION TABS */}

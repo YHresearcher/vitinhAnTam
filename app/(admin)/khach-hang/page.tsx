@@ -23,6 +23,7 @@ export default function KhachHangCrmPage() {
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<'all' | 'VIP' | 'Thân thiết' | 'Standard'>('all');
   const [selectedZone, setSelectedZone] = useState<string>('all');
 
@@ -60,14 +61,15 @@ export default function KhachHangCrmPage() {
     return { total, vipCount, loyalCount, standardCount };
   }, [customers]);
 
-  // Unique Zones
+  // Unique Zones — loại các giá trị dữ liệu thử ("Test Address", "test"…)
+  // khỏi chip lọc cho đỡ rối; khách thuộc các khu vực đó vẫn hiện ở "Tất cả".
   const zones = useMemo(() => {
     const set = new Set<string>();
     customers.forEach((c) => {
       if (c.area_zone) set.add(c.area_zone);
       else if (c.address) set.add(c.address.split(',').pop()?.trim() || 'Khu vực khác');
     });
-    return Array.from(set);
+    return Array.from(set).filter((zone) => !/test/i.test(zone));
   }, [customers]);
 
   // Filtered List
@@ -299,8 +301,8 @@ export default function KhachHangCrmPage() {
         </div>
       </div>
 
-      {/* Smart CRM Automation Alerts: 3-Day Birthday & 6-Month Maintenance */}
-      <CrmAlertsPanel customers={customers} inventory={inventory} tickets={tickets} />
+      {/* Smart CRM đã chuyển xuống DƯỚI bảng khách hàng (bảng là nội dung
+          chính của trang; nhắc việc CRM chỉ là phần phụ trợ). */}
 
       {/* Search & Filter Toolbar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
@@ -506,7 +508,7 @@ export default function KhachHangCrmPage() {
                         </button>
                       </td>
 
-                      {/* Actions */}
+                      {/* Actions — chỉ "Xem" là nút chính; Sửa/Xóa gom vào menu ⋯ */}
                       <td className="py-3.5 px-4 text-center">
                         <div className="inline-flex items-center gap-1.5">
                           <button
@@ -516,23 +518,51 @@ export default function KhachHangCrmPage() {
                           >
                             Xem
                           </button>
-                          {canAccessCRM() && (
-                            <button
-                              onClick={() => handleOpenEdit(cust)}
-                              className="px-2 py-1 text-xs text-emerald-700 hover:bg-emerald-50 font-medium rounded transition-colors"
-                              title="Chỉnh sửa thông tin"
-                            >
-                              Sửa
-                            </button>
-                          )}
-                          {currentUser.role === 'admin' && (
-                            <button
-                              onClick={() => handleDeleteCustomer(cust)}
-                              className="px-2 py-1 text-xs text-rose-600 hover:bg-rose-50 font-medium rounded transition-colors"
-                              title="Xóa khách hàng"
-                            >
-                              Xóa
-                            </button>
+                          {(canAccessCRM() || currentUser.role === 'admin') && (
+                            <div className="relative">
+                              <button
+                                onClick={() =>
+                                  setOpenActionMenuId(openActionMenuId === cust.id ? null : cust.id)
+                                }
+                                className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 font-bold rounded transition-colors"
+                                title="Thao tác khác"
+                                aria-label="Thao tác khác"
+                              >
+                                ⋯
+                              </button>
+                              {openActionMenuId === cust.id && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setOpenActionMenuId(null)}
+                                  />
+                                  <div className="absolute right-0 top-full mt-1 z-20 w-36 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-left">
+                                    {canAccessCRM() && (
+                                      <button
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          handleOpenEdit(cust);
+                                        }}
+                                        className="block w-full px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50 font-medium"
+                                      >
+                                        Sửa thông tin
+                                      </button>
+                                    )}
+                                    {currentUser.role === 'admin' && (
+                                      <button
+                                        onClick={() => {
+                                          setOpenActionMenuId(null);
+                                          handleDeleteCustomer(cust);
+                                        }}
+                                        className="block w-full px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 font-medium"
+                                      >
+                                        Xóa khách hàng
+                                      </button>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
@@ -544,6 +574,9 @@ export default function KhachHangCrmPage() {
           </table>
         </div>
       </div>
+
+      {/* Smart CRM Automation Alerts — đặt dưới bảng danh sách */}
+      <CrmAlertsPanel customers={customers} inventory={inventory} tickets={tickets} />
 
       {/* ======================================================== */}
       {/* MODAL 1: HỒ SƠ KHÁCH HÀNG 360 ĐỘ (CUSTOMER 360 VIEW) */}

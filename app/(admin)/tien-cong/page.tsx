@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { ShiftLog, formatDateVN } from '@/lib/supabase';
+import { TechnicianWorkloadRecharts } from '@/components/dashboard/TechnicianWorkloadRecharts';
 // Lucide icons removed for minimalist text design
 
 
@@ -12,8 +13,25 @@ export default function TienCongPage() {
     canAccessPayroll,
     shiftLogs,
     users,
+    tickets,
     addShiftLog,
   } = useStore();
+
+  // Năng suất KTV theo phiếu (chuyển từ Dashboard sang đây)
+  const technicianWorkloadData = React.useMemo(() => {
+    const techs = users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced');
+    return techs.map((u) => {
+      const techTickets = tickets.filter((t) => t.technician_name === u.name);
+      const completed = techTickets.filter((t) => t.status === 'completed' || t.status === 'delivered').length;
+      const inProgress = techTickets.filter((t) => t.status !== 'completed' && t.status !== 'delivered' && t.status !== 'cancelled').length;
+      return {
+        name: u.name.split(' ').slice(-1)[0] || u.name,
+        completed,
+        inProgress,
+        isOutsourced: u.role === 'outsourced',
+      };
+    });
+  }, [users, tickets]);
 
   const availableTechnicians = React.useMemo(() => {
     return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'admin');
@@ -146,6 +164,11 @@ export default function TienCongPage() {
             + Ghi Nhận Ca Mới
           </button>
         </div>
+      </div>
+
+      {/* Năng suất KTV (trước đây ở Dashboard) */}
+      <div className="max-w-xl">
+        <TechnicianWorkloadRecharts data={technicianWorkloadData} />
       </div>
 
       {/* Payroll KPI Cards - Clean Typography, No Empty Icon Boxes */}

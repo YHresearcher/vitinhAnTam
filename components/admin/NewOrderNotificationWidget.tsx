@@ -169,7 +169,7 @@ export function NewOrderNotificationWidget() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [, setTick] = useState(0);
 
-  const prevTotalCount = useRef(0);
+  const prevTotalCount = useRef(-1); // -1 = chưa có mốc so sánh (lần tải đầu không kêu chuông)
   const hasUserDismissed = useRef(false);
 
   // Tự động chuyển tab nếu tab hiện tại không có dữ liệu
@@ -231,16 +231,16 @@ export function NewOrderNotificationWidget() {
     }
   };
 
-  // Tự động mở khi có đơn hàng hoặc yêu cầu dịch vụ mới
+  // KHÔNG tự bung panel nữa (bản cũ tự mở ở mọi trang, che mất nội dung
+  // bảng/cột thao tác). Chỉ phát chuông khi có yêu cầu mới tăng lên;
+  // panel chỉ mở khi người dùng bấm vào chuông.
   useEffect(() => {
     if (!canView) return;
 
-    if (totalCount > 0 && !hasUserDismissed.current) {
-      setIsOpen(true);
-      if (totalCount > prevTotalCount.current) {
-        playChime();
-      }
-    } else if (totalCount === 0) {
+    if (prevTotalCount.current >= 0 && totalCount > prevTotalCount.current) {
+      playChime();
+    }
+    if (totalCount === 0) {
       setIsOpen(false);
       hasUserDismissed.current = false;
     }
@@ -308,7 +308,7 @@ export function NewOrderNotificationWidget() {
       className={`fixed print:hidden transition-all duration-300 ${
         isOpen
           ? 'bottom-3 right-3 left-3 sm:left-auto sm:bottom-6 sm:right-4 w-auto sm:w-[440px] max-w-[440px] z-[85]'
-          : 'bottom-20 right-4 z-40'
+          : 'bottom-6 right-4 z-40'
       }`}
     >
       {isOpen ? (
@@ -563,30 +563,24 @@ export function NewOrderNotificationWidget() {
           </div>
         </div>
       ) : (
-        /* ================= FLOATING PILL KHI THU NHỎ (STACKED AT bottom-20 right-4) ================= */
+        /* ================= CHUÔNG GỌN KHI ĐÓNG — badge số lượng, bấm mới mở panel ================= */
         <button
           type="button"
           onClick={() => {
             hasUserDismissed.current = false;
             setIsOpen(true);
           }}
-          className="group flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white shadow-xl hover:shadow-2xl border-2 border-red-400 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          title="Nhấp để xem đơn hàng & yêu cầu dịch vụ mới"
+          className="group relative w-12 h-12 rounded-full bg-gradient-to-r from-[#2B1810] via-red-950 to-[#C0392B] text-white shadow-xl hover:shadow-2xl border-2 border-red-400/70 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+          title={`Có ${totalCount} đơn hàng / yêu cầu dịch vụ mới — nhấp để xem`}
+          aria-label={`Thông báo: ${totalCount} yêu cầu mới`}
         >
-          <span className="relative flex h-2.5 w-2.5">
+          <BellRing className="w-5 h-5 text-amber-300" />
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-amber-400 text-slate-950 font-mono text-[11px] font-black flex items-center justify-center border-2 border-white dark:border-slate-900">
+            {totalCount}
+          </span>
+          <span className="absolute top-0.5 left-0.5 flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-300"></span>
-          </span>
-          <BellRing className="w-4 h-4 text-amber-300 animate-bounce" />
-          <span className="text-xs font-bold tracking-wide">
-            {pendingOrders.length > 0 && pendingServiceRequests.length > 0
-              ? `${totalCount} Đơn & Dịch vụ`
-              : pendingServiceRequests.length > 0
-              ? `${pendingServiceRequests.length} Yêu cầu DV`
-              : `${pendingOrders.length} Đơn hàng mới`}
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-mono text-[11px] font-black">
-            {totalCount}
           </span>
         </button>
       )}

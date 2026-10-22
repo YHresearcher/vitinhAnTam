@@ -190,43 +190,59 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
 
         {/* Navigation links */}
         <nav className="flex flex-col gap-0.5 px-3 mt-3 overflow-y-auto max-h-[calc(100vh-210px)] scrollbar-thin">
-          <div className="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            Phân hệ nghiệp vụ
-          </div>
-          {navItems.map((item) => {
-            const [itemPath, itemQuery] = item.href.split('?');
-            const isActive = itemQuery
-              ? pathname === itemPath && (typeof window !== 'undefined' && window.location.search.includes(itemQuery))
-              : pathname === item.href || (item.href !== '/dashboard' && pathname === itemPath);
-            const IconComponent = item.icon;
+          {(
+            [
+              { key: 'overview', label: 'Tổng quan & tài chính', hrefs: ['/dashboard', '/tai-chinh'] },
+              { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
+              { key: 'system', label: 'Nội dung & hệ thống', hrefs: ['/bai-viet', '/thanh-vien', '/cai-dat'] },
+            ] as const
+          ).map((group) => {
+            const groupItems = navItems.filter((item) =>
+              (group.hrefs as readonly string[]).includes(item.href)
+            );
+            if (groupItems.length === 0) return null;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch={true}
-                onClick={handleNavClick}
-                className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 ${
-                  isActive
-                    ? 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80 shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-medium'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <IconComponent
-                    className={`w-4 h-4 shrink-0 transition-colors ${
-                      isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                    }`}
-                  />
-                  <span className="text-xs sm:text-[13px] truncate">{item.label}</span>
+              <React.Fragment key={group.key}>
+                <div className="px-3 pt-2.5 pb-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  {group.label}
                 </div>
-                {item.badge && (
-                  <span
-                    className={`px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0 ${item.badgeColor}`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
+                {groupItems.map((item) => {
+                  const [itemPath, itemQuery] = item.href.split('?');
+                  const isActive = itemQuery
+                    ? pathname === itemPath && (typeof window !== 'undefined' && window.location.search.includes(itemQuery))
+                    : pathname === item.href || (item.href !== '/dashboard' && pathname === itemPath);
+                  const IconComponent = item.icon;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      prefetch={true}
+                      onClick={handleNavClick}
+                      className={`group flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-150 ${
+                        isActive
+                          ? 'bg-blue-50/90 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-800/80 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-medium'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <IconComponent
+                          className={`w-4 h-4 shrink-0 transition-colors ${
+                            isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
+                          }`}
+                        />
+                        <span className="text-xs sm:text-[13px] truncate">{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-full shrink-0 ${item.badgeColor}`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </React.Fragment>
             );
           })}
 

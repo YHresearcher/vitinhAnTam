@@ -639,8 +639,9 @@ export default function CaiDatPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-      {/* Header gọn gàng với nút Lưu nhanh */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+      {/* Header dính (sticky) — nút Lưu cấu hình ở đây là nút lưu DUY NHẤT
+          của trang, luôn trong tầm tay khi cuộn qua các mục dài */}
+      <div className="sticky top-16 z-30 bg-[#FAF7F2]/95 backdrop-blur flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 border-b border-slate-200">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Cấu hình hệ thống
@@ -1000,17 +1001,8 @@ export default function CaiDatPage() {
                     </div>
                   </div>
 
-                  {/* Nút lưu chung */}
-                  <div className="pt-6 border-t border-slate-200 flex justify-end">
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={isSaving}
-                      className="bg-[#C0392B] hover:bg-[#A93226] text-white font-bold h-10 px-8 rounded-lg text-sm shadow-md"
-                    >
-                      Lưu Tất Cả Cấu Hình Thương Hiệu &amp; Bot
-                    </Button>
-                  </div>
+                  {/* Không còn nút lưu riêng trong tab — dùng nút "Lưu cấu
+                      hình" dính ở đầu trang (cùng một thao tác lưu). */}
                 </form>
               </Card>
             ),

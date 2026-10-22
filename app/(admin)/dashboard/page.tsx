@@ -8,13 +8,8 @@ import {
   FinancialDrilldownModal,
   FinancialTransactionItem,
 } from '@/components/admin/FinancialDrilldownModal';
-import { CrmAlertsPanel } from '@/components/admin/CrmAlertsPanel';
 import { InventoryItem, OnsiteDispatch } from '@/lib/supabase';
 import { InteractiveCashflowChart } from '@/components/dashboard/InteractiveCashflowChart';
-import { RevenuePillarsDonutChart } from '@/components/dashboard/RevenuePillarsDonutChart';
-import { SlaHealthDashboardChart } from '@/components/dashboard/SlaHealthDashboardChart';
-import { TechnicianWorkloadRecharts } from '@/components/dashboard/TechnicianWorkloadRecharts';
-import { InventoryAgingRecharts } from '@/components/dashboard/InventoryAgingRecharts';
 import { message } from 'antd';
 
 export default function DashboardPage() {
@@ -376,91 +371,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
   }, [inventory, licenseKeys, tickets, cashflowTimeframe]);
 
   // 4 Revenue Pillars Data for Donut Chart
-  const revenuePillarsData = useMemo(() => {
-    const { breakdown } = financialAnalytics;
-    return [
-      {
-        name: 'Bán Kho Máy',
-        value: breakdown.machines.revenue,
-        cost: breakdown.machines.cost,
-        profit: breakdown.machines.profit,
-        count: breakdown.machines.count,
-        color: '#3b82f6',
-      },
-      {
-        name: 'Sửa Chữa Tiếp Nhận',
-        value: breakdown.tickets.revenue,
-        cost: breakdown.tickets.cost,
-        profit: breakdown.tickets.profit,
-        count: breakdown.tickets.count,
-        color: '#10b981',
-      },
-      {
-        name: 'Cứu Hộ Onsite',
-        value: onsiteDispatches.length * 150000,
-        cost: Math.round(onsiteDispatches.length * 150000 * 0.25),
-        profit: Math.round(onsiteDispatches.length * 150000 * 0.75),
-        count: onsiteDispatches.length,
-        color: '#f59e0b',
-      },
-      {
-        name: 'Key Win & Office',
-        value: breakdown.keys.revenue,
-        cost: breakdown.keys.cost,
-        profit: breakdown.keys.profit,
-        count: breakdown.keys.count,
-        color: '#ec4899',
-      },
-    ];
-  }, [financialAnalytics, onsiteDispatches]);
 
-  // SLA Health Data for Service Monitoring
-  const slaHealthData = useMemo(() => {
-    const now = new Date();
-    let overdue = 0;
-    let nearDeadline = 0;
-    let onTrack = 0;
-    let readyDeliver = 0;
-    let completed = 0;
-
-    tickets.forEach((t) => {
-      if (t.status === 'completed') {
-        completed++;
-      } else if (t.status === 'ready' || t.status === 'ready_deliver') {
-        readyDeliver++;
-      } else if (t.status === 'cancelled') {
-        // Skip
-      } else {
-        const est = t.estimated_completion ? new Date(t.estimated_completion) : null;
-        const diffHours = est && !isNaN(est.getTime()) ? (est.getTime() - now.getTime()) / (1000 * 60 * 60) : 48;
-        if (diffHours < 0) {
-          overdue++;
-        } else if (diffHours < 24) {
-          nearDeadline++;
-        } else {
-          onTrack++;
-        }
-      }
-    });
-
-    return { overdue, nearDeadline, onTrack, readyDeliver, completed };
-  }, [tickets]);
 
   // Technician Workload Data
-  const technicianWorkloadData = useMemo(() => {
-    const techs = users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced');
-    return techs.map((u) => {
-      const techTickets = tickets.filter((t) => t.technician_name === u.name);
-      const completed = techTickets.filter((t) => t.status === 'completed' || t.status === 'delivered').length;
-      const inProgress = techTickets.filter((t) => t.status !== 'completed' && t.status !== 'delivered' && t.status !== 'cancelled').length;
-      return {
-        name: u.name.split(' ').slice(-1)[0] || u.name,
-        completed,
-        inProgress,
-        isOutsourced: u.role === 'outsourced',
-      };
-    });
-  }, [users, tickets]);
+
 
   // Xử lý ca cứu hộ (Tối giản 4 bước: pending -> dispatched -> in_progress -> completed)
   const handleUpdateDispatch = async (id: string, currentStatus: OnsiteDispatch['status']) => {
@@ -767,8 +681,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       {/* 2 BIỂU ĐỒ TRỌNG TÂM: DÒNG TIỀN & DOANH THU 4 TRỤ CỘT       */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* CHART 1: BIỂU ĐỒ HOẠT ĐỘNG / DOANH SỐ */}
-        <div className="lg:col-span-7">
+        {/* BIỂU ĐỒ DÒNG TIỀN — biểu đồ duy nhất ở Dashboard.
+            Cơ cấu doanh thu 4 trụ cột đã có ở Tài chính (tab Cơ cấu);
+            SLA dịch vụ đã chuyển sang trang Sửa chữa & Cứu hộ; năng
+            suất KTV đã chuyển sang trang Tiền công KTV; phân bổ tồn
+            kho đã có mục cảnh báo tồn lâu ngay bên dưới. */}
+        <div className="lg:col-span-12">
           <InteractiveCashflowChart
             data={cashflowData}
             isAdmin={isAdmin}
@@ -777,31 +695,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
             onOpenDrilldown={() => setIsDrilldownOpen(true)}
           />
         </div>
-        {/* CHART 2: CƠ CẤU DOANH THU 4 TRỤ CỘT */}
-        <div className="lg:col-span-5">
-          <RevenuePillarsDonutChart
-            data={revenuePillarsData}
-            totalRevenue={financialAnalytics.totalIncome}
-          />
-        </div>
-      </div>
-
-      {/* ======================================================== */}
-      {/* 3 BIỂU ĐỒ VẬN HÀNH: SLA DỊCH VỤ, KTV, TỒN KHO           */}
-      {/* ======================================================== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <SlaHealthDashboardChart slaData={slaHealthData} />
-        <TechnicianWorkloadRecharts data={technicianWorkloadData} />
-        <InventoryAgingRecharts
-          inventoryData={{
-            rts: deviceStats.rts,
-            qc: deviceStats.qc,
-            repair: tickets.filter((t) => t.status === 'processing' || t.status === 'in_progress').length,
-            sold: deviceStats.sold,
-            agingCount: deviceStats.allAgingItems.length,
-          }}
-          totalDevices={deviceStats.total}
-        />
       </div>
 
 
@@ -962,10 +855,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         </div>
       </div>
 
-      {/* ======================================================== */}
-      {/* SMART CRM AUTOMATION: SINH NHẬT & NHẮC BẢO DƯỠNG 6T     */}
-      {/* ======================================================== */}
-      <CrmAlertsPanel customers={customers} inventory={inventory} tickets={tickets} compact={true} />
+      {/* Smart CRM (sinh nhật / nhắc bảo dưỡng / sắp hết BH) chỉ đặt ở
+          trang Khách hàng — không lặp lại ở Dashboard. */}
 
       {/* ======================================================== */}
       {/* THÔNG TIN VẬN HÀNH DẠNG DÒNG NGẮN GỌN (COMPACT ROW LIST) */}

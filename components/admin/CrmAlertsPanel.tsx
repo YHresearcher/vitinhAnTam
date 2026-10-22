@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Customer, InventoryItem, ServiceTicket } from '@/lib/supabase';
 import { useViTinhAnTamStore } from '@/lib/store';
 import {
@@ -241,6 +241,37 @@ export function CrmAlertsPanel({
     return result.sort((a, b) => a.daysRemaining - b.daysRemaining);
   }, [customers, inventory, selectedSalesFilter, currentUser, isManagerOrAdmin]);
 
+  // Ẩn các tab không có dữ liệu; nếu tab đang chọn trống thì nhảy sang
+  // tab đầu tiên có dữ liệu.
+  const totalAlerts =
+    upcomingBirthdayCustomers.length + followUpMilestones.length + expiringWarranties.length;
+  useEffect(() => {
+    const counts = {
+      birthday: upcomingBirthdayCustomers.length,
+      followup: followUpMilestones.length,
+      warranty: expiringWarranties.length,
+    };
+    if (counts[activeAlertTab] === 0) {
+      const firstNonEmpty = (Object.keys(counts) as Array<keyof typeof counts>).find(
+        (key) => counts[key] > 0
+      );
+      if (firstNonEmpty) setActiveAlertTab(firstNonEmpty);
+    }
+  }, [activeAlertTab, upcomingBirthdayCustomers.length, followUpMilestones.length, expiringWarranties.length]);
+
+  // Không có bất kỳ nhắc việc nào → thu thành một dải thông tin gọn
+  if (totalAlerts === 0) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs px-4 py-3 flex items-center gap-2 text-xs text-slate-500 font-sans">
+        <Sparkles className="w-4 h-4 text-amber-400" />
+        <span>
+          <strong className="text-slate-700">Smart CRM:</strong> hôm nay không có sinh nhật, mốc hỏi
+          thăm hay thiết bị sắp hết bảo hành cần xử lý.
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden font-sans">
       {/* Header & Tabs */}
@@ -282,6 +313,7 @@ export function CrmAlertsPanel({
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 bg-slate-50/60 px-4 pt-2.5 gap-2 overflow-x-auto">
+        {upcomingBirthdayCustomers.length > 0 && (
         <button
           type="button"
           onClick={() => setActiveAlertTab('birthday')}
@@ -297,7 +329,9 @@ export function CrmAlertsPanel({
             {upcomingBirthdayCustomers.length}
           </span>
         </button>
+        )}
 
+        {followUpMilestones.length > 0 && (
         <button
           type="button"
           onClick={() => setActiveAlertTab('followup')}
@@ -313,7 +347,9 @@ export function CrmAlertsPanel({
             {followUpMilestones.length}
           </span>
         </button>
+        )}
 
+        {expiringWarranties.length > 0 && (
         <button
           type="button"
           onClick={() => setActiveAlertTab('warranty')}
@@ -329,6 +365,7 @@ export function CrmAlertsPanel({
             {expiringWarranties.length}
           </span>
         </button>
+        )}
       </div>
 
       {/* Content Body */}
