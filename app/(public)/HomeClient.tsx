@@ -171,9 +171,29 @@ export default function HomePage() {
     return 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=600&auto=format&fit=crop&q=80';
   };
   
+  // Catalog key công khai (chỉ số lượng + giá theo phân loại, không có mã
+  // key) cho khách vãng lai — dữ liệu key đầy đủ chỉ nhân viên mới có.
+  const [publicKeyCatalog, setPublicKeyCatalog] = useState<
+    Array<{ id: string; name: string; type: string; description: string; availableStock: number; price: number }>
+  >([]);
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/keys/public-catalog')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled && json?.success && Array.isArray(json.categories)) {
+          setPublicKeyCatalog(json.categories);
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Software products available in stock
   const availableSoftwareCategories = useMemo(() => {
-    return (keyCategories || [])
+    const fromStore = (keyCategories || [])
       .map((cat) => {
         const keys = (licenseKeys || []).filter(
           (k) => k.category_id === cat.id && k.status === 'available'
@@ -185,7 +205,18 @@ export default function HomePage() {
         };
       })
       .filter((cat) => cat.availableStock > 0);
-  }, [keyCategories, licenseKeys]);
+    if (fromStore.length > 0) return fromStore;
+    // Khách vãng lai: dùng catalog công khai tổng hợp
+    return publicKeyCatalog.map((cat) => ({
+      id: cat.id,
+      name: cat.name,
+      type: cat.type as 'windows' | 'office' | 'others',
+      description: cat.description,
+      is_default: false,
+      availableStock: cat.availableStock,
+      price: cat.price,
+    }));
+  }, [keyCategories, licenseKeys, publicKeyCatalog]);
 
   const totalReadyStock = useMemo(
     () => inStockProducts.reduce((acc, curr) => acc + curr.stockCount, 0),
