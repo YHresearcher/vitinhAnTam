@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 
 // Protected API.
 // `x-user-role` do proxy.ts đặt TỪ SESSION ĐÃ KÝ và đè lên mọi giá trị client gửi lên.
@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (isSupabaseConfigured() && supabase) {
+  const supabase = getServerSupabase();
+  if (supabase) {
     try {
       const { data, error } = await supabase.from('inventory_items').select('*').order('created_at', { ascending: false });
       if (!error && data) {

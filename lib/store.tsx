@@ -987,17 +987,32 @@ export function StoreProvider({
         if (!isUsingSupabase || !supabase) return false;
 
         // 1. Tải kho máy công khai, linh kiện và blog (dùng cho cả khách vãng lai và nhân sự)
+        // Khách vãng lai (anon) chỉ còn quyền SELECT trên các cột an toàn
+        // của 2 bảng catalog (B3: ẩn cost_price/import_price/unit_cost/
+        // SĐT khách) và PostgREST từ chối select('*') khi chỉ có quyền
+        // theo cột — nên khách phải liệt kê cột tường minh. Nhân viên
+        // (JWT authenticated) giữ quyền toàn bảng, dùng '*'.
+        const PUBLIC_INVENTORY_COLUMNS =
+          'id, brand, burn_in_duration, cpu, created_at, customer_name, device_model, form_factor, image_urls, import_date, model, price, qc_status, quantity, ram, retail_price, serial_number, service_tag, shelf_location, specs, specs_summary, ssd_capacity, ssd_health, stock_quantity, warranty_months' as const;
+        const PUBLIC_SPARE_PART_COLUMNS =
+          'id, part_name, part_type, condition, quantity_in_stock, warranty_months, distributor, unit_price, shelf_location, notes, created_at' as const;
+        const invQuery = includeAdminData
+          ? supabase.from('inventory_items').select('*')
+          : supabase.from('inventory_items').select(PUBLIC_INVENTORY_COLUMNS);
+        const spQuery = includeAdminData
+          ? supabase.from('spare_parts').select('*')
+          : supabase.from('spare_parts').select(PUBLIC_SPARE_PART_COLUMNS);
         const [invResult, spResult, blogPostRes, blogCatRes] = await Promise.all([
-          supabase.from('inventory_items').select('*'),
-          supabase.from('spare_parts').select('*'),
+          invQuery,
+          spQuery,
           supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
           supabase.from('blog_categories').select('*').order('created_at', { ascending: true }),
         ]);
         if (invResult.error) {
           throw new Error(invResult.error.message);
         }
-        setInventory((invResult.data as InventoryItem[]) || []);
-        if (spResult.data) setSpareParts(spResult.data as SparePart[]);
+        setInventory((invResult.data as unknown as InventoryItem[]) || []);
+        if (spResult.data) setSpareParts(spResult.data as unknown as SparePart[]);
         if (blogPostRes.data && !blogPostRes.error) {
           setBlogPosts(blogPostRes.data as BlogPost[]);
         }
