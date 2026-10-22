@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 import { calculateReadingTime } from '@/lib/reading-time';
 import { isValidAgentKey } from '@/lib/server/agentAuth';
 
@@ -76,8 +77,9 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     };
 
-    if (isSupabaseConfigured() && supabase) {
-      const { data, error } = await supabase.from('blog_posts').insert(postPayload).select().single();
+    const db = getServerSupabase();
+    if (isSupabaseConfigured() && db) {
+      const { data, error } = await db.from('blog_posts').insert(postPayload).select().single();
       if (error) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
       }

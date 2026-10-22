@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   supabase,
+  setStaffAccessToken,
   isSupabaseConfigured,
   UserRole,
   UserAccount,
@@ -592,6 +593,7 @@ export function StoreProvider({
         };
       }
 
+      await ensureStaffToken();
       const found = data.user;
       setCurrentUser(found);
       setIsLoggedIn(true);
@@ -619,7 +621,25 @@ export function StoreProvider({
     }
   };
 
+  // Lấy Supabase JWT cho nhân viên (theo session cookie) và chuyển client
+  // sang dùng JWT đó, để RLS áp policy nhân viên thay vì anon công khai.
+  const ensureStaffToken = async (): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/auth/supabase-token');
+      if (!res.ok) return false;
+      const json = (await res.json().catch(() => null)) as { token?: string } | null;
+      if (json?.token) {
+        setStaffAccessToken(json.token);
+        return true;
+      }
+    } catch {
+      // Mất mạng/API lỗi: giữ client hiện tại, dữ liệu sẽ fallback local.
+    }
+    return false;
+  };
+
   const logout = () => {
+    setStaffAccessToken(null);
     setIsLoggedIn(false);
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEYS.isLoggedIn, 'false');
@@ -1047,6 +1067,7 @@ export function StoreProvider({
       let supabasePulledOk = false;
       try {
         const isStaffLoggedIn = typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEYS.isLoggedIn) === 'true';
+        if (isStaffLoggedIn) await ensureStaffToken();
         if (await pullFromSupabase(isStaffLoggedIn)) {
           setSyncStatus('synced');
           supabasePulledOk = true;
@@ -1818,6 +1839,16 @@ export function StoreProvider({
       clearInterval(tm);
     };
   }, [isLoggedIn, currentUser]);
+
+  // Làm mới Supabase JWT của nhân viên mỗi 30 phút (token sống 8 giờ)
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const tm = setInterval(() => {
+      void ensureStaffToken();
+    }, 30 * 60 * 1000);
+    return () => clearInterval(tm);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Spare parts management (Linh kiện mới & cũ)
   const addSparePart = async (partData: Omit<SparePart, 'id'>): Promise<SparePart> => {

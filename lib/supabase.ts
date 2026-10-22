@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 // Tự động chuẩn hóa nếu người dùng copy cả đường dẫn /rest/v1/ từ Dashboard
@@ -16,9 +16,26 @@ export const isSupabaseConfigured = (): boolean => {
   );
 };
 
-export const supabase = isSupabaseConfigured()
+export let supabase: SupabaseClient | null = isSupabaseConfigured()
   ? createClient(supabaseUrl, supabasePublishableKey)
   : null;
+
+/**
+ * Sau khi nhân viên đăng nhập, server cấp một Supabase JWT (role
+ * "authenticated") qua /api/auth/supabase-token. Gọi hàm này để thay
+ * client anon bằng client mang JWT đó — RLS sẽ áp policy của nhân viên
+ * thay vì policy công khai của anon. Truyền null khi đăng xuất để quay
+ * về client anon. CHỈ gọi từ trình duyệt.
+ */
+export function setStaffAccessToken(token: string | null): void {
+  if (!isSupabaseConfigured()) return;
+  supabase = token
+    ? createClient(supabaseUrl, supabasePublishableKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      })
+    : createClient(supabaseUrl, supabasePublishableKey);
+}
 
 // ==========================================
 // RBAC (ROLE-BASED ACCESS CONTROL)
