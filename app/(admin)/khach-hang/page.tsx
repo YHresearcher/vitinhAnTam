@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { Customer, InventoryItem, ServiceTicket, generateCustomerCode } from '@/lib/supabase';
 import { CrmAlertsPanel } from '@/components/admin/CrmAlertsPanel';
+import { StatCard } from '@/components/admin/ui/StatCard';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { CRM_TIER_CONFIG, calculateCustomerTier, normalizeCustomerTier } from '@/lib/crmTiers';
 // Lucide icons removed for minimalist text design
 
@@ -241,18 +243,17 @@ export default function KhachHangCrmPage() {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <PageHeader
+        title={
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Quản Lý Khách Hàng & CRM
             <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full font-mono">
               {customers.length} khách hàng
             </span>
           </h1>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        }
+        actions={
+          <>
           <button
             onClick={handleExportCSV}
             className="inline-flex items-center justify-center px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg shadow-2xs transition-all active:scale-95 whitespace-nowrap"
@@ -267,8 +268,9 @@ export default function KhachHangCrmPage() {
               + Thêm Khách Hàng Mới
             </button>
           )}
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* RBAC Notice for KTV */}
       {!canAccessCRM() && (
@@ -280,25 +282,10 @@ export default function KhachHangCrmPage() {
 
       {/* KPI Stats Grid - Clean typography, no empty icon boxes */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Tổng Khách Hàng</div>
-          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">{stats.total} người</div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Khách Hàng VIP</div>
-          <div className="text-xl font-bold text-amber-700 mt-1 font-mono">{stats.vipCount} đối tác</div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Khách Thân Thiết</div>
-          <div className="text-xl font-bold text-purple-700 mt-1 font-mono">{stats.loyalCount} khách quen</div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Khu Vực Phục Vụ</div>
-          <div className="text-xl font-bold text-emerald-700 mt-1">Long An - Tây Ninh</div>
-        </div>
+        <StatCard label="Tổng Khách Hàng" value={`${stats.total} người`} />
+        <StatCard label="Khách Hàng VIP" value={`${stats.vipCount} đối tác`} tone="amber" />
+        <StatCard label="Khách Thân Thiết" value={`${stats.loyalCount} khách quen`} tone="purple" />
+        <StatCard label="Khu Vực Phục Vụ" value="Long An - Tây Ninh" tone="emerald" mono={false} />
       </div>
 
       {/* Smart CRM đã chuyển xuống DƯỚI bảng khách hàng (bảng là nội dung

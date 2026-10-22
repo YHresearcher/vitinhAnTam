@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useStore } from '@/lib/store';
 import { ShiftLog, formatDateVN } from '@/lib/supabase';
 import { TechnicianWorkloadRecharts } from '@/components/dashboard/TechnicianWorkloadRecharts';
+import { StatCard } from '@/components/admin/ui/StatCard';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
 // Lucide icons removed for minimalist text design
 
 
@@ -140,17 +142,17 @@ export default function TienCongPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+      <PageHeader
+        title={
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             Tính Tiền Công Theo Ca & Thưởng KPI
             <span className="text-xs px-2.5 py-1 bg-emerald-100 text-emerald-700 font-semibold rounded-full">
               Đặc quyền Admin
             </span>
           </h1>
-        </div>
-
-        <div className="flex items-center gap-2">
+        }
+        actions={
+          <>
           <button
             onClick={handleExportCsv}
             className="px-3.5 py-2 bg-white border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors shadow-2xs"
@@ -163,8 +165,9 @@ export default function TienCongPage() {
           >
             + Ghi Nhận Ca Mới
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {/* Năng suất KTV (trước đây ở Dashboard) */}
       <div className="max-w-xl">
@@ -173,33 +176,10 @@ export default function TienCongPage() {
 
       {/* Payroll KPI Cards - Clean Typography, No Empty Icon Boxes */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Tổng Chi Tiền Công</div>
-          <div className="text-xl font-bold text-slate-900 mt-1 font-mono">
-            {totalWages.toLocaleString('vi-VN')} đ
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Tổng Ca Đã Trực</div>
-          <div className="text-xl font-bold text-emerald-700 mt-1 font-mono">
-            {shiftLogs.length} ca
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Máy Đã Hoàn Tất</div>
-          <div className="text-xl font-bold text-amber-700 mt-1 font-mono">
-            {totalTicketsHandled} máy
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-xs font-medium text-slate-500">Thưởng Năng Suất KPI</div>
-          <div className="text-xl font-bold text-purple-700 mt-1 font-mono">
-            {totalBonus.toLocaleString('vi-VN')} đ
-          </div>
-        </div>
+        <StatCard label="Tổng Chi Tiền Công" value={`${totalWages.toLocaleString('vi-VN')} đ`} />
+        <StatCard label="Tổng Ca Đã Trực" value={`${shiftLogs.length} ca`} tone="emerald" />
+        <StatCard label="Máy Đã Hoàn Tất" value={`${totalTicketsHandled} máy`} tone="amber" />
+        <StatCard label="Thưởng Năng Suất KPI" value={`${totalBonus.toLocaleString('vi-VN')} đ`} tone="purple" />
       </div>
 
       {/* Shift Logs Table */}

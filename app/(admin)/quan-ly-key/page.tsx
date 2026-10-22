@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { KeyCategory, KeyReleaseRequest, LicenseKeyItem } from '@/lib/supabase';
 import { PricePreview } from '@/components/PricePreview';
+import { StatCard } from '@/components/admin/ui/StatCard';
 
 // ===== Nhóm trạng thái (store đang dùng 'approved_waiting_test' / 'active_confirmed') =====
 // Chờ xác nhận active sau khi đã LẤY key
@@ -480,56 +481,13 @@ export default function QuanLyKeyPage() {
       {/* STATS OVERVIEW CARDS — 2 thẻ vận hành (đã kích hoạt / key lỗi)
           chỉ hiện khi có số liệu, tránh hàng thẻ toàn số 0 */}
       <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${stats.activated > 0 || stats.faulty > 0 ? 'sm:grid-cols-4' : 'sm:grid-cols-2 max-w-2xl'}`}>
-        <div className="bg-[#FFFDF9] p-4 rounded-xl border border-[#E8E2D9] shadow-xs">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#6E5D53]">
-            TỔNG KEY TRONG KHO
-          </div>
-          <div className="text-2xl font-black text-[#2B1810] font-mono mt-1">
-            {stats.total}
-          </div>
-          <div className="text-[11px] text-[#6E5D53] mt-0.5">
-            Tất cả các phiên bản
-          </div>
-        </div>
-
-        <div className="bg-[#FFFDF9] p-4 rounded-xl border border-emerald-200 shadow-xs">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
-            KEY SẴN SÀNG CẤP
-          </div>
-          <div className="text-2xl font-black text-emerald-700 font-mono mt-1">
-            {stats.available}
-          </div>
-          <div className="text-[11px] text-emerald-800 mt-0.5">
-            Có thể xuất kho ngay
-          </div>
-        </div>
-
+        <StatCard variant="brand" label="TỔNG KEY TRONG KHO" value={stats.total} sub="Tất cả các phiên bản" />
+        <StatCard variant="brand" label="KEY SẴN SÀNG CẤP" value={stats.available} tone="emerald" sub="Có thể xuất kho ngay" />
         {stats.activated > 0 && (
-          <div className="bg-[#FFFDF9] p-4 rounded-xl border border-blue-200 shadow-xs">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-blue-800">
-              ĐÃ KÍCH HOẠT THÀNH CÔNG
-            </div>
-            <div className="text-2xl font-black text-blue-700 font-mono mt-1">
-              {stats.activated}
-            </div>
-            <div className="text-[11px] text-blue-800 mt-0.5">
-              Đã gửi email cho khách
-            </div>
-          </div>
+          <StatCard variant="brand" label="ĐÃ KÍCH HOẠT THÀNH CÔNG" value={stats.activated} tone="blue" sub="Đã gửi email cho khách" />
         )}
-
         {stats.faulty > 0 && (
-          <div className="bg-[#FFFDF9] p-4 rounded-xl border border-rose-200 shadow-xs">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-rose-800">
-              KEY BÁO LỖI / XIN ĐỔI
-            </div>
-            <div className="text-2xl font-black text-rose-700 font-mono mt-1">
-              {stats.faulty}
-            </div>
-            <div className="text-[11px] text-rose-800 mt-0.5">
-              Lưu vết để bảo hành
-            </div>
-          </div>
+          <StatCard variant="brand" label="KEY BÁO LỖI / XIN ĐỔI" value={stats.faulty} tone="rose" sub="Lưu vết để bảo hành" />
         )}
       </div>
 
