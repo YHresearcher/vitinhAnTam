@@ -17,6 +17,49 @@ const ALLOWED_MIME_TYPES = new Set([
 const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'svg', 'ico']);
 
 /**
+ * Kiểm tra nội dung file thật bằng magic bytes / cấu trúc — không tin
+ * MIME type và đuôi file do client khai. Trả về họ định dạng nhận diện
+ * được ('png' | 'jpeg' | 'webp' | 'ico' | 'svg') hoặc null nếu không
+ * khớp bất kỳ định dạng ảnh nào được phép.
+ * SVG là XML text: bắt buộc bắt đầu bằng thẻ <svg (sau prolog/BOM) và
+ * tuyệt đối không chứa script, event handler hay javascript: URL —
+ * SVG độc được phục vụ cùng origin sẽ chạy script trong ngữ cảnh site.
+ */
+function sniffImageKind(buffer: Buffer): 'png' | 'jpeg' | 'webp' | 'ico' | 'svg' | null {
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) {
+    return 'png';
+  }
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return 'jpeg';
+  }
+  if (
+    buffer.length >= 12 &&
+    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+  ) {
+    return 'webp';
+  }
+  if (
+    buffer.length >= 4 &&
+    buffer[0] === 0x00 && buffer[1] === 0x00 &&
+    (buffer[2] === 0x01 || buffer[2] === 0x02) && buffer[3] === 0x00
+  ) {
+    return 'ico';
+  }
+  const text = buffer.toString('utf8');
+  const stripped = text.replace(/^﻿/, '').trimStart()
+    .replace(/^<\?xml[^>]*\?>/i, '').trimStart()
+    .replace(/^<!DOCTYPE[^>]*>/i, '').trimStart();
+  if (/^<svg[\s>]/i.test(stripped)) {
+    if (/<script|<foreignObject|<iframe|<embed|<object|javascript:|on\w+\s*=/i.test(text)) {
+      return null; // SVG có nội dung chủ động — từ chối
+    }
+    return 'svg';
+  }
+  return null;
+}
+
+/**
  * Xóa an toàn file ảnh cũ trên máy chủ (chỉ xóa trong /public/img/ hoặc /public/uploads/)
  */
 async function safelyDeleteFile(url?: string | null) {
@@ -85,6 +128,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 4b. Kiểm tra nội dung thật (magic bytes): đuôi file/MIME khai báo
+    // phải khớp định dạng nhận diện được từ dữ liệu.
+    const rawBytes = await file.arrayBuffer();
+    const buffer = Buffer.from(rawBytes);
+    const sniffed = sniffImageKind(buffer);
+    const extKind = ext === 'jpg' ? 'jpeg' : ext;
+    if (!sniffed || (ext && extKind !== sniffed)) {
+      return NextResponse.json(
+        { success: false, message: 'Nội dung tệp không khớp định dạng ảnh khai báo hoặc chứa nội dung không an toàn.' },
+        { status: 400 }
+      );
+    }
+
     // 5. Chuẩn hóa tên thư mục (ngăn chặn Directory Traversal)
     const safeFolder = targetFolder.replace(/[^a-zA-Z0-9_-]/g, '') || 'header';
     const uploadDir = join(process.cwd(), 'public', 'img', safeFolder);
@@ -95,13 +151,11 @@ export async function POST(request: NextRequest) {
       .replace(/\.[^/.]+$/, '')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .slice(0, 30);
-    const finalExt = ext || 'png';
+    const finalExt = ext || (sniffed === 'jpeg' ? 'jpg' : sniffed);
     const filename = `${sanitizedBase}-${Date.now()}.${finalExt}`;
     const filePath = join(uploadDir, filename);
 
-    // 7. Ghi file vào thư mục public/img/[safeFolder]
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // 7. Ghi file vào thư mục public/img/[safeFolder] (buffer đã đọc ở bước 4b)
     await writeFile(filePath, buffer);
 
     const publicUrl = `/img/${safeFolder}/${filename}`;

@@ -1,7 +1,11 @@
 import { MetadataRoute } from 'next';
-import { MOCK_BLOG_POSTS } from '@/lib/supabase';
+import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Sitemap đọc bài blog published THẬT từ DB (trước đây đọc MOCK_BLOG_POSTS
+// luôn rỗng nên không có URL blog nào). Lỗi DB → vẫn trả route tĩnh.
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://vitinhantam.com';
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -43,13 +47,30 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const blogRoutes: MetadataRoute.Sitemap = MOCK_BLOG_POSTS.filter((p) => p.status === 'published').map((post) => ({
-    url: `${baseUrl}/tin-tuc/${post.slug}`,
-    lastModified: new Date(post.updated_at || post.published_at || post.created_at),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  }));
+  let blogRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const db = getServerSupabase();
+    if (db) {
+      const { data, error } = await db
+        .from('blog_posts')
+        .select('slug, updated_at, published_at, created_at')
+        .eq('status', 'published')
+        .order('published_at', { ascending: false })
+        .limit(1000);
+      if (!error && data) {
+        blogRoutes = data
+          .filter((post) => typeof post.slug === 'string' && post.slug.length > 0)
+          .map((post) => ({
+            url: `${baseUrl}/tin-tuc/${post.slug}`,
+            lastModified: new Date(post.updated_at || post.published_at || post.created_at),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          }));
+      }
+    }
+  } catch {
+    // Sitemap không bao giờ được sập vì lỗi DB — trả phần tĩnh.
+  }
 
   return [...staticRoutes, ...blogRoutes];
 }
-

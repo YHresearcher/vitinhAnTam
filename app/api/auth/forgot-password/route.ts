@@ -34,7 +34,14 @@ export async function POST(request: NextRequest) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL || 'Vi Tính An Tâm <onboarding@resend.dev>';
   const appUrl = process.env.APP_URL || request.nextUrl.origin;
-  const token = createRecoveryToken(user.id);
+  let token: string;
+  try {
+    token = await createRecoveryToken(user.id);
+  } catch (error) {
+    // Không để lộ lỗi hạ tầng: vẫn trả thông điệp chung như mọi trường hợp khác
+    console.error('Password recovery token creation failed:', error);
+    return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
+  }
   const resetUrl = `${appUrl.replace(/\/$/, '')}/dat-lai-mat-khau?token=${encodeURIComponent(token)}`;
 
   if (!apiKey) {

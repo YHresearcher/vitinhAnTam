@@ -1134,6 +1134,42 @@ export function StoreProvider({
             setAdminDeductions(parsed);
           }
         });
+
+        // Tài chính: đối chiếu với Supabase khi đã đăng nhập nhân viên.
+        // DB có dữ liệu → DB là nguồn chuẩn. DB trống mà local có → đẩy
+        // local lên DB (backfill một lần cho dữ liệu cũ chỉ có ở local).
+        if (localStorage.getItem(STORAGE_KEYS.isLoggedIn) === 'true' && isUsingSupabase && supabase) {
+          try {
+            const [provRes, dedRes] = await Promise.all([
+              supabase.from('warranty_provisions').select('*'),
+              supabase.from('admin_deductions').select('*'),
+            ]);
+            if (!provRes.error && Array.isArray(provRes.data)) {
+              if (provRes.data.length > 0) {
+                setWarrantyProvisions(provRes.data as WarrantyProvision[]);
+                saveToLocal(STORAGE_KEYS.warrantyProvisions, provRes.data);
+              } else {
+                const localProv = JSON.parse(localStorage.getItem(STORAGE_KEYS.warrantyProvisions) || '[]');
+                if (Array.isArray(localProv) && localProv.length > 0) {
+                  await syncFinanceCollection('warranty_provisions', localProv);
+                }
+              }
+            }
+            if (!dedRes.error && Array.isArray(dedRes.data)) {
+              if (dedRes.data.length > 0) {
+                setAdminDeductions(dedRes.data as AdminDeductionItem[]);
+                saveToLocal(STORAGE_KEYS.adminDeductions, dedRes.data);
+              } else {
+                const localDed = JSON.parse(localStorage.getItem(STORAGE_KEYS.adminDeductions) || '[]');
+                if (Array.isArray(localDed) && localDed.length > 0) {
+                  await syncFinanceCollection('admin_deductions', localDed);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('Đối chiếu dữ liệu tài chính với Supabase lỗi:', e);
+          }
+        }
         readJson<BlogPost[]>(STORAGE_KEYS.blogPosts, (parsed) => {
           if (Array.isArray(parsed)) {
             setBlogPosts(parsed);
@@ -2096,6 +2132,25 @@ export function StoreProvider({
     }
   };
 
+  // Đồng bộ 2 collection tài chính (quỹ dự phòng bảo hành + trích admin)
+  // lên Supabase — trước đây chúng chỉ sống ở localStorage của từng
+  // trình duyệt, đổi máy là mất số liệu tiền. Upsert toàn bộ collection
+  // (dữ liệu nhỏ) sau mỗi lần thay đổi; chạy bằng JWT nhân viên.
+  const syncFinanceCollection = async (
+    table: 'warranty_provisions' | 'admin_deductions',
+    rows: unknown[]
+  ): Promise<void> => {
+    if (!isUsingSupabase || !supabase || !Array.isArray(rows) || rows.length === 0) return;
+    try {
+      const { error } = await supabase
+        .from(table)
+        .upsert(rows as Record<string, unknown>[]);
+      if (error) console.warn(`Đồng bộ ${table} lên Supabase lỗi:`, error.message);
+    } catch (err) {
+      console.warn(`Đồng bộ ${table} lên Supabase lỗi:`, err);
+    }
+  };
+
   const addKeyCategory = async (catData: { name: string; type: 'windows' | 'office' | 'others'; description: string; default_import_price?: number | null; default_unit_price?: number | null }): Promise<KeyCategory> => {
     const trimmedName = catData.name.trim();
     // Check if existing category matches (case-insensitive, trimmed)
@@ -2673,6 +2728,7 @@ export function StoreProvider({
       setAdminDeductions((prev) => {
         const next = [newKeyDeduction, ...prev];
         saveToLocal(STORAGE_KEYS.adminDeductions, next);
+        void syncFinanceCollection('admin_deductions', next);
         return next;
       });
     } catch (e) {
@@ -3573,6 +3629,7 @@ export function StoreProvider({
       setWarrantyProvisions((prev) => {
         const next = [newProvision, ...prev];
         saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+        void syncFinanceCollection('warranty_provisions', next);
         return next;
       });
     }
@@ -3606,6 +3663,7 @@ export function StoreProvider({
       setAdminDeductions((prev) => {
         const next = [newAdminDeduction, ...prev];
         saveToLocal(STORAGE_KEYS.adminDeductions, next);
+        void syncFinanceCollection('admin_deductions', next);
         return next;
       });
     } catch (e) {
@@ -3846,6 +3904,7 @@ export function StoreProvider({
         return wp;
       });
       saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+        void syncFinanceCollection('warranty_provisions', next);
       return next;
     });
     return {
@@ -3875,6 +3934,7 @@ export function StoreProvider({
         return wp;
       });
       saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+        void syncFinanceCollection('warranty_provisions', next);
       return next;
     });
     return { unlockedCount: count, unlockedTotal: total };
@@ -3899,6 +3959,7 @@ export function StoreProvider({
         return wp;
       });
       saveToLocal(STORAGE_KEYS.warrantyProvisions, next);
+        void syncFinanceCollection('warranty_provisions', next);
       return next;
     });
     return { settledCount: count, settledTotal: total };
@@ -3916,6 +3977,7 @@ export function StoreProvider({
     setAdminDeductions((prev) => {
       const next = [newItem, ...prev];
       saveToLocal(STORAGE_KEYS.adminDeductions, next);
+        void syncFinanceCollection('admin_deductions', next);
       return next;
     });
     return newItem;

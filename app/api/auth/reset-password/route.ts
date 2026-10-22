@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, message: 'Mật khẩu phải có từ 8 đến 128 ký tự.' }, { status: 400 });
   }
 
-  const userId = consumeRecoveryToken(token);
+  const userId = await consumeRecoveryToken(token);
   if (!userId || !setPassword(userId, password)) {
     return NextResponse.json({ success: false, message: 'Liên kết khôi phục không hợp lệ hoặc đã hết hạn.' }, { status: 400 });
   }
