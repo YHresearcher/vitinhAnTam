@@ -99,6 +99,24 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { action, id, data } = body;
 
+    // Cập nhật giá hàng loạt cho mọi key đang SẴN SÀNG của một phân loại
+    if (action === 'bulk_update_prices') {
+      const categoryId = typeof body.category_id === 'string' ? body.category_id : '';
+      const importPrice = Number(body.import_price);
+      const unitPrice = Number(body.unit_price);
+      if (!categoryId || !Number.isFinite(importPrice) || !Number.isFinite(unitPrice) || importPrice < 0 || unitPrice < 0) {
+        return NextResponse.json({ success: false, message: 'Thiếu phân loại hoặc giá không hợp lệ' }, { status: 400 });
+      }
+      const { data: updated, error } = await db
+        .from('license_keys')
+        .update({ import_price: importPrice, unit_price: unitPrice })
+        .eq('category_id', categoryId)
+        .eq('status', 'available')
+        .select('id');
+      if (error) throw error;
+      return NextResponse.json({ success: true, count: updated?.length || 0 });
+    }
+
     if (!id || !data) {
       return NextResponse.json({ success: false, message: 'Thiếu id hoặc dữ liệu cập nhật' }, { status: 400 });
     }

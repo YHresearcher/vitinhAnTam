@@ -305,7 +305,9 @@ interface StoreContextType {
   licenseKeys: LicenseKeyItem[];
   keyReleaseRequests: KeyReleaseRequest[];
   keyEmailTemplate: KeyEmailTemplateConfig;
-  addKeyCategory: (category: { name: string; type: 'windows' | 'office' | 'others'; description: string }) => Promise<KeyCategory>;
+  addKeyCategory: (category: { name: string; type: 'windows' | 'office' | 'others'; description: string; default_import_price?: number | null; default_unit_price?: number | null }) => Promise<KeyCategory>;
+  updateKeyCategory: (category: KeyCategory) => Promise<void>;
+  bulkUpdateKeyPrices: (categoryId: string, importPrice: number, unitPrice: number) => Promise<{ success: boolean; count: number; message: string }>;
   deleteKeyCategory: (id: string) => Promise<{ success: boolean; message: string }>;
   addLicenseKey: (item: Omit<LicenseKeyItem, 'id' | 'created_at'>) => Promise<LicenseKeyItem>;
   addBatchLicenseKeys: (categoryId: string, categoryName: string, rawKeysText: string, unitPrice?: number, importPrice?: number) => Promise<{ success: boolean; addedCount: number }>;
@@ -2063,15 +2065,17 @@ export function StoreProvider({
     }
   };
 
-  const addKeyCategory = async (catData: { name: string; type: 'windows' | 'office' | 'others'; description: string }): Promise<KeyCategory> => {
+  const addKeyCategory = async (catData: { name: string; type: 'windows' | 'office' | 'others'; description: string; default_import_price?: number | null; default_unit_price?: number | null }): Promise<KeyCategory> => {
     const trimmedName = catData.name.trim();
     // Check if existing category matches (case-insensitive, trimmed)
     const existing = keyCategories.find((c) => c.name.trim().toLowerCase() === trimmedName.toLowerCase());
     if (existing) {
-      // Merge / update description if provided
+      // Merge / update description and default prices if provided
       const updated: KeyCategory = {
         ...existing,
         description: catData.description || existing.description,
+        default_import_price: catData.default_import_price !== undefined ? catData.default_import_price : existing.default_import_price,
+        default_unit_price: catData.default_unit_price !== undefined ? catData.default_unit_price : existing.default_unit_price,
       };
       setKeyCategories((prev) => {
         const next = prev.map((c) => (c.id === existing.id ? updated : c));
@@ -2088,6 +2092,8 @@ export function StoreProvider({
       type: catData.type,
       description: catData.description,
       is_default: false,
+      default_import_price: catData.default_import_price ?? null,
+      default_unit_price: catData.default_unit_price ?? null,
       created_at: new Date().toISOString(),
     };
 
@@ -2098,6 +2104,51 @@ export function StoreProvider({
     });
     syncKeyMutation({ action: 'add_category', category: newCat });
     return newCat;
+  };
+
+  const updateKeyCategory = async (category: KeyCategory): Promise<void> => {
+    setKeyCategories((prev) => {
+      const next = prev.map((c) => (c.id === category.id ? category : c));
+      saveToLocal(STORAGE_KEYS.keyCategories, next);
+      return next;
+    });
+    syncKeyMutation({ action: 'add_category', category });
+  };
+
+  const bulkUpdateKeyPrices = async (
+    categoryId: string,
+    importPrice: number,
+    unitPrice: number
+  ): Promise<{ success: boolean; count: number; message: string }> => {
+    try {
+      const res = await fetch('/api/keys', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk_update_prices',
+          category_id: categoryId,
+          import_price: importPrice,
+          unit_price: unitPrice,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        return { success: false, count: 0, message: json?.message || 'Cập nhật giá hàng loạt thất bại' };
+      }
+      const count = Number(json.count) || 0;
+      setLicenseKeys((prev) => {
+        const next = prev.map((k) =>
+          k.category_id === categoryId && k.status === 'available'
+            ? { ...k, import_price: importPrice, unit_price: unitPrice }
+            : k
+        );
+        saveToLocal(STORAGE_KEYS.licenseKeys, next);
+        return next;
+      });
+      return { success: true, count, message: `Đã cập nhật giá cho ${count} key đang sẵn sàng.` };
+    } catch {
+      return { success: false, count: 0, message: 'Không gọi được máy chủ để cập nhật giá hàng loạt' };
+    }
   };
 
   const deleteKeyCategory = async (id: string): Promise<{ success: boolean; message: string }> => {
@@ -4275,6 +4326,8 @@ export function StoreProvider({
       keyReleaseRequests,
       keyEmailTemplate,
       addKeyCategory,
+      updateKeyCategory,
+      bulkUpdateKeyPrices,
       deleteKeyCategory,
       addLicenseKey,
       addBatchLicenseKeys,

@@ -372,6 +372,10 @@ export interface KeyCategory {
   type: 'windows' | 'office' | 'others';
   description: string; // Mô tả đặc tính key
   is_default: boolean; // true nếu là phân loại mặc định (không cho phép xóa)
+  /** Giá nhập mặc định của phân loại — tự điền khi thêm key mới (null = chưa đặt) */
+  default_import_price?: number | null;
+  /** Giá bán mặc định của phân loại — tự điền khi thêm key mới (null = chưa đặt) */
+  default_unit_price?: number | null;
   created_at?: string;
 }
 

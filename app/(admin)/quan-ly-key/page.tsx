@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useViTinhAnTamStore } from '@/lib/store';
-import { KeyCategory, KeyReleaseRequest } from '@/lib/supabase';
+import { KeyCategory, KeyReleaseRequest, LicenseKeyItem } from '@/lib/supabase';
 import { PricePreview } from '@/components/PricePreview';
 
 // ===== Nhóm trạng thái (store đang dùng 'approved_waiting_test' / 'active_confirmed') =====
@@ -23,10 +23,13 @@ export default function QuanLyKeyPage() {
     licenseKeys,
     keyReleaseRequests,
     addKeyCategory,
+    updateKeyCategory,
+    bulkUpdateKeyPrices,
     deleteKeyCategory,
     addLicenseKey,
     addBatchLicenseKeys,
     deleteLicenseKey,
+    updateLicenseKey,
     takeKeyForCustomer,
     createKeyReleaseRequest,
     approveKeyReleaseRequest,
@@ -78,6 +81,26 @@ export default function QuanLyKeyPage() {
   const [catSelectedPreset, setCatSelectedPreset] = useState<string>('WINDOWS 11 PROFESSIONAL');
   const [catCustomName, setCatCustomName] = useState('');
   const [catDescription, setCatDescription] = useState('Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác');
+  const [catDefaultImportPrice, setCatDefaultImportPrice] = useState<number>(0);
+  const [catDefaultUnitPrice, setCatDefaultUnitPrice] = useState<number>(0);
+
+  // Price editing states (per-key + per-category)
+  const [priceEditKey, setPriceEditKey] = useState<LicenseKeyItem | null>(null);
+  const [priceEditImport, setPriceEditImport] = useState<number>(0);
+  const [priceEditUnit, setPriceEditUnit] = useState<number>(0);
+  const [priceCatEdit, setPriceCatEdit] = useState<KeyCategory | null>(null);
+  const [priceCatImport, setPriceCatImport] = useState<number>(0);
+  const [priceCatUnit, setPriceCatUnit] = useState<number>(0);
+  const [priceCatBusy, setPriceCatBusy] = useState(false);
+
+  // Khi chọn phân loại trong form thêm key: tự điền giá mặc định của phân loại (nếu đã đặt)
+  useEffect(() => {
+    if (!isAddKeyModalOpen) return;
+    const cat = keyCategories.find((c) => c.id === targetCatId);
+    if (!cat) return;
+    if (cat.default_import_price != null) setKeyImportPrice(cat.default_import_price);
+    if (cat.default_unit_price != null) setKeyUnitPrice(cat.default_unit_price);
+  }, [targetCatId, isAddKeyModalOpen, keyCategories]);
 
   // Inventory table filter
   const [invCatFilter, setInvCatFilter] = useState('all');
@@ -315,11 +338,15 @@ export default function QuanLyKeyPage() {
       name: finalName,
       type: catCategoryType,
       description: catDescription.trim(),
+      default_import_price: catDefaultImportPrice > 0 ? catDefaultImportPrice : null,
+      default_unit_price: catDefaultUnitPrice > 0 ? catDefaultUnitPrice : null,
     });
 
     triggerFeedback(`Đã lưu phân loại: ${created.name}`);
     setIsAddCategoryModalOpen(false);
     setCatCustomName('');
+    setCatDefaultImportPrice(0);
+    setCatDefaultUnitPrice(0);
   };
 
   // Submit Handler: Delete Category
@@ -1035,13 +1062,14 @@ export default function QuanLyKeyPage() {
                     <th className="py-3 px-4">TRẠNG THÁI</th>
                     <th className="py-3 px-4">KHÁCH HÀNG GẮN KEY</th>
                     <th className="py-3 px-4">NGÀY TẠO</th>
+                    {isAdmin && <th className="py-3 px-4 text-right">GIÁ NHẬP / BÁN</th>}
                     {isAdmin && <th className="py-3 px-4 text-right">THAO TÁC</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E8E2D9]">
                   {filteredKeys.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-[#6E5D53]">
+                      <td colSpan={isAdmin ? 7 : 5} className="py-8 text-center text-[#6E5D53]">
                         Không có mã key nào trong kho phù hợp.
                       </td>
                     </tr>
@@ -1099,8 +1127,26 @@ export default function QuanLyKeyPage() {
                           {new Date(k.created_at).toLocaleDateString('vi-VN')}
                         </td>
                         {isAdmin && (
+                          <td className="py-3 px-4 text-right font-mono text-[11px]">
+                            <div className="text-rose-700 font-bold">{(k.import_price || 0).toLocaleString('vi-VN')} đ</div>
+                            <div className="text-emerald-700 font-bold">{(k.unit_price || 0).toLocaleString('vi-VN')} đ</div>
+                          </td>
+                        )}
+                        {isAdmin && (
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPriceEditKey(k);
+                                  setPriceEditImport(k.import_price || 0);
+                                  setPriceEditUnit(k.unit_price || 0);
+                                }}
+                                className="px-2 py-1 bg-sky-50 border border-sky-300 text-sky-800 rounded text-[11px] font-bold hover:bg-sky-100 transition-colors shrink-0"
+                                title="Sửa giá nhập / giá bán của key này"
+                              >
+                                💲 Giá
+                              </button>
                               {k.status === 'faulty' && (
                                 <button
                                   type="button"
@@ -1229,7 +1275,10 @@ export default function QuanLyKeyPage() {
                     <th className="py-3 px-4 text-center">KEY LỖI</th>
                     <th className="py-3 px-4 text-right">DOANH THU</th>
                     <th className="py-3 px-4 text-right">LỢI NHUẬN</th>
+                    {isAdmin && <th className="py-3 px-4 text-right">GIÁ NHẬP MẶC ĐỊNH</th>}
+                    {isAdmin && <th className="py-3 px-4 text-right">GIÁ BÁN MẶC ĐỊNH</th>}
                     <th className="py-3 px-4 text-center">TRẠNG THÁI KHO</th>
+                    {isAdmin && <th className="py-3 px-4 text-center">QUẢN LÝ GIÁ</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E8E2D9]">
@@ -1261,6 +1310,16 @@ export default function QuanLyKeyPage() {
                       <td className="py-3 px-4 text-right font-mono font-bold text-blue-800">
                         {Math.max(0, Math.round(item.profit)).toLocaleString('vi-VN')} đ
                       </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4 text-right font-mono font-bold text-rose-700">
+                          {item.default_import_price != null ? `${item.default_import_price.toLocaleString('vi-VN')} đ` : '—'}
+                        </td>
+                      )}
+                      {isAdmin && (
+                        <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
+                          {item.default_unit_price != null ? `${item.default_unit_price.toLocaleString('vi-VN')} đ` : '—'}
+                        </td>
+                      )}
                       <td className="py-3 px-4 text-center">
                         {item.available === 0 ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-800 border border-rose-300 animate-pulse">
@@ -1276,6 +1335,24 @@ export default function QuanLyKeyPage() {
                           </span>
                         )}
                       </td>
+                      {isAdmin && (
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const cat = keyCategories.find((c) => c.id === item.id);
+                              if (!cat) return;
+                              setPriceCatEdit(cat);
+                              setPriceCatImport(cat.default_import_price || 0);
+                              setPriceCatUnit(cat.default_unit_price || 0);
+                            }}
+                            className="px-2.5 py-1 bg-sky-50 border border-sky-300 text-sky-800 rounded text-[11px] font-bold hover:bg-sky-100 transition-colors"
+                            title="Đặt giá mặc định của phân loại và cập nhật hàng loạt cho key đang sẵn sàng"
+                          >
+                            💲 Sửa giá
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -1517,6 +1594,17 @@ export default function QuanLyKeyPage() {
                     </option>
                   ))}
                 </select>
+                {(() => {
+                  const cat = keyCategories.find((c) => c.id === targetCatId);
+                  if (!cat || (cat.default_import_price == null && cat.default_unit_price == null)) return null;
+                  return (
+                    <span className="text-[11px] text-[#6E5D53] mt-1 block">
+                      Giá mặc định của phân loại — nhập:{' '}
+                      {cat.default_import_price != null ? `${cat.default_import_price.toLocaleString('vi-VN')} đ` : '—'} · bán:{' '}
+                      {cat.default_unit_price != null ? `${cat.default_unit_price.toLocaleString('vi-VN')} đ` : '—'} (đã tự điền bên dưới, sửa được nếu cần)
+                    </span>
+                  );
+                })()}
               </div>
 
               {keyInputType === 'single' ? (
@@ -1730,6 +1818,38 @@ export default function QuanLyKeyPage() {
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-[#2B1810] mb-1">
+                    GIÁ NHẬP MẶC ĐỊNH / KEY (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={10000}
+                    value={catDefaultImportPrice}
+                    onChange={(e) => setCatDefaultImportPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#2B1810] mb-1">
+                    GIÁ BÁN MẶC ĐỊNH / KEY (VNĐ)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={10000}
+                    value={catDefaultUnitPrice}
+                    onChange={(e) => setCatDefaultUnitPrice(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                  />
+                </div>
+              </div>
+              <span className="text-[11px] text-[#6E5D53] block">
+                Để 0 = chưa đặt giá mặc định. Giá mặc định sẽ tự điền vào form mỗi khi thêm key thuộc phân loại này.
+              </span>
+
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
@@ -1746,6 +1866,184 @@ export default function QuanLyKeyPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: SỬA GIÁ TỪNG KEY */}
+      {/* ========================================================================= */}
+      {priceEditKey && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-md overflow-hidden animate-fade-in font-sans">
+            <div className="p-4 bg-[#0F4C5C] text-white flex items-center justify-between">
+              <h3 className="text-sm font-black tracking-tight text-white uppercase">SỬA GIÁ KEY</h3>
+              <button
+                type="button"
+                onClick={() => setPriceEditKey(null)}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-white/10"
+              >
+                Đóng
+              </button>
+            </div>
+            <form
+              className="p-5 space-y-4 text-xs"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await updateLicenseKey(priceEditKey.id, {
+                  import_price: priceEditImport,
+                  unit_price: priceEditUnit,
+                });
+                triggerFeedback(`Đã cập nhật giá cho key ${priceEditKey.license_code}.`);
+                setPriceEditKey(null);
+              }}
+            >
+              <div className="font-mono font-bold text-[#2B1810] break-all">{priceEditKey.license_code}</div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">GIÁ NHẬP / KEY (VNĐ)</label>
+                <PricePreview value={priceEditImport} label="Giá đầu vào" tone="rose" />
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={priceEditImport}
+                  onChange={(e) => setPriceEditImport(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">GIÁ BÁN / KEY (VNĐ)</label>
+                <PricePreview value={priceEditUnit} label="Giá bán" tone="emerald" />
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={priceEditUnit}
+                  onChange={(e) => setPriceEditUnit(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                />
+              </div>
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPriceEditKey(null)}
+                  className="px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
+                >
+                  HỦY
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-[#0F4C5C] hover:bg-[#0B3A47] text-white font-bold transition-all shadow-xs"
+                >
+                  LƯU GIÁ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: QUẢN LÝ GIÁ THEO PHÂN LOẠI (giá mặc định + cập nhật hàng loạt) */}
+      {/* ========================================================================= */}
+      {priceCatEdit && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-md overflow-hidden animate-fade-in font-sans">
+            <div className="p-4 bg-[#0F4C5C] text-white flex items-center justify-between">
+              <h3 className="text-sm font-black tracking-tight text-white uppercase">QUẢN LÝ GIÁ — PHÂN LOẠI</h3>
+              <button
+                type="button"
+                onClick={() => setPriceCatEdit(null)}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-white/10"
+              >
+                Đóng
+              </button>
+            </div>
+            <div className="p-5 space-y-4 text-xs">
+              <div className="font-black uppercase text-[#2B1810]">{priceCatEdit.name}</div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">GIÁ NHẬP MẶC ĐỊNH / KEY (VNĐ)</label>
+                <PricePreview value={priceCatImport} label="Giá đầu vào" tone="rose" />
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={priceCatImport}
+                  onChange={(e) => setPriceCatImport(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">GIÁ BÁN MẶC ĐỊNH / KEY (VNĐ)</label>
+                <PricePreview value={priceCatUnit} label="Giá bán" tone="emerald" />
+                <input
+                  type="number"
+                  min={0}
+                  step={10000}
+                  value={priceCatUnit}
+                  onChange={(e) => setPriceCatUnit(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                />
+              </div>
+              <span className="text-[11px] text-[#6E5D53] block">
+                Để 0 = xoá giá mặc định. Giá mặc định chỉ tự điền khi thêm key mới, không tự thay đổi giá các key đã có.
+              </span>
+              <div className="pt-1 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={priceCatBusy}
+                  onClick={async () => {
+                    setPriceCatBusy(true);
+                    await updateKeyCategory({
+                      ...priceCatEdit,
+                      default_import_price: priceCatImport > 0 ? priceCatImport : null,
+                      default_unit_price: priceCatUnit > 0 ? priceCatUnit : null,
+                    });
+                    setPriceCatBusy(false);
+                    triggerFeedback(`Đã lưu giá mặc định cho phân loại ${priceCatEdit.name}.`);
+                    setPriceCatEdit(null);
+                  }}
+                  className="w-full px-5 py-2.5 rounded-xl bg-[#0F4C5C] hover:bg-[#0B3A47] text-white font-bold transition-all shadow-xs disabled:opacity-50"
+                >
+                  LƯU GIÁ MẶC ĐỊNH
+                </button>
+                <button
+                  type="button"
+                  disabled={priceCatBusy}
+                  onClick={async () => {
+                    const availableCount = licenseKeys.filter(
+                      (k) => k.category_id === priceCatEdit.id && k.status === 'available'
+                    ).length;
+                    if (availableCount === 0) {
+                      alert('Phân loại này hiện không có key nào đang SẴN SÀNG.');
+                      return;
+                    }
+                    if (
+                      !confirm(
+                        `Áp dụng giá nhập ${priceCatImport.toLocaleString('vi-VN')} đ và giá bán ${priceCatUnit.toLocaleString('vi-VN')} đ cho toàn bộ ${availableCount} key đang SẴN SÀNG của phân loại ${priceCatEdit.name}? Key đã xuất/kích hoạt không bị ảnh hưởng.`
+                      )
+                    ) {
+                      return;
+                    }
+                    setPriceCatBusy(true);
+                    const res = await bulkUpdateKeyPrices(priceCatEdit.id, priceCatImport, priceCatUnit);
+                    setPriceCatBusy(false);
+                    triggerFeedback(res.message);
+                    if (res.success) setPriceCatEdit(null);
+                  }}
+                  className="w-full px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition-all shadow-xs disabled:opacity-50"
+                >
+                  ÁP DỤNG CHO KEY ĐANG SẴN SÀNG (HÀNG LOẠT)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPriceCatEdit(null)}
+                  className="w-full px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
+                >
+                  ĐÓNG
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
