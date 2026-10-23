@@ -47,12 +47,15 @@ export async function GET(request: NextRequest) {
         type: cat.type,
         description: cat.description || '',
         availableStock: availability.count,
+        // Giá hiển thị: mặc định phân loại > 0, else giá bán đầu tiên > 0,
+        // else 0 — giao diện tự hiển thị "Liên hệ" cho giá 0 (không tự
+        // bịa giá tham chiếu như trước).
         price:
           (typeof cat.default_unit_price === 'number' && cat.default_unit_price > 0
             ? cat.default_unit_price
             : null) ??
           availability.firstPrice ??
-          (cat.type === 'office' ? 450000 : 350000),
+          0,
       };
     })
     .filter((cat) => cat.availableStock > 0);

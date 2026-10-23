@@ -26,6 +26,7 @@ export default function QuanLyKeyPage() {
     addKeyCategory,
     updateKeyCategory,
     bulkUpdateKeyPrices,
+    bulkAdjustKeyPrices,
     deleteKeyCategory,
     addLicenseKey,
     addBatchLicenseKeys,
@@ -93,6 +94,23 @@ export default function QuanLyKeyPage() {
   const [priceCatImport, setPriceCatImport] = useState<number>(0);
   const [priceCatUnit, setPriceCatUnit] = useState<number>(0);
   const [priceCatBusy, setPriceCatBusy] = useState(false);
+
+  // Hiệu chỉnh giá đồng loạt (nhiều phân loại / tất cả, đặt cố định hoặc theo %)
+  const [bulkAdjustOpen, setBulkAdjustOpen] = useState(false);
+  const [bulkCatId, setBulkCatId] = useState<string>('all');
+  const [bulkMode, setBulkMode] = useState<'set' | 'percent'>('set');
+  const [bulkSetImport, setBulkSetImport] = useState<string>('');
+  const [bulkSetUnit, setBulkSetUnit] = useState<string>('');
+  const [bulkPctImport, setBulkPctImport] = useState<string>('');
+  const [bulkPctUnit, setBulkPctUnit] = useState<string>('');
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const bulkAffectedCount = useMemo(
+    () =>
+      licenseKeys.filter(
+        (k) => k.status === 'available' && (bulkCatId === 'all' || k.category_id === bulkCatId)
+      ).length,
+    [licenseKeys, bulkCatId]
+  );
 
   // Khi chọn phân loại trong form thêm key: tự điền giá mặc định của phân loại (nếu đã đặt)
   useEffect(() => {
@@ -472,6 +490,13 @@ export default function QuanLyKeyPage() {
                 className="px-3.5 py-2.5 rounded-xl bg-white border border-[#E8E2D9] text-[#2B1810] hover:border-[#C0392B] text-xs font-bold transition-all"
               >
                 + QUẢN LÝ PHÂN LOẠI
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkAdjustOpen(true)}
+                className="px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-all shadow-xs"
+              >
+                💲 GIÁ ĐỒNG LOẠT
               </button>
             </>
           )}
@@ -1088,8 +1113,12 @@ export default function QuanLyKeyPage() {
                         </td>
                         {isAdmin && (
                           <td className="py-3 px-4 text-right font-mono text-[11px]">
-                            <div className="text-rose-700 font-bold">{(k.import_price || 0).toLocaleString('vi-VN')} đ</div>
-                            <div className="text-emerald-700 font-bold">{(k.unit_price || 0).toLocaleString('vi-VN')} đ</div>
+                            <div className="text-rose-700 font-bold">
+                              {(k.import_price || 0) > 0 ? `${(k.import_price || 0).toLocaleString('vi-VN')} đ` : 'Liên hệ'}
+                            </div>
+                            <div className="text-emerald-700 font-bold">
+                              {(k.unit_price || 0) > 0 ? `${(k.unit_price || 0).toLocaleString('vi-VN')} đ` : 'Liên hệ'}
+                            </div>
                           </td>
                         )}
                         {isAdmin && (
@@ -1272,12 +1301,12 @@ export default function QuanLyKeyPage() {
                       </td>
                       {isAdmin && (
                         <td className="py-3 px-4 text-right font-mono font-bold text-rose-700">
-                          {item.default_import_price != null ? `${item.default_import_price.toLocaleString('vi-VN')} đ` : '—'}
+                          {item.default_import_price != null && item.default_import_price > 0 ? `${item.default_import_price.toLocaleString('vi-VN')} đ` : 'Liên hệ'}
                         </td>
                       )}
                       {isAdmin && (
                         <td className="py-3 px-4 text-right font-mono font-bold text-emerald-700">
-                          {item.default_unit_price != null ? `${item.default_unit_price.toLocaleString('vi-VN')} đ` : '—'}
+                          {item.default_unit_price != null && item.default_unit_price > 0 ? `${item.default_unit_price.toLocaleString('vi-VN')} đ` : 'Liên hệ'}
                         </td>
                       )}
                       <td className="py-3 px-4 text-center">
@@ -1560,8 +1589,8 @@ export default function QuanLyKeyPage() {
                   return (
                     <span className="text-[11px] text-[#6E5D53] mt-1 block">
                       Giá mặc định của phân loại — nhập:{' '}
-                      {cat.default_import_price != null ? `${cat.default_import_price.toLocaleString('vi-VN')} đ` : '—'} · bán:{' '}
-                      {cat.default_unit_price != null ? `${cat.default_unit_price.toLocaleString('vi-VN')} đ` : '—'} (đã tự điền bên dưới, sửa được nếu cần)
+                      {cat.default_import_price != null && cat.default_import_price > 0 ? `${cat.default_import_price.toLocaleString('vi-VN')} đ` : 'Liên hệ'} · bán:{' '}
+                      {cat.default_unit_price != null && cat.default_unit_price > 0 ? `${cat.default_unit_price.toLocaleString('vi-VN')} đ` : 'Liên hệ'} (đã tự điền bên dưới, sửa được nếu cần)
                     </span>
                   );
                 })()}
@@ -1998,6 +2027,216 @@ export default function QuanLyKeyPage() {
                 <button
                   type="button"
                   onClick={() => setPriceCatEdit(null)}
+                  className="w-full px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
+                >
+                  ĐÓNG
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: HIỆU CHỈNH GIÁ ĐỒNG LOẠT (ADMIN ONLY) */}
+      {/* ========================================================================= */}
+      {bulkAdjustOpen && isAdmin && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-md overflow-hidden animate-fade-in font-sans">
+            <div className="p-4 bg-amber-600 text-white flex items-center justify-between">
+              <h3 className="text-sm font-black tracking-tight text-white uppercase">
+                💲 Hiệu chỉnh giá đồng loạt
+              </h3>
+              <button
+                type="button"
+                onClick={() => setBulkAdjustOpen(false)}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-black/20"
+              >
+                Đóng
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">PHẠM VI PHÂN LOẠI</label>
+                <select
+                  value={bulkCatId}
+                  onChange={(e) => setBulkCatId(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-bold"
+                >
+                  <option value="all">Tất cả phân loại</option>
+                  {keyCategories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[11px] text-[#6E5D53] block mt-1">
+                  Chỉ áp dụng cho key đang <strong>SẴN SÀNG</strong> (chưa xuất) — hiện có{' '}
+                  <strong className="text-[#2B1810]">{bulkAffectedCount} key</strong> trong phạm vi
+                  đã chọn. Key đã xuất / kích hoạt / báo lỗi không bị thay đổi.
+                </span>
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">CÁCH HIỆU CHỈNH</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBulkMode('set')}
+                    className={`flex-1 px-3 py-2 rounded-lg font-bold border transition-all ${
+                      bulkMode === 'set'
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-[#2B1810] border-[#E8E2D9] hover:border-amber-500'
+                    }`}
+                  >
+                    Đặt giá cố định
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBulkMode('percent')}
+                    className={`flex-1 px-3 py-2 rounded-lg font-bold border transition-all ${
+                      bulkMode === 'percent'
+                        ? 'bg-amber-600 text-white border-amber-600'
+                        : 'bg-white text-[#2B1810] border-[#E8E2D9] hover:border-amber-500'
+                    }`}
+                  >
+                    Tăng / giảm theo %
+                  </button>
+                </div>
+              </div>
+
+              {bulkMode === 'set' ? (
+                <>
+                  <div>
+                    <label className="block font-bold text-[#2B1810] mb-1">GIÁ NHẬP MỚI / KEY (VNĐ)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={10000}
+                      value={bulkSetImport}
+                      onChange={(e) => setBulkSetImport(e.target.value)}
+                      placeholder="Để trống = giữ nguyên giá nhập"
+                      className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-[#2B1810] mb-1">GIÁ BÁN MỚI / KEY (VNĐ)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={10000}
+                      value={bulkSetUnit}
+                      onChange={(e) => setBulkSetUnit(e.target.value)}
+                      placeholder="Để trống = giữ nguyên giá bán"
+                      className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                    />
+                  </div>
+                  <span className="text-[11px] text-[#6E5D53] block">
+                    Nhập <strong>0</strong> để giá đó hiển thị là <strong>“Liên hệ”</strong> cho khách
+                    (áp dụng cho giá bán trên trang chủ).
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block font-bold text-[#2B1810] mb-1">% THAY ĐỔI GIÁ NHẬP</label>
+                    <input
+                      type="number"
+                      step={1}
+                      value={bulkPctImport}
+                      onChange={(e) => setBulkPctImport(e.target.value)}
+                      placeholder="Để trống = giữ nguyên. VD: 10 = tăng 10%, -5 = giảm 5%"
+                      className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-[#2B1810] mb-1">% THAY ĐỔI GIÁ BÁN</label>
+                    <input
+                      type="number"
+                      step={1}
+                      value={bulkPctUnit}
+                      onChange={(e) => setBulkPctUnit(e.target.value)}
+                      placeholder="Để trống = giữ nguyên. VD: 10 = tăng 10%, -5 = giảm 5%"
+                      className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-mono font-bold"
+                    />
+                  </div>
+                  <span className="text-[11px] text-[#6E5D53] block">
+                    Giá sau điều chỉnh được làm tròn đến hàng nghìn đồng. Key đang có giá 0 vẫn giữ
+                    0 (“Liên hệ”).
+                  </span>
+                </>
+              )}
+
+              <div className="pt-1 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={bulkBusy}
+                  onClick={async () => {
+                    const importRaw = bulkMode === 'set' ? bulkSetImport : bulkPctImport;
+                    const unitRaw = bulkMode === 'set' ? bulkSetUnit : bulkPctUnit;
+                    const importVal = importRaw.trim() === '' ? null : Number(importRaw);
+                    const unitVal = unitRaw.trim() === '' ? null : Number(unitRaw);
+                    if (importVal === null && unitVal === null) {
+                      alert('Bạn chưa nhập giá trị hiệu chỉnh nào.');
+                      return;
+                    }
+                    if (
+                      (importVal !== null && !Number.isFinite(importVal)) ||
+                      (unitVal !== null && !Number.isFinite(unitVal)) ||
+                      (bulkMode === 'set' && ((importVal !== null && importVal < 0) || (unitVal !== null && unitVal < 0))) ||
+                      (bulkMode === 'percent' && ((importVal !== null && importVal <= -100) || (unitVal !== null && unitVal <= -100)))
+                    ) {
+                      alert('Giá trị hiệu chỉnh không hợp lệ.');
+                      return;
+                    }
+                    if (bulkAffectedCount === 0) {
+                      alert('Phạm vi đã chọn hiện không có key nào đang SẴN SÀNG.');
+                      return;
+                    }
+                    const scopeLabel =
+                      bulkCatId === 'all'
+                        ? 'TẤT CẢ phân loại'
+                        : keyCategories.find((c) => c.id === bulkCatId)?.name || 'phân loại đã chọn';
+                    const fmtVal = (v: number | null, isImport: boolean) => {
+                      if (v === null) return 'giữ nguyên';
+                      if (bulkMode === 'set') return `${v.toLocaleString('vi-VN')} đ`;
+                      return `${v > 0 ? '+' : ''}${v}% (${isImport ? 'giá nhập' : 'giá bán'})`;
+                    };
+                    if (
+                      !confirm(
+                        `Hiệu chỉnh giá cho ${bulkAffectedCount} key đang SẴN SÀNG thuộc ${scopeLabel}?\n` +
+                          `• Giá nhập: ${fmtVal(importVal, true)}\n` +
+                          `• Giá bán: ${fmtVal(unitVal, false)}\n` +
+                          `Key đã xuất/kích hoạt không bị ảnh hưởng.`
+                      )
+                    ) {
+                      return;
+                    }
+                    setBulkBusy(true);
+                    const res = await bulkAdjustKeyPrices({
+                      categoryId: bulkCatId === 'all' ? null : bulkCatId,
+                      mode: bulkMode,
+                      importPrice: importVal,
+                      unitPrice: unitVal,
+                    });
+                    setBulkBusy(false);
+                    triggerFeedback(res.message);
+                    if (res.success) {
+                      setBulkAdjustOpen(false);
+                      setBulkSetImport('');
+                      setBulkSetUnit('');
+                      setBulkPctImport('');
+                      setBulkPctUnit('');
+                    }
+                  }}
+                  className="w-full px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold transition-all shadow-xs disabled:opacity-50"
+                >
+                  ÁP DỤNG CHO {bulkAffectedCount} KEY SẴN SÀNG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkAdjustOpen(false)}
                   className="w-full px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
                 >
                   ĐÓNG

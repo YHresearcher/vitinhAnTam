@@ -201,7 +201,14 @@ export default function HomePage() {
         return {
           ...cat,
           availableStock: keys.length,
-          price: keys[0]?.unit_price || (cat.type === 'office' ? 450000 : 350000),
+          // Giá hiển thị: mặc định phân loại > 0, else giá bán đầu tiên > 0,
+          // else giá của key đầu tiên (có thể 0 → giao diện hiện "Liên hệ").
+          price:
+            typeof cat.default_unit_price === 'number' && cat.default_unit_price > 0
+              ? cat.default_unit_price
+              : (keys.find((k) => (k.unit_price || 0) > 0)?.unit_price ??
+                keys[0]?.unit_price ??
+                0),
         };
       })
       .filter((cat) => cat.availableStock > 0);

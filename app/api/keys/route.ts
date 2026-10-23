@@ -117,6 +117,75 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true, count: updated?.length || 0 });
     }
 
+    // Hiệu chỉnh giá ĐỒNG LOẠT (công cụ riêng ở trang Quản lý key):
+    // phạm vi = 1 phân loại hoặc tất cả; chỉ key đang SẴN SÀNG.
+    // mode 'set': đặt giá cố định (trường null = giữ nguyên; 0 = hiển thị "Liên hệ").
+    // mode 'percent': tăng/giảm theo % trên giá hiện tại (trường null = giữ
+    // nguyên), kết quả làm tròn đến hàng nghìn đồng.
+    if (action === 'bulk_adjust_prices') {
+      const categoryId =
+        typeof body.category_id === 'string' && body.category_id ? body.category_id : null;
+      const mode = body.mode === 'percent' ? 'percent' : 'set';
+      const rawImport = body.import_price;
+      const rawUnit = body.unit_price;
+      const importVal =
+        rawImport === null || rawImport === undefined || rawImport === '' ? null : Number(rawImport);
+      const unitVal =
+        rawUnit === null || rawUnit === undefined || rawUnit === '' ? null : Number(rawUnit);
+      if (importVal === null && unitVal === null) {
+        return NextResponse.json(
+          { success: false, message: 'Chưa nhập giá trị hiệu chỉnh nào' },
+          { status: 400 }
+        );
+      }
+      if (
+        (importVal !== null && !Number.isFinite(importVal)) ||
+        (unitVal !== null && !Number.isFinite(unitVal)) ||
+        (mode === 'set' && ((importVal !== null && importVal < 0) || (unitVal !== null && unitVal < 0))) ||
+        (mode === 'percent' && ((importVal !== null && importVal <= -100) || (unitVal !== null && unitVal <= -100)))
+      ) {
+        return NextResponse.json({ success: false, message: 'Giá trị hiệu chỉnh không hợp lệ' }, { status: 400 });
+      }
+
+      let query = db
+        .from('license_keys')
+        .select('id, import_price, unit_price')
+        .eq('status', 'available');
+      if (categoryId) query = query.eq('category_id', categoryId);
+      const { data: keys, error: fetchError } = await query;
+      if (fetchError) throw fetchError;
+      if (!keys || keys.length === 0) {
+        return NextResponse.json({ success: true, count: 0, updated: [] });
+      }
+
+      const roundThousand = (v: number) => Math.max(0, Math.round(v / 1000) * 1000);
+      const updated: { id: string; import_price: number; unit_price: number }[] = [];
+      for (const k of keys) {
+        const oldImport = Number(k.import_price) || 0;
+        const oldUnit = Number(k.unit_price) || 0;
+        const newImport =
+          importVal === null
+            ? oldImport
+            : mode === 'set'
+              ? importVal
+              : roundThousand(oldImport * (1 + importVal / 100));
+        const newUnit =
+          unitVal === null
+            ? oldUnit
+            : mode === 'set'
+              ? unitVal
+              : roundThousand(oldUnit * (1 + unitVal / 100));
+        if (newImport === oldImport && newUnit === oldUnit) continue;
+        const { error: updError } = await db
+          .from('license_keys')
+          .update({ import_price: newImport, unit_price: newUnit })
+          .eq('id', k.id);
+        if (updError) throw updError;
+        updated.push({ id: k.id, import_price: newImport, unit_price: newUnit });
+      }
+      return NextResponse.json({ success: true, count: updated.length, updated });
+    }
+
     if (!id || !data) {
       return NextResponse.json({ success: false, message: 'Thiếu id hoặc dữ liệu cập nhật' }, { status: 400 });
     }

@@ -309,6 +309,12 @@ interface StoreContextType {
   addKeyCategory: (category: { name: string; type: 'windows' | 'office' | 'others'; description: string; default_import_price?: number | null; default_unit_price?: number | null }) => Promise<KeyCategory>;
   updateKeyCategory: (category: KeyCategory) => Promise<void>;
   bulkUpdateKeyPrices: (categoryId: string, importPrice: number, unitPrice: number) => Promise<{ success: boolean; count: number; message: string }>;
+  bulkAdjustKeyPrices: (params: {
+    categoryId: string | null;
+    mode: 'set' | 'percent';
+    importPrice: number | null;
+    unitPrice: number | null;
+  }) => Promise<{ success: boolean; count: number; message: string }>;
   deleteKeyCategory: (id: string) => Promise<{ success: boolean; message: string }>;
   addLicenseKey: (item: Omit<LicenseKeyItem, 'id' | 'created_at'>) => Promise<LicenseKeyItem>;
   addBatchLicenseKeys: (categoryId: string, categoryName: string, rawKeysText: string, unitPrice?: number, importPrice?: number) => Promise<{ success: boolean; addedCount: number }>;
@@ -2249,6 +2255,53 @@ export function StoreProvider({
       return { success: true, count, message: `Đã cập nhật giá cho ${count} key đang sẵn sàng.` };
     } catch {
       return { success: false, count: 0, message: 'Không gọi được máy chủ để cập nhật giá hàng loạt' };
+    }
+  };
+
+  // Hiệu chỉnh giá đồng loạt: phạm vi 1 phân loại hoặc tất cả, chỉ key
+  // SẴN SÀNG; 'set' = đặt giá cố định (null = giữ nguyên, 0 = "Liên hệ"),
+  // 'percent' = tăng/giảm % (máy chủ làm tròn đến hàng nghìn).
+  const bulkAdjustKeyPrices = async (params: {
+    categoryId: string | null;
+    mode: 'set' | 'percent';
+    importPrice: number | null;
+    unitPrice: number | null;
+  }): Promise<{ success: boolean; count: number; message: string }> => {
+    try {
+      const res = await fetch('/api/keys', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'bulk_adjust_prices',
+          category_id: params.categoryId,
+          mode: params.mode,
+          import_price: params.importPrice,
+          unit_price: params.unitPrice,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.success) {
+        return { success: false, count: 0, message: json?.message || 'Hiệu chỉnh giá đồng loạt thất bại' };
+      }
+      const updated: { id: string; import_price: number; unit_price: number }[] = json.updated || [];
+      if (updated.length > 0) {
+        const byId = new Map(updated.map((u) => [u.id, u]));
+        setLicenseKeys((prev) => {
+          const next = prev.map((k) => {
+            const u = byId.get(k.id);
+            return u ? { ...k, import_price: u.import_price, unit_price: u.unit_price } : k;
+          });
+          saveToLocal(STORAGE_KEYS.licenseKeys, next);
+          return next;
+        });
+      }
+      return {
+        success: true,
+        count: Number(json.count) || 0,
+        message: `Đã hiệu chỉnh giá cho ${Number(json.count) || 0} key đang sẵn sàng.`,
+      };
+    } catch {
+      return { success: false, count: 0, message: 'Không gọi được máy chủ để hiệu chỉnh giá đồng loạt' };
     }
   };
 
@@ -4436,6 +4489,7 @@ export function StoreProvider({
       addKeyCategory,
       updateKeyCategory,
       bulkUpdateKeyPrices,
+      bulkAdjustKeyPrices,
       deleteKeyCategory,
       addLicenseKey,
       addBatchLicenseKeys,
