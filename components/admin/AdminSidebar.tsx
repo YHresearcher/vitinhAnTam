@@ -17,6 +17,7 @@ import {
   Sliders,
   FileText,
   ShieldCheck,
+  Navigation,
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
@@ -39,6 +40,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canAccessSettings,
     canAccessCRM,
     pendingOrdersCount,
+    currentUser,
   } = useViTinhAnTamStore();
 
   const handleNavClick = () => {
@@ -53,6 +55,14 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
   const pendingDispatchesCount = onsiteDispatches.filter(
     (d) => d.status !== 'completed' && d.status !== 'cancelled'
   ).length;
+  const myActiveJobsCount = onsiteDispatches.filter(
+    (d) =>
+      currentUser &&
+      (d.technician_id === currentUser.id ||
+        (!d.technician_id && d.technician_name === currentUser.name)) &&
+      d.status !== 'completed' &&
+      d.status !== 'cancelled'
+  ).length;
   const pendingKeyRequestsCount = keyReleaseRequests.filter(
     (r) => r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested'
   ).length;
@@ -66,6 +76,16 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         badge: null,
         badgeColor: '',
         visible: true,
+      },
+      {
+        label: 'Việc của tôi',
+        href: '/viec-cua-toi',
+        icon: Navigation,
+        badge: myActiveJobsCount > 0 ? `${myActiveJobsCount}` : null,
+        badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
+        visible:
+          !!currentUser &&
+          ['technician', 'outsourced', 'tech_manager'].includes(currentUser.role),
       },
       {
         label: 'Tài chính & Doanh thu',
@@ -162,6 +182,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     pendingDispatchesCount,
     pendingKeyRequestsCount,
     pendingOrdersCount,
+    currentUser,
+    myActiveJobsCount,
   ]);
 
   const sidebarContent = (
@@ -193,7 +215,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           {(
             [
               { key: 'overview', label: 'Tổng quan & tài chính', hrefs: ['/dashboard', '/tai-chinh'] },
-              { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
+              { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/viec-cua-toi', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
               { key: 'system', label: 'Nội dung & hệ thống', hrefs: ['/bai-viet', '/thanh-vien', '/cai-dat'] },
             ] as const
           ).map((group) => {

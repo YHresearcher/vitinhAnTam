@@ -576,6 +576,7 @@ export interface OnsiteDispatch {
   issue_summary?: string;
   issue_description?: string;
   technician_name: string;
+  technician_id?: string; // ID tài khoản KTV được giao (để KTV thấy việc của mình)
   technician_fee?: number; // Tiền công / thù lao trả cho KTV ca này (VNĐ)
   fee_synced_to_payroll?: boolean; // Đã tự động kết chuyển sang bảng lương KTV chưa
   created_at?: string;

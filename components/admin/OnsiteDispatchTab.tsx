@@ -118,7 +118,8 @@ export default function OnsiteDispatchTab() {
   };
 
   const handleAssignTechnician = async (dispatchId: string, technicianName: string) => {
-    const ok = await assignDispatchTechnician(dispatchId, technicianName);
+    const tech = availableTechnicians.find((u) => u.name === technicianName);
+    const ok = await assignDispatchTechnician(dispatchId, technicianName, tech?.id);
     if (ok) {
       setNotice(`Đã điều động KTV ${technicianName} phụ trách ca cứu hộ!`);
       setTimeout(() => setNotice(null), 3000);
@@ -389,6 +390,16 @@ export default function OnsiteDispatchTab() {
                     <span className="font-medium text-slate-400">Địa chỉ: </span>
                     <span className="font-medium text-slate-800">{dispatch.address}</span>
                   </div>
+                  {dispatch.address && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dispatch.address)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      📍 Chỉ đường Google Maps
+                    </a>
+                  )}
                   {(dispatch.distance_km || dispatch.estimated_arrival_minutes) && (
                     <div className="flex items-center gap-3 text-[11px] text-slate-500 font-medium">
                       {dispatch.distance_km && (

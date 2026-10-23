@@ -183,7 +183,7 @@ interface StoreContextType {
 
   // Task / Ticket assignment actions
   assignTicketTechnician: (id: string, technicianName: string) => Promise<boolean>;
-  assignDispatchTechnician: (id: string, technicianName: string) => Promise<boolean>;
+  assignDispatchTechnician: (id: string, technicianName: string, technicianId?: string) => Promise<boolean>;
 
   // CRM Customer actions
   addCustomer: (customer: Omit<Customer, 'id' | 'created_at'>) => Promise<Customer>;
@@ -3451,12 +3451,18 @@ export function StoreProvider({
     return true;
   };
 
-  const assignDispatchTechnician = async (id: string, technicianName: string): Promise<boolean> => {
+  const assignDispatchTechnician = async (
+    id: string,
+    technicianName: string,
+    technicianId?: string
+  ): Promise<boolean> => {
     if (!canAssignTasks()) {
       return false;
     }
     setOnsiteDispatches((prev) => {
-      const next = prev.map((d) => (d.id === id ? { ...d, technician_name: technicianName } : d));
+      const next = prev.map((d) =>
+        d.id === id ? { ...d, technician_name: technicianName, technician_id: technicianId } : d
+      );
       saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
       return next;
     });
@@ -3464,7 +3470,11 @@ export function StoreProvider({
     if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
-        () => client.from('onsite_dispatches').update({ technician_name: technicianName }).eq('id', id),
+        () =>
+          client
+            .from('onsite_dispatches')
+            .update({ technician_name: technicianName, technician_id: technicianId ?? null })
+            .eq('id', id),
         'Phân bổ KTV điều phối Onsite'
       );
     }
