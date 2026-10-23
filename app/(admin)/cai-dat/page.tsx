@@ -1390,7 +1390,7 @@ export default function CaiDatPage() {
             <Input placeholder="VD: Dell OptiPlex 7060 SFF hoặc Sửa nguồn PC" />
           </Form.Item>
           <Form.Item name="location" label="Khu vực sinh sống">
-            <Input placeholder="VD: TP. Tân An hoặc Bến Lức" />
+            <Input placeholder="VD: phường Long An hoặc Bến Lức" />
           </Form.Item>
           <Form.Item name="rating" label="Số sao đánh giá (1 - 5)">
             <InputNumber min={1} max={5} className="w-full" />

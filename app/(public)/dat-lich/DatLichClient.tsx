@@ -111,8 +111,8 @@ function AppointmentBookingContent() {
   const getFullAddress = () => {
     if (locationType === 'counter') {
       return currentLang === 'en'
-        ? 'Vi Tinh An Tam Store (45 Nguyen Hue, Ward 1, Tan An, Long An)'
-        : 'Cửa hàng Vi Tính An Tâm (45 Nguyễn Huệ, P.1, Tân An, Long An)';
+        ? 'Vi Tinh An Tam Store (52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province)'
+        : 'Cửa hàng Vi Tính An Tâm (52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh)';
     }
 
     const currentDistName =
@@ -122,7 +122,7 @@ function AppointmentBookingContent() {
     const parts = [
       streetAddress.trim(),
       selectedWard,
-      selectedCity === 'long_an' ? 'TP. Tân An' : currentDistName,
+      selectedCity === 'long_an' ? 'Phường Long An' : currentDistName,
       cityName,
     ].filter(Boolean);
 
@@ -164,7 +164,7 @@ function AppointmentBookingContent() {
         issue_description: `Đặt lịch: ${serviceNeeded || 'Kiểm tra máy tổng quát'}`,
         estimated_cost: locationType === 'onsite' ? 150000 : 100000,
         dispatch_address: locationType === 'onsite' ? fullAddr : undefined,
-        technician_name: selectedCity === 'long_an' ? 'KTV Trực ca Tân An' : 'KTV Trực ca TP.HCM',
+        technician_name: selectedCity === 'long_an' ? 'KTV Trực ca Long An' : 'KTV Trực ca TP.HCM',
         selected_services: [
           {
             id: 'srv-booking',
@@ -491,8 +491,8 @@ function AppointmentBookingContent() {
                         <span className="text-xs text-slate-500 mb-1 block">
                           {selectedCity === 'long_an'
                             ? currentLang === 'en'
-                              ? `${t.wardLabel} (Tan An Central)`
-                              : `${t.wardLabel} (Nội thành Tân An)`
+                              ? `${t.wardLabel} (Long An Central)`
+                              : `${t.wardLabel} (Nội thành Long An)`
                             : t.wardLabel}
                         </span>
                         <select

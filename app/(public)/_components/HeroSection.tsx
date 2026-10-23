@@ -68,7 +68,7 @@ export default function HeroSection({
               <p className="text-base sm:text-lg text-[#6E5D53] leading-relaxed">
                 {t.hero.description || (isEn
                   ? 'Dell/Lenovo/HP refurbished desktop & laptop. Genuine digital OEM license. Ready stock in Long An, Tay Ninh.'
-                  : 'Máy đồng bộ Dell/Lenovo/HP, laptop doanh nhân. Key Windows bản quyền số vĩnh viễn. Có sẵn tại Tân An, Long An')}
+                  : 'Máy đồng bộ Dell/Lenovo/HP, laptop doanh nhân. Key Windows bản quyền số vĩnh viễn. Có sẵn tại phường Long An, tỉnh Tây Ninh')}
               </p>
             </div>
 

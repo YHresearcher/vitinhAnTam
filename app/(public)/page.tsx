@@ -3,7 +3,7 @@ import HomePage from './HomeClient';
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Chuẩn A Tuyển Chọn Tại Tân An, Long An',
+    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Chuẩn A Tuyển Chọn Tại Phường Long An, Tỉnh Tây Ninh',
   },
   description:
     'PC đồng bộ & laptop doanh nhân tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng, bảo hành chu đáo và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',

@@ -16,7 +16,7 @@ export const TRANSLATIONS = {
     },
     footer: {
       hubTitle: 'CỬA HÀNG VI TÍNH AN TÂM',
-      hubAddress: '52 Nguyễn Cửu Vân, P. Long An, Tỉnh Tây Ninh',
+      hubAddress: '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh',
       hotlineLabel: 'Hotline / Zalo:',
       techSupportLabel: 'Hỗ trợ kỹ thuật:',
       techSupportValue: '24/7 trực ca tiếp nhận',
@@ -173,7 +173,7 @@ export const TRANSLATIONS = {
     },
     reviews: {
       title: 'NHẬN XÉT CỦA KHÁCH HÀNG',
-      ratingText: 'Từ khách hàng doanh nghiệp & cá nhân tại Long An - Tây Ninh',
+      ratingText: 'Từ khách hàng doanh nghiệp & cá nhân tại Tây Ninh',
     },
     faq: {
       tag: 'Hỏi đáp & Quyền lợi khách hàng',
@@ -190,9 +190,9 @@ export const TRANSLATIONS = {
       hotlineLabel: 'Hotline Khẩn Cấp & Zalo Kỹ Thuật:',
       btnCallTech: 'Gọi Trực Tiếp KTV Ca Trực',
       hqBadge: 'TRỤ SỞ CHÍNH',
-      hqTitle: 'Trụ Sở & Trạm Kỹ Thuật Tân An',
+      hqTitle: 'Trụ Sở & Trạm Kỹ Thuật (phường Long An)',
       hqAddress:
-        '45 Nguyễn Huệ, Phường 1, TP. Tân An, Tỉnh Long An (Có bãi đỗ ô tô thuận tiện)',
+        '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh (Có bãi đỗ ô tô thuận tiện)',
       mapLink: 'Chỉ đường trên Google Maps',
     },
     floating: {
@@ -267,7 +267,7 @@ export const TRANSLATIONS = {
       modeOnsiteTitle: 'Kỹ Thuật Viên Đến Tận Nơi',
       modeOnsiteDesc: 'Phục vụ tận nhà hoặc văn phòng theo lịch hẹn thuận tiện cho bạn.',
       modeCounterTitle: 'Mang Máy Đến Cửa Hàng',
-      modeCounterDesc: '45 Nguyễn Huệ, P.1, Tân An (Có chỗ đỗ xe, kiểm tra & lấy ngay sau 30 phút)',
+      modeCounterDesc: '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh (Có chỗ đỗ xe, kiểm tra & lấy ngay sau 30 phút)',
       step2Title: '2. Thông tin khách hàng',
       nameLabel: 'Họ và tên *',
       namePlaceholder: '',
@@ -717,7 +717,7 @@ export const TRANSLATIONS = {
     },
     reviews: {
       title: 'CLIENT TESTIMONIALS & FEEDBACK',
-      ratingText: 'From corporate & private clients across Long An - Tay Ninh',
+      ratingText: 'From corporate & private clients across Tay Ninh',
     },
     faq: {
       tag: 'Customer Entitlements & FAQ',
@@ -727,16 +727,16 @@ export const TRANSLATIONS = {
     },
     coverage: {
       title: 'TECHNICAL HUB & DISPATCH',
-      desc: 'Rapid technical dispatch across Tan An and surrounding regions.',
+      desc: 'Rapid technical dispatch across Long An Ward and surrounding regions.',
       goldenHourTitle: 'AFTER-HOURS EMERGENCY SUPPORT',
       goldenHourDesc:
         'Priority support: 17:30 – 21:00 (Mon – Sun) • Zero surcharge.',
       hotlineLabel: 'Emergency Hotline & Technical Zalo:',
       btnCallTech: 'Call On-Duty Engineer Now',
       hqBadge: 'HEADQUARTERS',
-      hqTitle: 'Vi Tinh An Tam - Tan An Hub',
+      hqTitle: 'Vi Tinh An Tam - Long An Ward Hub',
       hqAddress:
-        '45 Nguyen Hue, Ward 1, Tan An City, Long An Province (Spacious car parking available)',
+        '52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province (Spacious car parking available)',
       mapLink: 'View Directions on Google Maps',
     },
     floating: {
@@ -811,7 +811,7 @@ export const TRANSLATIONS = {
       modeOnsiteTitle: 'On-Site Technical Support',
       modeOnsiteDesc: 'In-person assistance at your home or office by convenient appointment.',
       modeCounterTitle: 'Bring Computer to Hub',
-      modeCounterDesc: '45 Nguyen Hue, Ward 1, Tan An (Convenient parking, rapid 30-min express checkout)',
+      modeCounterDesc: '52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province (Convenient parking, rapid 30-min express checkout)',
       step2Title: '2. Client Information',
       nameLabel: 'Full Name *',
       namePlaceholder: '',

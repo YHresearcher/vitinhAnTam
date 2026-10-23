@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   keywords: [
     'Máy tính văn phòng',
     'Vi Tính An Tâm',
-    'máy tính Long An',
+    'máy tính Tây Ninh',
     'laptop văn phòng',
     'Dell OptiPlex',
     'ThinkPad',
@@ -106,9 +106,9 @@ const jsonLd = {
   image: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: '45 Nguyễn Huệ, Phường 1',
-    addressLocality: 'Tân An',
-    addressRegion: 'Long An',
+    streetAddress: '52 Nguyễn Cửu Vân',
+    addressLocality: 'Long An',
+    addressRegion: 'Tây Ninh',
     postalCode: '820000',
     addressCountry: 'VN',
   },
@@ -133,7 +133,7 @@ const jsonLd = {
   ],
   priceRange: '3.000.000₫ - 8.000.000₫',
   areaServed: [
-    { '@type': 'AdministrativeArea', name: 'Long An' },
+    { '@type': 'AdministrativeArea', name: 'Tây Ninh' },
   ],
   sameAs: [
     'https://zalo.me/0909053058',
