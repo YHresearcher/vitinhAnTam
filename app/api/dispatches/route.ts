@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
-import { requireStaff } from '@/lib/server/auth';
+import { getSession, STAFF_ROLES } from '@/lib/server/auth';
 import { rateLimit } from '@/lib/server/rateLimit';
+import type { SessionPayload } from '@/lib/session';
+
+// STAFF_ROLES (lib/server/auth) không gồm 'outsourced' — có chủ đích cho
+// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài là người thực thi
+// ca, nên route này chấp nhận thêm 'outsourced' nhưng siết phạm vi:
+// chỉ xem/cập nhật ca được gán cho chính mình, không tạo ca mới.
+function getDispatchSession(req: NextRequest): SessionPayload | null {
+  const session = getSession(req);
+  if (!session) return null;
+  if ((STAFF_ROLES as readonly string[]).includes(session.role)) return session;
+  return session.role === 'outsourced' ? session : null;
+}
+
+function isFullStaff(session: SessionPayload): boolean {
+  return (STAFF_ROLES as readonly string[]).includes(session.role);
+}
 
 // API ca cứu hộ onsite (điều phối KTV). Mọi thao tác đều cần session
 // nhân viên; ghi/đọc qua server client (service role) giống /api/users
@@ -44,17 +60,20 @@ function pickRow(body: Record<string, unknown>): Record<string, unknown> {
 }
 
 export async function GET(req: NextRequest) {
-  if (!requireStaff(req)) {
+  const session = getDispatchSession(req);
+  if (!session) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
   const db = getServerSupabase();
   if (!db) {
     return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 500 });
   }
-  const { data, error } = await db
-    .from('onsite_dispatches')
-    .select('*')
-    .order('created_at', { ascending: false });
+  let query = db.from('onsite_dispatches').select('*').order('created_at', { ascending: false });
+  // KTV thuê ngoài chỉ thấy các ca được gán cho chính mình.
+  if (!isFullStaff(session)) {
+    query = query.eq('technician_id', session.sub);
+  }
+  const { data, error } = await query;
   if (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -62,7 +81,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!requireStaff(req)) {
+  const session = getDispatchSession(req);
+  // Tạo ca là việc của điều phối viên — KTV thuê ngoài không tạo ca.
+  if (!session || !isFullStaff(session)) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
   if (!rateLimit(req, 'dispatch-create', 30, 10 * 60 * 1000)) {
@@ -100,7 +121,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!requireStaff(req)) {
+  const session = getDispatchSession(req);
+  if (!session) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
@@ -116,6 +138,17 @@ export async function PATCH(req: NextRequest) {
   const db = getServerSupabase();
   if (!db) {
     return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 500 });
+  }
+  // KTV thuê ngoài chỉ được cập nhật ca được gán cho chính mình.
+  if (!isFullStaff(session)) {
+    const { data: existing } = await db
+      .from('onsite_dispatches')
+      .select('technician_id')
+      .eq('id', id)
+      .maybeSingle();
+    if (!existing || existing.technician_id !== session.sub) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
   }
   const { data, error } = await db.from('onsite_dispatches').update(updates).eq('id', id).select();
   if (error) {
