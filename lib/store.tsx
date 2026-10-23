@@ -1061,6 +1061,17 @@ export function StoreProvider({
           setBlogCategories(blogCatRes.data as BlogCategory[]);
         }
 
+        // Làm mới cấu hình hiển thị công khai trực tiếp từ DB: bản settings do
+        // layout tiêm vào lúc render có thể cũ (đọc từ bộ nhớ/file phía server),
+        // khiến thay đổi trong Cài đặt (vd bật/tắt nút widget) không ra trang chủ.
+        try {
+          const pubRes = await fetch('/api/settings/public');
+          const pubJson = await pubRes.json().catch(() => null);
+          if (pubJson?.success && pubJson?.data) {
+            setSystemSettings((prev) => ({ ...prev, ...pubJson.data }));
+          }
+        } catch {}
+
         // 2. TỐI ƯU SUPABASE EGRESS & BẢO MẬT:
         // Khách vãng lai (chưa đăng nhập): DỪNG LẠI TẠI ĐÂY!
         // Tuyệt đối không kéo 4 bảng bảo mật: customers, service_tickets, onsite_dispatches, shift_logs.
