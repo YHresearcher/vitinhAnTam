@@ -1107,6 +1107,20 @@ export function StoreProvider({
         setOnsiteDispatches((onsResult.data as OnsiteDispatch[]) || []);
         setShiftLogs((shfResult.data as ShiftLog[]) || []);
 
+        // 3b. Dispatch: ưu tiên dữ liệu từ API server (nguồn sự thật cho
+        // bảng này — đọc/ghi trực tiếp qua PostgREST không đáng tin cậy).
+        try {
+          const dRes = await fetch('/api/dispatches');
+          if (dRes.ok) {
+            const dJson = await dRes.json().catch(() => null);
+            if (dJson?.success && Array.isArray(dJson.data)) {
+              setOnsiteDispatches(dJson.data as OnsiteDispatch[]);
+            }
+          }
+        } catch (e) {
+          console.warn('Could not pull dispatches from /api/dispatches:', e);
+        }
+
         // 4. Đồng bộ Kho Key Bản Quyền từ Supabase
         try {
           const keysRes = await fetch('/api/keys');
@@ -1361,6 +1375,23 @@ export function StoreProvider({
         supabase.from('blog_categories').select('*'),
       ]);
 
+      // Dispatch đọc qua API server (nguồn sự thật) — ghi/đọc trực tiếp
+      // qua PostgREST từ trình duyệt không đáng tin cậy cho bảng này.
+      // Áp dụng ngay khi có (kể cả khi cụm đồng bộ bên dưới lỗi), và áp
+      // dụng lại sau setOnsiteDispatches(onsData) để thắng dữ liệu đọc
+      // trực tiếp (có thể rỗng im lặng khi RLS chặn mà không báo lỗi).
+      const apiDispatches: OnsiteDispatch[] | null = await fetch('/api/dispatches')
+        .then(async (r) => {
+          if (!r.ok) return null;
+          const j = (await r.json().catch(() => null)) as { data?: OnsiteDispatch[] } | null;
+          return j?.data ?? null;
+        })
+        .catch(() => null);
+      if (apiDispatches) {
+        setOnsiteDispatches(apiDispatches);
+        saveToLocal(STORAGE_KEYS.onsiteDispatches, apiDispatches);
+      }
+
       const failures = [invResult, cusResult, tckResult, spResult, onsResult, shfResult].flatMap(
         (result) => (result.error ? [result.error] : [])
       );
@@ -1379,6 +1410,7 @@ export function StoreProvider({
       setTickets(tckData as ServiceTicket[]);
       setSpareParts(spData as SparePart[]);
       setOnsiteDispatches(onsData as OnsiteDispatch[]);
+      if (apiDispatches) setOnsiteDispatches(apiDispatches);
       setShiftLogs(shfData as ShiftLog[]);
       if (blogPostResult.data && !blogPostResult.error && (blogPostResult.data as BlogPost[]).length > 0) {
         setBlogPosts(blogPostResult.data as BlogPost[]);
@@ -3401,15 +3433,13 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
-      const client = supabase;
-      const updatePayload: Partial<OnsiteDispatch> = { status };
-      if (synced) updatePayload.fee_synced_to_payroll = true;
-      await runSupabaseWrite(
-        () => client.from('onsite_dispatches').update(updatePayload).eq('id', id),
-        'Cập nhật trạng thái cứu hộ'
-      );
-    }
+    const updatePayload: Partial<OnsiteDispatch> = { status };
+    if (synced) updatePayload.fee_synced_to_payroll = true;
+    await syncDispatchWrite(
+      { id, ...updatePayload } as Record<string, unknown>,
+      'PATCH',
+      'Cập nhật trạng thái cứu hộ'
+    );
   };
 
   const updateDispatchDetails = async (id: string, updates: Partial<OnsiteDispatch>): Promise<boolean> => {
@@ -3442,17 +3472,14 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
-      const client = supabase;
-      await runSupabaseWrite(
-        () =>
-          client
-            .from('onsite_dispatches')
-            .update(toDispatchDbRow({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }))
-            .eq('id', id),
-        'Cập nhật chi tiết ca cứu hộ Onsite'
-      );
-    }
+    await syncDispatchWrite(
+      { id, ...toDispatchDbRow({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }) } as Record<
+        string,
+        unknown
+      >,
+      'PATCH',
+      'Cập nhật chi tiết ca cứu hộ Onsite'
+    );
     return true;
   };
 
@@ -3477,6 +3504,38 @@ export function StoreProvider({
     return row as Partial<OnsiteDispatch>;
   };
 
+  // Ghi dispatch qua API server (/api/dispatches, service role + session
+  // nhân viên) thay vì ghi thẳng PostgREST từ trình duyệt — đường ghi
+  // trực tiếp không lưu được xuống DB trong thực tế (kiểm chứng live
+  // 2026-10-23, 2 vòng). Lỗi từ server được đưa lên banner đồng bộ để
+  // không còn thất bại im lặng.
+  const syncDispatchWrite = async (
+    payload: Record<string, unknown>,
+    method: 'POST' | 'PATCH',
+    label: string
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/dispatches', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const json = (await res.json().catch(() => null)) as { error?: string } | null;
+        const message = json?.error || `HTTP ${res.status}`;
+        console.warn(`${label}: API trả lỗi -> ${message}`);
+        setSyncError(`${label}: ${message}`);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không xác định';
+      console.warn(`${label}: lỗi mạng -> ${message}`);
+      setSyncError(`${label}: ${message}`);
+      return false;
+    }
+  };
+
   const addOnsiteDispatch = async (
     dispatchData: Omit<OnsiteDispatch, 'id' | 'created_at'>
   ): Promise<OnsiteDispatch> => {
@@ -3492,13 +3551,11 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase) {
-      const client = supabase;
-      await runSupabaseWrite(
-        () => client.from('onsite_dispatches').insert([toDispatchDbRow(newDispatch)]),
-        'Tạo ca cứu hộ Onsite'
-      );
-    }
+    await syncDispatchWrite(
+      toDispatchDbRow(newDispatch) as Record<string, unknown>,
+      'POST',
+      'Tạo ca cứu hộ Onsite'
+    );
     return newDispatch;
   };
 
@@ -3518,17 +3575,11 @@ export function StoreProvider({
       return next;
     });
 
-    if (isUsingSupabase && supabase && isUuid(id)) {
-      const client = supabase;
-      await runSupabaseWrite(
-        () =>
-          client
-            .from('onsite_dispatches')
-            .update({ technician_name: technicianName, technician_id: technicianId ?? null })
-            .eq('id', id),
-        'Phân bổ KTV điều phối Onsite'
-      );
-    }
+    await syncDispatchWrite(
+      { id, technician_name: technicianName, technician_id: technicianId ?? null },
+      'PATCH',
+      'Phân bổ KTV điều phối Onsite'
+    );
     return true;
   };
 
