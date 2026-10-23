@@ -91,12 +91,66 @@ export default function OnsiteDispatchTab() {
     assignDispatchTechnician,
     updateDispatchDetails,
     addServiceTicket,
+    addOnsiteDispatch,
     currentUser,
   } = useStore();
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [notice, setNotice] = useState<string | null>(null);
   const [convertingDispatch, setConvertingDispatch] = useState<OnsiteDispatch | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    customer_name: '',
+    phone: '',
+    address: '',
+    area_zone: '',
+    scheduled_time: '',
+    issue_summary: '',
+    technician_id: '',
+    technician_fee: '',
+    urgency: 'normal' as 'normal' | 'urgent',
+  });
+  const [creating, setCreating] = useState(false);
+
+  const handleCreateDispatch = async () => {
+    if (!createForm.customer_name.trim() || !createForm.address.trim() || creating) return;
+    setCreating(true);
+    const tech = availableTechnicians.find((u) => u.id === createForm.technician_id);
+    const fee = parseInt(createForm.technician_fee.replace(/[^0-9]/g, ''), 10);
+    await addOnsiteDispatch({
+      customer_name: createForm.customer_name.trim(),
+      customer_phone: createForm.phone.trim(),
+      phone: createForm.phone.trim(),
+      address: createForm.address.trim(),
+      area_zone: createForm.area_zone.trim() || undefined,
+      scheduled_time: createForm.scheduled_time.trim() || undefined,
+      issue_summary: createForm.issue_summary.trim() || undefined,
+      urgency: createForm.urgency,
+      technician_name: tech?.name || '',
+      technician_id: tech?.id,
+      technician_fee: isNaN(fee) || fee <= 0 ? undefined : fee,
+      status: tech ? 'dispatched' : 'pending',
+    });
+    setCreating(false);
+    setShowCreate(false);
+    setCreateForm({
+      customer_name: '',
+      phone: '',
+      address: '',
+      area_zone: '',
+      scheduled_time: '',
+      issue_summary: '',
+      technician_id: '',
+      technician_fee: '',
+      urgency: 'normal',
+    });
+    setNotice(
+      tech
+        ? `Đã tạo ca và giao cho KTV ${tech.name} — ca sẽ hiện trong mục "Việc của tôi" của KTV!`
+        : 'Đã tạo ca cứu hộ (chưa gán KTV).'
+    );
+    setTimeout(() => setNotice(null), 3500);
+  };
 
   const availableTechnicians = useMemo(() => {
     return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'admin');
@@ -184,6 +238,14 @@ export default function OnsiteDispatchTab() {
             Quy trình điều phối tinh gọn 4 bước: Tiếp nhận ➔ Di chuyển ➔ Xử lý tại chỗ ➔ Hoàn tất ca.
           </p>
         </div>
+        {canAssignTasks() && (
+          <button
+            onClick={() => setShowCreate(true)}
+            className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl px-4 py-2.5 shadow-sm"
+          >
+            ＋ Tạo ca & giao việc
+          </button>
+        )}
       </div>
 
       {/* Stepper Guide Banner */}
@@ -574,6 +636,139 @@ export default function OnsiteDispatchTab() {
           );
         })}
       </div>
+
+      {showCreate && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[100] p-4 text-left">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-800 mb-1">Tạo ca cứu hộ & giao việc</h3>
+            <p className="text-xs text-slate-500 mb-4">
+              Ca sẽ xuất hiện ngay trong mục <strong>"Việc của tôi"</strong> của kỹ thuật viên được
+              giao, kèm địa chỉ và nút chỉ đường Google Maps.
+            </p>
+            <div className="space-y-3 text-sm">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tên khách hàng *</label>
+                <input
+                  type="text"
+                  value={createForm.customer_name}
+                  onChange={(e) => setCreateForm({ ...createForm, customer_name: e.target.value })}
+                  placeholder="VD: Anh Tuấn — Văn phòng ABC"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại khách</label>
+                <input
+                  type="tel"
+                  value={createForm.phone}
+                  onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+                  placeholder="VD: 0909xxxxxx"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Địa chỉ đến tận nơi *</label>
+                <input
+                  type="text"
+                  value={createForm.address}
+                  onChange={(e) => setCreateForm({ ...createForm, address: e.target.value })}
+                  placeholder="Số nhà, đường, phường/xã, tỉnh — càng đầy đủ Maps chỉ càng đúng"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Khu vực</label>
+                  <input
+                    type="text"
+                    value={createForm.area_zone}
+                    onChange={(e) => setCreateForm({ ...createForm, area_zone: e.target.value })}
+                    placeholder="VD: P. Long An"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Giờ hẹn</label>
+                  <input
+                    type="text"
+                    value={createForm.scheduled_time}
+                    onChange={(e) => setCreateForm({ ...createForm, scheduled_time: e.target.value })}
+                    placeholder="VD: 15:00 hôm nay"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Mô tả việc / sự cố</label>
+                <textarea
+                  rows={2}
+                  value={createForm.issue_summary}
+                  onChange={(e) => setCreateForm({ ...createForm, issue_summary: e.target.value })}
+                  placeholder="VD: Giao máy Dell OptiPlex + cài đặt tại văn phòng; hoặc: máy không lên nguồn"
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Giao cho kỹ thuật viên</label>
+                <select
+                  value={createForm.technician_id}
+                  onChange={(e) => setCreateForm({ ...createForm, technician_id: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">-- Chưa gán, giao sau --</option>
+                  {availableTechnicians.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                      {u.role === 'outsourced' ? ' (Thuê ngoài)' : u.role === 'admin' ? ' (Admin)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Tiền công KTV (đ)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={createForm.technician_fee}
+                    onChange={(e) => setCreateForm({ ...createForm, technician_fee: e.target.value })}
+                    placeholder="VD: 200000"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Mức độ</label>
+                  <select
+                    value={createForm.urgency}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, urgency: e.target.value as 'normal' | 'urgent' })
+                    }
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="normal">Thường</option>
+                    <option value="urgent">Gấp</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end mt-6">
+              <button
+                onClick={() => setShowCreate(false)}
+                className="px-4 py-2 text-sm text-slate-600 border rounded-lg"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleCreateDispatch}
+                disabled={!createForm.customer_name.trim() || !createForm.address.trim() || creating}
+                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg"
+              >
+                {creating ? 'Đang tạo…' : 'Tạo ca & giao việc'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {convertingDispatch && (
         <ConvertOnsiteModal 

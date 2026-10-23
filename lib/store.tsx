@@ -184,6 +184,7 @@ interface StoreContextType {
   // Task / Ticket assignment actions
   assignTicketTechnician: (id: string, technicianName: string) => Promise<boolean>;
   assignDispatchTechnician: (id: string, technicianName: string, technicianId?: string) => Promise<boolean>;
+  addOnsiteDispatch: (dispatch: Omit<OnsiteDispatch, 'id' | 'created_at'>) => Promise<OnsiteDispatch>;
 
   // CRM Customer actions
   addCustomer: (customer: Omit<Customer, 'id' | 'created_at'>) => Promise<Customer>;
@@ -3451,6 +3452,31 @@ export function StoreProvider({
     return true;
   };
 
+  const addOnsiteDispatch = async (
+    dispatchData: Omit<OnsiteDispatch, 'id' | 'created_at'>
+  ): Promise<OnsiteDispatch> => {
+    const newDispatch: OnsiteDispatch = {
+      ...dispatchData,
+      id: createId(),
+      created_at: new Date().toISOString(),
+    };
+
+    setOnsiteDispatches((prev) => {
+      const next = [newDispatch, ...prev];
+      saveToLocal(STORAGE_KEYS.onsiteDispatches, next);
+      return next;
+    });
+
+    if (isUsingSupabase && supabase) {
+      const client = supabase;
+      await runSupabaseWrite(
+        () => client.from('onsite_dispatches').insert([newDispatch]),
+        'Tạo ca cứu hộ Onsite'
+      );
+    }
+    return newDispatch;
+  };
+
   const assignDispatchTechnician = async (
     id: string,
     technicianName: string,
@@ -4681,6 +4707,7 @@ export function StoreProvider({
       updateDispatchStatus,
       updateDispatchDetails,
       assignDispatchTechnician,
+      addOnsiteDispatch,
       addShiftLog,
       creditTechnicianPayroll,
       pendingOrders,
