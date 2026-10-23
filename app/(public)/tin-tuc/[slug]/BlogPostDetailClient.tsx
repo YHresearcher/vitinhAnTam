@@ -64,9 +64,9 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
               {title}
             </h1>
 
-            {post.excerpt && (
+            {((isEn && post.excerpt_en) || post.excerpt) && (
               <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed italic border-l-4 border-blue-500 pl-4 py-1">
-                {post.excerpt}
+                {(isEn && post.excerpt_en) || post.excerpt}
               </p>
             )}
 

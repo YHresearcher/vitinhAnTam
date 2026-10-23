@@ -2,6 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { ListOrdered } from 'lucide-react';
+import { useViTinhAnTamStore } from '@/lib/store';
 
 interface TocItem {
   id: string;
@@ -10,6 +11,8 @@ interface TocItem {
 }
 
 export default function TableOfContents({ contentHtml }: { contentHtml: string }) {
+  const { currentLang } = useViTinhAnTamStore();
+  const isEn = currentLang === 'en';
   const headings = useMemo<TocItem[]>(() => {
     if (!contentHtml) return [];
     const regex = /<h([2-3])[^>]*>(.*?)<\/h\1>/gi;
@@ -51,7 +54,7 @@ export default function TableOfContents({ contentHtml }: { contentHtml: string }
     <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
       <div className="flex items-center gap-2 mb-3 text-slate-900 dark:text-white font-bold text-sm">
         <ListOrdered className="w-4 h-4 text-blue-600" />
-        <span>Mục lục bài viết</span>
+        <span>{isEn ? 'Table of Contents' : 'Mục lục bài viết'}</span>
       </div>
 
       <ul className="space-y-2 text-xs">

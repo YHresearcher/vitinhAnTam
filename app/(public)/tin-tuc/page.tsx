@@ -197,8 +197,8 @@ export default function PublicBlogPage() {
           !featuredPost && (
             <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
               <BookOpen className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-              <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">Không tìm thấy bài viết nào</h3>
-              <p className="text-xs text-slate-500 mt-1">Hãy thử tìm kiếm với từ khóa khác.</p>
+              <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">{isEn ? 'No articles found' : 'Không tìm thấy bài viết nào'}</h3>
+              <p className="text-xs text-slate-500 mt-1">{isEn ? 'Try searching with a different keyword.' : 'Hãy thử tìm kiếm với từ khóa khác.'}</p>
             </div>
           )
         )}
