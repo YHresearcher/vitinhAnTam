@@ -158,6 +158,14 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
 
   const partsTotal = parts.reduce((sum, p) => sum + p.price * p.quantity, 0);
 
+  // Xem trước trực tiếp (live preview): dòng linh kiện đang gõ dở —
+  // chưa bấm "Thêm" — cũng được tính vào các con số hiển thị, để người
+  // nhập thấy tổng tiền thay đổi theo từng phím gõ. Số LƯU xuống phiếu
+  // vẫn chỉ gồm các dòng đã bấm Thêm (xem handleSave).
+  const draftPartTotal = (Number(newPartQty) || 0) * (Number(newPartPrice) || 0);
+  const hasDraftPart = draftPartTotal > 0;
+  const partsPreviewTotal = partsTotal + draftPartTotal;
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -504,7 +512,12 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                 <span>Linh Kiện &amp; Dịch Vụ Tính Phí</span>
               </h3>
               <span className="text-xs font-mono font-bold text-emerald-700">
-                {partsTotal.toLocaleString('vi-VN')} đ
+                {partsPreviewTotal.toLocaleString('vi-VN')} đ
+                {hasDraftPart && (
+                  <span className="ml-1.5 font-sans text-[10px] font-semibold text-amber-600">
+                    (gồm {draftPartTotal.toLocaleString('vi-VN')} đ đang nhập)
+                  </span>
+                )}
               </span>
             </div>
 
@@ -576,6 +589,11 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                   className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs text-right font-mono"
                 />
               </div>
+              {hasDraftPart && (
+                <span className="whitespace-nowrap pb-1 font-mono font-bold text-emerald-700">
+                  = {draftPartTotal.toLocaleString('vi-VN')} đ
+                </span>
+              )}
               <button
                 type="button"
                 onClick={handleAddPart}
@@ -602,10 +620,18 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
             </div>
 
             <div className="text-right">
+              <span className="text-xs text-slate-400 mr-3">
+                Linh kiện: {partsPreviewTotal.toLocaleString('vi-VN')} đ
+              </span>
               <span className="text-xs text-slate-400 mr-2">Tổng thu dự kiến:</span>
               <span className="text-lg font-black font-mono text-emerald-400">
-                {((actualCost || 0) + partsTotal).toLocaleString('vi-VN')} đ
+                {((actualCost || 0) + partsPreviewTotal).toLocaleString('vi-VN')} đ
               </span>
+              {hasDraftPart && (
+                <span className="block text-[10px] font-semibold text-amber-400">
+                  Tạm tính — gồm dòng đang nhập, bấm Thêm để chốt vào phiếu
+                </span>
+              )}
             </div>
           </div>
         </div>
