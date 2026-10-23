@@ -706,7 +706,7 @@ export default function HomePage() {
                         {/* Actions */}
                         <div className="pt-3 flex items-center gap-2 border-t border-slate-100">
                           <Link
-                            href="https://zalo.me/0961803623"
+                            href={`https://zalo.me/${systemSettings.zaloNumber || '0909053058'}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
@@ -1327,7 +1327,7 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
               <a
-                href={`https://zalo.me/0909053058?text=${zaloMessage}`}
+                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${zaloMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"

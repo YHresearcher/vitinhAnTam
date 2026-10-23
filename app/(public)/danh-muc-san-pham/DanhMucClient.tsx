@@ -520,7 +520,7 @@ function ProductsCatalogContent() {
                     </div>
                     <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                       <a
-                        href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+                        href={systemSettings?.zaloLink || 'https://zalo.me/0909053058'}
                         target="_blank"
                         rel="noreferrer"
                         className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center gap-2"
@@ -779,7 +779,7 @@ function ProductsCatalogContent() {
           </p>
           <div className="pt-2">
             <a
-              href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+              href={systemSettings?.zaloLink || 'https://zalo.me/0909053058'}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
@@ -881,7 +881,7 @@ function ProductsCatalogContent() {
                   {/* Actions */}
                   <div className="pt-2 flex items-center gap-2 border-t border-slate-200">
                     <a
-                      href={systemSettings?.zaloLink || 'https://zalo.me/0969624564'}
+                      href={systemSettings?.zaloLink || 'https://zalo.me/0909053058'}
                       target="_blank"
                       rel="noreferrer"
                       className="px-3 py-2.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors flex items-center justify-center gap-1.5"

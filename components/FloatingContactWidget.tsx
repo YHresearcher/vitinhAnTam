@@ -12,6 +12,7 @@ export function FloatingContactWidget() {
 
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
+  const cw = systemSettings.contactWidget;
   const hotline = systemSettings.hotline || '0909.053.058';
   const cleanHotline = hotline.replace(/\./g, '');
 
@@ -26,30 +27,35 @@ export function FloatingContactWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
       {/* 1. Tra cuu bao hanh */}
-      <Link
-        href="/tra-cuu-bao-hanh"
-        className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-[#FAF7F2] text-[#C0392B] border-2 border-[#C0392B] shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
-        title={t.floating.warrantyTooltip}
-      >
-        <ShieldCheck className="w-5 h-5 text-[#C0392B]" strokeWidth={1.5} />
-        <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
-          {t.floating.warrantyTooltip}
-        </span>
-      </Link>
+      {cw?.showWarranty !== false && (
+        <Link
+          href="/tra-cuu-bao-hanh"
+          className="pointer-events-auto w-12 h-12 rounded-full bg-white hover:bg-[#FAF7F2] text-[#C0392B] border-2 border-[#C0392B] shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
+          title={t.floating.warrantyTooltip}
+        >
+          <ShieldCheck className="w-5 h-5 text-[#C0392B]" strokeWidth={1.5} />
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
+            {t.floating.warrantyTooltip}
+          </span>
+        </Link>
+      )}
 
       {/* 2. Hotline */}
-      <a
-        href={`tel:${cleanHotline}`}
-        className="pointer-events-auto w-12 h-12 rounded-full bg-[#D9531E] hover:bg-[#C0392B] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
-        title={`Hotline: ${hotline}`}
-      >
-        <PhoneCall className="w-5 h-5" strokeWidth={1.5} />
-        <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
-          Hotline: {hotline} (24/7)
-        </span>
-      </a>
+      {cw?.showHotline !== false && (
+        <a
+          href={`tel:${cleanHotline}`}
+          className="pointer-events-auto w-12 h-12 rounded-full bg-[#D9531E] hover:bg-[#C0392B] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
+          title={`Hotline: ${hotline}`}
+        >
+          <PhoneCall className="w-5 h-5" strokeWidth={1.5} />
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
+            Hotline: {hotline} (24/7)
+          </span>
+        </a>
+      )}
 
       {/* 3. Zalo */}
+      {cw?.showZalo !== false && (
       <div className="relative pointer-events-auto">
         <button
           type="button"
@@ -102,6 +108,10 @@ export function FloatingContactWidget() {
                           ? 'Hardware Support'
                           : contact.role === 'Cứu hộ khẩn cấp'
                           ? 'Emergency Dispatch'
+                          : contact.role === 'Hỗ trợ tiếng Anh'
+                          ? 'English Support'
+                          : contact.role && contact.role.includes('English')
+                          ? contact.role
                           : contact.role
                         : contact.role}
                     </div>
@@ -115,30 +125,35 @@ export function FloatingContactWidget() {
           </div>
         )}
       </div>
+      )}
 
       {/* 4. WhatsApp */}
-      <a
-        href={systemSettings.whatsappLink || 'https://wa.me/84909053058'}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="pointer-events-auto w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
-        title="WhatsApp"
-      >
-        <MessageCircle className="w-5 h-5 text-white" />
-        <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
-          WhatsApp: {systemSettings.whatsappNumber || '0909053058'}
-        </span>
-      </a>
+      {cw?.showWhatsapp !== false && (
+        <a
+          href={systemSettings.whatsappLink || 'https://wa.me/84909053058'}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="pointer-events-auto w-12 h-12 rounded-full bg-[#25D366] hover:bg-[#20ba5a] text-white shadow-lg flex items-center justify-center transition-all hover:scale-110 active:scale-95 group relative"
+          title="WhatsApp"
+        >
+          <MessageCircle className="w-5 h-5 text-white" />
+          <span className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all absolute right-14 px-3 py-1.5 rounded-lg bg-[#2B1810] text-white text-xs font-semibold whitespace-nowrap shadow-xl">
+            WhatsApp: {systemSettings.whatsappNumber || '0909053058'}
+          </span>
+        </a>
+      )}
 
       {/* 5. Scroll to Top */}
-      <button
-        type="button"
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className="pointer-events-auto w-10 h-10 rounded-full bg-white hover:bg-[#FAF7F2] text-[#6E5D53] hover:text-[#2B1810] border border-[#E8E2D9] shadow-md flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
-        title={t.floating.backToTop}
-      >
-        <ArrowUp className="w-4 h-4 text-[#2B1810]" strokeWidth={1.5} />
-      </button>
+      {cw?.showBackToTop !== false && (
+        <button
+          type="button"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="pointer-events-auto w-10 h-10 rounded-full bg-white hover:bg-[#FAF7F2] text-[#6E5D53] hover:text-[#2B1810] border border-[#E8E2D9] shadow-md flex items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          title={t.floating.backToTop}
+        >
+          <ArrowUp className="w-4 h-4 text-[#2B1810]" strokeWidth={1.5} />
+        </button>
+      )}
     </div>
   );
 }

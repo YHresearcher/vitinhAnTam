@@ -45,12 +45,21 @@ export interface ZaloContactItem {
   role?: string;
 }
 
+export interface ContactWidgetConfig {
+  showWarranty?: boolean;
+  showHotline?: boolean;
+  showZalo?: boolean;
+  showWhatsapp?: boolean;
+  showBackToTop?: boolean;
+}
+
 export interface SystemSettings {
   brandSlogan?: string;
   hotline: string;
   zaloNumber: string;
   zaloLink: string;
   zaloContacts?: ZaloContactItem[];
+  contactWidget?: ContactWidgetConfig;
   whatsappNumber: string;
   whatsappLink: string;
   email: string;
@@ -94,10 +103,11 @@ export const initialSystemSettings: SystemSettings = {
   zaloNumber: '0909053058',
   zaloLink: 'https://zalo.me/0909053058',
   zaloContacts: [
-    { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '123456', role: 'Tư vấn bán hàng & cấu hình máy' },
-    { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '345678', role: 'Hỗ trợ phần cứng & bảo hành' },
-    { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '678910', role: 'Cứu hộ khẩn cấp & key bản quyền' },
+    { id: 'zalo-1', name: 'Kỹ Thuật 1', phone: '0909053058', role: 'Tư vấn bán hàng & cấu hình máy' },
+    { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '0909053058', role: 'Hỗ trợ phần cứng & bảo hành' },
+    { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '0909053058', role: 'Cứu hộ khẩn cấp & key bản quyền' },
   ],
+  contactWidget: { showWarranty: true, showHotline: true, showZalo: true, showWhatsapp: true, showBackToTop: true },
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
   email: 'hello@vitinhantam.com',

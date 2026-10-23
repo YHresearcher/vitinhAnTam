@@ -14,6 +14,7 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['zaloNumber', 'zalo_number'],
   ['zaloLink', 'zalo_link'],
   ['zaloContacts', 'zalo_contacts'],
+  ['contactWidget', 'contact_widget'],
   ['whatsappNumber', 'whatsapp_number'],
   ['whatsappLink', 'whatsapp_link'],
   ['email', 'email'],

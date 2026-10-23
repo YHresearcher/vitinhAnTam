@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { PaymentQrSettingsSection } from '@/components/admin/PaymentQrSettingsSection';
+import { ContactWidgetSettingsSection } from '@/components/admin/ContactWidgetSettingsSection';
 import Link from 'next/link';
 import {
   Tabs,
@@ -869,6 +870,14 @@ export default function CaiDatPage() {
                         handleChange={handleChange}
                         isUploadingQr={isUploadingQr}
                         handleUploadQrImage={handleUploadQrImage}
+                      />
+                    </div>
+
+                    {/* Widget Liên Hệ Trang Chủ */}
+                    <div className="pt-2">
+                      <ContactWidgetSettingsSection
+                        formData={formData}
+                        setFormData={setFormData}
                       />
                     </div>
                   </div>
