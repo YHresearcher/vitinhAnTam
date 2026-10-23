@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vitinhantam.com'),
+  metadataBase: new URL('https://www.vitinhantam.com'),
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     'sửa máy tính tận nơi',
     'cứu hộ máy tính',
   ],
-  authors: [{ name: 'Vi Tính An Tâm', url: 'https://vitinhantam.com' }],
+  authors: [{ name: 'Vi Tính An Tâm', url: 'https://www.vitinhantam.com' }],
   creator: 'Vi Tính An Tâm',
   publisher: 'Vi Tính An Tâm',
   formatDetection: {
@@ -65,13 +65,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, bảo hành chu đáo. Hotline: 0909.053.058.',
-    url: 'https://vitinhantam.com',
+    url: 'https://www.vitinhantam.com',
     siteName: 'Vi Tính An Tâm',
     locale: 'vi_VN',
     type: 'website',
     images: [
       {
-        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
+        url: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -82,7 +82,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, hỗ trợ tận tâm.',
-    images: ['https://vitinhantam.com/anh-that-cua-hang.jpg'],
+    images: ['https://www.vitinhantam.com/images/hero-showroom.jpg'],
   },
   robots: {
     index: true,
@@ -102,10 +102,10 @@ const jsonLd = {
   '@type': 'LocalBusiness',
   name: 'Vi Tính An Tâm',
   slogan: 'Bán bằng tâm để bạn an tâm',
-  url: 'https://vitinhantam.com',
+  url: 'https://www.vitinhantam.com',
   telephone: '+84909053058',
   email: 'hello@vitinhantam.com',
-  image: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
+  image: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '52 Nguyễn Cửu Vân',

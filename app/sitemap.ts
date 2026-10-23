@@ -6,7 +6,7 @@ import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://vitinhantam.com';
+  const baseUrl = 'https://www.vitinhantam.com';
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -17,12 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/tin-tuc`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/danh-muc-san-pham`,
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 0.9,

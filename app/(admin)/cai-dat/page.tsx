@@ -157,7 +157,7 @@ export default function CaiDatPage() {
     if (typeof window !== 'undefined') {
       return `${window.location.origin}/api/webhook/zalo`;
     }
-    return 'https://vitinhantam.com/api/webhook/zalo';
+    return 'https://www.vitinhantam.com/api/webhook/zalo';
   };
 
   const validateBotTokenFormat = (): string | null => {

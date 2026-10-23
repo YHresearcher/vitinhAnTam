@@ -14,10 +14,10 @@ export const metadata: Metadata = {
     title: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
     description:
       'Máy tính cũ bảo hành 6 tháng đồng loạt, máy nguyên bản chưa qua sửa chữa, linh kiện rõ ràng. Hotline: 0909.053.058.',
-    url: 'https://vitinhantam.com',
+    url: 'https://www.vitinhantam.com',
     images: [
       {
-        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
+        url: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -71,12 +71,12 @@ const websiteJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Vi Tính An Tâm',
-  url: 'https://vitinhantam.com',
+  url: 'https://www.vitinhantam.com',
   potentialAction: {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: 'https://vitinhantam.com/tra-cuu-bao-hanh?tag={search_term_string}',
+      urlTemplate: 'https://www.vitinhantam.com/tra-cuu-bao-hanh?tag={search_term_string}',
     },
     'query-input': 'required name=search_term_string',
   },

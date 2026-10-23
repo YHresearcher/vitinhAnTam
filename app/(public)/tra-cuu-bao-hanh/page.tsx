@@ -12,10 +12,10 @@ export const metadata: Metadata = {
     title: 'Tra Cứu Bảo Hành — Vi Tính An Tâm',
     description:
       'Tra cứu nhanh tình trạng bảo hành máy tính bằng Service Tag hoặc số điện thoại. Hỗ trợ kỹ thuật nhanh chóng.',
-    url: 'https://vitinhantam.com/tra-cuu-bao-hanh',
+    url: 'https://www.vitinhantam.com/tra-cuu-bao-hanh',
     images: [
       {
-        url: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
+        url: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
         width: 1200,
         height: 630,
         alt: 'Tra cứu bảo hành máy tính tại Vi Tính An Tâm',
@@ -33,13 +33,13 @@ const breadcrumbJsonLd = {
       '@type': 'ListItem',
       position: 1,
       name: 'Trang chủ',
-      item: 'https://vitinhantam.com',
+      item: 'https://www.vitinhantam.com',
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Tra cứu bảo hành',
-      item: 'https://vitinhantam.com/tra-cuu-bao-hanh',
+      item: 'https://www.vitinhantam.com/tra-cuu-bao-hanh',
     },
   ],
 };
