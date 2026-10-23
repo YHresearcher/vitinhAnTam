@@ -37,7 +37,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 w-full z-50 bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E8E2D9] shadow-xs">
       {/* Main Header */}
-      <div className="min-h-[64px] sm:min-h-[72px] py-1.5 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+      <div className="min-h-[64px] sm:min-h-[72px] py-1.5 max-w-7xl mx-auto px-4 sm:px-6 xl:px-8 flex items-center justify-between gap-2 xl:gap-4">
         {/* Logo with Slogan */}
         <div className="flex items-center gap-2.5">
           <Link href="/" className="shrink-0">
@@ -46,11 +46,11 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation - Tăng kích thước chữ từng hạng mục */}
-        <nav className="hidden md:flex items-center gap-1.5" aria-label="Menu chính">
+        <nav className="hidden xl:flex items-center gap-1 shrink-0" aria-label="Menu chính">
           <Link
             href="/"
             aria-current={pathname === '/' ? 'page' : undefined}
-            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
+            className={`px-2.5 py-2 text-[13.5px] font-bold rounded-lg transition-colors whitespace-nowrap ${
               pathname === '/'
                 ? 'bg-[#FBE8DE] text-[#C0392B]'
                 : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
@@ -61,7 +61,7 @@ export function Navbar() {
           <Link
             href="/vi-sao-chon-an-tam"
             aria-current={pathname === '/vi-sao-chon-an-tam' ? 'page' : undefined}
-            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
+            className={`px-2.5 py-2 text-[13.5px] font-bold rounded-lg transition-colors whitespace-nowrap ${
               pathname === '/vi-sao-chon-an-tam'
                 ? 'bg-[#FBE8DE] text-[#C0392B]'
                 : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
@@ -72,21 +72,21 @@ export function Navbar() {
           <Link
             href="/#san-pham"
             onClick={(e) => handleScrollToAnchor(e, 'san-pham')}
-            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            className="text-[13.5px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-2.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA] whitespace-nowrap"
           >
             {t.products}
           </Link>
           <Link
             href="/#dich-vu-spa"
             onClick={(e) => handleScrollToAnchor(e, 'dich-vu-spa')}
-            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            className="text-[13.5px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-2.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA] whitespace-nowrap"
           >
             {t.services}
           </Link>
           <Link
             href="/tin-tuc"
             aria-current={pathname.startsWith('/tin-tuc') ? 'page' : undefined}
-            className={`px-3.5 py-2 text-sm lg:text-[15px] font-bold rounded-lg transition-colors ${
+            className={`px-2.5 py-2 text-[13.5px] font-bold rounded-lg transition-colors whitespace-nowrap ${
               pathname.startsWith('/tin-tuc')
                 ? 'bg-[#FBE8DE] text-[#C0392B]'
                 : 'text-[#5C4D44] hover:text-[#C0392B] hover:bg-[#F4EFEA]'
@@ -97,7 +97,7 @@ export function Navbar() {
           <Link
             href="/#chinh-sach"
             onClick={(e) => handleScrollToAnchor(e, 'chinh-sach')}
-            className="text-sm lg:text-[15px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-3.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA]"
+            className="text-[13.5px] font-bold text-[#5C4D44] hover:text-[#C0392B] px-2.5 py-2 rounded-lg transition-colors hover:bg-[#F4EFEA] whitespace-nowrap"
           >
             {t.contact}
           </Link>
@@ -108,7 +108,7 @@ export function Navbar() {
           {/* Nút Đặt Lịch Ngay trên Desktop */}
           <Link
             href="/dat-lich"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs lg:text-sm font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white text-xs xl:text-[13px] font-bold shadow-xs transition-all hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
           >
             <Calendar className="w-3.5 h-3.5" />
             <span>{t.bookNow || (isEn ? 'Book Service' : 'Đặt Lịch Ngay')}</span>
@@ -195,7 +195,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors"
+            className="xl:hidden p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors"
             aria-label="Toggle Navigation Menu"
           >
             {isMobileMenuOpen ? (
@@ -209,7 +209,7 @@ export function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-4 pt-2 pb-4 space-y-1 shadow-lg">
+        <div className="xl:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-4 pt-2 pb-4 space-y-1 shadow-lg">
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}

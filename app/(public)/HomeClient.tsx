@@ -119,11 +119,21 @@ export default function HomePage() {
     return uniqueList;
   }, [allProducts]);
   
-  // YÊU CẦU 1: Trang chủ chỉ lấy đúng 3 sản phẩm nổi bật đang sẵn kho
-  const featuredProducts = useMemo(() => inStockProducts.slice(0, 3), [inStockProducts]);
+  // QUY TẮC HIỂN THỊ KHO MÁY: sắp xếp mới nhất trước (theo ngày nhập kho);
+  // mục "Tất cả" chỉ hiện 3 máy mới nhất, tab "Máy tính & Laptop" (xem
+  // toàn bộ kho) hiện toàn bộ.
+  const sortedInStockProducts = useMemo(
+    () =>
+      [...inStockProducts].sort((a, b) => (b.addedAt || '').localeCompare(a.addedAt || '')),
+    [inStockProducts]
+  );
+  const featuredProducts = useMemo(() => sortedInStockProducts.slice(0, 3), [sortedInStockProducts]);
+  const displayedProducts = homeProductTab === 'hardware' ? sortedInStockProducts : featuredProducts;
 
-  // 3 sản phẩm RAM & SSD ngẫu nhiên / sẵn kho từ kho linh kiện (spareParts) có số lượng > 0
-  const featuredComponents = useMemo(() => {
+  // QUY TẮC HIỂN THỊ LINH KIỆN: toàn bộ RAM & SSD còn hàng, mới nhất
+  // trước (theo created_at nếu dữ liệu có); mục "Tất cả" chỉ hiện 3
+  // linh kiện mới nhất, tab "Linh kiện" hiện toàn bộ.
+  const allComponents = useMemo(() => {
     const list = (spareParts || []).filter((p) => {
       const stock = Number(p.quantity_in_stock) || 0;
       if (stock <= 0) return false;
@@ -137,27 +147,14 @@ export default function HomePage() {
         name.includes('NVME')
       );
     });
-
-    if (list.length === 0) return [];
-
-    // Chọn phong phú cả SSD và RAM, lấy đúng 3 sản phẩm
-    const ssds = list.filter((p) => (p.part_type || '').toUpperCase() === 'SSD' || (p.part_name || '').toUpperCase().includes('SSD'));
-    const rams = list.filter((p) => (p.part_type || '').toUpperCase() === 'RAM' || (p.part_name || '').toUpperCase().includes('RAM'));
-
-    const picked: typeof list = [];
-    if (ssds.length > 0) picked.push(ssds[0]);
-    if (rams.length > 0) picked.push(rams[0]);
-    if (ssds.length > 1 && picked.length < 3) picked.push(ssds[1]);
-    if (rams.length > 1 && picked.length < 3) picked.push(rams[1]);
-
-    for (const item of list) {
-      if (picked.length >= 3) break;
-      if (!picked.some((x) => x.id === item.id)) {
-        picked.push(item);
-      }
-    }
-    return picked.slice(0, 3);
+    return [...list].sort((a, b) =>
+      ((b as { created_at?: string }).created_at || '').localeCompare(
+        (a as { created_at?: string }).created_at || ''
+      )
+    );
   }, [spareParts]);
+  const featuredComponents = useMemo(() => allComponents.slice(0, 3), [allComponents]);
+  const displayedComponents = homeProductTab === 'components' ? allComponents : featuredComponents;
 
   const getPartImage = (part: { part_type?: string; part_name?: string }) => {
     const type = (part.part_type || '').toUpperCase();
@@ -225,6 +222,23 @@ export default function HomePage() {
     }));
   }, [keyCategories, licenseKeys, publicKeyCatalog]);
 
+  // QUY TẮC HIỂN THỊ KEY Ở TRANG CHỦ: mục "Tất cả" chỉ hiện 3 phân loại
+  // nổi bật — Windows 11 Pro, Office 2021, Microsoft 365 — theo đúng thứ
+  // tự này; tab "Phần mềm & Key" (xem toàn bộ) hiện mọi phân loại còn hàng.
+  const featuredSoftwareCategories = useMemo(() => {
+    const patterns = ['WINDOWS 11 PRO', 'OFFICE 2021', '365'];
+    return patterns
+      .map((p) => availableSoftwareCategories.find((c) => c.name.toUpperCase().includes(p)))
+      .filter((c): c is (typeof availableSoftwareCategories)[number] => Boolean(c));
+  }, [availableSoftwareCategories]);
+  const displayedSoftwareCategories =
+    homeProductTab === 'software' ? availableSoftwareCategories : featuredSoftwareCategories;
+  // Tổng số key đang sẵn sàng — dùng cho chip trạng thái kho ở hero
+  const totalAvailableKeys = useMemo(
+    () => availableSoftwareCategories.reduce((sum, c) => sum + (c.availableStock || 0), 0),
+    [availableSoftwareCategories]
+  );
+
   const totalReadyStock = useMemo(
     () => inStockProducts.reduce((acc, curr) => acc + curr.stockCount, 0),
     [inStockProducts]
@@ -266,16 +280,23 @@ export default function HomePage() {
         <section className="bg-gradient-to-b from-[#FDFBF7] via-white to-[#F8FAFC] border-b border-slate-200/80 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {/* Top brand & store location status */}
+            {/* Trạng thái kho trực tiếp (thay chip brandTag cũ bị trùng tên
+                thương hiệu với header): số máy + số key đang có sẵn thật */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-6 pb-5 border-b border-slate-200/60 text-xs">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-[#FBE8DE] text-[#C0392B] text-[10px] font-extrabold uppercase tracking-wider border border-[#F2C4B2]">
-                  {t.hero.brandTag || 'TIỆM VI TÍNH TỬ TẾ • TÂY NINH'}
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  {isEn
+                    ? `In stock now: ${totalReadyStock} computers • ${totalAvailableKeys} license keys`
+                    : `Có sẵn tại kho: ${totalReadyStock} máy • ${totalAvailableKeys} key bản quyền`}
                 </span>
-                
-              
               </div>
-              
+              <span className="hidden sm:block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                {isEn ? 'Tan An, Long An • On-site rescue & support' : 'Tân An, Long An • Cứu hộ & hỗ trợ tận nơi'}
+              </span>
             </div>
 
             {/* Main Hero: 2-column with content left & image showcase right */}
@@ -444,7 +465,7 @@ export default function HomePage() {
               >
                 <span>{isEn ? 'Components (RAM / SSD)' : 'LINH KIỆN (RAM / SSD)'}</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
-                  {featuredComponents.length}
+                  {allComponents.length}
                 </span>
               </button>
               <button
@@ -468,7 +489,7 @@ export default function HomePage() {
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
           {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
             <div className="space-y-6 mb-10">
-              {featuredProducts.length === 0 ? (
+              {displayedProducts.length === 0 ? (
                 <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
                   <Monitor className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                   <p className="text-sm font-semibold text-slate-600">
@@ -481,7 +502,7 @@ export default function HomePage() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {featuredProducts.map((prod) => (
+                    {displayedProducts.map((prod) => (
                       <div
                         key={prod.id}
                         className="group bg-white rounded-2xl border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
@@ -572,6 +593,19 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
+                  {homeProductTab === 'all' && sortedInStockProducts.length > 3 && (
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setHomeProductTab('hardware')}
+                        className="px-5 py-2.5 rounded-xl bg-white border border-[#E8E2D9] hover:border-[#C0392B] text-[#C0392B] font-bold text-xs uppercase tracking-wider transition-all"
+                      >
+                        {isEn
+                          ? `View all ${sortedInStockProducts.length} computers in stock →`
+                          : `Xem toàn bộ kho máy (${sortedInStockProducts.length} sản phẩm) →`}
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -595,13 +629,13 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {featuredComponents.length === 0 ? (
+              {displayedComponents.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
                   {isEn ? 'Components are currently being replenished.' : 'Kho linh kiện RAM & SSD đang được cập nhật thêm.'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {featuredComponents.map((part) => (
+                  {displayedComponents.map((part) => (
                     <div
                       key={part.id}
                       className="group bg-white rounded-2xl border border-slate-200 hover:border-[#C0392B] shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
@@ -712,7 +746,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
-                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (LIFETIME ON MOTHERBOARD)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (VĨNH VIỄN THEO MAINBOARD)'}
+                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (WINDOWS & OFFICE)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (WINDOWS & OFFICE)'}
                   </h3>
                 </div>
                 <button
@@ -724,13 +758,13 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {availableSoftwareCategories.length === 0 ? (
+              {displayedSoftwareCategories.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
                   {isEn ? 'License keys are temporarily being replenished.' : 'Các phiên bản key bản quyền đang được cập nhật thêm vào kho.'}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {availableSoftwareCategories.map((cat) => (
+                  {displayedSoftwareCategories.map((cat) => (
                     <div
                       key={cat.id}
                       className="group bg-white rounded-2xl border border-[#E8E2D9] hover:border-[#C0392B] shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between overflow-hidden p-6"
@@ -761,7 +795,19 @@ export default function HomePage() {
                         <div className="pt-3 border-t border-slate-100 space-y-1.5 text-[11px] text-[#6E5D53]">
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span>{isEn ? 'Lifetime motherboard digital entitlement, never expires' : 'Kích hoạt vĩnh viễn theo máy, không hết hạn'}</span>
+                            <span>
+                              {cat.type === 'windows'
+                                ? isEn
+                                  ? 'Lifetime digital license bound to the motherboard'
+                                  : 'Bản quyền số vĩnh viễn theo mainboard'
+                                : cat.type === 'office'
+                                  ? isEn
+                                    ? 'Bound to your Microsoft account — not tied to the motherboard, moves to a new PC with you'
+                                    : 'Gắn với tài khoản Microsoft — không theo mainboard, đổi máy vẫn dùng tiếp được'
+                                  : isEn
+                                    ? 'Genuine license with 1-to-1 replacement warranty'
+                                    : 'Bản quyền chính hãng, bảo hành 1 đổi 1'}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />

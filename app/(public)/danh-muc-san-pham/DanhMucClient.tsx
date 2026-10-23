@@ -1087,7 +1087,13 @@ function ProductsCatalogContent() {
                 {isEn ? 'GENUINE SOFTWARE LICENSES' : 'MUA KEY BẢN QUYỀN'}
               </h2>
               <p className="text-xs text-[#6E5D53]">
-                {isEn ? 'Hardware-bound digital license • Lifetime activation • 1-to-1 replacement guarantee' : 'Kích hoạt theo máy, bảo hành 1 đổi 1.'}
+                {selectedKeyType === 'windows'
+                  ? isEn
+                    ? 'Windows keys: digital license bound to the motherboard • 1-to-1 replacement guarantee'
+                    : 'Key Windows: bản quyền số kích hoạt theo mainboard • Bảo hành 1 đổi 1.'
+                  : isEn
+                    ? 'Office keys: bound to your Microsoft account (not the motherboard) • 1-to-1 replacement guarantee'
+                    : 'Key Office: gắn với tài khoản Microsoft, không theo mainboard • Bảo hành 1 đổi 1.'}
               </p>
             </div>
 

@@ -30,6 +30,7 @@ export interface ShowcaseItem {
   qcStatus: string;
   burnInDuration: number;
   isSold?: boolean;
+  addedAt?: string; // Ngày nhập kho (import_date) hoặc ngày tạo — để sắp xếp "mới nhất" ở trang chủ
   customerName?: string;
   customerArea?: string;
   handoverDate?: string;
@@ -161,6 +162,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         qcStatus: item.qc_status || 'ready_to_sell',
         burnInDuration: item.burn_in_duration || 60,
         isSold,
+        addedAt: item.import_date || item.created_at || undefined,
         customerName: item.customer_name,
         customerArea: item.customer_phone ? (isEn ? 'Tay Ninh Region' : 'Khu vực Tây Ninh') : undefined,
         handoverDate: item.handover_date,
