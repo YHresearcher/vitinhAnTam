@@ -102,7 +102,7 @@ const jsonLd = {
   slogan: 'Bán bằng tâm để bạn an tâm',
   url: 'https://vitinhantam.com',
   telephone: '+84909053058',
-  email: 'lienhe@vitinhantam.com',
+  email: 'hello@vitinhantam.com',
   image: 'https://vitinhantam.com/anh-that-cua-hang.jpg',
   address: {
     '@type': 'PostalAddress',

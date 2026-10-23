@@ -39,8 +39,8 @@ export function Footer() {
               </p>
               <p>
                 <strong className="text-white font-bold">{t.emailLabel}</strong>{' '}
-                <a href={`mailto:${systemSettings.email}`} className="hover:text-white transition-colors">
-                  {systemSettings.email || 'lienhe@vitinhantam.com'}
+                <a href={`mailto:${systemSettings.email || 'hello@vitinhantam.com'}`} className="hover:text-white transition-colors">
+                  {systemSettings.email || 'hello@vitinhantam.com'}
                 </a>
               </p>
             </div>

@@ -100,7 +100,7 @@ export const initialSystemSettings: SystemSettings = {
   ],
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
-  email: 'lienhe@vitinhantam.com',
+  email: 'hello@vitinhantam.com',
   address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh',
   streetAddress: '52 Nguyễn Cửu Vân',
   district: 'P. Long An',
