@@ -117,7 +117,7 @@ function AppointmentBookingContent() {
 
     const currentDistName =
       availableDistricts.find((d) => d.id === selectedDistrict)?.name || '';
-    const cityName = selectedCity === 'long_an' ? 'Long An' : 'TP. Hồ Chí Minh';
+    const cityName = selectedCity === 'long_an' ? 'Tây Ninh' : 'TP. Hồ Chí Minh';
 
     const parts = [
       streetAddress.trim(),
@@ -463,7 +463,7 @@ function AppointmentBookingContent() {
                           onChange={(e) => handleCityChange(e.target.value as 'long_an' | 'tphcm')}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all cursor-pointer"
                         >
-                          <option value="long_an">Long An</option>
+                          <option value="long_an">Tây Ninh</option>
                           <option value="tphcm">TP. Hồ Chí Minh</option>
                         </select>
                       </div>
