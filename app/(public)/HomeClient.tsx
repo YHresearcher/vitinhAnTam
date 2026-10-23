@@ -295,7 +295,7 @@ export default function HomePage() {
                 </span>
               </div>
               <span className="hidden sm:block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                {isEn ? 'Tan An, Long An • On-site rescue & support' : 'Tân An, Long An • Cứu hộ & hỗ trợ tận nơi'}
+                {isEn ? 'On-site rescue & support' : 'Cứu hộ & hỗ trợ tận nơi'}
               </span>
             </div>
 
@@ -802,8 +802,8 @@ export default function HomePage() {
                                   : 'Bản quyền số vĩnh viễn theo mainboard'
                                 : cat.type === 'office'
                                   ? isEn
-                                    ? 'Bound to your Microsoft account — not tied to the motherboard, moves to a new PC with you'
-                                    : 'Gắn với tài khoản Microsoft — không theo mainboard, đổi máy vẫn dùng tiếp được'
+                                    ? 'Perpetual license, one-time online activation — no recurring fees'
+                                    : 'Bản quyền vĩnh viễn, kích hoạt online 1 lần — không phí gia hạn định kỳ'
                                   : isEn
                                     ? 'Genuine license with 1-to-1 replacement warranty'
                                     : 'Bản quyền chính hãng, bảo hành 1 đổi 1'}
