@@ -858,56 +858,19 @@ export default function HomePage() {
         <section className="bg-[#FAF7F2] border-y border-[#E8E2D9] py-16 scroll-mt-20" id="dich-vu-spa">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {/* Split Feature: Hardware Testing Lab Image & Technical Standards */}
-            <div className="bg-white rounded-2xl border border-[#E8E2D9] shadow-sm p-6 sm:p-10 mb-12">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                
-                {/* Tech Lab Image */}
-                <div className="lg:col-span-6 relative aspect-16/10 rounded-xl overflow-hidden shadow-md border border-slate-200 group">
-                  <Image
-                    src="/images/tech-service-lab.jpg"
-                    alt="Phòng Kỹ Thuật Kiểm Định Phần Cứng Vi Tính An Tâm"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                  <div className="absolute bottom-3 left-3 right-3 text-white">
-                    <span className="text-[10px] font-mono uppercase bg-[#C0392B] px-2 py-0.5 rounded font-bold">
-                      {isEn ? 'TECHNICAL STANDARD' : 'TIÊU CHUẨN KỸ THUẬT'}
-                    </span>
-                    <p className="text-xs font-semibold mt-1">
-                      {isEn ? 'Sonic cleaning • Arctic MX-4 paste • FurMark / AIDA64 load testing' : 'Vệ sinh siêu âm • Keo tản nhiệt Arctic MX-4 • Stress test FurMark / AIDA64'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Technical Description */}
-                <div className="lg:col-span-6 space-y-4">
-                  <div className="inline-flex items-center px-3 py-1 rounded-md bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
-                    {t.services.tag}
-                  </div>
-                  <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
-                    {t.services.title}
-                  </h2>
-                  <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed">
-                    {isEn
-                      ? 'Every device serviced or delivered undergoes thorough inspection under realistic workloads. Original hardware, transparent pricing, zero hidden fees.'
-                      : 'An Tâm cam kết bo mạch chủ nguyên bản 100%, chưa từng qua sửa chữa. Toàn bộ quy trình kiểm định chất lượng được thực hiện thực tế qua các phần mềm đo kiểm chuyên dụng (stress test nhiệt độ, xung nhịp vi xử lý, sức khỏe ổ cứng) trước khi bàn giao.'}
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
-                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Premium Thermal Compound' : 'Keo Tản Nhiệt Cao Cấp'}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Authentic Arctic MX-4 paste, drops heat by 5 - 12°C.' : 'Sử dụng Arctic MX-4 chính hãng, giảm nhiệt 5 - 12°C.'}</div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-[#FAF7F2] border border-[#E8E2D9]">
-                      <div className="text-xs font-bold text-[#2B1810]">{isEn ? 'Digital OEM License' : 'Bản Quyền Số OEM'}</div>
-                      <div className="text-[11px] text-[#6E5D53] mt-0.5">{isEn ? 'Clean Windows tied to motherboard, safe for business data.' : 'Windows sạch vĩnh viễn theo mainboard, an toàn cho dữ liệu công việc.'}</div>
-                    </div>
-                  </div>
-                </div>
-
+            {/* Section Header */}
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <div className="inline-flex items-center px-3 py-1 rounded-md bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
+                {t.services.tag}
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight mt-4">
+                {t.services.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed mt-3">
+                {t.services.subtitle}
+              </p>
+              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-[#E8E2D9] text-[11px] font-bold text-[#2B1810] mt-4">
+                {t.services.commitmentBadge}
               </div>
             </div>
 
