@@ -3445,11 +3445,36 @@ export function StoreProvider({
     if (isUsingSupabase && supabase && isUuid(id)) {
       const client = supabase;
       await runSupabaseWrite(
-        () => client.from('onsite_dispatches').update({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }).eq('id', id),
+        () =>
+          client
+            .from('onsite_dispatches')
+            .update(toDispatchDbRow({ ...updates, ...(synced ? { fee_synced_to_payroll: true } : {}) }))
+            .eq('id', id),
         'Cập nhật chi tiết ca cứu hộ Onsite'
       );
     }
     return true;
+  };
+
+  // Bảng onsite_dispatches chỉ có đúng các cột dưới đây. Gửi kèm field
+  // lạ (vd customer_phone — chỉ là field phía app) khiến PostgREST từ
+  // chối TOÀN BỘ câu ghi (PGRST204) và ca chỉ tồn tại ở state cục bộ —
+  // đây là lỗi khiến ca tạo mới không tới được tài khoản KTV (đã kiểm
+  // chứng live 2026-10-23). Mọi câu ghi dispatch phải qua hàm lọc này.
+  const DISPATCH_DB_COLUMNS = [
+    'id', 'ticket_code', 'customer_name', 'phone', 'address', 'area_zone',
+    'scheduled_time', 'distance_km', 'estimated_arrival_minutes', 'urgency',
+    'status', 'issue_summary', 'issue_description', 'technician_name',
+    'technician_id', 'technician_fee', 'fee_synced_to_payroll', 'created_at',
+  ] as const;
+  const toDispatchDbRow = (d: Partial<OnsiteDispatch>): Partial<OnsiteDispatch> => {
+    const src = d as Record<string, unknown>;
+    const row: Record<string, unknown> = {};
+    for (const col of DISPATCH_DB_COLUMNS) {
+      if (src[col] !== undefined) row[col] = src[col];
+    }
+    if (row.phone === undefined && d.customer_phone) row.phone = d.customer_phone;
+    return row as Partial<OnsiteDispatch>;
   };
 
   const addOnsiteDispatch = async (
@@ -3470,7 +3495,7 @@ export function StoreProvider({
     if (isUsingSupabase && supabase) {
       const client = supabase;
       await runSupabaseWrite(
-        () => client.from('onsite_dispatches').insert([newDispatch]),
+        () => client.from('onsite_dispatches').insert([toDispatchDbRow(newDispatch)]),
         'Tạo ca cứu hộ Onsite'
       );
     }
