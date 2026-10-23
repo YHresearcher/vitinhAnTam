@@ -155,21 +155,21 @@ export const TRANSLATIONS = {
       btnCheck: 'Kiểm Tra Ngay',
     },
     qcProcess: {
-      title: 'QUY TRÌNH KIỂM TRA CẨN THẬN TRƯỚC KHI GIAO',
+      title: 'MỖI MÁY ĐỀU ĐƯỢC KIỂM TRA KỸ TRƯỚC KHI GIAO',
       subtitle:
-        'Bo mạch chủ nguyên bản 100%, chưa qua sửa chữa chắp vá. Toàn bộ linh kiện được kiểm định kỹ lưỡng bằng phần mềm chuyên dụng (FurMark, AIDA64, CrystalDiskInfo) trước khi giao máy.',
-      s1Title: 'NGUỒN ĐIỆN ỔN ĐỊNH',
+        'Máy cũ nên càng phải kiểm kỹ. Trước khi giao, kỹ thuật viên của tiệm kiểm tra lại toàn bộ — từ nguồn điện, nhiệt độ cho đến ổ cứng và pin — rồi báo đúng tình trạng thật cho khách. Khi nhận máy, khách cứ thoải mái kiểm tra lại ngay tại chỗ.',
+      s1Title: 'CHẠY THỬ & KIỂM TRA NGUỒN',
       s1Desc:
-        'Kiểm tra điện áp thực tế, đảm bảo máy hoạt động ổn định trong giờ làm việc cao điểm.',
-      s2Title: 'TẢN NHIỆT MÁT ÊM',
+        'Cắm máy chạy thử liên tục, cho chạy tải nặng một lúc để chắc chắn máy không sập nguồn hay treo giữa chừng khi đang làm việc.',
+      s2Title: 'VỆ SINH & TẢN NHIỆT',
       s2Desc:
-        'Vệ sinh sạch bụi bẩn, tra keo tản nhiệt tốt, quạt chạy êm và máy mát mẻ khi làm việc.',
-      s3Title: 'LINH KIỆN MINH BẠCH',
+        'Mở máy vệ sinh sạch bụi, thay keo tản nhiệt mới, kiểm tra quạt — để máy chạy êm, mát và bền hơn khi dùng lâu dài.',
+      s3Title: 'Ổ CỨNG, RAM & PIN',
       s3Desc:
-        'Mới báo mới, cũ báo cũ; kiểm tra kỹ sức khỏe ổ cứng và bộ nhớ trước khi giao.',
-      s4Title: 'HỖ TRỢ KỊP THỜI',
+        'Đo sức khỏe ổ cứng, kiểm tra bộ nhớ và độ chai pin bằng phần mềm chuyên dụng. Bộ phận nào đã yếu, tiệm báo rõ trước khi giao.',
+      s4Title: 'MAIN & LINH KIỆN ĐÚNG NHƯ MÔ TẢ',
       s4Desc:
-        'Bảo hành rõ ràng theo từng linh kiện, hỗ trợ xử lý nhanh để không gián đoạn công việc.',
+        'Bo mạch chủ còn nguyên bản, chưa qua sửa chữa chắp vá; linh kiện đúng như đã giới thiệu — mới báo mới, cũ báo cũ.',
     },
     reviews: {
       title: 'NHẬN XÉT CỦA KHÁCH HÀNG',
@@ -699,21 +699,21 @@ export const TRANSLATIONS = {
       btnCheck: 'Check Warranty Now',
     },
     qcProcess: {
-      title: 'CAREFUL INSPECTION PROCESS BEFORE DELIVERY',
+      title: 'EVERY MACHINE IS CAREFULLY CHECKED BEFORE HANDOVER',
       subtitle:
-        'We strictly refuse patched or poorly repaired motherboards. Every component is carefully tested for stable operation.',
-      s1Title: 'STABLE POWER DELIVERY',
+        'A used machine deserves an even closer check. Before handover, our technician re-tests everything — power, temperatures, drive and battery health — and reports the real condition honestly. You are welcome to check the machine again on the spot when you receive it.',
+      s1Title: 'POWER & STABILITY TESTING',
       s1Desc:
-        'Real-world voltage verification, ensuring stability during peak business hours.',
-      s2Title: 'COOL & WHISPER-QUIET',
+        'Each machine is run continuously and put under load for a while, making sure it never loses power or freezes in the middle of your work.',
+      s2Title: 'CLEANING & COOLING',
       s2Desc:
-        'Cleaned dust chambers and quality thermal compound keep operations cool and smooth.',
-      s3Title: 'TRANSPARENT COMPONENTS',
+        'We open the machine, clean out the dust, apply fresh thermal paste and check the fans — so it runs quiet, cool and longer.',
+      s3Title: 'DRIVE, MEMORY & BATTERY HEALTH',
       s3Desc:
-        'Brand-new or genuine pulled units clearly stated; full health check before handover.',
-      s4Title: 'TIMELY SUPPORT',
+        'We measure drive health, test the memory and check battery wear with professional tools. Any part that is getting weak is reported to you before handover.',
+      s4Title: 'ORIGINAL BOARD, PARTS AS DESCRIBED',
       s4Desc:
-        'Clear warranty by component, prompt resolution so your workflow never stalls.',
+        'The motherboard is original and never patch-repaired, and every part matches what we described — if it is new we say new, if it is used we say used.',
     },
     reviews: {
       title: 'CLIENT TESTIMONIALS & FEEDBACK',

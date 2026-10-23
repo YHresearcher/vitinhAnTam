@@ -2503,7 +2503,7 @@ export function StoreProvider({
       license_code: code.toUpperCase(),
       status: 'available',
       import_price: importPrice || 0,
-      unit_price: unitPrice || 350000,
+      unit_price: unitPrice ?? 350000,
       created_at: new Date().toISOString(),
     }));
     setLicenseKeys((prev) => {
@@ -2798,7 +2798,7 @@ export function StoreProvider({
       customer_phone: req.customer_phone,
       assigned_at: new Date().toISOString(),
       import_price: costPrice || 150000,
-      unit_price: 350000,
+      unit_price: keyCategories.find((c) => c.id === req.category_id)?.default_unit_price ?? 350000,
       request_id: req.id,
       notes: `Nạp nhanh & cấp cho yêu cầu #${req.id.slice(-4)} (${req.customer_name})`,
       created_at: new Date().toISOString(),
@@ -2916,7 +2916,9 @@ export function StoreProvider({
     // 3b. Ghi nhận dòng tiền trích Admin (10% đối với Key bản quyền) & Hoàn vốn vay (Vốn + 5% LN)
     try {
       const keyItem = licenseKeys.find((k) => k.id === req.released_key_id);
-      const salePrice = Number(keyItem?.unit_price || 350000);
+      const rawUnitPrice = keyItem?.unit_price;
+      const salePrice = Number(rawUnitPrice ?? 350000);
+      const pricePending = rawUnitPrice === 0; // giá "Liên hệ" — chưa nhập giá bán thật, giữ 0 thay vì giả định 350.000₫
       const costPrice = Number(keyItem?.import_price || 50000);
       const netProfit = Math.max(0, salePrice - costPrice);
       const adminRate = 0.10; // 10% trích riêng cho Admin khi bán Key bản quyền
@@ -2939,7 +2941,7 @@ export function StoreProvider({
         seller_name: req.requester_name || currentUser.name,
         serial_number: req.released_key_code || req.assigned_key_code,
         order_code: req.request_code,
-        notes: `Cấp & kích hoạt Key bản quyền (${req.category_name})`,
+        notes: `Cấp & kích hoạt Key bản quyền (${req.category_name})${pricePending ? ' — Giá Liên hệ: chưa nhập giá bán thật, cần cập nhật sau' : ''}`,
         created_at: emailSentTime,
       };
 
@@ -4332,7 +4334,7 @@ export function StoreProvider({
         const key = req.released_key_code || req.id;
         if (!explicitMap.has(key) && !explicitMap.has(req.id)) {
           const matchedKey = licenseKeys.find((k) => k.id === req.released_key_id);
-          const salePrice = Number(matchedKey?.unit_price || 350000);
+          const salePrice = Number(matchedKey?.unit_price ?? 350000);
           const costPrice = Number(matchedKey?.import_price || 50000);
           const profit = Math.max(0, salePrice - costPrice);
           const adminRate = 0.10; // 10% trích riêng cho Admin khi bán Key

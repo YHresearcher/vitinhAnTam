@@ -283,7 +283,7 @@ export default function QuanLyKeyPage() {
     const rows = keyReleaseRequests.map((r) => {
       const assignedKey = r.assigned_key_code || r.released_key_code || '---';
       const keyObj = licenseKeys.find((k) => k.id === r.released_key_id || k.license_code === assignedKey);
-      const price = keyObj?.unit_price || 350000;
+      const price = keyObj?.unit_price ?? 350000;
       
       let statusText = 'Chờ duyệt';
       if (r.status === 'activated' || r.status === 'active_confirmed') statusText = 'Đã kích hoạt';
