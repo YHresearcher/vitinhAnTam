@@ -29,6 +29,7 @@ export interface ShowcaseItem {
   shelfLocation: string;
   qcStatus: string;
   burnInDuration: number;
+  warrantyMonths: number;
   isSold?: boolean;
   addedAt?: string; // Ngày nhập kho (import_date) hoặc ngày tạo — để sắp xếp "mới nhất" ở trang chủ
   customerName?: string;
@@ -161,6 +162,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         shelfLocation: shelf,
         qcStatus: item.qc_status || 'ready_to_sell',
         burnInDuration: item.burn_in_duration || 60,
+        warrantyMonths: item.warranty_months ?? 6,
         isSold,
         addedAt: item.import_date || item.created_at || undefined,
         customerName: item.customer_name,
@@ -177,8 +179,8 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         subBadge: isEn
           ? en
             ? en.subBadge
-            : '12-Month Hardware Warranty'
-          : (rawMatch?.vi.subBadge || 'Bảo hành 12 tháng'),
+            : '6-Month Full-System Warranty'
+          : (rawMatch?.vi.subBadge || 'Bảo hành toàn máy 6 tháng'),
         desc: isEn
           ? en
             ? en.desc

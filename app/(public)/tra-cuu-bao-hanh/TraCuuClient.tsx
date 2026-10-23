@@ -116,7 +116,7 @@ function WarrantyLookupContent() {
     if (searchResult?.item?.warranty_months) {
       return Number(searchResult.item.warranty_months);
     }
-    return 12;
+    return 6;
   };
 
   const warrantyMonths = calculateWarrantyMonths();

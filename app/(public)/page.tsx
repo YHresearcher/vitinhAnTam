@@ -3,17 +3,17 @@ import HomePage from './HomeClient';
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Chuẩn A Tuyển Chọn Tại Phường Long An, Tỉnh Tây Ninh',
+    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Bảo Hành 6 Tháng, Chuẩn A Tuyển Chọn Tại Tây Ninh',
   },
   description:
-    'PC đồng bộ & laptop doanh nhân tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng, bảo hành chu đáo và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',
+    'Máy tính cũ bảo hành 6 tháng đồng loạt: PC đồng bộ & laptop doanh nghiệp tuyển chọn chuẩn A, Windows sạch bản quyền, linh kiện rõ ràng, hỗ trợ kỹ thuật tận tâm tại Tây Ninh. Hotline 0909.053.058.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
     description:
-      'Linh kiện rõ ràng, máy nguyên bản chưa qua sửa chữa, bảo hành chu đáo. Hotline: 0909.053.058.',
+      'Máy tính cũ bảo hành 6 tháng đồng loạt, máy nguyên bản chưa qua sửa chữa, linh kiện rõ ràng. Hotline: 0909.053.058.',
     url: 'https://vitinhantam.com',
     images: [
       {
@@ -41,10 +41,10 @@ const faqJsonLd = {
     },
     {
       '@type': 'Question',
-      name: 'Chính sách bảo hành và hỗ trợ kỹ thuật tại An Tâm hoạt động như thế nào?',
+      name: 'Máy tính cũ tại Vi Tính An Tâm được bảo hành bao lâu?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Khi máy gặp bất kỳ sự cố nào, quý khách chỉ cần liên hệ hotline kỹ thuật hoặc tra cứu theo số Service Tag hoặc số điện thoại. Chúng tôi luôn ứng phó nhanh với tình huống, hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng, đổi linh kiện kịp thời để công việc của quý khách không bị ảnh hưởng.',
+        text: 'Mọi máy tính cũ tại Vi Tính An Tâm — PC đồng bộ và laptop doanh nghiệp — đều được bảo hành đồng loạt 6 tháng toàn bộ máy (thân máy, mainboard, CPU, RAM, ổ cứng, nguồn), không phân biệt dòng máy hay giá bán. Trong thời gian bảo hành, lỗi phần cứng được sửa chữa hoặc thay linh kiện tương đương miễn phí. Quý khách tra cứu thời hạn bảo hành bằng số S/N ngay trên website hoặc gọi hotline kỹ thuật 0909.053.058; cửa hàng hỗ trợ xử lý từ xa qua UltraViewer hoặc đến tận nơi kiểm tra trong khả năng.',
       },
     },
     {

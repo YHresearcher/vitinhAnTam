@@ -38,8 +38,10 @@ export const metadata: Metadata = {
     template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
   },
   description:
-    'PC đồng bộ & laptop tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng, bảo hành chu đáo và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',
+    'Máy tính cũ bảo hành 6 tháng đồng loạt, PC đồng bộ & laptop tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',
   keywords: [
+    'máy tính cũ bảo hành 6 tháng',
+    'laptop cũ bảo hành 6 tháng',
     'Máy tính văn phòng',
     'Vi Tính An Tâm',
     'máy tính Tây Ninh',

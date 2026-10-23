@@ -607,6 +607,10 @@ function ProductsCatalogContent() {
                             <HardDrive className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             <span className="truncate font-mono">{prod.specs.storage}</span>
                           </div>
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="truncate font-medium text-slate-600">{isEn ? `${prod.warrantyMonths ?? 6}-month full-system warranty` : `Bảo hành toàn máy ${prod.warrantyMonths ?? 6} tháng`}</span>
+                          </div>
                         </div>
 
                         {/* Gift & Highlight */}

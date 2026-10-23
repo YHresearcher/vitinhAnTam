@@ -452,7 +452,7 @@ export default function KhoMayPage() {
     stock_quantity: 1,
     shelf_location: '',
     qc_status: 'testing' as InventoryItem['qc_status'],
-    warranty_months: 12,
+    warranty_months: 6,
   });
 
   // Danh sách máy trong lô nhập: mỗi máy có S/N và sức khỏe SSD riêng
@@ -969,7 +969,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         stock_quantity: 1,
         shelf_location: 'Kệ A1-01',
         qc_status: 'testing',
-        warranty_months: 12,
+        warranty_months: 6,
       });
       setBatchUnits([{ serialNumber: '', ssdHealth: 98 }]);
     } catch (err: unknown) {

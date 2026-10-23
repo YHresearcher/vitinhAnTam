@@ -1593,7 +1593,7 @@ export function StoreProvider({
               lenderBonus,
               warrantyReserve,
               remainingProfit,
-              warrantyMonths: item.warranty_months || 12,
+              warrantyMonths: item.warranty_months || 6,
               shelfLocation: item.shelf_location,
             },
           }),
