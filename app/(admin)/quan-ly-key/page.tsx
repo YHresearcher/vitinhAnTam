@@ -95,6 +95,14 @@ export default function QuanLyKeyPage() {
   const [priceCatUnit, setPriceCatUnit] = useState<number>(0);
   const [priceCatBusy, setPriceCatBusy] = useState(false);
 
+  // Sửa thông tin phân loại (tên / loại / mô tả) — trước đây chỉ sửa được
+  // giá, không có giao diện sửa thông tin dù store/API đã hỗ trợ upsert
+  const [catInfoEdit, setCatInfoEdit] = useState<KeyCategory | null>(null);
+  const [catInfoName, setCatInfoName] = useState('');
+  const [catInfoType, setCatInfoType] = useState<KeyCategory['type']>('others');
+  const [catInfoDesc, setCatInfoDesc] = useState('');
+  const [catInfoBusy, setCatInfoBusy] = useState(false);
+
   // Hiệu chỉnh giá đồng loạt (nhiều phân loại / tất cả, đặt cố định hoặc theo %)
   const [bulkAdjustOpen, setBulkAdjustOpen] = useState(false);
   const [bulkCatId, setBulkCatId] = useState<string>('all');
@@ -998,17 +1006,31 @@ export default function QuanLyKeyPage() {
                       </span>
 
                       {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCategory(cat)}
-                          className={
-                            pendingDeleteCatId === cat.id
-                              ? 'text-[11px] font-black text-white bg-rose-600 hover:bg-rose-700 rounded-md px-2 py-1'
-                              : 'text-[11px] text-rose-700 hover:text-rose-900 font-bold hover:underline'
-                          }
-                        >
-                          {pendingDeleteCatId === cat.id ? 'Xác nhận xoá?' : 'Xóa phân loại'}
-                        </button>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCatInfoEdit(cat);
+                              setCatInfoName(cat.name);
+                              setCatInfoType(cat.type);
+                              setCatInfoDesc(cat.description || '');
+                            }}
+                            className="text-[11px] text-[#0F4C5C] hover:text-[#0B3A47] font-bold hover:underline"
+                          >
+                            ✏️ Sửa thông tin
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat)}
+                            className={
+                              pendingDeleteCatId === cat.id
+                                ? 'text-[11px] font-black text-white bg-rose-600 hover:bg-rose-700 rounded-md px-2 py-1'
+                                : 'text-[11px] text-rose-700 hover:text-rose-900 font-bold hover:underline'
+                            }
+                          >
+                            {pendingDeleteCatId === cat.id ? 'Xác nhận xoá?' : 'Xóa phân loại'}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1950,6 +1972,94 @@ export default function QuanLyKeyPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: SỬA THÔNG TIN PHÂN LOẠI (tên / loại / mô tả) */}
+      {/* ========================================================================= */}
+      {catInfoEdit && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFDF9] rounded-2xl shadow-2xl border border-[#E8E2D9] w-full max-w-md overflow-hidden animate-fade-in font-sans">
+            <div className="p-4 bg-[#0F4C5C] text-white flex items-center justify-between">
+              <h3 className="text-sm font-black tracking-tight text-white uppercase">Sửa thông tin phân loại</h3>
+              <button
+                type="button"
+                onClick={() => setCatInfoEdit(null)}
+                className="text-white/80 hover:text-white text-xs font-bold px-2 py-1 rounded bg-white/10"
+              >
+                Đóng
+              </button>
+            </div>
+            <div className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">TÊN PHÂN LOẠI *</label>
+                <input
+                  type="text"
+                  value={catInfoName}
+                  onChange={(e) => setCatInfoName(e.target.value)}
+                  placeholder="VD: WINDOWS 11 PROFESSIONAL"
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-bold"
+                />
+                <span className="text-[11px] text-[#6E5D53] block mt-1">
+                  Tên này hiển thị trên trang chủ và trang danh mục cho khách xem.
+                </span>
+              </div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">LOẠI KEY</label>
+                <select
+                  value={catInfoType}
+                  onChange={(e) => setCatInfoType(e.target.value as KeyCategory['type'])}
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-bold"
+                >
+                  <option value="windows">Windows</option>
+                  <option value="office">Office</option>
+                  <option value="others">Khác (Others)</option>
+                </select>
+                <span className="text-[11px] text-[#6E5D53] block mt-1">
+                  Loại quyết định câu giới thiệu trên thẻ key (Windows: theo mainboard; Office: vĩnh viễn, kích hoạt online).
+                </span>
+              </div>
+              <div>
+                <label className="block font-bold text-[#2B1810] mb-1">MÔ TẢ</label>
+                <textarea
+                  value={catInfoDesc}
+                  onChange={(e) => setCatInfoDesc(e.target.value)}
+                  rows={3}
+                  placeholder="Mô tả ngắn hiển thị dưới tên phân loại trên trang chủ..."
+                  className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810]"
+                />
+              </div>
+              <div className="pt-1 flex flex-col gap-2">
+                <button
+                  type="button"
+                  disabled={catInfoBusy || !catInfoName.trim()}
+                  onClick={async () => {
+                    setCatInfoBusy(true);
+                    await updateKeyCategory({
+                      ...catInfoEdit,
+                      name: catInfoName.trim(),
+                      type: catInfoType,
+                      description: catInfoDesc.trim(),
+                    });
+                    setCatInfoBusy(false);
+                    triggerFeedback(`Đã lưu thông tin phân loại "${catInfoName.trim()}".`);
+                    setCatInfoEdit(null);
+                  }}
+                  className="w-full px-5 py-2.5 rounded-xl bg-[#0F4C5C] hover:bg-[#0B3A47] text-white font-bold transition-all shadow-xs disabled:opacity-50"
+                >
+                  LƯU THÔNG TIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatInfoEdit(null)}
+                  className="w-full px-4 py-2 rounded-xl text-[#6E5D53] hover:bg-slate-100 font-bold"
+                >
+                  ĐÓNG
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
