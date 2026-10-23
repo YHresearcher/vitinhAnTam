@@ -796,17 +796,23 @@ export default function HomePage() {
                           <div className="flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                             <span>
-                              {cat.type === 'windows'
-                                ? isEn
-                                  ? 'Lifetime digital license bound to the motherboard'
-                                  : 'Bản quyền số vĩnh viễn theo mainboard'
-                                : cat.type === 'office'
+                              {cat.name.toUpperCase().includes('365')
+                                ? // Microsoft 365 là THUÊ BAO 12 tháng — không được ghi
+                                  // "vĩnh viễn" dù type trong DB đang là 'office'
+                                  isEn
+                                  ? '12-month subscription plan with 1TB OneDrive included'
+                                  : 'Gói thuê bao 12 tháng, kèm 1TB OneDrive'
+                                : cat.type === 'windows'
                                   ? isEn
-                                    ? 'Perpetual license, one-time online activation — no recurring fees'
-                                    : 'Bản quyền vĩnh viễn, kích hoạt online 1 lần — không phí gia hạn định kỳ'
-                                  : isEn
-                                    ? 'Genuine license with 1-to-1 replacement warranty'
-                                    : 'Bản quyền chính hãng, bảo hành 1 đổi 1'}
+                                    ? 'Lifetime digital license bound to the motherboard'
+                                    : 'Bản quyền số vĩnh viễn theo mainboard'
+                                  : cat.type === 'office'
+                                    ? isEn
+                                      ? 'Perpetual license, one-time online activation — no recurring fees'
+                                      : 'Bản quyền vĩnh viễn, kích hoạt online 1 lần — không phí gia hạn định kỳ'
+                                    : isEn
+                                      ? 'Genuine license with 1-to-1 replacement warranty'
+                                      : 'Bản quyền chính hãng, bảo hành 1 đổi 1'}
                             </span>
                           </div>
                           <div className="flex items-center gap-1.5">
