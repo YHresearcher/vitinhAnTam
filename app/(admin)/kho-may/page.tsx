@@ -2032,8 +2032,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       {/* Modal Nhập Máy Mới */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/30 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8 animate-fade-in">
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+          <div className="bg-white w-full max-w-3xl max-h-[94vh] flex flex-col rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+            <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Nhập Lô Máy Mới</h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -2048,17 +2048,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               </button>
             </div>
 
-            <form onSubmit={handleCreateNewItem} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleCreateNewItem} className="p-4 space-y-3 overflow-y-auto min-h-0">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {/* Brand */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Thương Hiệu
                   </label>
                   <select
                     value={newItem.brand}
                     onChange={(e) => setNewItem({ ...newItem, brand: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="Dell">Dell</option>
                     <option value="HP">HP</option>
@@ -2070,7 +2070,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                 {/* Model */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Model Máy *
                   </label>
                   <input
@@ -2079,13 +2079,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: OptiPlex 7070 SFF"
                     value={newItem.model}
                     onChange={(e) => setNewItem({ ...newItem, model: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* Tag gốc của lô (mã quản lý dòng máy) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Mã Quản Lý Lô (Tag Gốc) *
                   </label>
                   <input
@@ -2094,19 +2094,19 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: ST-99214X (máy 1; máy 2: -2, máy 3: -3...)"
                     value={newItem.service_tag}
                     onChange={(e) => setNewItem({ ...newItem, service_tag: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] font-mono uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* Form factor */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Kích Thước Case
                   </label>
                   <select
                     value={newItem.form_factor}
                     onChange={(e) => setNewItem({ ...newItem, form_factor: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="SFF">SFF (Small Form Factor)</option>
                     <option value="Mini / Micro">Mini / Micro PC</option>
@@ -2117,7 +2117,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                 {/* CPU */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Vi Xử Lý (CPU)
                   </label>
                   <input
@@ -2125,13 +2125,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: i5-8500"
                     value={newItem.cpu}
                     onChange={(e) => setNewItem({ ...newItem, cpu: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* RAM */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Bộ Nhớ RAM
                   </label>
                   <input
@@ -2139,13 +2139,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: 16GB DDR4"
                     value={newItem.ram}
                     onChange={(e) => setNewItem({ ...newItem, ram: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* SSD Capacity */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Ổ Cứng SSD
                   </label>
                   <input
@@ -2153,13 +2153,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: 256GB NVMe"
                     value={newItem.ssd_capacity}
                     onChange={(e) => setNewItem({ ...newItem, ssd_capacity: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
                 {/* Số lượng máy trong lô */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Số Lượng Máy Trong Lô *
                   </label>
                   <input
@@ -2168,13 +2168,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     max={50}
                     value={batchUnits.length}
                     onChange={(e) => setBatchQty(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-bold"
                   />
                 </div>
 
 
                 {/* Danh sách S/N & Sức khỏe SSD từng máy trong lô */}
-                <div className="md:col-span-2 p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
+                <div className="md:col-span-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-indigo-900">
                       S/N &amp; Sức khỏe SSD từng máy trong lô
@@ -2224,7 +2224,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                 {/* Giá đầu vào (vốn nhập kho) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Giá Đầu Vào (VNĐ)
                   </label>
                   <PricePreview value={newItem.import_price} label="Giá đầu vào" tone="rose" />
@@ -2237,13 +2237,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     onChange={(e) =>
                       setNewItem({ ...newItem, import_price: e.target.value === '' ? 0 : Number(e.target.value) })
                     }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
                   />
                 </div>
 
                 {/* Ngày Nhập Hàng */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Ngày Nhập Hàng *
                   </label>
                   <input
@@ -2251,19 +2251,19 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     required
                     value={newItem.import_date}
                     onChange={(e) => setNewItem({ ...newItem, import_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono font-medium text-slate-800"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono font-medium text-slate-800"
                   />
                 </div>
 
                 {/* Nguồn Nhập: Kho VTAT (không thời hạn) / Reseller (tự xoá sau 7 ngày) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Nguồn Nhập *
                   </label>
                   <select
                     value={newItem.source}
                     onChange={(e) => setNewItem({ ...newItem, source: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-white"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-white"
                   >
                     <option value="vtat">Kho VTAT (không thời hạn)</option>
                     <option value="reseller">Reseller (tự xoá khỏi kho sau 7 ngày)</option>
@@ -2277,7 +2277,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
 
                 {/* Giá Gốc & Giá Giảm */}
-                <div className="md:col-span-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div className="md:col-span-3 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                       <Tag className="w-3.5 h-3.5 text-blue-600" />
@@ -2291,7 +2291,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {/* Giá Gốc */}
                     <div>
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-0.5">
                         <label className="text-xs font-semibold text-slate-700">
                           Giá Gốc Niêm Yết (VNĐ) *
                         </label>
@@ -2323,13 +2323,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           const val = e.target.value === '' ? 0 : Number(e.target.value);
                           setNewItem({ ...newItem, original_price: val, price: val });
                         }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] font-mono font-bold text-slate-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                       />
                     </div>
 
                     {/* Giá Giảm */}
                     <div>
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-0.5">
                         <label className="text-xs font-semibold text-slate-700">
                           Giá Giảm Khuyến Mãi (VNĐ)
                         </label>
@@ -2359,7 +2359,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           const val = e.target.value === '' ? 0 : Number(e.target.value);
                           setNewItem({ ...newItem, sale_price: val });
                         }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-mono font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] font-mono font-bold text-rose-600 focus:ring-2 focus:ring-rose-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -2395,7 +2395,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
                 {/* QC Status */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Trạng Thái
                   </label>
                   <select
@@ -2403,7 +2403,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     onChange={(e) =>
                       setNewItem({ ...newItem, qc_status: e.target.value as InventoryItem['qc_status'] })
                     }
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="testing">⏳ Đang QC (chạy thử)</option>
                     <option value="ready_to_sell">✓ Sẵn sàng bán (RTS)</option>
@@ -2411,7 +2411,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
