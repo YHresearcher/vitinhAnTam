@@ -445,6 +445,7 @@ export default function KhoMayPage() {
     ssd_health: 98,
     import_price: 0,
     import_date: new Date().toISOString().slice(0, 10),
+    source: 'vtat',
     original_price: 0,
     sale_price: 0,
     price: 0,
@@ -926,6 +927,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           ssd_health: health,
           import_price: Number(newItem.import_price),
           import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
+          source: newItem.source || 'vtat',
           original_price: orig,
           sale_price: sale,
           price: effectivePrice,
@@ -955,6 +957,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ssd_health: 98,
         import_price: 3500000,
         import_date: new Date().toISOString().slice(0, 10),
+        source: 'vtat',
         original_price: 4850000,
         sale_price: 0,
         price: 4850000,
@@ -1489,6 +1492,26 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             {item.form_factor}
                           </span>
                         </div>
+                        {item.source === 'reseller' &&
+                          item.qc_status !== 'sold' &&
+                          item.qc_status !== 'dealer_sold' && (
+                            <div className="mt-1.5">
+                              <span
+                                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                                  daysInStock >= 7
+                                    ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                                    : 7 - daysInStock <= 2
+                                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      : 'bg-sky-50 text-sky-700 border border-sky-200'
+                                }`}
+                                title="Hàng Reseller: tự động xoá khỏi kho sau 7 ngày kể từ ngày nhập nếu chưa bán"
+                              >
+                                {daysInStock >= 7
+                                  ? 'RESELLER · QUÁ HẠN 7 NGÀY — SẮP TỰ XOÁ'
+                                  : `RESELLER · CÒN ${7 - daysInStock} NGÀY`}
+                              </span>
+                            </div>
+                          )}
                         {isReserved && (
                           <div className="mt-1.5 p-1.5 bg-purple-100/70 border border-purple-200 rounded-md text-[11px] text-purple-900 max-w-xs">
                             <div className="font-semibold flex items-center gap-1 text-purple-800">
@@ -2230,6 +2253,27 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     onChange={(e) => setNewItem({ ...newItem, import_date: e.target.value })}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono font-medium text-slate-800"
                   />
+                </div>
+
+                {/* Nguồn Nhập: Kho VTAT (không thời hạn) / Reseller (tự xoá sau 7 ngày) */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Nguồn Nhập *
+                  </label>
+                  <select
+                    value={newItem.source}
+                    onChange={(e) => setNewItem({ ...newItem, source: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-white"
+                  >
+                    <option value="vtat">Kho VTAT (không thời hạn)</option>
+                    <option value="reseller">Reseller (tự xoá khỏi kho sau 7 ngày)</option>
+                  </select>
+                  {newItem.source === 'reseller' && (
+                    <p className="text-[11px] text-amber-700 mt-1">
+                      Máy Reseller chưa bán sẽ <strong>tự động xoá khỏi kho sau 7 ngày</strong> kể
+                      từ ngày nhập (máy đang giữ cho khách/đã bán không bị xoá).
+                    </p>
+                  )}
                 </div>
 
                 {/* Giá Gốc & Giá Giảm */}

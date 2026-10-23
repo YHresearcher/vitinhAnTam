@@ -270,6 +270,7 @@ export interface InventoryItem {
   cost_price?: number;
   import_price?: number;
   import_date?: string; // YYYY-MM-DD - Ngày nhập hàng vào kho
+  source?: 'vtat' | 'reseller' | string; // Nguồn nhập: 'vtat' = kho VTAT (không thời hạn) | 'reseller' = hàng Reseller (tự xoá khỏi kho sau 7 ngày chưa bán)
   retail_price?: number;
   price?: number;
   original_price?: number; // Giá gốc niêm yết (VNĐ)

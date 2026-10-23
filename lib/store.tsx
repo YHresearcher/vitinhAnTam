@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import {
   supabase,
   setStaffAccessToken,
@@ -1628,6 +1628,42 @@ export function StoreProvider({
     return true;
   };
 
+  // TỰ ĐỘNG XOÁ MÁY RESELLER QUÁ HẠN: máy có nguồn nhập 'reseller' còn
+  // trong kho đủ 7 ngày kể từ ngày nhập sẽ tự bị xoá khỏi kho (quy định:
+  // kho VTAT không thời hạn, Reseller quá 7 ngày thì trả lại). Chạy mỗi
+  // khi dữ liệu kho/tài khoản thay đổi trong phiên nhân viên; bỏ qua máy
+  // đã bán, dealer đã bán và máy đang giữ cho khách (reserved — đã có
+  // khách đặt cọc). deleteInventoryItem tự kiểm tra quyền sửa kho, nên
+  // khách vãng lai không kích hoạt được việc xoá này.
+  const sweptResellerIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const now = Date.now();
+    const expired = inventory.filter((item) => {
+      if (item.source !== 'reseller') return false;
+      if (
+        item.qc_status === 'sold' ||
+        item.qc_status === 'dealer_sold' ||
+        item.qc_status === 'reserved'
+      ) {
+        return false;
+      }
+      if (sweptResellerIdsRef.current.has(item.id)) return false;
+      const dateStr = item.import_date || item.created_at;
+      if (!dateStr) return false;
+      const importedAt = new Date(dateStr).getTime();
+      if (Number.isNaN(importedAt)) return false;
+      return Math.floor((now - importedAt) / (1000 * 60 * 60 * 24)) >= 7;
+    });
+    if (expired.length === 0) return;
+    expired.forEach((item) => sweptResellerIdsRef.current.add(item.id));
+    void (async () => {
+      for (const item of expired) {
+        await deleteInventoryItem(item.id);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inventory, currentUser]);
+
   const reserveInventoryItem = async (params: {
     itemId: string;
     customerName: string;
@@ -2308,16 +2344,51 @@ export function StoreProvider({
   const deleteKeyCategory = async (id: string): Promise<{ success: boolean; message: string }> => {
     const cat = keyCategories.find((c) => c.id === id);
     if (!cat) return { success: false, message: 'Không tìm thấy phân loại key cần xóa!' };
-    if (cat.is_default || cat.type !== 'others') {
-      return { success: false, message: 'Chỉ được phép xóa các phân loại thuộc nhóm "Others" (Không thể xóa các phân loại mặc định của hệ thống)!' };
+    // Mọi phân loại đều xoá được (kể cả mặc định/windows/office) MIỄN LÀ
+    // không còn key nào thuộc phân loại và không còn yêu cầu cấp key đang
+    // mở — tránh mồ côi dữ liệu key/khách hàng và lỗi khoá ngoại ở DB.
+    const keysInCat = licenseKeys.filter((k) => k.category_id === id);
+    if (keysInCat.length > 0) {
+      const available = keysInCat.filter((k) => k.status === 'available').length;
+      return {
+        success: false,
+        message: `Phân loại "${cat.name}" còn ${keysInCat.length} key (${available} đang sẵn sàng). Hãy xoá các key thuộc phân loại này trước rồi mới xoá phân loại.`,
+      };
+    }
+    const openRequests = keyReleaseRequests.filter(
+      (r) =>
+        r.category_id === id &&
+        !['activated', 'active_confirmed', 'rejected'].includes(r.status)
+    );
+    if (openRequests.length > 0) {
+      return {
+        success: false,
+        message: `Phân loại "${cat.name}" còn ${openRequests.length} yêu cầu cấp key đang mở. Hãy xử lý xong các yêu cầu này trước khi xoá phân loại.`,
+      };
+    }
+    // Xoá ở máy chủ TRƯỚC (và chờ kết quả thật) để phân loại không "sống
+    // lại" ở lần kéo dữ liệu tiếp theo nếu DB từ chối.
+    if (isUsingSupabase) {
+      try {
+        const res = await fetch('/api/keys', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete_category', id }),
+        });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.success) {
+          return { success: false, message: json?.message || 'Máy chủ từ chối xoá phân loại' };
+        }
+      } catch {
+        return { success: false, message: 'Không gọi được máy chủ để xoá phân loại' };
+      }
     }
     setKeyCategories((prev) => {
       const next = prev.filter((c) => c.id !== id);
       saveToLocal(STORAGE_KEYS.keyCategories, next);
       return next;
     });
-    syncKeyMutation({ action: 'delete_category', id }, 'DELETE');
-    return { success: true, message: 'Đã xóa phân loại thành công!' };
+    return { success: true, message: `Đã xóa phân loại "${cat.name}" thành công!` };
   };
 
   const addLicenseKey = async (item: Omit<LicenseKeyItem, 'id' | 'created_at'>): Promise<LicenseKeyItem> => {

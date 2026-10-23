@@ -368,13 +368,22 @@ export default function QuanLyKeyPage() {
     setCatDefaultUnitPrice(0);
   };
 
-  // Submit Handler: Delete Category
+  // Submit Handler: Delete Category — mọi phân loại đều xoá được khi
+  // không còn key nào thuộc phân loại (store kiểm tra lại + chặn khi còn
+  // yêu cầu cấp key đang mở, và chỉ xoá local sau khi máy chủ xác nhận).
   const handleDeleteCategory = async (cat: KeyCategory) => {
-    if (cat.is_default) {
-      alert('Không thể xóa các phân loại mặc định của hệ thống!');
+    const keysCount = licenseKeys.filter((k) => k.category_id === cat.id).length;
+    if (keysCount > 0) {
+      alert(
+        `Phân loại "${cat.name}" còn ${keysCount} key nên chưa xoá được. Hãy xoá các key thuộc phân loại này trước (tab Kho key chi tiết), rồi quay lại xoá phân loại.`
+      );
       return;
     }
-    if (confirm(`Bạn có chắc chắn muốn xóa phân loại "${cat.name}"?`)) {
+    if (
+      confirm(
+        `Xoá hẳn phân loại "${cat.name}"?\nPhân loại hiện không còn key nào. Hành động này không khôi phục được.`
+      )
+    ) {
       const res = await deleteKeyCategory(cat.id);
       if (res.success) {
         triggerFeedback(res.message);
@@ -979,7 +988,7 @@ export default function QuanLyKeyPage() {
                         Còn {stockCount} key khả dụng
                       </span>
 
-                      {isAdmin && !cat.is_default && (
+                      {isAdmin && (
                         <button
                           type="button"
                           onClick={() => handleDeleteCategory(cat)}
