@@ -155,21 +155,21 @@ export const TRANSLATIONS = {
       btnCheck: 'Kiểm Tra Ngay',
     },
     qcProcess: {
-      title: 'MỖI MÁY ĐỀU ĐƯỢC KIỂM TRA KỸ TRƯỚC KHI GIAO',
+      title: 'TRƯỚC KHI GIAO, MÁY NÀO CŨNG ĐƯỢC KIỂM TRA LẠI KỸ',
       subtitle:
-        'Máy cũ nên càng phải kiểm kỹ. Trước khi giao, kỹ thuật viên của tiệm kiểm tra lại toàn bộ — từ nguồn điện, nhiệt độ cho đến ổ cứng và pin — rồi báo đúng tình trạng thật cho khách. Khi nhận máy, khách cứ thoải mái kiểm tra lại ngay tại chỗ.',
-      s1Title: 'CHẠY THỬ & KIỂM TRA NGUỒN',
+        'Bán máy cũ thì khâu này là quan trọng nhất. Máy nào trước khi giao cũng được kỹ thuật viên của tiệm kiểm tra lại hết một lượt, có sao nói vậy. Lúc nhận máy, bạn cứ mở lên kiểm tra thoải mái.',
+      s1Title: 'CẮM ĐIỆN CHẠY THỬ',
       s1Desc:
-        'Cắm máy chạy thử liên tục, cho chạy tải nặng một lúc để chắc chắn máy không sập nguồn hay treo giữa chừng khi đang làm việc.',
-      s2Title: 'VỆ SINH & TẢN NHIỆT',
+        'Cho máy chạy thử một lúc, mở nhiều việc nặng xem có bị sập nguồn hay đơ máy không. Chạy ổn định mới giao.',
+      s2Title: 'VỆ SINH, THAY KEO TẢN NHIỆT',
       s2Desc:
-        'Mở máy vệ sinh sạch bụi, thay keo tản nhiệt mới, kiểm tra quạt — để máy chạy êm, mát và bền hơn khi dùng lâu dài.',
-      s3Title: 'Ổ CỨNG, RAM & PIN',
+        'Mở máy ra hút bụi, thay keo tản nhiệt mới, nghe thử quạt có kêu không. Máy sạch thì chạy mới êm và mát.',
+      s3Title: 'XEM LẠI Ổ CỨNG, RAM, PIN',
       s3Desc:
-        'Đo sức khỏe ổ cứng, kiểm tra bộ nhớ và độ chai pin bằng phần mềm chuyên dụng. Bộ phận nào đã yếu, tiệm báo rõ trước khi giao.',
-      s4Title: 'MAIN & LINH KIỆN ĐÚNG NHƯ MÔ TẢ',
+        'Dùng phần mềm đo lại sức khỏe ổ cứng, kiểm tra RAM, xem pin chai bao nhiêu phần trăm. Cái nào yếu, tiệm nói trước chứ không giấu.',
+      s4Title: 'MAIN CÒN ZIN, LINH KIỆN ĐÚNG NHƯ ĐÃ NÓI',
       s4Desc:
-        'Bo mạch chủ còn nguyên bản, chưa qua sửa chữa chắp vá; linh kiện đúng như đã giới thiệu — mới báo mới, cũ báo cũ.',
+        'Kiểm tra main chưa từng qua sửa chữa, linh kiện đúng như lúc giới thiệu. Mới thì nói mới, cũ thì nói cũ.',
     },
     reviews: {
       title: 'NHẬN XÉT CỦA KHÁCH HÀNG',
@@ -699,21 +699,21 @@ export const TRANSLATIONS = {
       btnCheck: 'Check Warranty Now',
     },
     qcProcess: {
-      title: 'EVERY MACHINE IS CAREFULLY CHECKED BEFORE HANDOVER',
+      title: 'EVERY MACHINE GETS A PROPER CHECK BEFORE IT LEAVES',
       subtitle:
-        'A used machine deserves an even closer check. Before handover, our technician re-tests everything — power, temperatures, drive and battery health — and reports the real condition honestly. You are welcome to check the machine again on the spot when you receive it.',
-      s1Title: 'POWER & STABILITY TESTING',
+        'With used machines, this step matters most. Before any handover, our technician goes over the whole machine once more and tells you exactly how things stand. When you pick it up, feel free to open it and check everything yourself.',
+      s1Title: 'PLUG IT IN AND LET IT RUN',
       s1Desc:
-        'Each machine is run continuously and put under load for a while, making sure it never loses power or freezes in the middle of your work.',
-      s2Title: 'CLEANING & COOLING',
+        'We let the machine run for a while and push it with heavier tasks to see if it shuts down or freezes. It only goes out when it runs stable.',
+      s2Title: 'A PROPER CLEAN, FRESH THERMAL PASTE',
       s2Desc:
-        'We open the machine, clean out the dust, apply fresh thermal paste and check the fans — so it runs quiet, cool and longer.',
-      s3Title: 'DRIVE, MEMORY & BATTERY HEALTH',
+        'We open it up, clear out the dust, put on fresh thermal paste and listen to the fans. A clean machine runs quieter and cooler.',
+      s3Title: 'DRIVE, MEMORY AND BATTERY CHECK',
       s3Desc:
-        'We measure drive health, test the memory and check battery wear with professional tools. Any part that is getting weak is reported to you before handover.',
+        'We use software to check the drive health, test the memory and see how worn the battery is. If something is weak, we tell you upfront — nothing is hidden.',
       s4Title: 'ORIGINAL BOARD, PARTS AS DESCRIBED',
       s4Desc:
-        'The motherboard is original and never patch-repaired, and every part matches what we described — if it is new we say new, if it is used we say used.',
+        'We check the motherboard has never been repaired and that every part matches what we told you. New is new, used is used.',
     },
     reviews: {
       title: 'CLIENT TESTIMONIALS & FEEDBACK',
