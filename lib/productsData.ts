@@ -180,7 +180,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
           ? en
             ? en.subBadge
             : '6-Month Full-System Warranty'
-          : (rawMatch?.vi.subBadge || 'Bảo hành toàn máy 6 tháng'),
+          : (rawMatch?.vi.subBadge || 'Bảo hành 6 tháng'),
         desc: isEn
           ? en
             ? en.desc
