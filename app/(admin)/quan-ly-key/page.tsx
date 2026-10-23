@@ -126,10 +126,14 @@ export default function QuanLyKeyPage() {
   const [invStatusFilter, setInvStatusFilter] = useState('all');
   const [invSearch, setInvSearch] = useState('');
 
-  const triggerFeedback = (msg: string) => {
+  const triggerFeedback = (msg: string, ms = 3500) => {
     setStatusFeedback(msg);
-    setTimeout(() => setStatusFeedback(null), 3500);
+    setTimeout(() => setStatusFeedback(null), ms);
   };
+
+  // Phân loại đang chờ xác nhận xoá (bấm nút xoá 2 lần — thay confirm()
+  // native vốn khó thấy/khó kiểm chứng; lần bấm đầu chỉ "lên cót")
+  const [pendingDeleteCatId, setPendingDeleteCatId] = useState<string | null>(null);
 
   const copyToClipboard = (text: string) => {
     if (navigator.clipboard) {
@@ -374,23 +378,28 @@ export default function QuanLyKeyPage() {
   const handleDeleteCategory = async (cat: KeyCategory) => {
     const keysCount = licenseKeys.filter((k) => k.category_id === cat.id).length;
     if (keysCount > 0) {
-      alert(
-        `Phân loại "${cat.name}" còn ${keysCount} key nên chưa xoá được. Hãy xoá các key thuộc phân loại này trước (tab Kho key chi tiết), rồi quay lại xoá phân loại.`
+      // Hiện banner trong trang (không dùng alert() native — khó thấy và
+      // không để lại dấu vết trên giao diện để kiểm chứng)
+      setPendingDeleteCatId(null);
+      triggerFeedback(
+        `⚠️ Phân loại "${cat.name}" còn ${keysCount} key nên chưa xoá được. Hãy xoá các key thuộc phân loại này trước (tab Kho key chi tiết), rồi quay lại xoá phân loại.`,
+        6000
       );
       return;
     }
-    if (
-      confirm(
-        `Xoá hẳn phân loại "${cat.name}"?\nPhân loại hiện không còn key nào. Hành động này không khôi phục được.`
-      )
-    ) {
-      const res = await deleteKeyCategory(cat.id);
-      if (res.success) {
-        triggerFeedback(res.message);
-      } else {
-        alert(res.message);
-      }
+    // Phân loại trống: bấm lần 1 để "lên cót", bấm lần 2 mới xoá thật
+    if (pendingDeleteCatId !== cat.id) {
+      setPendingDeleteCatId(cat.id);
+      triggerFeedback(
+        `⚠️ Nhấn nút "Xác nhận xoá" thêm một lần nữa để xoá hẳn phân loại "${cat.name}" (không khôi phục được).`,
+        6000
+      );
+      setTimeout(() => setPendingDeleteCatId((cur) => (cur === cat.id ? null : cur)), 6000);
+      return;
     }
+    setPendingDeleteCatId(null);
+    const res = await deleteKeyCategory(cat.id);
+    triggerFeedback(res.message, 5000);
   };
 
   // Submit Handler: Add Keys
@@ -933,7 +942,7 @@ export default function QuanLyKeyPage() {
                   DANH MỤC PHÂN LOẠI KEY WINDOWS &amp; OFFICE
                 </h3>
                 <p className="text-xs text-[#6E5D53] mt-0.5">
-                  Phân loại mặc định của hệ thống được bảo vệ và không thể xóa. Các phân loại tự nhập thuộc &quot;Others&quot; có thể xóa hoặc tự động merge.
+                  Mọi phân loại đều xoá được khi không còn key nào thuộc phân loại và không còn yêu cầu cấp key đang mở.
                 </p>
               </div>
 
@@ -992,9 +1001,13 @@ export default function QuanLyKeyPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteCategory(cat)}
-                          className="text-[11px] text-rose-700 hover:text-rose-900 font-bold hover:underline"
+                          className={
+                            pendingDeleteCatId === cat.id
+                              ? 'text-[11px] font-black text-white bg-rose-600 hover:bg-rose-700 rounded-md px-2 py-1'
+                              : 'text-[11px] text-rose-700 hover:text-rose-900 font-bold hover:underline'
+                          }
                         >
-                          Xóa phân loại
+                          {pendingDeleteCatId === cat.id ? 'Xác nhận xoá?' : 'Xóa phân loại'}
                         </button>
                       )}
                     </div>
