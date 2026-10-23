@@ -869,50 +869,55 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const handleCreateNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    const baseTag = newItem.service_tag.toUpperCase().trim();
     if (!newItem.model) {
       alert('Vui lòng nhập Model!');
       return;
     }
-    if (!baseTag) {
-      alert('Vui lòng nhập Mã quản lý lô (Tag gốc)!');
-      return;
-    }
 
-    // Tag duy nhất cho từng máy trong lô: máy 1 = Tag gốc, máy 2..N = Tag gốc-2, -3...
-    const takenTags = new Set(inventory.map((i) => i.service_tag.toUpperCase()));
-    if (takenTags.has(baseTag)) {
-      alert(`Tag gốc [${baseTag}] đã tồn tại trong kho — vui lòng dùng Tag khác!`);
-      return;
-    }
-    const uniqueTagFor = (index: number): string => {
-      if (index === 0) return baseTag;
-      let n = index + 1;
-      let candidate = `${baseTag}-${n}`;
-      while (takenTags.has(candidate)) {
-        n += 1;
-        candidate = `${baseTag}-${n}`;
-      }
-      takenTags.add(candidate);
-      return candidate;
-    };
+    // Quản lý CHỈ bằng S/N (bỏ Mã Quản Lý Lô/Tag Gốc): service_tag của
+    // từng máy = chính S/N của máy đó. Máy chưa kịp ghi S/N thì tự sinh
+    // một mã tạm duy nhất để vẫn tra cứu/quản lý được, sửa S/N sau.
+    const takenIds = new Set(
+      inventory
+        .flatMap((i) => [i.service_tag?.toUpperCase(), i.serial_number?.toUpperCase()])
+        .filter(Boolean) as string[]
+    );
 
-    // S/N không được trùng trong lô
+    // S/N không được trùng trong lô, cũng không trùng máy đã có trong kho
     const serials = batchUnits.map((u) => u.serialNumber.trim().toUpperCase()).filter(Boolean);
     if (new Set(serials).size !== serials.length) {
       alert('Có S/N bị trùng trong lô — mỗi máy phải có S/N riêng!');
       return;
     }
+    const clash = serials.find((s) => takenIds.has(s));
+    if (clash) {
+      alert(`S/N [${clash}] đã tồn tại trong kho — mỗi máy được quản lý bằng một S/N riêng!`);
+      return;
+    }
+
+    const stamp = Date.now().toString(36).toUpperCase();
+    const identityFor = (unit: { serialNumber: string }, index: number): string => {
+      const sn = unit.serialNumber.trim().toUpperCase();
+      if (sn) return sn;
+      let candidate = `VTAT-${stamp}-${index + 1}`;
+      let n = 1;
+      while (takenIds.has(candidate)) {
+        n += 1;
+        candidate = `VTAT-${stamp}-${index + 1}-${n}`;
+      }
+      takenIds.add(candidate);
+      return candidate;
+    };
 
     try {
       const orig = Number(newItem.original_price) || 0;
       const sale = Number(newItem.sale_price) || 0;
       const effectivePrice = sale > 0 ? sale : orig;
 
-      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N & sức khỏe SSD riêng theo lô
+      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N & sức khỏe SSD riêng
       for (let i = 0; i < batchUnits.length; i += 1) {
         const unit = batchUnits[i];
-        const tag = uniqueTagFor(i);
+        const tag = identityFor(unit, i);
         const health = Math.max(1, Math.min(100, Number(unit.ssdHealth) || 98));
         const serial = unit.serialNumber.trim() || tag;
         await addInventoryItem({
@@ -942,7 +947,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       }
 
       setIsAddModalOpen(false);
-      setActionNotice(`Đã nhập ${batchUnits.length} máy vào kho (lô [${baseTag}])!`);
+      setActionNotice(`Đã nhập ${batchUnits.length} máy vào kho!`);
       setTimeout(() => setActionNotice(null), 3000);
 
       // Reset form
@@ -2035,7 +2040,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <div className="bg-white w-full max-w-3xl max-h-[94vh] flex flex-col rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
             <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between shrink-0">
               <div>
-                <h3 className="text-base font-bold text-slate-900">Nhập Lô Máy Mới</h3>
+                <h3 className="text-base font-bold text-slate-900">Nhập máy mới</h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
                   Cùng 1 dòng máy / cấu hình — S/N và sức khỏe SSD nhập riêng cho từng máy.
                 </p>
@@ -2080,21 +2085,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     value={newItem.model}
                     onChange={(e) => setNewItem({ ...newItem, model: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  />
-                </div>
-
-                {/* Tag gốc của lô (mã quản lý dòng máy) */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
-                    Mã Quản Lý Lô (Tag Gốc) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="VD: ST-99214X (máy 1; máy 2: -2, máy 3: -3...)"
-                    value={newItem.service_tag}
-                    onChange={(e) => setNewItem({ ...newItem, service_tag: e.target.value })}
-                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] font-mono uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
 
@@ -2188,7 +2178,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         type="text"
                         value={unit.serialNumber}
                         onChange={(e) => updateBatchUnit(idx, { serialNumber: e.target.value })}
-                        placeholder={`S/N máy ${idx + 1} (để trống = lấy Tag)`}
+                        placeholder={`S/N máy ${idx + 1} (mã quản lý chính của máy)`}
                         className="flex-1 min-w-0 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                       />
                       <input
@@ -2227,7 +2217,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Giá Đầu Vào (VNĐ)
                   </label>
-                  <PricePreview value={newItem.import_price} label="Giá đầu vào" tone="rose" />
+                  {/* Ô nhập để TRƯỚC, dòng đọc giá để dưới — để ô nhập ngang
+                      hàng với ô Ngày Nhập/Nguồn Nhập cùng hàng */}
                   <input
                     type="number"
                     min={0}
@@ -2239,6 +2230,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     }
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
                   />
+                  <PricePreview value={newItem.import_price} label="Giá đầu vào" tone="rose" />
                 </div>
 
                 {/* Ngày Nhập Hàng */}
@@ -2364,33 +2356,34 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     </div>
                   </div>
 
-                  {/* Live Preview Display Rule */}
-                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">Hiển thị thực tế:</span>
-                    {newItem.sale_price > 0 ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-extrabold text-rose-600 font-mono text-sm">
-                          {formatMoney(newItem.sale_price)}
-                        </span>
-                        <span className="text-xs text-slate-400 line-through font-mono">
-                          {formatMoney(newItem.original_price)}
-                        </span>
-                        {newItem.original_price > newItem.sale_price && (
-                          <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
-                            -{Math.round(((newItem.original_price - newItem.sale_price) / newItem.original_price) * 100)}%
-                          </span>
-                        )}
-                      </div>
-                    ) : newItem.original_price <= 0 ? (
-                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
-                        Liên hệ
+                </div>
+
+                {/* Giá hiển thị thực tế — nằm bên DƯỚI và NGOÀI khung giá bán,
+                    không đóng khung để không nhầm với ô nhập liệu; chưa nhập
+                    giá bán nào thì hiện 'Chưa có' */}
+                <div className="md:col-span-3 flex items-center justify-between text-xs px-1 -mt-1">
+                  <span className="text-slate-500 font-medium">Giá hiển thị thực tế:</span>
+                  {newItem.sale_price > 0 ? (
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-extrabold text-rose-600 font-mono text-sm">
+                        {formatMoney(newItem.sale_price)}
                       </span>
-                    ) : (
-                      <span className="font-bold text-slate-900 font-mono text-sm">
+                      <span className="text-xs text-slate-400 line-through font-mono">
                         {formatMoney(newItem.original_price)}
                       </span>
-                    )}
-                  </div>
+                      {newItem.original_price > newItem.sale_price && (
+                        <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
+                          -{Math.round(((newItem.original_price - newItem.sale_price) / newItem.original_price) * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  ) : newItem.original_price <= 0 ? (
+                    <span className="font-semibold text-slate-400">Chưa có</span>
+                  ) : (
+                    <span className="font-bold text-slate-900 font-mono text-sm">
+                      {formatMoney(newItem.original_price)}
+                    </span>
+                  )}
                 </div>
 
                 {/* QC Status */}
@@ -2423,7 +2416,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   type="submit"
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm"
                 >
-                  Lưu Lô Máy ({batchUnits.length} máy)
+                  Lưu máy mới ({batchUnits.length} máy)
                 </button>
               </div>
             </form>
