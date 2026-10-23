@@ -22,6 +22,12 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'].blog;
 
+  // Bản tiếng Anh đã lưu sẵn (nếu có) — khách chọn English sẽ đọc bản này
+  const title = isEn && post.title_en ? post.title_en : post.title;
+  const contentHtml = (isEn && post.content_en ? post.content_en : post.content) || '';
+  const faqs =
+    isEn && post.faq_schema_en && post.faq_schema_en.length > 0 ? post.faq_schema_en : post.faq_schema;
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Breadcrumb Navigation */}
@@ -34,7 +40,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
           {t?.breadcrumbBlog || (isEn ? 'Tech Blog' : 'Tin tức')}
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-xs">{post.title}</span>
+        <span className="text-slate-800 dark:text-slate-200 font-medium truncate max-w-xs">{title}</span>
       </nav>
 
       {/* Article Container Grid */}
@@ -55,7 +61,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
             </div>
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
-              {post.title}
+              {title}
             </h1>
 
             {post.excerpt && (
@@ -95,7 +101,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
           {/* Rich HTML Content — bắt buộc sanitize để chống stored XSS */}
           <div
             className="prose prose-slate dark:prose-invert max-w-none text-slate-800 dark:text-slate-200 text-base leading-relaxed space-y-4"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content || '') }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(contentHtml) }}
           />
 
           {/* Tags footer */}
@@ -114,7 +120,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
           )}
 
           {/* FAQ Accordion Section */}
-          {post.faq_schema && post.faq_schema.length > 0 && (
+          {faqs && faqs.length > 0 && (
             <div className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-4">
               <div className="flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-indigo-600" />
@@ -123,7 +129,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
                 </h2>
               </div>
               <div className="space-y-3">
-                {post.faq_schema.map((faq, idx) => (
+                {faqs.map((faq, idx) => (
                   <div
                     key={idx}
                     className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-1.5"
@@ -144,7 +150,7 @@ export default function BlogPostDetailClient({ post, postUrl }: BlogPostDetailCl
         {/* Right Sticky Sidebar */}
         <aside className="lg:col-span-4 space-y-6">
           <div className="sticky top-20 space-y-6">
-            <TableOfContents contentHtml={post.content} />
+            <TableOfContents contentHtml={contentHtml} />
 
             <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg space-y-4">
               <span className="inline-block px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold tracking-wider uppercase">

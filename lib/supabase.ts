@@ -679,6 +679,7 @@ export const formatDateVN = (dateInput: string | Date | undefined | null): strin
 export interface BlogCategory {
   id: string;
   name: string;
+  name_en?: string;
   slug: string;
   description?: string;
   created_at?: string;
@@ -709,6 +710,14 @@ export interface BlogPost {
   meta_description?: string;
   focus_keyword?: string;
   faq_schema?: FaqSchemaItem[];
+
+  // Bản dịch tiếng Anh (dịch 1 lần, lưu cố định — hiển thị khi khách chọn English)
+  title_en?: string;
+  excerpt_en?: string;
+  content_en?: string;
+  meta_title_en?: string;
+  meta_description_en?: string;
+  faq_schema_en?: FaqSchemaItem[];
   
   // Reading metrics
   reading_time_minutes: number;

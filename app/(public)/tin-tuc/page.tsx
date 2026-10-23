@@ -30,7 +30,9 @@ export default function PublicBlogPage() {
       const matchSearch =
         !search ||
         p.title.toLowerCase().includes(search.toLowerCase()) ||
+        p.title_en?.toLowerCase().includes(search.toLowerCase()) ||
         p.excerpt?.toLowerCase().includes(search.toLowerCase()) ||
+        p.excerpt_en?.toLowerCase().includes(search.toLowerCase()) ||
         p.tags?.some((t) => t.toLowerCase().includes(search.toLowerCase()));
 
       const matchCat = selectedCat === 'all' || p.category_id === selectedCat;
@@ -81,7 +83,7 @@ export default function PublicBlogPage() {
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
-                {c.name}
+                {isEn && c.name_en ? c.name_en : c.name}
               </button>
             ))}
           </div>
@@ -114,12 +116,12 @@ export default function PublicBlogPage() {
 
                 <Link href={`/tin-tuc/${featuredPost.slug}`}>
                   <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white hover:text-blue-600 transition leading-snug">
-                    {featuredPost.title}
+                    {isEn && featuredPost.title_en ? featuredPost.title_en : featuredPost.title}
                   </h2>
                 </Link>
 
                 <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-3 leading-relaxed">
-                  {featuredPost.excerpt || (isEn ? 'Read our comprehensive breakdown for technical symptoms and optimal solutions...' : 'Đọc bài viết chi tiết để hiểu rõ hơn các dấu hiệu hỏng hóc và cách khắc phục tối ưu...')}
+                  {(isEn && featuredPost.excerpt_en) || featuredPost.excerpt || (isEn ? 'Read our comprehensive breakdown for technical symptoms and optimal solutions...' : 'Đọc bài viết chi tiết để hiểu rõ hơn các dấu hiệu hỏng hóc và cách khắc phục tối ưu...')}
                 </p>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -159,22 +161,22 @@ export default function PublicBlogPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-xs">
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                        {cat?.name || 'Thủ thuật'}
+                        {cat ? (isEn && cat.name_en ? cat.name_en : cat.name) : isEn ? 'Tips' : 'Thủ thuật'}
                       </span>
                       <span className="inline-flex items-center gap-1 font-semibold text-slate-500">
                         <Clock className="w-3 h-3 text-blue-500" />
-                        {post.reading_time_minutes || 1} phút đọc
+                        {post.reading_time_minutes || 1} {isEn ? 'min read' : 'phút đọc'}
                       </span>
                     </div>
 
                     <Link href={`/tin-tuc/${post.slug}`}>
                       <h3 className="font-bold text-base text-slate-900 dark:text-white hover:text-blue-600 transition line-clamp-2">
-                        {post.title}
+                        {isEn && post.title_en ? post.title_en : post.title}
                       </h3>
                     </Link>
 
                     <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                      {post.excerpt || 'Đọc chi tiết hướng dẫn chuẩn kỹ thuật...'}
+                      {(isEn && post.excerpt_en) || post.excerpt || (isEn ? 'Read the full technical guide...' : 'Đọc chi tiết hướng dẫn chuẩn kỹ thuật...')}
                     </p>
                   </div>
 
@@ -184,7 +186,7 @@ export default function PublicBlogPage() {
                       href={`/tin-tuc/${post.slug}`}
                       className="font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
                     >
-                      Chi tiết <ArrowRight className="w-3.5 h-3.5" />
+                      {isEn ? 'Details' : 'Chi tiết'} <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>

@@ -448,6 +448,31 @@ export function StoreProvider({
   });
   const [currentLang, setCurrentLang] = useState<'vi' | 'en'>('vi');
 
+  // Khôi phục ngôn ngữ ngay khi provider mount (mọi lần tải trang):
+  // ưu tiên lựa chọn đã lưu -> tham số ?lang= -> ngôn ngữ trình duyệt.
+  // Nhờ vậy English được giữ khi chuyển trang / tải lại, không phụ thuộc luồng tải dữ liệu.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('vtat_lang_v2');
+      if (saved === 'vi' || saved === 'en') {
+        setCurrentLang(saved);
+        document.documentElement.lang = saved;
+        return;
+      }
+      const q = new URLSearchParams(window.location.search).get('lang');
+      if (q === 'vi' || q === 'en') {
+        setCurrentLang(q);
+        document.documentElement.lang = q;
+        return;
+      }
+      const nav = (navigator.language || '').toLowerCase();
+      if (nav && !nav.startsWith('vi')) {
+        setCurrentLang('en');
+        document.documentElement.lang = 'en';
+      }
+    } catch {}
+  }, []);
+
   // Theme mode (light/dark) — đọc lựa chọn đã lưu, mặc định light
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
