@@ -463,6 +463,19 @@ export default function KhoMayPage() {
 
   // Hình ảnh máy nhập trong lô (tải lên qua /api/upload, lưu vào image_urls)
   const [newItemImages, setNewItemImages] = useState<string[]>([]);
+  // Gỡ ảnh khỏi form nhập = xóa luôn file vừa tải lên (file chưa gắn với
+  // máy nào nên xóa ngay được, khỏi để file mồ côi trong Storage).
+  const removeNewItemImage = (idx: number) => {
+    const url = newItemImages[idx];
+    setNewItemImages((prev) => prev.filter((_, j) => j !== idx));
+    if (url) {
+      fetch('/api/upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      }).catch(() => {});
+    }
+  };
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   // Lỗi tải ảnh hiện ngay trong form (không dùng alert — alert gốc dễ bị
   // trình duyệt chặn và người dùng tưởng là tải xong nhưng không có ảnh).
@@ -2379,7 +2392,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           />
                           <button
                             type="button"
-                            onClick={() => setNewItemImages((prev) => prev.filter((_, j) => j !== i))}
+                            onClick={() => removeNewItemImage(i)}
                             title="Gỡ ảnh này"
                             className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold leading-none shadow"
                           >

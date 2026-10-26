@@ -1706,6 +1706,28 @@ export function StoreProvider({
         'Xóa thiết bị'
       );
     }
+    // Dọn ảnh đi kèm (2026-10-26): xóa file ảnh của máy này khỏi Storage
+    // khi xóa máy — kể cả máy reseller bị quét tự động quá hạn 7 ngày
+    // (luồng đó cũng gọi hàm này). TRỪ ảnh còn được máy khác dùng chung
+    // (ảnh tải theo lô được lưu chung cho cả lô): chỉ xóa file không còn
+    // máy nào tham chiếu. Best-effort: lỗi xóa ảnh không chặn việc xóa máy
+    // (route DELETE yêu cầu quyền admin/quản lý user).
+    const urlsToClean = (target?.image_urls || []).filter(
+      (u): u is string => typeof u === 'string' && u.includes('/storage/v1/object/public/')
+    );
+    if (urlsToClean.length > 0) {
+      const stillUsed = new Set(
+        inventory.filter((i) => i.id !== id).flatMap((i) => i.image_urls || [])
+      );
+      for (const u of urlsToClean) {
+        if (stillUsed.has(u)) continue;
+        fetch('/api/upload', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: u }),
+        }).catch(() => {});
+      }
+    }
     return true;
   };
 
