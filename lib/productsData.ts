@@ -30,6 +30,7 @@ export interface ShowcaseItem {
   qcStatus: string;
   burnInDuration: number;
   warrantyMonths: number;
+  warrantyType?: 'months' | 'manufacturer';
   isSold?: boolean;
   addedAt?: string; // Ngày nhập kho (import_date) hoặc ngày tạo — để sắp xếp "mới nhất" ở trang chủ
   customerName?: string;
@@ -163,6 +164,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         qcStatus: item.qc_status || 'ready_to_sell',
         burnInDuration: item.burn_in_duration || 60,
         warrantyMonths: item.warranty_months ?? 6,
+        warrantyType: item.warranty_type ?? 'months',
         isSold,
         addedAt: item.import_date || item.created_at || undefined,
         customerName: item.customer_name,

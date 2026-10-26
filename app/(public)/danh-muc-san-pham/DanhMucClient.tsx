@@ -609,7 +609,7 @@ function ProductsCatalogContent() {
                           </div>
                           <div className="flex items-center gap-2">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span className="truncate font-medium text-slate-600">{isEn ? `${prod.warrantyMonths ?? 6}-month warranty` : `Bảo hành ${prod.warrantyMonths ?? 6} tháng`}</span>
+                            <span className="truncate font-medium text-slate-600">{prod.warrantyType === 'manufacturer' ? (isEn ? 'Manufacturer warranty' : 'Bảo hành theo nhà sản xuất') : (isEn ? `${prod.warrantyMonths ?? 6}-month warranty` : `Bảo hành ${prod.warrantyMonths ?? 6} tháng`)}</span>
                           </div>
                         </div>
 
@@ -872,7 +872,7 @@ function ProductsCatalogContent() {
                       <div className="text-right">
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{t.catalog?.partsWarrantyLabel || (isEn ? 'Warranty' : 'Bảo hành')} {part.warranty_months ? `${part.warranty_months} ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}` : `36 ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}`}</span>
+                          <span>{t.catalog?.partsWarrantyLabel || (isEn ? 'Warranty' : 'Bảo hành')} {part.warranty_type === 'manufacturer' ? (isEn ? 'Manufacturer warranty' : 'Theo nhà sản xuất') : (part.warranty_months ? `${part.warranty_months} ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}` : `36 ${t.catalog?.partsWarrantyMonths || (isEn ? 'months' : 'tháng')}`)}</span>
                         </span>
                       </div>
                     </div>

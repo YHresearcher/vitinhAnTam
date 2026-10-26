@@ -120,6 +120,9 @@ function WarrantyLookupContent() {
   };
 
   const warrantyMonths = calculateWarrantyMonths();
+  const isManufacturerWarranty =
+    searchResult?.ticket?.warranty_type === 'manufacturer' ||
+    searchResult?.item?.warranty_type === 'manufacturer';
 
   const handoverDateRaw =
     searchResult?.item?.handover_date ||
@@ -309,7 +312,7 @@ function WarrantyLookupContent() {
               <div>
                 <span className="text-[11px] uppercase tracking-wider text-slate-500 font-medium">{t.packageLabel}</span>
                 <p className="text-sm font-bold text-slate-900 mt-0.5">
-                  {currentLang === 'en' ? `An Tam Care (${warrantyMonths}M)` : `An Tam Care (${warrantyMonths}T)`}
+                  {isManufacturerWarranty ? (currentLang === 'en' ? 'An Tam Care (Manufacturer)' : 'An Tam Care (Theo NSX)') : (currentLang === 'en' ? `An Tam Care (${warrantyMonths}M)` : `An Tam Care (${warrantyMonths}T)`)}
                 </p>
               </div>
               <div>
@@ -355,17 +358,19 @@ function WarrantyLookupContent() {
                     </span>
                     <span className="font-bold text-slate-900">{t.tier1Name}</span>
                     <span className="text-slate-500 font-mono text-[11px]">
-                      ({currentLang === 'en' ? 'Valid until ' : 'Hạn đến '} {formatDateVN(expiryDate.toISOString())})
+                      {isManufacturerWarranty ? (currentLang === 'en' ? '(Manufacturer warranty)' : '(Theo nhà sản xuất)') : (<>({currentLang === 'en' ? 'Valid until ' : 'Hạn đến '} {formatDateVN(expiryDate.toISOString())})</>)}
                     </span>
                   </div>
                   <span className="font-semibold text-[#C0392B] shrink-0">
-                    {remainingDays > 0
+                    {isManufacturerWarranty
+                      ? (currentLang === 'en' ? 'Covered by manufacturer' : 'Bảo hành theo nhà sản xuất')
+                      : remainingDays > 0
                       ? (currentLang === 'en' ? `${remainingDays} days remaining` : `Còn ${remainingDays} ngày bảo hành`)
                       : (currentLang === 'en' ? 'Expired' : 'Hết hạn bảo hành')}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#C0392B] h-full rounded-full transition-all duration-500" style={{ width: `${machineProgress}%` }} />
+                  <div className="bg-[#C0392B] h-full rounded-full transition-all duration-500" style={{ width: isManufacturerWarranty ? '0%' : `${machineProgress}%` }} />
                 </div>
               </div>
 

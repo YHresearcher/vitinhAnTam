@@ -79,7 +79,7 @@ export default function KhoMayPage() {
     part_type: 'SSD',
     condition: 'new' as 'new' | 'used',
     quantity_in_stock: 5,
-    warranty_months: 36,
+    warranty_months: 6,
     distributor: 'Chính hãng',
     unit_cost: 450000,
     original_price: 650000,
@@ -88,6 +88,7 @@ export default function KhoMayPage() {
     shelf_location: 'Kệ Linh Kiện L1',
     notes: 'Mới 100% nguyên seal',
   });
+  const [newPartWarrantyType, setNewPartWarrantyType] = useState<'months' | 'manufacturer'>('months');
 
   // Helper tính ngày hết hạn bảo hành từ ngày bán
   const calculateWarrantyEndDate = (startDateStr: string, months: number): string => {
@@ -118,7 +119,8 @@ export default function KhoMayPage() {
   const [sellCustomerPhone, setSellCustomerPhone] = useState('');
   const [sellCustomerAddress, setSellCustomerAddress] = useState('');
   const [sellSerialNumber, setSellSerialNumber] = useState('');
-  const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(12);
+  const [sellWarrantyMonths, setSellWarrantyMonths] = useState<number>(6);
+  const [sellWarrantyType, setSellWarrantyType] = useState<'months' | 'manufacturer'>('months');
   const [sellPrice, setSellPrice] = useState<number>(0);
   const [sellDate, setSellDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [cashflowConfirmData, setCashflowConfirmData] = useState<CashflowSaleConfirm | null>(null);
@@ -131,7 +133,8 @@ export default function KhoMayPage() {
   const [sellPartCustomerPhone, setSellPartCustomerPhone] = useState('');
   const [sellPartCustomerAddress, setSellPartCustomerAddress] = useState('');
   const [sellPartQuantity, setSellPartQuantity] = useState<number>(1);
-  const [sellPartWarrantyMonths, setSellPartWarrantyMonths] = useState<number>(12);
+  const [sellPartWarrantyMonths, setSellPartWarrantyMonths] = useState<number>(6);
+  const [sellPartWarrantyType, setSellPartWarrantyType] = useState<'months' | 'manufacturer'>('months');
   const [sellPartPrice, setSellPartPrice] = useState<number>(0);
   const [sellPartDate, setSellPartDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
@@ -160,9 +163,8 @@ export default function KhoMayPage() {
     setSellCustomerPhone(item.customer_phone || '');
     setSellCustomerAddress('');
     setSellSerialNumber(item.serial_number || item.service_tag);
-    const validMonths = [3, 6, 12, 36];
-    const initialWarranty = validMonths.includes(item.warranty_months || 0) ? (item.warranty_months as number) : 12;
-    setSellWarrantyMonths(initialWarranty);
+    setSellWarrantyType(item.warranty_type === 'manufacturer' ? 'manufacturer' : 'months');
+    setSellWarrantyMonths(6);
     const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
     setSellPrice(effectiveItemPrice);
     setSellQuantity(1);
@@ -230,6 +232,7 @@ export default function KhoMayPage() {
       customerAddress: sellCustomerAddress.trim(),
       serialNumber: sellSerialNumber.trim(),
       warrantyMonths: sellWarrantyMonths,
+      warrantyType: sellWarrantyType,
       quantity: sellQuantity,
       soldPrice: Number(sellPrice) || 0,
       saleDate: sellDate,
@@ -250,6 +253,7 @@ export default function KhoMayPage() {
         customerAddress,
         serialNumber,
         warrantyMonths,
+        warrantyType,
         soldPrice,
         saleDate,
         costPrice,
@@ -283,6 +287,7 @@ export default function KhoMayPage() {
         customerAddress: customerAddress || '',
         serialNumber,
         warrantyMonths,
+        warrantyType,
         quantity,
         soldPrice,
         saleDate,
@@ -362,8 +367,9 @@ export default function KhoMayPage() {
     setSellPartCustomerPhone('');
     setSellPartCustomerAddress('');
     setSellPartQuantity(1);
-    const validMonths = [3, 6, 12, 36];
-    const partWarranty = validMonths.includes(part.warranty_months || 0) ? (part.warranty_months as number) : 36;
+    setSellPartWarrantyType(part.warranty_type === 'manufacturer' ? 'manufacturer' : 'months');
+    const validMonths = [3, 6];
+    const partWarranty = validMonths.includes(part.warranty_months || 0) ? (part.warranty_months as number) : 6;
     setSellPartWarrantyMonths(partWarranty);
     const effectivePartPrice = part.sale_price && part.sale_price > 0 ? part.sale_price : (part.original_price || part.unit_price || 0);
     setSellPartPrice(effectivePartPrice);
@@ -387,6 +393,7 @@ export default function KhoMayPage() {
       customerAddress: sellPartCustomerAddress,
       quantity: sellPartQuantity,
       warrantyMonths: sellPartWarrantyMonths,
+      warrantyType: sellPartWarrantyType,
       soldPrice: sellPartPrice,
       saleDate: sellPartDate,
     });
@@ -777,7 +784,16 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
   }, [inventory, spareParts, nowTimestamp]);
 
   // Helper tính toán thời gian bảo hành thời gian thực
-  const getRealtimeWarrantyStatus = (handoverDateStr?: string, warrantyMonths: number = 12) => {
+  const getRealtimeWarrantyStatus = (handoverDateStr?: string, warrantyMonths: number = 12, warrantyType?: 'months' | 'manufacturer') => {
+    if (warrantyType === 'manufacturer') {
+      return {
+        isExpired: false,
+        isNearExpiry: false,
+        remainingText: 'Theo nhà sản xuất',
+        badgeClass: 'bg-slate-100 text-slate-700 border-slate-200',
+        percentElapsed: 0,
+      };
+    }
     if (!handoverDateStr) {
       return {
         isExpired: false,
@@ -1116,6 +1132,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         condition: newPart.condition,
         quantity_in_stock: Number(newPart.quantity_in_stock),
         warranty_months: Number(newPart.warranty_months),
+        warranty_type: newPartWarrantyType,
         distributor: newPart.distributor,
         unit_cost: Number(newPart.unit_cost),
         original_price: orig,
@@ -1135,7 +1152,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         part_type: 'SSD',
         condition: 'new',
         quantity_in_stock: 5,
-        warranty_months: 36,
+        warranty_months: 6,
         distributor: 'Chính hãng',
         unit_cost: 450000,
         original_price: 650000,
@@ -1144,6 +1161,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         shelf_location: 'Kệ Linh Kiện L1',
         notes: 'Mới 100% nguyên seal',
       });
+      setNewPartWarrantyType('months');
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm linh kiện'));
     }
@@ -1174,7 +1192,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         `"${item.ssd_capacity || item.specs?.ssd || ''}"`,
         `"${item.qc_status || ''}"`,
         item.price || item.retail_price || 0,
-        `"${item.warranty_months || 0} tháng"`,
+        `"${item.warranty_type === 'manufacturer' ? 'Theo nhà sản xuất' : `${item.warranty_months || 0} tháng`}"`,
         `"${(item.specs_summary || '').replace(/"/g, '""')}"`,
       ]);
       const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -1215,7 +1233,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         `"${(m.customer_name || '').replace(/"/g, '""')}"`,
         `"${m.customer_phone || ''}"`,
         `"${(m.handover_date || '').slice(0, 10)}"`,
-        `"${m.warranty_months || 0} tháng"`,
+        `"${m.warranty_type === 'manufacturer' ? 'Theo nhà sản xuất' : `${m.warranty_months || 0} tháng`}"`,
         `"${m.serial_number || ''}"`,
       ]);
       const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -2104,7 +2122,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           {/* Warranty */}
                           <td className="py-3.5 px-4 text-center">
                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">
-                              {part.warranty_months} tháng
+                              {part.warranty_type === 'manufacturer' ? 'Theo NSX' : `${part.warranty_months} tháng`}
                             </span>
                           </td>
 
@@ -2790,14 +2808,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       Thời Hạn Bảo Hành *
                     </label>
                     <select
-                      value={sellWarrantyMonths}
-                      onChange={(e) => setSellWarrantyMonths(Number(e.target.value))}
+                      value={sellWarrantyType === 'manufacturer' ? 'manufacturer' : 'months:6'}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === 'manufacturer') {
+                          setSellWarrantyType('manufacturer');
+                        } else {
+                          setSellWarrantyType('months');
+                          setSellWarrantyMonths(6);
+                        }
+                      }}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-blue-700"
                     >
-                      <option value={3}>3 Tháng</option>
-                      <option value={6}>6 Tháng</option>
-                      <option value={12}>12 Tháng</option>
-                      <option value={36}>36 Tháng</option>
+                      <option value="months:6">6 Tháng</option>
+                      <option value="manufacturer">Theo nhà sản xuất</option>
                     </select>
                   </div>
 
@@ -2857,7 +2881,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     Kích hoạt BH: <strong className="text-slate-900 font-mono">{sellDate ? new Date(sellDate).toLocaleDateString('vi-VN') : '—'}</strong>
                   </span>
                   <span className="text-blue-800 font-semibold">
-                    Hết hạn BH: <strong className="text-blue-700 font-mono">{calculateWarrantyEndDate(sellDate, sellWarrantyMonths) || '—'}</strong>
+                    {sellWarrantyType === 'manufacturer' ? (
+                      'Bảo hành theo nhà sản xuất'
+                    ) : (
+                      <>Hết hạn BH: <strong className="text-blue-700 font-mono">{calculateWarrantyEndDate(sellDate, sellWarrantyMonths) || '—'}</strong></>
+                    )}
                   </span>
                 </div>
               </div>
@@ -3337,14 +3365,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       Thời Hạn Bảo Hành *
                     </label>
                     <select
-                      value={sellPartWarrantyMonths}
-                      onChange={(e) => setSellPartWarrantyMonths(Number(e.target.value))}
+                      value={sellPartWarrantyType === 'manufacturer' ? 'manufacturer' : `months:${sellPartWarrantyMonths}`}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === 'manufacturer') {
+                          setSellPartWarrantyType('manufacturer');
+                        } else {
+                          setSellPartWarrantyType('months');
+                          setSellPartWarrantyMonths(Number(v.replace('months:', '')));
+                        }
+                      }}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold text-emerald-700"
                     >
-                      <option value={3}>3 Tháng</option>
-                      <option value={6}>6 Tháng</option>
-                      <option value={12}>12 Tháng</option>
-                      <option value={36}>36 Tháng</option>
+                      <option value="months:3">3 Tháng</option>
+                      <option value="months:6">6 Tháng</option>
+                      <option value="manufacturer">Theo nhà sản xuất</option>
                     </select>
                   </div>
                 </div>
@@ -3414,7 +3449,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setNewPart({ ...newPart, condition: 'new', warranty_months: 36 })}
+                    onClick={() => { setNewPart({ ...newPart, condition: 'new', warranty_months: 6 }); setNewPartWarrantyType('months'); }}
                     className={`p-3 rounded-xl border-2 text-left transition-all ${
                       newPart.condition === 'new'
                         ? 'border-emerald-600 bg-emerald-50/60 shadow-xs'
@@ -3426,14 +3461,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         Mới 100%
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        Chính hãng (24-36 tháng)
+                        Chính hãng (6 tháng hoặc theo NSX)
                       </div>
                     </div>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setNewPart({ ...newPart, condition: 'used', warranty_months: 3 })}
+                    onClick={() => { setNewPart({ ...newPart, condition: 'used', warranty_months: 3 }); setNewPartWarrantyType('months'); }}
                     className={`p-3 rounded-xl border-2 text-left transition-all ${
                       newPart.condition === 'used'
                         ? 'border-purple-600 bg-purple-50/60 shadow-xs'
@@ -3445,7 +3480,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         Cũ / Bóc Máy
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        Đã test QC (1-6 tháng)
+                        Đã test QC (3 tháng hoặc theo NSX)
                       </div>
                     </div>
                   </button>
@@ -3508,19 +3543,25 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 {/* Warranty Months */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Bảo Hành (Tháng) *
+                    Bảo Hành *
                   </label>
                   <select
-                    value={newPart.warranty_months}
-                    onChange={(e) => setNewPart({ ...newPart, warranty_months: Number(e.target.value) })}
+                    value={newPartWarrantyType === 'manufacturer' ? 'manufacturer' : `months:${newPart.warranty_months}`}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === 'manufacturer') {
+                        setNewPartWarrantyType('manufacturer');
+                        setNewPart({ ...newPart, warranty_months: 0 });
+                      } else {
+                        setNewPartWarrantyType('months');
+                        setNewPart({ ...newPart, warranty_months: Number(v.replace('months:', '')) });
+                      }
+                    }}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-emerald-800"
                   >
-                    <option value={1}>1 Tháng</option>
-                    <option value={3}>3 Tháng</option>
-                    <option value={6}>6 Tháng</option>
-                    <option value={12}>12 Tháng</option>
-                    <option value={24}>24 Tháng</option>
-                    <option value={36}>36 Tháng</option>
+                    <option value="months:3">3 Tháng</option>
+                    <option value="months:6">6 Tháng</option>
+                    <option value="manufacturer">Theo nhà sản xuất</option>
                   </select>
                 </div>
 
@@ -3733,7 +3774,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   <span>•</span>
                   <span>Kiểu dáng: <strong>{viewingSpecsItem.form_factor}</strong></span>
                   <span>•</span>
-                  <span>Bảo hành: <strong>{viewingSpecsItem.warranty_months} tháng</strong></span>
+                  {viewingSpecsItem.warranty_type === 'manufacturer' ? (<span>Bảo hành: <strong>Theo nhà sản xuất</strong></span>) : (<span>Bảo hành: <strong>{viewingSpecsItem.warranty_months} tháng</strong></span>)}
                 </div>
               </div>
 

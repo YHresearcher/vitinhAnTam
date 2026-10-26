@@ -257,6 +257,8 @@ export interface MachineComponent {
   note?: string;
 }
 
+export type WarrantyType = 'months' | 'manufacturer';
+
 export interface InventoryItem {
   id: string;
   service_tag: string; // ST-8F4K92X, TP-994L2A
@@ -287,6 +289,7 @@ export interface InventoryItem {
   quantity?: number;
   deposit_amount?: number;
   warranty_months: number;
+  warranty_type?: WarrantyType;
   shelf_location: string; // Kệ A1, B2, C1...
   image_urls?: string[];
   // Nhập máy 2026-10-26: thông tin người bán (chỉ nhập khi source = 'reseller')
@@ -367,6 +370,7 @@ export interface SparePart {
   condition: 'new' | 'used'; // Mới 100% hoặc Zin bóc máy / Cũ 99%
   quantity_in_stock: number;
   warranty_months: number;
+  warranty_type?: WarrantyType;
   distributor?: string;
   unit_cost?: number;
   unit_price: number;
@@ -560,6 +564,7 @@ export interface ServiceTicket {
   technician_note?: string;
   service_category?: 'sua_chua' | 'bao_hanh'; // 'sua_chua' = Sửa chữa, 'bao_hanh' = Bảo hành
   warranty_duration_months?: number; // Thời gian bảo hành (tháng)
+  warranty_type?: WarrantyType;
   estimated_completion?: string; // Thời gian hoàn tất / hẹn trả dự kiến
   repair_deadline?: string;
   warranty_deadline?: string;

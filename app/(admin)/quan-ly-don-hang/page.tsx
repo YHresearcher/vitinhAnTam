@@ -226,7 +226,7 @@ export default function OrderManagementPage() {
   const executeSale = (
     order: Order,
     matchedItem: InventoryItem,
-    warrantyMonths: number,
+    warranty: { months: number; type: 'months' | 'manufacturer' },
     deliveryInfo: {
       deliveryMethod: 'pickup' | 'delivery';
       deliveryStaffId?: string;
@@ -251,7 +251,8 @@ export default function OrderManagementPage() {
       customerPhone: order.customer_phone,
       customerAddress: deliveryInfo.shippingAddress || order.customer_address || '',
       serialNumber: matchedItem.serial_number || matchedItem.service_tag,
-      warrantyMonths,
+      warrantyMonths: warranty.months,
+      warrantyType: warranty.type,
       soldPrice: Number(order.device_price) || 0,
       costPrice: currentCost,
       orderCode: order.order_code,
@@ -272,7 +273,7 @@ export default function OrderManagementPage() {
     setIsSubmittingOrderSale(true);
 
     try {
-      const { item, costPrice, soldPrice, warrantyMonths } = finalData;
+      const { item, costPrice, soldPrice, warrantyMonths, warrantyType } = finalData;
 
       // Đồng bộ giá vốn nếu có điều chỉnh
       if (costPrice !== (item.import_price || item.cost_price || 0)) {
@@ -318,6 +319,7 @@ export default function OrderManagementPage() {
         customerAddress: finalData.customerAddress || executingOrder.customer_address || '',
         serialNumber: item.serial_number || item.service_tag,
         warrantyMonths,
+        warrantyType,
         soldPrice,
         notes: cashflowNote,
       });
@@ -617,7 +619,7 @@ export default function OrderManagementPage() {
           inventory={inventory}
           users={users}
           onClose={() => setExecutingOrder(null)}
-          onConfirm={(i, m, deliveryInfo) => executeSale(executingOrder, i, m, deliveryInfo)}
+          onConfirm={(i, w, deliveryInfo) => executeSale(executingOrder, i, w, deliveryInfo)}
         />
       )}
 
@@ -647,7 +649,7 @@ function ExecuteOrderModal({
   onClose: () => void;
   onConfirm: (
     i: InventoryItem,
-    months: number,
+    warranty: { months: number; type: 'months' | 'manufacturer' },
     deliveryInfo: {
       deliveryMethod: 'pickup' | 'delivery';
       deliveryStaffId?: string;
@@ -661,7 +663,8 @@ function ExecuteOrderModal({
     ? inventory.find((i) => i.service_tag === order.device_tag && i.qc_status !== 'sold')
     : null;
   const [selectedTag, setSelectedTag] = useState<string>(matchedItem?.service_tag || '');
-  const [months, setMonths] = useState(12);
+  const [months, setMonths] = useState(6);
+  const [warrantyType, setWarrantyType] = useState<'months' | 'manufacturer'>('months');
 
   // Giao hàng tận nơi vs Khách đến lấy
   const [deliveryMethod, setDeliveryMethod] = useState<'pickup' | 'delivery'>(
@@ -696,7 +699,7 @@ function ExecuteOrderModal({
 
     const assignedStaff = activeStaffList.find((u) => u.id === deliveryStaffId);
 
-    onConfirm(item, months, {
+    onConfirm(item, { months, type: warrantyType }, {
       deliveryMethod,
       deliveryStaffId: deliveryMethod === 'delivery' ? deliveryStaffId : undefined,
       deliveryStaffName: deliveryMethod === 'delivery' ? assignedStaff?.name : undefined,
@@ -754,34 +757,24 @@ function ExecuteOrderModal({
 
           <div>
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Thời hạn bảo hành (Tháng)
+              Thời hạn bảo hành
             </label>
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                className="w-24 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:bg-white focus:outline-none"
-                value={months}
-                onChange={(e) => setMonths(Math.max(1, Number(e.target.value) || 1))}
-                min={1}
-                max={36}
-              />
-              <div className="flex items-center gap-1">
-                {[1, 3, 6, 12, 24].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setMonths(m)}
-                    className={`px-2.5 py-1 rounded text-xs font-semibold border transition-all cursor-pointer ${
-                      months === m
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    {m}T
-                  </button>
-                ))}
-              </div>
-            </div>
+            <select
+              value={warrantyType === 'manufacturer' ? 'manufacturer' : 'months:6'}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === 'manufacturer') {
+                  setWarrantyType('manufacturer');
+                } else {
+                  setWarrantyType('months');
+                  setMonths(6);
+                }
+              }}
+              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none"
+            >
+              <option value="months:6">6 Tháng</option>
+              <option value="manufacturer">Theo nhà sản xuất</option>
+            </select>
           </div>
 
           {/* Hình thức nhận hàng: Giao hàng tận nơi vs Khách đến lấy */}
@@ -876,7 +869,7 @@ function ExecuteOrderModal({
                       placeholder="VD: 50.000"
                     />
                     <div className="flex items-center gap-1">
-                      {[30000, 50000, 70000, 100000].map((fee) => (
+                      {[50000, 100000].map((fee) => (
                         <button
                           key={fee}
                           type="button"

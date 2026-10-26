@@ -206,6 +206,7 @@ interface StoreContextType {
     customerAddress: string;
     serialNumber: string;
     warrantyMonths: number;
+    warrantyType?: 'months' | 'manufacturer';
     quantity?: number; // Số lượng máy bán trong 1 giao dịch (mặc định 1)
     soldPrice?: number;
     notes?: string;
@@ -220,6 +221,7 @@ interface StoreContextType {
     customerAddress?: string;
     quantity: number;
     warrantyMonths: number;
+    warrantyType?: 'months' | 'manufacturer';
     soldPrice: number;
     saleDate?: string;
   }) => Promise<{ success: boolean; message: string }>;
@@ -1090,9 +1092,9 @@ export function StoreProvider({
         // theo cột — nên khách phải liệt kê cột tường minh. Nhân viên
         // (JWT authenticated) giữ quyền toàn bảng, dùng '*'.
         const PUBLIC_INVENTORY_COLUMNS =
-          'id, brand, burn_in_duration, cpu, created_at, customer_name, device_model, form_factor, image_urls, import_date, model, price, qc_status, quantity, ram, retail_price, serial_number, service_tag, shelf_location, specs, specs_summary, ssd_capacity, ssd_health, stock_quantity, warranty_months' as const;
+          'id, brand, burn_in_duration, cpu, created_at, customer_name, device_model, form_factor, image_urls, import_date, model, price, qc_status, quantity, ram, retail_price, serial_number, service_tag, shelf_location, specs, specs_summary, ssd_capacity, ssd_health, stock_quantity, warranty_months, warranty_type' as const;
         const PUBLIC_SPARE_PART_COLUMNS =
-          'id, part_name, part_type, condition, quantity_in_stock, warranty_months, distributor, unit_price, shelf_location, notes, created_at' as const;
+          'id, part_name, part_type, condition, quantity_in_stock, warranty_months, warranty_type, distributor, unit_price, shelf_location, notes, created_at' as const;
         const invQuery = includeAdminData
           ? supabase.from('inventory_items').select('*')
           : supabase.from('inventory_items').select(PUBLIC_INVENTORY_COLUMNS);
@@ -3696,6 +3698,7 @@ export function StoreProvider({
     customerAddress: string;
     serialNumber: string;
     warrantyMonths: number;
+    warrantyType?: 'months' | 'manufacturer';
     quantity?: number; // Số lượng máy bán trong 1 giao dịch (mặc định 1)
     soldPrice?: number;
     notes?: string;
@@ -3715,8 +3718,15 @@ export function StoreProvider({
     }
 
     const saleDateTime = params.saleDate ? new Date(params.saleDate) : new Date();
-    const warrantyUntilDate = new Date(saleDateTime);
-    warrantyUntilDate.setMonth(warrantyUntilDate.getMonth() + params.warrantyMonths);
+    const isManufacturerWarranty = params.warrantyType === 'manufacturer';
+    const saleWarrantyMonths = isManufacturerWarranty ? 0 : params.warrantyMonths;
+    const warrantyUntilDate = isManufacturerWarranty
+      ? null
+      : (() => {
+          const d = new Date(saleDateTime);
+          d.setMonth(d.getMonth() + params.warrantyMonths);
+          return d;
+        })();
 
     // Generate Customer Code: [DDMM] + [4 last digits of phone]
     const existingCustomerCodes = customers
@@ -3788,7 +3798,8 @@ export function StoreProvider({
       customer_code: customerCode,
       sold_by: currentUser.name,
       serial_number: serial,
-      warranty_months: params.warrantyMonths,
+      warranty_months: saleWarrantyMonths,
+      warranty_type: isManufacturerWarranty ? 'manufacturer' : 'months',
       handover_date: saleDateTime.toISOString(),
       retail_price: unitSoldPrice,
       reserved_order_code: '',
@@ -3810,7 +3821,8 @@ export function StoreProvider({
         customer_code: customerCode,
         sold_by: currentUser.name,
         serial_number: serial,
-        warranty_months: params.warrantyMonths,
+        warranty_months: saleWarrantyMonths,
+        warranty_type: isManufacturerWarranty ? 'manufacturer' : 'months',
         handover_date: saleDateTime.toISOString(),
         retail_price: unitSoldPrice,
       };
@@ -3925,12 +3937,17 @@ export function StoreProvider({
       visual_condition: 'Máy chuẩn A bàn giao mới 100% nguyên bản',
       technician_note: `Bán hàng thành công${
         sellQty > 1 ? ` (Máy ${idx + 1}/${sellQty})` : ''
-      }. Serial: ${serial}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
+      }. Serial: ${serial}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. ${isManufacturerWarranty ? 'Bảo hành theo nhà sản xuất' : `Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate!.toLocaleDateString('vi-VN')})`}.`,
       estimated_cost: unitSoldPrice,
       total_amount: unitSoldPrice,
       created_at: saleDateTime.toISOString(),
-      warranty_until: warrantyUntilDate.toISOString(),
-      warranty_duration_months: params.warrantyMonths,
+      ...(isManufacturerWarranty
+        ? { warranty_type: 'manufacturer' as const }
+        : {
+            warranty_until: warrantyUntilDate!.toISOString(),
+            warranty_duration_months: params.warrantyMonths,
+            warranty_type: 'months' as const,
+          }),
     }));
 
     setTickets((prev) => {
@@ -3977,7 +3994,7 @@ export function StoreProvider({
     const provisionAmount = Math.max(0, Math.round(netProfit * 0.05));
 
     if (provisionAmount > 0) {
-      const expiryDate = new Date(Date.now() + params.warrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+      const expiryDate = new Date(Date.now() + saleWarrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
       const newProvision: WarrantyProvision = {
         id: createId(),
         item_id: item.id,
@@ -3989,7 +4006,7 @@ export function StoreProvider({
         customer_code: customerCode,
         seller_name: currentUser.name,
         sale_date: new Date().toISOString(),
-        warranty_months: params.warrantyMonths,
+        warranty_months: saleWarrantyMonths,
         warranty_expiry_date: expiryDate,
         sale_price: finalSoldPrice,
         cost_price: finalCostPrice * sellQty,
@@ -4156,6 +4173,7 @@ export function StoreProvider({
     customerAddress?: string;
     quantity: number;
     warrantyMonths: number;
+    warrantyType?: 'months' | 'manufacturer';
     soldPrice: number;
     saleDate?: string;
   }): Promise<{ success: boolean; message: string }> => {
@@ -4180,8 +4198,15 @@ export function StoreProvider({
     }
 
     const saleDateTime = params.saleDate ? new Date(params.saleDate) : new Date();
-    const warrantyUntilDate = new Date(saleDateTime);
-    warrantyUntilDate.setMonth(warrantyUntilDate.getMonth() + params.warrantyMonths);
+    const isManufacturerWarranty = params.warrantyType === 'manufacturer';
+    const saleWarrantyMonths = isManufacturerWarranty ? 0 : params.warrantyMonths;
+    const warrantyUntilDate = isManufacturerWarranty
+      ? null
+      : (() => {
+          const d = new Date(saleDateTime);
+          d.setMonth(d.getMonth() + params.warrantyMonths);
+          return d;
+        })();
 
     // 1. Giảm tồn kho
     const updatedStock = Math.max(0, (part.quantity_in_stock || 0) - params.quantity);
@@ -4227,12 +4252,17 @@ export function StoreProvider({
       technician_name: currentUser.name,
       status: 'delivered',
       visual_condition: part.condition === 'new' ? 'Linh kiện mới 100% nguyên seal' : 'Linh kiện zin tháo máy',
-      technician_note: `Xuất bán linh kiện x${params.quantity}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}).`,
+      technician_note: `Xuất bán linh kiện x${params.quantity}. Ngày bán: ${saleDateTime.toLocaleDateString('vi-VN')}. ${isManufacturerWarranty ? 'Bảo hành theo nhà sản xuất' : `Bảo hành ${params.warrantyMonths} tháng (đến ${warrantyUntilDate!.toLocaleDateString('vi-VN')})`}.`,
       estimated_cost: params.soldPrice,
       total_amount: params.soldPrice,
       created_at: saleDateTime.toISOString(),
-      warranty_until: warrantyUntilDate.toISOString(),
-      warranty_duration_months: params.warrantyMonths,
+      ...(isManufacturerWarranty
+        ? { warranty_type: 'manufacturer' as const }
+        : {
+            warranty_until: warrantyUntilDate!.toISOString(),
+            warranty_duration_months: params.warrantyMonths,
+            warranty_type: 'months' as const,
+          }),
     };
 
     setTickets((prev) => {
@@ -4262,7 +4292,9 @@ export function StoreProvider({
 
     return {
       success: true,
-      message: `Xuất bán linh kiện thành công! Bảo hành ${params.warrantyMonths} tháng đến ${warrantyUntilDate.toLocaleDateString('vi-VN')}.`,
+      message: isManufacturerWarranty
+      ? 'Xuất bán linh kiện thành công! Bảo hành theo nhà sản xuất.'
+      : `Xuất bán linh kiện thành công! Bảo hành ${params.warrantyMonths} tháng đến ${warrantyUntilDate!.toLocaleDateString('vi-VN')}.`,
     };
   };
 

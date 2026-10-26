@@ -12,6 +12,7 @@ export interface CashflowSaleConfirmData {
   customerAddress?: string;
   serialNumber: string;
   warrantyMonths: number;
+  warrantyType?: 'months' | 'manufacturer';
   quantity?: number; // Số lượng máy bán trong 1 giao dịch (mặc định 1)
   soldPrice: number;
   saleDate?: string;

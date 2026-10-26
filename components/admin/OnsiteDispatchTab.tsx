@@ -562,7 +562,7 @@ export default function OnsiteDispatchTab() {
 
                     {!dispatch.fee_synced_to_payroll && (
                       <div className="flex items-center gap-1">
-                        {[50000, 100000, 150000].map((fee) => (
+                        {[50000, 100000].map((fee) => (
                           <button
                             key={fee}
                             type="button"
@@ -735,6 +735,18 @@ export default function OnsiteDispatchTab() {
                     placeholder="VD: 200000"
                     className="w-full px-3 py-2 border rounded-lg focus:ring-1 focus:ring-blue-500"
                   />
+                  <div className="flex items-center gap-1 mt-1.5">
+                    {[50000, 100000].map((fee) => (
+                      <button
+                        key={fee}
+                        type="button"
+                        onClick={() => setCreateForm({ ...createForm, technician_fee: String(fee) })}
+                        className="px-2 py-0.5 rounded text-[11px] font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-600"
+                      >
+                        {fee === 50000 ? '50k' : '100k'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Mức độ</label>

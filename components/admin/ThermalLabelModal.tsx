@@ -81,7 +81,7 @@ export function ThermalLabelModal({ item, onClose, isOpen = true }: ThermalLabel
               </div>
               <div className="text-right">
                 <div className="text-[6.5px] font-bold text-emerald-700 print:text-black">
-                  BH {item.warranty_months}T (1 ĐỔI 1)
+                  BH {item.warranty_type === 'manufacturer' ? 'THEO NSX' : `${item.warranty_months}T`} (1 ĐỔI 1)
                 </div>
                 <div className="text-[5.5px] text-slate-500 print:text-black">
                   Tra cứu theo S/N máy

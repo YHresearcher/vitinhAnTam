@@ -696,7 +696,11 @@ export default function KhachHangCrmPage() {
                           <div className="text-xs text-slate-600">
                             Serial: <span className="font-mono font-medium">{dev.serial_number || 'N/A'}</span> • Cấu hình: {dev.cpu || dev.specs?.cpu || 'i5'}, {dev.ram || dev.specs?.ram || '16GB'}, {dev.ssd_capacity || dev.specs?.ssd || 'SSD'}
                           </div>
-                          {dev.warranty_months ? (
+                          {dev.warranty_type === 'manufacturer' ? (
+                            <div className="text-xs text-emerald-700 font-medium">
+                              Bảo hành: Theo nhà sản xuất {dev.handover_date ? `(Bàn giao: ${new Date(dev.handover_date).toLocaleDateString('vi-VN')})` : ''}
+                            </div>
+                          ) : dev.warranty_months ? (
                             <div className="text-xs text-emerald-700 font-medium">
                               Bảo hành: {dev.warranty_months} tháng {dev.handover_date ? `(Bàn giao: ${new Date(dev.handover_date).toLocaleDateString('vi-VN')})` : ''}
                             </div>

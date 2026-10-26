@@ -562,7 +562,7 @@ export default function HomePage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                                <span className="truncate font-medium text-slate-600">{isEn ? `${prod.warrantyMonths ?? 6}-month warranty` : `Bảo hành ${prod.warrantyMonths ?? 6} tháng`}</span>
+                                <span className="truncate font-medium text-slate-600">{prod.warrantyType === 'manufacturer' ? (isEn ? 'Manufacturer warranty' : 'Bảo hành theo nhà sản xuất') : (isEn ? `${prod.warrantyMonths ?? 6}-month warranty` : `Bảo hành ${prod.warrantyMonths ?? 6} tháng`)}</span>
                               </div>
                             </div>
 
@@ -692,7 +692,7 @@ export default function HomePage() {
                           <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
                             <div className="flex items-center gap-2">
                               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span>{isEn ? 'Warranty:' : 'Bảo hành:'} <strong>{part.warranty_months ? `${part.warranty_months} tháng (1 đổi 1)` : 'Chính hãng'}</strong></span>
+                              <span>{isEn ? 'Warranty:' : 'Bảo hành:'} <strong>{part.warranty_type === 'manufacturer' ? 'Theo nhà sản xuất' : (part.warranty_months ? `${part.warranty_months} tháng (1 đổi 1)` : 'Chính hãng')}</strong></span>
                             </div>
                             {part.distributor && (
                               <div className="flex items-center gap-2">

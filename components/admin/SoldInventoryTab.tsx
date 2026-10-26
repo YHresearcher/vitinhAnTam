@@ -7,7 +7,7 @@ import { message } from "antd";
 
 interface Props {
   soldMachines: InventoryItem[];
-  getRealtimeWarrantyStatus: (d?: string, m?: number) => {
+  getRealtimeWarrantyStatus: (d?: string, m?: number, t?: 'months' | 'manufacturer') => {
     isExpired: boolean;
     isNearExpiry: boolean;
     remainingText: string;
@@ -50,7 +50,7 @@ export function SoldInventoryTab({ soldMachines, getRealtimeWarrantyStatus }: Pr
 
   const filtered = useMemo(() => {
     return soldMachines.filter((item) => {
-      const st = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months);
+      const st = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months, item.warranty_type);
       if (filter === "active" && st.isExpired) return false;
       if (filter === "near_expiry" && (!st.isNearExpiry || st.isExpired)) return false;
       if (filter === "expired" && !st.isExpired) return false;
@@ -130,7 +130,7 @@ export function SoldInventoryTab({ soldMachines, getRealtimeWarrantyStatus }: Pr
                 </tr>
               ) : (
                 filtered.map((item) => {
-                  const w = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months);
+                  const w = getRealtimeWarrantyStatus(item.handover_date, item.warranty_months, item.warranty_type);
                   const dateStr = item.handover_date ? new Date(item.handover_date).toLocaleDateString("vi-VN") : "—";
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">

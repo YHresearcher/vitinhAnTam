@@ -484,7 +484,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
 
                 {!ticket.fee_synced_to_payroll && (
                   <div className="flex items-center gap-1">
-                    {[0, 50000, 100000, 150000, 200000].map((fee) => (
+                    {[50000, 100000].map((fee) => (
                       <button
                         key={fee}
                         type="button"

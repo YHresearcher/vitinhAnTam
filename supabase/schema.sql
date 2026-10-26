@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS inventory_items (
   price NUMERIC NOT NULL DEFAULT 0,
   deposit_amount NUMERIC DEFAULT 0,
   warranty_months INT NOT NULL DEFAULT 12,
+  warranty_type TEXT NOT NULL DEFAULT 'months' CHECK (warranty_type IN ('months', 'manufacturer')),
   -- `stock_quantity` là tên UI đang dùng, `quantity` là tên trong DB — luôn ghi đồng thời
   stock_quantity INT NOT NULL DEFAULT 1,
   quantity INT NOT NULL DEFAULT 1,
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS spare_parts (
   condition TEXT DEFAULT 'new', -- new (mới 100%), used (zin bóc máy / cũ 99%)
   quantity_in_stock INT NOT NULL DEFAULT 0,
   warranty_months INT DEFAULT 36,
+  warranty_type TEXT NOT NULL DEFAULT 'months' CHECK (warranty_type IN ('months', 'manufacturer')),
   distributor TEXT,
   unit_cost NUMERIC NOT NULL DEFAULT 0,
   unit_price NUMERIC NOT NULL DEFAULT 0,
@@ -99,6 +101,7 @@ CREATE TABLE IF NOT EXISTS service_tickets (
   technician_note TEXT,
   service_category TEXT DEFAULT 'sua_chua', -- sua_chua, bao_hanh
   warranty_duration_months INT,
+  warranty_type TEXT NOT NULL DEFAULT 'months' CHECK (warranty_type IN ('months', 'manufacturer')),
   estimated_completion TEXT,
   repair_deadline TEXT,
   warranty_deadline TEXT,
