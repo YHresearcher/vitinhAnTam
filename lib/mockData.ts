@@ -56,7 +56,7 @@ export const initialUsers: UserAccount[] = [
     name: 'Sales 01',
     email: 'sales01@vitinhantam.com',
     phone: '0933.345.678',
-    role: 'sales',
+    role: 'sales_manager',
     roleTitle: 'Chuyên viên Bán hàng & CSKH',
     avatarBg: 'bg-purple-600',
     referral_code: 'sales01',

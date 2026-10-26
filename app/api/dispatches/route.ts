@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/server/rateLimit';
 import type { SessionPayload } from '@/lib/session';
 
 // STAFF_ROLES (lib/server/auth) không gồm 'outsourced' — có chủ đích cho
-// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài và Salesman là người
+// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài và NVKD là người
 // thực thi ca, nên route này chấp nhận thêm 2 phân hệ này nhưng siết phạm
 // vi: chỉ xem/cập nhật ca được gán cho chính mình, không tạo ca mới.
 const FIELD_ROLES = ['outsourced', 'salesman'] as const;
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = getDispatchSession(req);
-  // Tạo ca là việc của điều phối viên — KTV thuê ngoài / Salesman không tạo ca.
+  // Tạo ca là việc của điều phối viên — KTV thuê ngoài / NVKD không tạo ca.
   if (!session || !isFullStaff(session)) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }

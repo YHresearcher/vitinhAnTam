@@ -40,7 +40,7 @@ export function setStaffAccessToken(token: string | null): void {
 // ==========================================
 // RBAC (ROLE-BASED ACCESS CONTROL)
 // ==========================================
-export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'sales' | 'outsourced' | 'salesman';
+export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'outsourced' | 'salesman';
 
 export interface UserPermissions {
   can_edit_stock: boolean;
@@ -202,22 +202,12 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     email: 'cuong.ktvngoai@vitinhantam.com',
     phone: '0988.765.432',
   },
-  sales: {
-    id: 'u-sales-1',
-    username: 'sales01',
-    name: 'Sales 01',
-    role: 'sales',
-    roleTitle: 'Chuyên viên Bán hàng & CSKH',
-    avatarBg: 'bg-purple-600',
-    email: 'sales01@vitinhantam.com',
-    phone: '0933.345.678',
-  },
   salesman: {
     id: 'u-salesman-1',
     username: 'salesman01',
     name: 'Salesman 01',
     role: 'salesman',
-    roleTitle: 'Salesman — Giao máy & Kỹ thuật thị trường',
+    roleTitle: 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường',
     avatarBg: 'bg-orange-600',
     email: 'salesman01@vitinhantam.com',
     phone: '0933.345.679',

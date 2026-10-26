@@ -420,7 +420,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                   <option value="">-- Chưa chỉ định --</option>
                   {availableTechnicians.map((u) => (
                     <option key={u.id} value={u.name}>
-                      {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : u.role === 'salesman' ? 'Salesman' : 'KTV'})
+                      {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : u.role === 'salesman' ? 'NVKD' : 'KTV'})
                     </option>
                   ))}
                 </select>

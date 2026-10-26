@@ -511,12 +511,12 @@ export default function OnsiteDispatchTab() {
                             </option>
                           ))}
                       </optgroup>
-                      <optgroup label="KTV Thuê Ngoài / Salesman">
+                      <optgroup label="KTV Thuê Ngoài / NVKD">
                         {availableTechnicians
                           .filter((u) => u.role === 'outsourced' || u.role === 'salesman')
                           .map((u) => (
                             <option key={u.id} value={u.name}>
-                              {u.name} {u.role === 'salesman' ? '(Salesman)' : '(Thuê Ngoài)'}
+                              {u.name} {u.role === 'salesman' ? '(NVKD)' : '(Thuê Ngoài)'}
                             </option>
                           ))}
                       </optgroup>
@@ -719,7 +719,7 @@ export default function OnsiteDispatchTab() {
                   {availableTechnicians.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name}
-                      {u.role === 'outsourced' ? ' (Thuê ngoài)' : u.role === 'salesman' ? ' (Salesman)' : u.role === 'admin' ? ' (Admin)' : ''}
+                      {u.role === 'outsourced' ? ' (Thuê ngoài)' : u.role === 'salesman' ? ' (NVKD)' : u.role === 'admin' ? ' (Admin)' : ''}
                     </option>
                   ))}
                 </select>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { UserAccount, UserRole, generateStaffId } from '@/lib/supabase';
@@ -16,6 +16,7 @@ export default function MemberManagementPage() {
     addUser,
     deleteUser,
     canManageUsers,
+    refreshUsersFromServer,
   } = useViTinhAnTamStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +30,29 @@ export default function MemberManagementPage() {
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [isSyncingUsers, setIsSyncingUsers] = useState(false);
+
+  // Đồng bộ danh sách thành viên từ máy chủ mỗi khi mở trang này (admin).
+  // Trước đây trang chỉ đọc cache localStorage của trình duyệt nên tài khoản
+  // tạo ở nơi khác không hiện, còn tài khoản đã xóa vẫn hiện như thẻ ảo.
+  useEffect(() => {
+    if (!canManageUsers()) return;
+    setIsSyncingUsers(true);
+    refreshUsersFromServer()
+      .catch(() => {})
+      .finally(() => setIsSyncingUsers(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSyncUsers = async () => {
+    setIsSyncingUsers(true);
+    try {
+      const ok = await refreshUsersFromServer();
+      showToast(ok ? 'Đã đồng bộ danh sách thành viên từ máy chủ.' : 'Không đồng bộ được, vẫn giữ danh sách hiện tại.');
+    } finally {
+      setIsSyncingUsers(false);
+    }
+  };
 
   // New User Form State
   const [newUserForm, setNewUserForm] = useState({
@@ -98,7 +122,7 @@ export default function MemberManagementPage() {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
     } else if (editingUser.role === 'salesman') {
-      defaultTitle = defaultTitle || 'Salesman — Giao máy & Kỹ thuật thị trường';
+      defaultTitle = defaultTitle || 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường';
       avatarBg = 'bg-orange-600';
     } else if (editingUser.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';
@@ -172,7 +196,7 @@ export default function MemberManagementPage() {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
     } else if (newUserForm.role === 'salesman') {
-      defaultTitle = defaultTitle || 'Salesman — Giao máy & Kỹ thuật thị trường';
+      defaultTitle = defaultTitle || 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường';
       avatarBg = 'bg-orange-600';
     } else if (newUserForm.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';
@@ -260,7 +284,7 @@ export default function MemberManagementPage() {
   const techCount = users.filter((u) => u.role === 'technician').length;
   const outsourcedCount = users.filter((u) => u.role === 'outsourced').length;
   const salesmanCount = users.filter((u) => u.role === 'salesman').length;
-  const salesCount = users.filter((u) => u.role === 'sales' || u.role === 'sales_manager').length;
+  const salesManagerCount = users.filter((u) => u.role === 'sales_manager').length;
 
   // Access check
   if (!canManageUsers()) {
@@ -308,6 +332,13 @@ export default function MemberManagementPage() {
 
         <div className="flex items-center gap-3 shrink-0">
           <button
+            onClick={handleSyncUsers}
+            disabled={isSyncingUsers}
+            className="inline-flex items-center px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSyncingUsers ? 'Đang đồng bộ…' : '↻ Đồng bộ từ máy chủ'}
+          </button>
+          <button
             onClick={() => setIsAddingUser(true)}
             className="inline-flex items-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all active:scale-[0.98]"
           >
@@ -339,13 +370,13 @@ export default function MemberManagementPage() {
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-orange-200 bg-orange-50/30 shadow-2xs">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-orange-700">Salesman</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-orange-700">NVKD</span>
           <p className="text-2xl font-bold text-orange-700 mt-1 font-mono">{salesmanCount}</p>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200 shadow-2xs">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-700">Kinh Doanh &amp; CSKH</span>
-          <p className="text-2xl font-bold text-purple-700 mt-1 font-mono">{salesCount}</p>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-purple-700">QL Bán Hàng</span>
+          <p className="text-2xl font-bold text-purple-700 mt-1 font-mono">{salesManagerCount}</p>
         </div>
       </div>
 
@@ -363,7 +394,7 @@ export default function MemberManagementPage() {
 
         {/* Role Tabs */}
         <div className="flex items-center gap-1 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
-          {(['all', 'admin', 'tech_manager', 'technician', 'outsourced', 'salesman', 'sales_manager', 'sales'] as const).map((tab) => (
+          {(['all', 'admin', 'tech_manager', 'technician', 'outsourced', 'salesman', 'sales_manager'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setRoleFilter(tab)}
@@ -380,9 +411,8 @@ export default function MemberManagementPage() {
                   tech_manager: 'QL Kỹ thuật',
                   technician: 'KTV Nội bộ',
                   outsourced: 'Thuê ngoài',
-                  salesman: 'Salesman',
+                  salesman: 'NVKD',
                   sales_manager: 'QL Bán hàng',
-                  sales: 'Kinh doanh',
                 } as const
               )[tab]}
             </button>
@@ -434,7 +464,6 @@ export default function MemberManagementPage() {
                           outsourced: 'bg-amber-50 text-amber-800 border border-amber-200 font-semibold',
                           salesman: 'bg-orange-50 text-orange-800 border border-orange-200 font-semibold',
                           sales_manager: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
-                          sales: 'bg-purple-50 text-purple-700 border border-purple-200',
                         } as const
                       )[member.role]
                     }`}
@@ -445,9 +474,8 @@ export default function MemberManagementPage() {
                         tech_manager: 'QL Kỹ Thuật',
                         technician: 'Kỹ Thuật',
                         outsourced: 'Thuê Ngoài',
-                        salesman: 'Salesman',
+                        salesman: 'NVKD',
                         sales_manager: 'QL Bán Hàng',
-                        sales: 'Kinh Doanh',
                       } as const
                     )[member.role]}
                   </span>
@@ -707,8 +735,7 @@ export default function MemberManagementPage() {
                     { id: 'sales_manager', label: 'QL Bán Hàng', desc: 'CRM & doanh số' },
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Chẩn đoán & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV sửa chữa' },
-                    { id: 'salesman', label: 'Salesman', desc: 'Giao máy & kỹ thuật thị trường' },
-                    { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & Lập phiếu' },
+                    { id: 'salesman', label: 'NVKD', desc: 'Bán hàng, giao máy & kỹ thuật thị trường' },
                   ].map((r) => (
                     <button
                       key={r.id}
@@ -941,8 +968,7 @@ export default function MemberManagementPage() {
                     { id: 'sales_manager', label: 'QL Bán Hàng', desc: 'CRM & doanh số' },
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Sửa chữa & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV ngoài' },
-                    { id: 'salesman', label: 'Salesman', desc: 'Giao máy & kỹ thuật thị trường' },
-                    { id: 'sales', label: 'Kinh Doanh', desc: 'Bán hàng & CSKH' },
+                    { id: 'salesman', label: 'NVKD', desc: 'Bán hàng, giao máy & kỹ thuật thị trường' },
                   ].map((r) => (
                     <button
                       key={r.id}

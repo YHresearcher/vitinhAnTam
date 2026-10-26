@@ -180,7 +180,7 @@ interface StoreContextType {
   canAssignTasks: () => boolean; // Admin & Tech Lead (Technician) can assign/reassign tickets and dispatches
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
   canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
-  // Nhân viên hiện trường (KTV thuê ngoài + Salesman): chỉ được dùng "Việc
+  // Nhân viên hiện trường (KTV thuê ngoài + NVKD): chỉ được dùng "Việc
   // của tôi" (ca của mình + thu nhập cá nhân), không xem màn hình chung của
   // cửa hàng (dashboard, phiếu, đơn, kho, bài viết). Cùng khái niệm với
   // FIELD_ROLES bên app/api/dispatches.
@@ -224,6 +224,7 @@ interface StoreContextType {
   }) => Promise<{ success: boolean; message: string }>;
 
   // Member management actions (Admin)
+  refreshUsersFromServer: () => Promise<boolean>;
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
   changeUserPassword: (id: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   resetUserPassword: (id: string) => Promise<{ ok: boolean; message?: string }>;
@@ -594,9 +595,9 @@ export function StoreProvider({
   const canAssignTasks = () =>
     currentUser.role === 'admin' || currentUser.role === 'tech_manager' || currentUser.role === 'technician';
   const canSellAndEditWarranty = () =>
-    currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
+    currentUser.role === 'admin' || currentUser.role === 'sales_manager';
   const canAccessCRM = () =>
-    currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
+    currentUser.role === 'admin' || currentUser.role === 'sales_manager';
   const isFieldStaff = () =>
     currentUser.role === 'outsourced' || currentUser.role === 'salesman';
 
@@ -723,6 +724,26 @@ export function StoreProvider({
     } catch (err) {
       console.warn('Không gọi được /api/auth/users:', err);
       return null;
+    }
+  };
+
+  // Đồng bộ danh sách thành viên từ máy chủ (nguồn chuẩn là DB).
+  // Trang thành viên trước đây chỉ đọc cache localStorage của trình duyệt,
+  // nên tài khoản tạo ở nơi khác (VD: Nhật Đăng) không hiện, còn tài khoản
+  // đã xóa bằng SQL vẫn hiện như thẻ ảo. Hàm này thay toàn bộ danh sách
+  // local bằng danh sách máy chủ trả về.
+  const refreshUsersFromServer = async (): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/users', { method: 'GET' });
+      if (!response.ok) return false;
+      const data = (await response.json().catch(() => null)) as { data?: unknown } | null;
+      if (!data || !Array.isArray(data.data)) return false;
+      const cleaned = (data.data as UserAccount[]).filter((u) => u && u.id);
+      setUsers(cleaned);
+      persistUsersLocally(cleaned);
+      return true;
+    } catch {
+      return false;
     }
   };
 
@@ -4731,6 +4752,7 @@ export function StoreProvider({
       resetUserPassword,
       addUser,
       deleteUser,
+      refreshUsersFromServer,
       addCustomer,
       updateCustomer,
       deleteCustomer,

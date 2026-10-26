@@ -150,7 +150,7 @@ export default function AdminLayout({
     };
   }, [isLoggedIn, logout, router]);
 
-  // Nhân viên hiện trường (KTV thuê ngoài, Salesman) chỉ được dùng "Thống
+  // Nhân viên hiện trường (KTV thuê ngoài, NVKD) chỉ được dùng "Thống
   // kê hiệu quả kinh doanh": chặn cả đường gõ trực tiếp URL vào trang chung
   // (dashboard, phiếu, đơn, kho, bài viết...). Sidebar đã ẩn các mục này;
   // đây là lớp chặn thứ hai để không lọt qua đường link trực tiếp hay bảng lệnh.

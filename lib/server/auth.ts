@@ -5,7 +5,7 @@
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE, verifySession, type SessionPayload } from '@/lib/session';
 
-export const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'] as const;
+export const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'technician'] as const;
 
 export function getSession(request: NextRequest): SessionPayload | null {
   return verifySession(request.cookies.get(SESSION_COOKIE)?.value);

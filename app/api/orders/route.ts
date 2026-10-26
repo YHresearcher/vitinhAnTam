@@ -37,7 +37,7 @@ type OrderPayload = {
 
 const VALID_PAYMENT = ['qr', 'cash'];
 const VALID_DELIVERY = ['pickup', 'delivery'];
-const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'sales', 'technician'];
+const STAFF_ROLES = ['admin', 'tech_manager', 'sales_manager', 'technician'];
 
 /** Chỉ staff đã đăng nhập bằng session hợp lệ mới được xem/cập nhật đơn.
  *  KHÔNG tin x-staff-role/Referer — giả được bằng curl, từng làm lộ đơn hàng. */
@@ -388,7 +388,7 @@ export async function POST(request: NextRequest) {
 // GET /api/orders — Staff (admin/sales/technician) xem danh sách đơn
 // ---------------------------------------------------------------------------
 export async function GET(request: NextRequest) {
-  // Nhân viên hiện trường (KTV thuê ngoài, Salesman) cũng được xem đơn —
+  // Nhân viên hiện trường (KTV thuê ngoài, NVKD) cũng được xem đơn —
   // nhưng CHỈ các đơn giao hàng gán cho chính mình (phục vụ mục "Giao máy
   // tận nơi" trong trang Thống kê hiệu quả kinh doanh). Cùng cách siết
   // phạm vi như /api/dispatches; nhân viên nội bộ xem toàn bộ như trước.
