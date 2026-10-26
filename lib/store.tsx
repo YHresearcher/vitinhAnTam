@@ -846,7 +846,9 @@ export function StoreProvider({
           rest.role === 'technician' ||
           rest.role === 'outsourced' ||
           rest.role === 'salesman',
-        can_access_payroll: rest.role === 'admin' || rest.role === 'tech_manager' || rest.role === 'sales_manager',
+        // Sales Manager KHÔNG còn được cấp quyền lương/tài chính theo role
+        // (admin vẫn có thể cấp riêng từng người qua checkbox phân quyền).
+        can_access_payroll: rest.role === 'admin' || rest.role === 'tech_manager',
         can_manage_users: rest.role === 'admin',
       },
     };
