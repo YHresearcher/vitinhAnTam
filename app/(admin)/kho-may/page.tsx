@@ -40,6 +40,7 @@ export default function KhoMayPage() {
     reserveInventoryItem,
     cancelReservationItem,
     canSellAndEditWarranty,
+    canSell,
     sellInventoryItem,
     markItemAsDealerSold,
     sellSparePart,
@@ -148,7 +149,7 @@ export default function KhoMayPage() {
   );
 
   const handleOpenSellModal = (item: InventoryItem) => {
-    if (!canSellAndEditWarranty()) {
+    if (!canSell()) {
       setActionNotice('Chỉ Quản trị viên và Nhân viên bán hàng mới có quyền xuất bán & điều chỉnh thông tin bảo hành!');
       setTimeout(() => setActionNotice(null), 3500);
       return;
@@ -255,19 +256,24 @@ export default function KhoMayPage() {
         quantity,
       } = cashflowConfirmData;
 
+      // NVKD chỉ bán, không được sửa giá vốn: ép về giá vốn trong kho,
+      // mọi chỉnh sửa trong popup của NVKD đều bị bỏ qua.
+      const effectiveCostPrice = canSellAndEditWarranty()
+        ? costPrice
+        : item.import_price || item.cost_price || 0;
       // Đồng bộ giá vốn nếu người dùng điều chỉnh trong popup
-      if (costPrice !== (item.import_price || item.cost_price || 0)) {
-        await updateInventoryItem(item.id, { import_price: costPrice });
+      if (effectiveCostPrice !== (item.import_price || item.cost_price || 0)) {
+        await updateInventoryItem(item.id, { import_price: effectiveCostPrice });
       }
 
-      const profit = Math.max(0, soldPrice - costPrice);
+      const profit = Math.max(0, soldPrice - effectiveCostPrice);
       const sellerBonus = Math.round(profit * 0.10);
       const lenderBonus = Math.round(profit * 0.05);
-      const lenderTotal = costPrice + lenderBonus;
+      const lenderTotal = effectiveCostPrice + lenderBonus;
       const warrantyReserve = Math.round(profit * 0.05);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -346,7 +352,7 @@ export default function KhoMayPage() {
 
   // Mở modal bán linh kiện
   const handleOpenSellPartModal = (part: SparePart) => {
-    if (!canSellAndEditWarranty()) {
+    if (!canSell()) {
       setActionNotice('Chỉ Quản trị viên và Nhân viên bán hàng mới có quyền xuất bán!');
       setTimeout(() => setActionNotice(null), 3500);
       return;
@@ -1801,8 +1807,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             </button>
                           )}
 
-                          {/* Sale Handover Button (Admin & Sales) — khóa với máy đã bán */}
-                          {canSellAndEditWarranty() && item.qc_status !== 'sold' && (
+                          {/* Sale Handover Button (Admin, Sales & NVKD) — khóa với máy đã bán */}
+                          {canSell() && item.qc_status !== 'sold' && (
                             <button
                               onClick={() => handleOpenSellModal(item)}
                               title={
@@ -2112,7 +2118,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                                   Sửa giá
                                 </button>
                               )}
-                              {canSellAndEditWarranty() && (
+                              {canSell() && (
                                 <button
                                   onClick={() => handleOpenSellPartModal(part)}
                                   disabled={part.quantity_in_stock <= 0}
@@ -2978,6 +2984,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       type="number"
                       step={50000}
                       min={0}
+                      readOnly={!canSellAndEditWarranty()}
                       value={cashflowConfirmData.costPrice}
                       onChange={(e) => {
                         const val = Number(e.target.value) || 0;
@@ -2987,7 +2994,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       title="Bạn có thể điều chỉnh giá vốn nếu máy chưa có giá vốn ban đầu"
                     />
                   </div>
-                  <span className="text-[10px] text-slate-500 mt-0.5 block">Có thể chỉnh nhanh nếu cần</span>
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">{canSellAndEditWarranty() ? 'Có thể chỉnh nhanh nếu cần' : 'Giá vốn từ kho (NVKD không chỉnh sửa được)'}</span>
                 </div>
 
                 <div className={`p-3 border rounded-xl ${

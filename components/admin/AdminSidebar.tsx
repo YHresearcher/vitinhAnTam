@@ -64,8 +64,11 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
       d.status !== 'completed' &&
       d.status !== 'cancelled'
   ).length;
+  // NVKD chỉ thấy số yêu cầu chờ của chính mình (trang key của NVKD cũng chỉ liệt kê yêu cầu của mình).
   const pendingKeyRequestsCount = keyReleaseRequests.filter(
-    (r) => r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested'
+    (r) =>
+      (r.status === 'pending' || r.status === 'faulty_re_requesting' || r.status === 'auto_re_requested') &&
+      (currentUser?.role !== 'salesman' || r.requester_id === currentUser?.id)
   ).length;
 
   const navItems = useMemo(() => {
@@ -131,7 +134,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: Boxes,
         badge: null,
         badgeColor: '',
-        visible: !isFieldStaff(),
+        visible: !isFieldStaff() || currentUser?.role === 'salesman',
       },
       {
         label: 'Kho key bản quyền',
@@ -139,7 +142,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: KeyRound,
         badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
         badgeColor: 'bg-[#C0392B] text-white font-mono font-bold shadow-xs',
-        visible: !isFieldStaff(),
+        visible: !isFieldStaff() || currentUser?.role === 'salesman',
       },
       {
         label: 'Bài viết & SEO',

@@ -150,12 +150,17 @@ export default function AdminLayout({
     };
   }, [isLoggedIn, logout, router]);
 
-  // Nhân viên hiện trường (KTV thuê ngoài, NVKD) chỉ được dùng "Thống
-  // kê hiệu quả kinh doanh": chặn cả đường gõ trực tiếp URL vào trang chung
-  // (dashboard, phiếu, đơn, kho, bài viết...). Sidebar đã ẩn các mục này;
-  // đây là lớp chặn thứ hai để không lọt qua đường link trực tiếp hay bảng lệnh.
+  // Nhân viên hiện trường chỉ được dùng "Thống kê hiệu quả kinh doanh",
+  // trừ NVKD (salesman) được vào thêm kho để bán và xin key. Chặn cả
+  // đường gõ trực tiếp URL vào trang chung (dashboard, phiếu, đơn, bài
+  // viết...). Sidebar đã ẩn các mục này; đây là lớp chặn thứ hai để
+  // không lọt qua đường link trực tiếp hay bảng lệnh.
+  const fieldAllowedPaths =
+    currentUser.role === 'salesman'
+      ? ['/viec-cua-toi', '/kho-may', '/quan-ly-key']
+      : ['/viec-cua-toi'];
   const isRestrictedForFieldStaff =
-    isLoggedIn && isFieldStaff() && pathname !== '/viec-cua-toi';
+    isLoggedIn && isFieldStaff() && !fieldAllowedPaths.includes(pathname);
   useEffect(() => {
     if (isRestrictedForFieldStaff) {
       router.replace('/viec-cua-toi');
