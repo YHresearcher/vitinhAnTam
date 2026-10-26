@@ -35,8 +35,8 @@ export default function WhyUsPage() {
           
           <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
             {isEn
-              ? 'We approach our craft with honesty and genuine responsibility. Whether supplying pre-owned enterprise computers or performing technical repairs, An Tam focuses on meticulous hardware selection, verified components, and prompt support so your daily work stays uninterrupted.'
-              : 'Chúng tôi làm nghề bằng sự trung thực và trách nhiệm. Khi bán máy tính hay nhận sửa chữa, An Tâm luôn nỗ lực làm tốt nhất từ khâu chọn lọc máy, kiểm tra linh kiện đến khâu hỗ trợ kỹ thuật để công việc của bạn luôn suôn sẻ.'}
+              ? 'We work with honesty and genuine responsibility. The shop focuses on three things: selling thoroughly tested used machines, upgrades matched to real needs, and licensed software preinstalled — sold in Tay Ninh and Saigon. From machine selection and parts inspection to after-sales support, An Tam keeps your daily work running smoothly.'
+              : 'Chúng tôi làm nghề bằng sự trung thực và trách nhiệm. Shop chỉ tập trung ba việc: bán máy cũ đã test kỹ, nâng cấp đúng nhu cầu, cài sẵn phần mềm bản quyền — bán tại Tây Ninh và Sài Gòn. Từ khâu chọn máy, kiểm tra linh kiện đến hỗ trợ sau bán, An Tâm làm sao cho công việc của bạn luôn suôn sẻ.'}
           </p>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -150,8 +150,8 @@ export default function WhyUsPage() {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                   {isEn
-                    ? 'When technical issues arise, our highest priority is keeping your productivity moving. Our technicians offer rapid remote support via UltraViewer or on-site inspections where feasible. Any faulty part under warranty is promptly swapped without dragging delays.'
-                    : 'An Tâm cam kết bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi trong bán kính < 5km từ cửa hàng. Ngoài phạm vi 5km, cửa hàng tiếp nhận xử lý nhanh tại shop hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk, ưu tiên tối đa để công việc của quý khách không bị gián đoạn.'}
+                    ? 'When technical issues arise, our highest priority is keeping your productivity moving. Our technicians offer rapid remote support via UltraViewer or on-site inspections where feasible. Customers in Saigon are supported remotely via UltraViewer and through our hotline and Zalo during the warranty period. Any faulty part under warranty is promptly swapped without dragging delays.'
+                    : 'An Tâm cam kết bảo hành nhanh chóng, hỗ trợ kỹ thuật tận nơi trong bán kính < 5km từ cửa hàng. Ngoài phạm vi 5km, cửa hàng tiếp nhận xử lý nhanh tại shop hoặc hỗ trợ trực tiếp từ xa qua UltraViewer / AnyDesk, ưu tiên tối đa để công việc của quý khách không bị gián đoạn. Khách ở Sài Gòn được hỗ trợ từ xa và qua hotline, Zalo trong thời gian bảo hành.'}
                 </p>
               </div>
               <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-purple-700">

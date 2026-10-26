@@ -3,17 +3,17 @@ import HomePage from './HomeClient';
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Bảo Hành 6 Tháng, Chuẩn A Tuyển Chọn Tại Tây Ninh',
+    absolute: 'Vi Tính An Tâm — Máy Tính Cũ Bảo Hành 6 Tháng, Test Kỹ Từng Máy — Tây Ninh & Sài Gòn',
   },
   description:
-    'Máy tính cũ bảo hành 6 tháng đồng loạt: PC đồng bộ & laptop doanh nghiệp tuyển chọn chuẩn A, Windows sạch bản quyền, linh kiện rõ ràng, hỗ trợ kỹ thuật tận tâm tại Tây Ninh. Hotline 0909.053.058.',
+    'Máy tính cũ đã test kỹ từng máy, bảo hành 6 tháng nguyên máy. Nâng cấp RAM, SSD đúng nhu cầu, phần mềm bản quyền cài sẵn, mua về dùng ngay. Bán tại Tây Ninh và Sài Gòn. Hotline 0909.053.058.',
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
+    title: 'Vi Tính An Tâm — Máy Tính Cũ Bảo Hành 6 Tháng, Test Kỹ Từng Máy',
     description:
-      'Máy tính cũ bảo hành 6 tháng đồng loạt, máy nguyên bản chưa qua sửa chữa, linh kiện rõ ràng. Hotline: 0909.053.058.',
+      'Máy tính cũ đã test kỹ, bảo hành 6 tháng nguyên máy. Nâng cấp đúng nhu cầu, phần mềm bản quyền cài sẵn. Bán tại Tây Ninh và Sài Gòn. Hotline: 0909.053.058.',
     url: 'https://www.vitinhantam.com',
     images: [
       {

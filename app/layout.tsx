@@ -38,13 +38,17 @@ export const metadata: Metadata = {
     template: '%s | Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
   },
   description:
-    'Máy tính cũ bảo hành 6 tháng đồng loạt, PC đồng bộ & laptop tuyển chọn, Windows sạch bản quyền, linh kiện rõ ràng và hỗ trợ kỹ thuật tận tâm. Hotline 0909.053.058.',
+    'Máy tính cũ đã test kỹ từng máy, bảo hành 6 tháng nguyên máy. PC đồng bộ & laptop tuyển chọn, nâng cấp đúng nhu cầu, phần mềm bản quyền cài sẵn. Bán tại Tây Ninh và Sài Gòn. Hotline 0909.053.058.',
   keywords: [
     'máy tính cũ bảo hành 6 tháng',
     'laptop cũ bảo hành 6 tháng',
     'Máy tính văn phòng',
     'Vi Tính An Tâm',
-    'máy tính Tây Ninh',
+    'máy tính cũ Tây Ninh',
+    'máy tính cũ Sài Gòn',
+    'máy tính cũ TP.HCM',
+    'nâng cấp RAM SSD',
+    'key Office bản quyền',
     'laptop văn phòng',
     'Dell OptiPlex',
     'ThinkPad',
@@ -136,6 +140,7 @@ const jsonLd = {
   priceRange: '3.000.000₫ - 8.000.000₫',
   areaServed: [
     { '@type': 'AdministrativeArea', name: 'Tây Ninh' },
+    { '@type': 'AdministrativeArea', name: 'Thành phố Hồ Chí Minh' },
   ],
   sameAs: [
     'https://zalo.me/0909053058',

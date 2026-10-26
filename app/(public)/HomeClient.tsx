@@ -914,10 +914,10 @@ export default function HomePage() {
                     <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg1Sub}</div>
                   </div>
                   <Link
-                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg1Title)}`}
+                    href="/danh-muc-san-pham"
                     className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                   >
-                    {t.services.btnBookPkg}
+                    {t.services.btnPkg1 || t.services.btnBookPkg}
                   </Link>
                 </div>
               </div>
@@ -966,7 +966,7 @@ export default function HomePage() {
                     href={`/dat-lich?service=${encodeURIComponent(t.services.pkg2Title)}`}
                     className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                   >
-                    {t.services.btnBookPkg}
+                    {t.services.btnPkg2 || t.services.btnBookPkg}
                   </Link>
                 </div>
               </div>
@@ -1009,10 +1009,12 @@ export default function HomePage() {
                     <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg3Sub}</div>
                   </div>
                   <Link
-                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg3Title)}`}
+                    href="https://zalo.me/0909053058"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                   >
-                    {t.services.btnBookPkg}
+                    {t.services.btnPkg3 || t.services.btnBookPkg}
                   </Link>
                 </div>
               </div>
@@ -1089,7 +1091,7 @@ export default function HomePage() {
                 {t.reviews.title || (isEn ? 'CLIENT TESTIMONIALS & FEEDBACK' : 'NHẬN XÉT CỦA KHÁCH HÀNG')}
               </h2>
               <p className="text-xs sm:text-sm text-[#6E5D53]">
-                {t.reviews.ratingText || (isEn ? 'From corporate & private clients across Long An - Tay Ninh' : 'Từ khách hàng doanh nghiệp & cá nhân tại Long An - Tây Ninh')}
+                {t.reviews.ratingText || (isEn ? 'From corporate & private clients' : 'Từ khách hàng doanh nghiệp & cá nhân')}
               </p>
             </div>
 
