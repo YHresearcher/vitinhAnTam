@@ -759,7 +759,9 @@ export default function QuanLyKeyPage() {
                             ? 'Kỹ thuật viên'
                             : req.requester_role === 'outsourced'
                             ? 'KTV Thuê Ngoài'
-                            : req.requester_role === 'sales'
+                            : (req.requester_role as string) === 'sales'
+                            // Role 'sales' đã xóa khỏi hệ thống nhưng yêu cầu cũ trong DB
+                            // vẫn có thể mang giá trị này — giữ nhãn để hiển thị đúng.
                             ? 'Kinh doanh (Sales)'
                             : 'Quản trị viên'}
                         </div>
