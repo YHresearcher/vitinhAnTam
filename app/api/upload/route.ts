@@ -154,7 +154,9 @@ export async function POST(request: NextRequest) {
 
     // 5. Nén/tối ưu ảnh raster trước khi lưu (xem ghi chú đầu file).
     //    SVG/ICO đi thẳng xuống bước lưu, không qua sharp.
-    let outBuffer = buffer;
+    // Buffer<ArrayBufferLike>: sharp trả về Buffer với ArrayBufferLike,
+    // khác kiểu Buffer<ArrayBuffer> của Buffer.from — khai rõ để TS chịu.
+    let outBuffer: Buffer<ArrayBufferLike> = buffer;
     let outKind: 'png' | 'jpeg' | 'webp' | 'ico' | 'svg' = sniffed;
     let optimized = false;
     if (sniffed === 'png' || sniffed === 'jpeg' || sniffed === 'webp') {
