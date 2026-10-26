@@ -4099,7 +4099,9 @@ export function StoreProvider({
     itemId: string,
     dealerNote?: string
   ): Promise<{ success: boolean; message: string }> => {
-    if (!canSell()) {
+    // Dealer-sold (gỡ máy, không doanh thu) là tác vụ back-office: chỉ admin
+    // và sales_manager, KHÔNG nằm trong quyền bán thường của NVKD.
+    if (!canSellAndEditWarranty()) {
       return {
         success: false,
         message: 'Bạn không có quyền cập nhật trạng thái bán của thiết bị!',

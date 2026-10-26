@@ -1348,7 +1348,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       {/* RBAC Notice (Compact) */}
       {!canEditStock() && (
         <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-          <span>Tài khoản {currentUser.name} ({currentUser.role === 'technician' ? 'Kỹ thuật' : 'Kinh doanh'}) — Chỉ xem tồn kho, quyền sửa dành cho Admin.</span>
+          <span>
+          {currentUser.role === 'salesman'
+            ? `Tài khoản ${currentUser.name} (NVKD) — Được bán máy/linh kiện và xin key; không sửa giá, nhập, xóa hay đổi trạng thái QC.`
+            : `Tài khoản ${currentUser.name} (${currentUser.role === 'technician' ? 'Kỹ thuật' : 'Kinh doanh'}) — Chỉ xem tồn kho, quyền sửa dành cho Admin.`}
+        </span>
         </div>
       )}
 
@@ -1699,9 +1703,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         )}
                       </td>
 
-                      {/* QC Status — máy đã bán: chỉ xem (khóa select) */}
+                      {/* QC Status — máy đã bán: chỉ xem (khóa select); NVKD cũng chỉ xem (không đổi QC) */}
                       <td className="py-3.5 px-4">
-                        {canUpdateRepairStatus() && item.qc_status !== 'sold' ? (
+                        {canUpdateRepairStatus() && currentUser.role !== 'salesman' && item.qc_status !== 'sold' ? (
                           <select
                             value={item.qc_status}
                             onChange={(e) => {
