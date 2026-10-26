@@ -107,7 +107,7 @@ export default function MemberManagementPage() {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
     } else if (editingUser.role === 'salesman') {
-      defaultTitle = defaultTitle || 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường';
+      defaultTitle = defaultTitle || 'NVKD';
       avatarBg = 'bg-orange-600';
     } else if (editingUser.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';
@@ -181,7 +181,7 @@ export default function MemberManagementPage() {
       defaultTitle = defaultTitle || 'Kỹ thuật viên đối tác / Thuê ngoài';
       avatarBg = 'bg-amber-600';
     } else if (newUserForm.role === 'salesman') {
-      defaultTitle = defaultTitle || 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường';
+      defaultTitle = defaultTitle || 'NVKD';
       avatarBg = 'bg-orange-600';
     } else if (newUserForm.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';

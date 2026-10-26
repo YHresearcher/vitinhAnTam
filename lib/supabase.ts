@@ -207,7 +207,7 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     username: 'salesman01',
     name: 'Salesman 01',
     role: 'salesman',
-    roleTitle: 'NVKD — Bán hàng, giao máy & kỹ thuật thị trường',
+    roleTitle: 'NVKD',
     avatarBg: 'bg-orange-600',
     email: 'salesman01@vitinhantam.com',
     phone: '0933.345.679',

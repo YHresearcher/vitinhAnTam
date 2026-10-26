@@ -315,6 +315,96 @@ export default function ViecCuaToiPage() {
         }
       />
 
+      {/* Tuyến đường được giao — ca và đơn giao của NVKD */}
+      <div>
+        <h2 className="text-base font-bold text-slate-900">🗺️ Tuyến đường được giao</h2>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Các ca giao máy / cứu hộ tận nơi và đơn giao hàng được giao cho bạn — bấm &quot;Chỉ đường&quot; để Google Maps dẫn đường tới địa chỉ khách.
+        </p>
+      </div>
+
+      {activeJobs.length === 0 ? (
+        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
+          <Navigation className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <p className="text-slate-600 font-semibold">Chưa có việc nào được giao cho bạn.</p>
+          <p className="text-sm text-slate-400 mt-1">
+            Khi quản lý điều phối một ca tới tài khoản của bạn, ca đó sẽ tự hiện ở đây.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{activeJobs.map(renderJob)}</div>
+      )}
+
+      {myDeliveries.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+            <Truck className="w-4 h-4" /> Giao máy tận nơi — đơn giao cho bạn ({myDeliveries.length})
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {myDeliveries.map((o) => {
+              const phone = o.customer_phone;
+              return (
+                <div key={o.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-bold text-slate-900 text-base leading-snug">{o.customer_name}</p>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        {o.order_code} • {o.device_name}
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 bg-blue-100 text-blue-800 border-blue-200">
+                      {ORDER_STATUS_LABEL[o.status] || o.status}
+                    </span>
+                  </div>
+                  {o.customer_address && (
+                    <p className="flex items-start gap-1.5 text-sm text-slate-700">
+                      <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                      <span className="font-medium">{o.customer_address}</span>
+                    </p>
+                  )}
+                  {o.delivery_fee ? (
+                    <p className="text-xs text-emerald-700 font-semibold">
+                      Thù lao giao: {fmt(o.delivery_fee)}
+                    </p>
+                  ) : null}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {o.customer_address ? (
+                      <a
+                        href={mapsUrl(o.customer_address)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl px-3 py-2.5"
+                      >
+                        <Navigation className="w-4 h-4" /> Chỉ đường
+                      </a>
+                    ) : (
+                      <span className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl px-3 py-2.5">
+                        <Navigation className="w-4 h-4" /> Chưa có địa chỉ
+                      </span>
+                    )}
+                    {phone ? (
+                      <a
+                        href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
+                        className="flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-bold rounded-xl px-3 py-2.5"
+                      >
+                        <Phone className="w-4 h-4" /> Gọi khách
+                      </a>
+                    ) : (
+                      <span className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl px-3 py-2.5">
+                        <Phone className="w-4 h-4" /> Chưa có SĐT
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Hiệu quả hoạt động — thu nhập và lịch sử hoàn thành */}
+      <h2 className="text-base font-bold text-slate-900">📊 Hiệu quả hoạt động</h2>
+
       {/* Thu nhập của tôi — thống kê theo tháng / năm */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -501,86 +591,7 @@ export default function ViecCuaToiPage() {
         </div>
       </div>
 
-      {activeJobs.length === 0 ? (
-        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
-          <Navigation className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-          <p className="text-slate-600 font-semibold">Chưa có việc nào được giao cho bạn.</p>
-          <p className="text-sm text-slate-400 mt-1">
-            Khi quản lý điều phối một ca tới tài khoản của bạn, ca đó sẽ tự hiện ở đây.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{activeJobs.map(renderJob)}</div>
-      )}
-
-      {myDeliveries.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
-            <Truck className="w-4 h-4" /> Giao máy tận nơi — đơn giao cho bạn ({myDeliveries.length})
-          </h2>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {myDeliveries.map((o) => {
-              const phone = o.customer_phone;
-              return (
-                <div key={o.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-bold text-slate-900 text-base leading-snug">{o.customer_name}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">
-                        {o.order_code} • {o.device_name}
-                      </p>
-                    </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 bg-blue-100 text-blue-800 border-blue-200">
-                      {ORDER_STATUS_LABEL[o.status] || o.status}
-                    </span>
-                  </div>
-                  {o.customer_address && (
-                    <p className="flex items-start gap-1.5 text-sm text-slate-700">
-                      <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-                      <span className="font-medium">{o.customer_address}</span>
-                    </p>
-                  )}
-                  {o.delivery_fee ? (
-                    <p className="text-xs text-emerald-700 font-semibold">
-                      Thù lao giao: {fmt(o.delivery_fee)}
-                    </p>
-                  ) : null}
-                  <div className="grid grid-cols-2 gap-2 pt-1">
-                    {o.customer_address ? (
-                      <a
-                        href={mapsUrl(o.customer_address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl px-3 py-2.5"
-                      >
-                        <Navigation className="w-4 h-4" /> Chỉ đường
-                      </a>
-                    ) : (
-                      <span className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl px-3 py-2.5">
-                        <Navigation className="w-4 h-4" /> Chưa có địa chỉ
-                      </span>
-                    )}
-                    {phone ? (
-                      <a
-                        href={`tel:${phone.replace(/[^0-9+]/g, '')}`}
-                        className="flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-bold rounded-xl px-3 py-2.5"
-                      >
-                        <Phone className="w-4 h-4" /> Gọi khách
-                      </a>
-                    ) : (
-                      <span className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl px-3 py-2.5">
-                        <Phone className="w-4 h-4" /> Chưa có SĐT
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {doneJobs.length > 0 && (
+{doneJobs.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide">
             Đã hoàn thành ({doneJobs.length})

@@ -179,6 +179,7 @@ interface StoreContextType {
   canManageUsers: () => boolean;
   canAssignTasks: () => boolean; // Admin & Tech Lead (Technician) can assign/reassign tickets and dispatches
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
+  canSell: () => boolean; // Admin, Sales Manager & NVKD: sell-only (no price/warranty/customer edits)
   canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
   // Nhân viên hiện trường (KTV thuê ngoài + NVKD): chỉ được dùng "Việc
   // của tôi" (ca của mình + thu nhập cá nhân), không xem màn hình chung của
@@ -580,10 +581,11 @@ export function StoreProvider({
     currentUser.role === 'outsourced' ||
     currentUser.role === 'salesman' ||
     currentUser.permissions?.can_update_repair_status === true;
+  // Tài chính & lương KTV: chỉ admin và QL Kỹ thuật. Sales Manager không còn xem
+  // 2 trang này (vẫn xem tổng quan doanh thu trên dashboard qua canAccessFinancials).
   const canAccessPayroll = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'tech_manager' ||
-    currentUser.role === 'sales_manager' ||
     currentUser.permissions?.can_access_payroll === true;
   const canAccessFinancials = () =>
     currentUser.role === 'admin' ||
@@ -596,6 +598,13 @@ export function StoreProvider({
     currentUser.role === 'admin' || currentUser.role === 'tech_manager' || currentUser.role === 'technician';
   const canSellAndEditWarranty = () =>
     currentUser.role === 'admin' || currentUser.role === 'sales_manager';
+
+  // Quyền bán hàng (riêng): admin, sales_manager và NVKD được bán máy/linh kiện.
+  // Khác với canSellAndEditWarranty ở chỗ không kèm quyền sửa giá/bảo hành/thông tin khách.
+  const canSell = () =>
+    currentUser.role === 'admin' ||
+    currentUser.role === 'sales_manager' ||
+    currentUser.role === 'salesman';
   const canAccessCRM = () =>
     currentUser.role === 'admin' || currentUser.role === 'sales_manager';
   const isFieldStaff = () =>
@@ -3690,7 +3699,7 @@ export function StoreProvider({
     notes?: string;
     saleDate?: string;
   }): Promise<{ success: boolean; customerCode: string; message: string }> => {
-    if (!canSellAndEditWarranty()) {
+    if (!canSell()) {
       return {
         success: false,
         customerCode: '',
@@ -4088,7 +4097,7 @@ export function StoreProvider({
     itemId: string,
     dealerNote?: string
   ): Promise<{ success: boolean; message: string }> => {
-    if (!canSellAndEditWarranty()) {
+    if (!canSell()) {
       return {
         success: false,
         message: 'Bạn không có quyền cập nhật trạng thái bán của thiết bị!',
@@ -4146,7 +4155,7 @@ export function StoreProvider({
     soldPrice: number;
     saleDate?: string;
   }): Promise<{ success: boolean; message: string }> => {
-    if (!canSellAndEditWarranty()) {
+    if (!canSell()) {
       return {
         success: false,
         message: 'Bạn không có quyền thực hiện bán hàng hoặc điều chỉnh thông tin bảo hành!',
@@ -4756,6 +4765,7 @@ export function StoreProvider({
       canManageUsers,
       canAssignTasks,
       canSellAndEditWarranty,
+      canSell,
       canAccessCRM,
       isFieldStaff,
       sellInventoryItem,
