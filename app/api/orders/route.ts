@@ -388,7 +388,16 @@ export async function POST(request: NextRequest) {
 // GET /api/orders — Staff (admin/sales/technician) xem danh sách đơn
 // ---------------------------------------------------------------------------
 export async function GET(request: NextRequest) {
-  if (!isStaff(request)) {
+  // Nhân viên hiện trường (KTV thuê ngoài, Salesman) cũng được xem đơn —
+  // nhưng CHỈ các đơn giao hàng gán cho chính mình (phục vụ mục "Giao máy
+  // tận nơi" trong trang Thống kê hiệu quả kinh doanh). Cùng cách siết
+  // phạm vi như /api/dispatches; nhân viên nội bộ xem toàn bộ như trước.
+  const session = getSession(request);
+  const isStaffSession =
+    !!session && (STAFF_ROLES as readonly string[]).includes(session.role);
+  const isFieldSession =
+    !!session && (['outsourced', 'salesman'] as readonly string[]).includes(session.role);
+  if (!isStaffSession && !isFieldSession) {
     return NextResponse.json(
       { error: 'Forbidden', message: 'Chỉ admin, sales và kỹ thuật mới có quyền xem danh sách đơn hàng.' },
       { status: 403 }
@@ -403,6 +412,9 @@ export async function GET(request: NextRequest) {
     try {
       let query = db.from('orders').select('*').order('created_at', { ascending: false });
       if (status) query = query.eq('status', status);
+      if (isFieldSession && session) {
+        query = query.eq('delivery_staff_id', session.sub).eq('delivery_method', 'delivery');
+      }
       const { data, error } = await query.limit(100);
       if (!error && data) {
         rows = data as Array<Record<string, unknown>>;
@@ -414,12 +426,16 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Merge đơn còn nằm trong file fallback (id bắt đầu bằng 'local-') để không bỏ sót
-  const seenCodes = new Set(rows.map((o) => String(o.order_code || '')));
-  for (const o of readFallbackOrders()) {
-    if (seenCodes.has(String(o.order_code || ''))) continue;
-    if (status && o.status !== status) continue;
-    rows.push(o);
+  // Merge đơn còn nằm trong file fallback (id bắt đầu bằng 'local-') để không bỏ sót.
+  // Chỉ áp dụng cho nhân viên nội bộ — đơn fallback không mang delivery_staff_id
+  // nên không được lọt vào phạm vi của nhân viên hiện trường.
+  if (isStaffSession) {
+    const seenCodes = new Set(rows.map((o) => String(o.order_code || '')));
+    for (const o of readFallbackOrders()) {
+      if (seenCodes.has(String(o.order_code || ''))) continue;
+      if (status && o.status !== status) continue;
+      rows.push(o);
+    }
   }
   rows.sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
 

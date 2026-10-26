@@ -146,7 +146,7 @@ export default function OnsiteDispatchTab() {
     });
     setNotice(
       tech
-        ? `Đã tạo ca và giao cho KTV ${tech.name} — ca sẽ hiện trong mục "Việc của tôi" của KTV!`
+        ? `Đã tạo ca và giao cho KTV ${tech.name} — ca sẽ hiện trong mục "Thống kê hiệu quả kinh doanh" của KTV!`
         : 'Đã tạo ca cứu hộ (chưa gán KTV).'
     );
     setTimeout(() => setNotice(null), 3500);
@@ -642,7 +642,7 @@ export default function OnsiteDispatchTab() {
           <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-slate-800 mb-1">Tạo ca cứu hộ & giao việc</h3>
             <p className="text-xs text-slate-500 mb-4">
-              Ca sẽ xuất hiện ngay trong mục <strong>"Việc của tôi"</strong> của kỹ thuật viên được
+              Ca sẽ xuất hiện ngay trong mục <strong>"Thống kê hiệu quả kinh doanh"</strong> của kỹ thuật viên được
               giao, kèm địa chỉ và nút chỉ đường Google Maps.
             </p>
             <div className="space-y-3 text-sm">

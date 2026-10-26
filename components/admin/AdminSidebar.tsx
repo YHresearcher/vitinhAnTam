@@ -76,11 +76,11 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: LayoutDashboard,
         badge: null,
         badgeColor: '',
-        // Nhân viên hiện trường chỉ xem "Việc của tôi": không dashboard chung.
+        // Nhân viên hiện trường chỉ xem "Thống kê hiệu quả kinh doanh": không dashboard chung.
         visible: !isFieldStaff(),
       },
       {
-        label: 'Việc của tôi',
+        label: 'Thống kê hiệu quả kinh doanh',
         href: '/viec-cua-toi',
         icon: Navigation,
         badge: myActiveJobsCount > 0 ? `${myActiveJobsCount}` : null,

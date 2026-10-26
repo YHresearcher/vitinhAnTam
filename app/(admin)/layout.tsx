@@ -150,10 +150,10 @@ export default function AdminLayout({
     };
   }, [isLoggedIn, logout, router]);
 
-  // Nhân viên hiện trường (KTV thuê ngoài, Salesman) chỉ được dùng "Việc
-  // của tôi": chặn cả đường gõ trực tiếp URL vào trang chung (dashboard,
-  // phiếu, đơn, kho, bài viết...). Sidebar đã ẩn các mục này; đây là lớp
-  // chặn thứ hai để không lọt qua đường link trực tiếp hay bảng lệnh.
+  // Nhân viên hiện trường (KTV thuê ngoài, Salesman) chỉ được dùng "Thống
+  // kê hiệu quả kinh doanh": chặn cả đường gõ trực tiếp URL vào trang chung
+  // (dashboard, phiếu, đơn, kho, bài viết...). Sidebar đã ẩn các mục này;
+  // đây là lớp chặn thứ hai để không lọt qua đường link trực tiếp hay bảng lệnh.
   const isRestrictedForFieldStaff =
     isLoggedIn && isFieldStaff() && pathname !== '/viec-cua-toi';
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function AdminLayout({
   if (isRestrictedForFieldStaff) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <p className="text-sm font-bold text-slate-800 mb-1">Đang chuyển về Việc của tôi...</p>
+        <p className="text-sm font-bold text-slate-800 mb-1">Đang chuyển về Thống kê hiệu quả kinh doanh...</p>
         <p className="text-xs text-slate-500">Tài khoản hiện trường chỉ xem được ca và thu nhập của mình.</p>
       </div>
     );
