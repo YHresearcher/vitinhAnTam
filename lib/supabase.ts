@@ -489,6 +489,11 @@ export interface CustomerOrder {
   device_tag?: string;
   payment_method: 'qr' | 'cash';
   delivery_method: 'pickup' | 'delivery';
+  // Người giao hàng gán ở bước xuất kho (migration 2026-10-26: 3 cột này
+  // trước đó chưa từng tồn tại nên việc gán bị lặng lẽ bỏ qua).
+  delivery_staff_id?: string;
+  delivery_staff_name?: string;
+  delivery_fee?: number;
   note?: string;
   status: 'pending' | 'confirmed' | 'processing' | 'completed' | 'cancelled';
   confirmed_by?: string;

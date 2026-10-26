@@ -16,14 +16,6 @@ import { useStore } from '@/lib/store';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import type { CustomerOrder, OnsiteDispatch, OnsiteDispatchStatus } from '@/lib/supabase';
 
-// Đơn giao hàng gán cho nhân viên: các cột giao hàng nằm trên dòng orders
-// (không có trong interface CustomerOrder gốc nên khai riêng ở đây).
-interface MyDeliveryOrder extends CustomerOrder {
-  delivery_staff_id?: string;
-  delivery_staff_name?: string;
-  delivery_fee?: number;
-}
-
 const ORDER_STATUS_LABEL: Record<string, string> = {
   pending: 'Chờ xác nhận',
   confirmed: 'Đã xác nhận',
@@ -171,7 +163,7 @@ export default function ViecCuaToiPage() {
   // Đơn giao KHÔNG nằm trong ca điều phối: nó được gán ở bước xuất kho
   // (delivery_staff_id trên dòng orders). /api/orders siết sẵn theo người
   // giao cho vai trò hiện trường nên ở đây chỉ lọc lại lần nữa cho chắc.
-  const [myDeliveries, setMyDeliveries] = useState<MyDeliveryOrder[]>([]);
+  const [myDeliveries, setMyDeliveries] = useState<CustomerOrder[]>([]);
   useEffect(() => {
     if (!currentUser) return;
     let cancelled = false;
@@ -180,7 +172,7 @@ export default function ViecCuaToiPage() {
         const res = await fetch('/api/orders');
         const data = await res.json().catch(() => ({}));
         // GET /api/orders trả { data: [...] } (không phải mảng trần).
-        const rows: MyDeliveryOrder[] = Array.isArray(data) ? data : data.data || [];
+        const rows: CustomerOrder[] = Array.isArray(data) ? data : data.data || [];
         if (cancelled) return;
         setMyDeliveries(
           rows
@@ -405,13 +397,11 @@ export default function ViecCuaToiPage() {
           </div>
           <div className="w-full h-56 border border-slate-200 rounded-xl p-2 cursor-pointer">
             <ResponsiveContainer width="100%" height="100%">
+              {/* Bấm cột đổi tháng: onClick đặt trên Bar (payload của cột) — onClick
+                  của BarChart không mang activePayload ổn định ở recharts v3. */}
               <BarChart
                 data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                onClick={(e: any) => {
-                  const m = e?.activePayload?.[0]?.payload?.month;
-                  if (m) setIncomeMonth(m);
-                }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="label" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={{ stroke: '#cbd5e1' }} />
@@ -441,8 +431,29 @@ export default function ViecCuaToiPage() {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="fee" stackId="income" name="Thù lao ca / kỹ thuật" fill="#059669" />
-                <Bar dataKey="commission" stackId="income" name="Hoa hồng bán máy" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="fee"
+                  stackId="income"
+                  name="Thù lao ca / kỹ thuật"
+                  fill="#059669"
+                  cursor="pointer"
+                  onClick={(d: any) => {
+                    const m = d?.payload?.month;
+                    if (m) setIncomeMonth(m);
+                  }}
+                />
+                <Bar
+                  dataKey="commission"
+                  stackId="income"
+                  name="Hoa hồng bán máy"
+                  fill="#4f46e5"
+                  radius={[4, 4, 0, 0]}
+                  cursor="pointer"
+                  onClick={(d: any) => {
+                    const m = d?.payload?.month;
+                    if (m) setIncomeMonth(m);
+                  }}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
