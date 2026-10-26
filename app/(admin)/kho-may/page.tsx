@@ -464,9 +464,13 @@ export default function KhoMayPage() {
   // Hình ảnh máy nhập trong lô (tải lên qua /api/upload, lưu vào image_urls)
   const [newItemImages, setNewItemImages] = useState<string[]>([]);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  // Lỗi tải ảnh hiện ngay trong form (không dùng alert — alert gốc dễ bị
+  // trình duyệt chặn và người dùng tưởng là tải xong nhưng không có ảnh).
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const handleNewItemImageUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setIsUploadingImage(true);
+    setImageUploadError(null);
     try {
       for (const file of Array.from(files)) {
         const form = new FormData();
@@ -475,7 +479,9 @@ export default function KhoMayPage() {
         const res = await fetch('/api/upload', { method: 'POST', body: form });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data?.success || !data?.url) {
-          alert(`Không tải được ảnh ${file.name}: ${data?.message || 'lỗi không rõ'}`);
+          setImageUploadError(
+            `Không tải được ảnh ${file.name}: ${data?.message || 'lỗi không rõ'} — ảnh chưa được lưu, vui lòng thử lại.`
+          );
           continue;
         }
         setNewItemImages((prev) => [...prev, data.url as string]);
@@ -1058,6 +1064,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       });
       setBatchUnits([blankBatchUnit()]);
       setNewItemImages([]);
+      setImageUploadError(null);
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm máy'));
     }
@@ -2396,6 +2403,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     />
                     {isUploadingImage && (
                       <span className="text-[11px] text-slate-500">Đang tải lên...</span>
+                    )}
+                    {imageUploadError && (
+                      <span className="text-[11px] font-semibold text-rose-700">{imageUploadError}</span>
                     )}
                   </div>
                   <p className="text-[11px] text-slate-500">

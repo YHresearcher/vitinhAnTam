@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir, unlink } from 'node:fs/promises';
+import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
+import { getServerSupabase } from '@/lib/server/supabaseAdmin';
 
 // Tối ưu ảnh khi tải lên (2026-10-26): ảnh chụp/thiết bị thường từ điện
 // thoại (3000–4000px, vài MB) rất nặng cho hệ thống. Ảnh raster
@@ -70,13 +71,37 @@ function sniffImageKind(buffer: Buffer): 'png' | 'jpeg' | 'webp' | 'ico' | 'svg'
   return null;
 }
 
+// Route module của Next.js không được export thêm gì ngoài handler/config,
+// nên hằng này để nội bộ (không export).
+const STORAGE_BUCKET = 'images';
+
+// Lưu trữ ảnh ở đâu (2026-10-26): TRƯỚC ĐÂY route này ghi file vào
+// public/img/ trên ổ đĩa của server. Trên Vercel serverless, /var/task
+// chỉ đọc (mkdir báo ENOENT) và kể cả ghi được thì file cũng không được
+// phục vụ qua lớp static — nên mọi lần tải ảnh lên production đều lỗi
+// 500 âm thầm. Từ nay ảnh được đẩy lên Supabase Storage bucket `images`
+// (public read), trả về URL công khai của Storage. Hàm xóa dưới đây xử
+// lý cả URL Storage mới lẫn URL /img/ cũ (thời còn ghi local).
 /**
- * Xóa an toàn file ảnh cũ trên máy chủ (chỉ xóa trong /public/img/ hoặc /public/uploads/)
+ * Xóa an toàn file ảnh cũ: URL Supabase Storage thì gọi storage.remove,
+ * URL /img/ hoặc /uploads/ cũ thì xóa file local (nếu còn).
  */
 async function safelyDeleteFile(url?: string | null) {
   if (!url || typeof url !== 'string') return;
   try {
     const cleanUrl = url.split('?')[0].split('#')[0];
+    // Dạng: https://<ref>.supabase.co/storage/v1/object/public/<bucket>/<path>
+    const storageMatch = cleanUrl.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+    if (storageMatch) {
+      const db = getServerSupabase();
+      if (db) {
+        const [, bucket, path] = storageMatch;
+        if (!path.includes('..')) {
+          await db.storage.from(bucket).remove([decodeURIComponent(path)]);
+        }
+      }
+      return;
+    }
     const normalized = cleanUrl.replace(/\\/g, '/').trim();
     if (!normalized.startsWith('/img/') && !normalized.startsWith('/uploads/')) return;
 
@@ -197,8 +222,6 @@ export async function POST(request: NextRequest) {
 
     // 6. Chuẩn hóa tên thư mục (ngăn chặn Directory Traversal)
     const safeFolder = targetFolder.replace(/[^a-zA-Z0-9_-]/g, '') || 'header';
-    const uploadDir = join(process.cwd(), 'public', 'img', safeFolder);
-    await mkdir(uploadDir, { recursive: true });
 
     // 7. Tạo tên file an toàn duy nhất (đuôi theo định dạng SAU tối ưu)
     const sanitizedBase = originalName
@@ -207,12 +230,38 @@ export async function POST(request: NextRequest) {
       .slice(0, 30);
     const finalExt = outKind === 'jpeg' ? 'jpg' : outKind;
     const filename = `${sanitizedBase}-${Date.now()}.${finalExt}`;
-    const filePath = join(uploadDir, filename);
+    const storagePath = `${safeFolder}/${filename}`;
 
-    // 8. Ghi file vào thư mục public/img/[safeFolder]
-    await writeFile(filePath, outBuffer);
-
-    const publicUrl = `/img/${safeFolder}/${filename}`;
+    // 8. Đẩy file lên Supabase Storage (không ghi ổ đĩa local — xem ghi
+    // chú đầu file). Bucket `images` phải tồn tại và public read.
+    const db = getServerSupabase();
+    if (!db) {
+      return NextResponse.json(
+        { success: false, message: 'Chưa cấu hình kho lưu trữ ảnh trên máy chủ.' },
+        { status: 500 }
+      );
+    }
+    const contentType =
+      outKind === 'jpeg'
+        ? 'image/jpeg'
+        : outKind === 'webp'
+          ? 'image/webp'
+          : outKind === 'png'
+            ? 'image/png'
+            : outKind === 'svg'
+              ? 'image/svg+xml'
+              : 'image/x-icon';
+    const { error: uploadError } = await db.storage
+      .from(STORAGE_BUCKET)
+      .upload(storagePath, outBuffer, { contentType, upsert: false });
+    if (uploadError) {
+      console.error('Lỗi khi đẩy ảnh lên Storage:', uploadError);
+      return NextResponse.json(
+        { success: false, message: 'Không lưu được ảnh lên kho lưu trữ. Vui lòng thử lại.' },
+        { status: 500 }
+      );
+    }
+    const publicUrl = db.storage.from(STORAGE_BUCKET).getPublicUrl(storagePath).data.publicUrl;
 
     // 9. Tự động xóa file cũ nếu có để giải phóng dung lượng hosting
     if (oldUrl && oldUrl !== publicUrl) {
