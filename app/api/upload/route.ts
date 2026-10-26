@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
+import sharp from 'sharp';
 import { SESSION_COOKIE, verifySession } from '@/lib/session';
+
+// Tối ưu ảnh khi tải lên (2026-10-26): ảnh chụp/thiết bị thường từ điện
+// thoại (3000–4000px, vài MB) rất nặng cho hệ thống. Ảnh raster
+// (png/jpeg/webp) được tự động: xoay đúng chiều EXIF, thu về tối đa
+// 1600px cạnh dài (không phóng to ảnh nhỏ), nén JPEG/WebP quality 80.
+// PNG không có kênh alpha → chuyển sang JPEG cho nhẹ; PNG có alpha
+// (logo, ảnh nền trong suốt) giữ nguyên PNG nén lossless. SVG/ICO không
+// đụng tới (vector/icon, nén lại không có ý nghĩa). Nếu bản nén ra nặng
+// hơn bản gốc (ảnh nhỏ, ảnh đã nén kỹ) thì giữ nguyên bản gốc. Lỗi nén
+// không làm hỏng upload: fallback về file gốc.
 
 // MIME types được phép upload
 const ALLOWED_MIME_TYPES = new Set([
@@ -141,26 +152,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Chuẩn hóa tên thư mục (ngăn chặn Directory Traversal)
+    // 5. Nén/tối ưu ảnh raster trước khi lưu (xem ghi chú đầu file).
+    //    SVG/ICO đi thẳng xuống bước lưu, không qua sharp.
+    let outBuffer = buffer;
+    let outKind: 'png' | 'jpeg' | 'webp' | 'ico' | 'svg' = sniffed;
+    let optimized = false;
+    if (sniffed === 'png' || sniffed === 'jpeg' || sniffed === 'webp') {
+      try {
+        const image = sharp(buffer).rotate();
+        const meta = await image.metadata();
+        const resized = image.resize({
+          width: 1600,
+          height: 1600,
+          fit: 'inside',
+          withoutEnlargement: true,
+        });
+        let candidate: Buffer;
+        let candidateKind: 'png' | 'jpeg' | 'webp';
+        if (sniffed === 'jpeg') {
+          candidate = await resized.jpeg({ quality: 80, mozjpeg: true }).toBuffer();
+          candidateKind = 'jpeg';
+        } else if (sniffed === 'webp') {
+          candidate = await resized.webp({ quality: 80 }).toBuffer();
+          candidateKind = 'webp';
+        } else if (meta.hasAlpha) {
+          candidate = await resized.png({ compressionLevel: 9 }).toBuffer();
+          candidateKind = 'png';
+        } else {
+          candidate = await resized.jpeg({ quality: 82, mozjpeg: true }).toBuffer();
+          candidateKind = 'jpeg';
+        }
+        // Chỉ nhận bản nén khi nó thực sự nhẹ hơn bản gốc.
+        if (candidate.length < buffer.length) {
+          outBuffer = candidate;
+          outKind = candidateKind;
+          optimized = true;
+        }
+      } catch (err) {
+        console.warn('Nén ảnh thất bại, giữ file gốc:', err);
+      }
+    }
+
+    // 6. Chuẩn hóa tên thư mục (ngăn chặn Directory Traversal)
     const safeFolder = targetFolder.replace(/[^a-zA-Z0-9_-]/g, '') || 'header';
     const uploadDir = join(process.cwd(), 'public', 'img', safeFolder);
     await mkdir(uploadDir, { recursive: true });
 
-    // 6. Tạo tên file an toàn duy nhất
+    // 7. Tạo tên file an toàn duy nhất (đuôi theo định dạng SAU tối ưu)
     const sanitizedBase = originalName
       .replace(/\.[^/.]+$/, '')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .slice(0, 30);
-    const finalExt = ext || (sniffed === 'jpeg' ? 'jpg' : sniffed);
+    const finalExt = outKind === 'jpeg' ? 'jpg' : outKind;
     const filename = `${sanitizedBase}-${Date.now()}.${finalExt}`;
     const filePath = join(uploadDir, filename);
 
-    // 7. Ghi file vào thư mục public/img/[safeFolder] (buffer đã đọc ở bước 4b)
-    await writeFile(filePath, buffer);
+    // 8. Ghi file vào thư mục public/img/[safeFolder]
+    await writeFile(filePath, outBuffer);
 
     const publicUrl = `/img/${safeFolder}/${filename}`;
 
-    // 8. Tự động xóa file cũ nếu có để giải phóng dung lượng hosting
+    // 9. Tự động xóa file cũ nếu có để giải phóng dung lượng hosting
     if (oldUrl && oldUrl !== publicUrl) {
       await safelyDeleteFile(oldUrl);
     }
@@ -169,7 +221,12 @@ export async function POST(request: NextRequest) {
       success: true,
       url: publicUrl,
       filename,
-      message: 'Tải lên hình ảnh thành công!',
+      message: optimized
+        ? `Tải lên hình ảnh thành công! Đã tự nén từ ${(buffer.length / 1024).toFixed(0)}KB xuống ${(outBuffer.length / 1024).toFixed(0)}KB.`
+        : 'Tải lên hình ảnh thành công!',
+      optimized,
+      originalSize: buffer.length,
+      size: outBuffer.length,
     });
   } catch (error) {
     console.error('Lỗi khi upload file:', error);

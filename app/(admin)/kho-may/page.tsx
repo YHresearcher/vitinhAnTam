@@ -2399,7 +2399,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     )}
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    Tối đa 4MB/ảnh (PNG/JPG/WebP). Ảnh lưu chung cho các máy trong lô này.
+                    Tối đa 4MB/ảnh (PNG/JPG/WebP). Ảnh tự động nén về tối đa 1600px khi tải
+                    lên để nhẹ hệ thống. Ảnh lưu chung cho các máy trong lô này.
                   </p>
                 </div>
 
