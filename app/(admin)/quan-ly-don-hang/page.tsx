@@ -287,7 +287,7 @@ export default function OrderManagementPage() {
       const isWalkIn = Boolean(finalData.isWalkIn) || finalData.referralCode === 'Khách vãng lai';
       const profit = Math.max(0, soldPrice - costPrice);
       // Nếu là khách vãng lai, hoa hồng sales = 0₫ và gộp trọn vào lợi nhuận chung
-      const sellerBonus = isWalkIn ? 0 : Math.round(profit * 0.15);
+      const sellerBonus = isWalkIn ? 0 : Math.round(profit * 0.10);
       const lenderBonus = Math.round(profit * 0.05);
       const lenderTotal = costPrice + lenderBonus;
       // Trích cho Admin: 10% đối với Key, 5% đối với máy tính/linh kiện
@@ -297,12 +297,12 @@ export default function OrderManagementPage() {
 
       const adminRateLabel = isKey ? '10%' : '5%';
       const remainingPercentLabel = isKey
-        ? (isWalkIn ? '85%' : '70%')
-        : (isWalkIn ? '90%' : '75%');
+        ? (isWalkIn ? '85%' : '75%')
+        : (isWalkIn ? '90%' : '80%');
 
       const sellerLabel = isWalkIn
-        ? 'Khách vãng lai (15% hoa hồng gộp vào lợi nhuận chung)'
-        : `${finalData.sellerName || executingOrder.seller_name || 'Sale'} (15%: ${sellerBonus.toLocaleString('vi-VN')}₫)`;
+        ? 'Khách vãng lai (10% hoa hồng gộp vào lợi nhuận chung)'
+        : `${finalData.sellerName || executingOrder.seller_name || 'Sale'} (10%: ${sellerBonus.toLocaleString('vi-VN')}₫)`;
 
       const deliveryNote = finalData.deliveryMethod === 'delivery'
         ? `[Giao tận nơi: ${finalData.deliveryStaffName || 'KTV'} - Thù lao: ${Number(finalData.deliveryFee || 0).toLocaleString('vi-VN')}₫]`

@@ -66,7 +66,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
   const availableTechnicians = useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'salesman' || u.role === 'admin');
   }, [users]);
 
   useEffect(() => {
@@ -420,7 +420,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                   <option value="">-- Chưa chỉ định --</option>
                   {availableTechnicians.map((u) => (
                     <option key={u.id} value={u.name}>
-                      {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : 'KTV'})
+                      {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : u.role === 'salesman' ? 'Salesman' : 'KTV'})
                     </option>
                   ))}
                 </select>

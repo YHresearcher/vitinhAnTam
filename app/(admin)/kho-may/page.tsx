@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useStore } from '@/lib/store';
 import {
   InventoryItem,
+  MachineComponent,
   generateCustomerCode,
   SparePart,
 } from '@/lib/supabase';
@@ -260,13 +261,13 @@ export default function KhoMayPage() {
       }
 
       const profit = Math.max(0, soldPrice - costPrice);
-      const sellerBonus = Math.round(profit * 0.15);
+      const sellerBonus = Math.round(profit * 0.10);
       const lenderBonus = Math.round(profit * 0.05);
       const lenderTotal = costPrice + lenderBonus;
       const warrantyReserve = Math.round(profit * 0.05);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (75%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${costPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -446,30 +447,75 @@ export default function KhoMayPage() {
     import_price: 0,
     import_date: new Date().toISOString().slice(0, 10),
     source: 'vtat',
+    seller_name: '',
+    seller_phone: '',
+    seller_note: '',
     original_price: 0,
     sale_price: 0,
     price: 0,
     stock_quantity: 1,
     shelf_location: '',
-    qc_status: 'testing' as InventoryItem['qc_status'],
+    // Máy nhập vào luôn ở trạng thái sẵn sàng bán: máy chỉ được nhập sau
+    // khi đã test (xem xác nhận test từng máy trong lô bên dưới).
+    qc_status: 'ready_to_sell' as InventoryItem['qc_status'],
     warranty_months: 6,
   });
 
-  // Danh sách máy trong lô nhập: mỗi máy có S/N và sức khỏe SSD riêng
-  const [batchUnits, setBatchUnits] = useState<{ serialNumber: string; ssdHealth: number }[]>([
-    { serialNumber: '', ssdHealth: 98 },
-  ]);
+  // Hình ảnh máy nhập trong lô (tải lên qua /api/upload, lưu vào image_urls)
+  const [newItemImages, setNewItemImages] = useState<string[]>([]);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const handleNewItemImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploadingImage(true);
+    try {
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append('file', file);
+        form.append('folder', 'machines');
+        const res = await fetch('/api/upload', { method: 'POST', body: form });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data?.success || !data?.url) {
+          alert(`Không tải được ảnh ${file.name}: ${data?.message || 'lỗi không rõ'}`);
+          continue;
+        }
+        setNewItemImages((prev) => [...prev, data.url as string]);
+      }
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Danh sách máy trong lô nhập: mỗi máy có S/N riêng (mã quản lý chính),
+  // S/N từng linh kiện tách riêng (RAM / SSD / nguồn) và cờ "đã test".
+  // Máy phải được test trước khi nhập — máy chưa tick "Đã test" sẽ bị chặn lưu.
+  type BatchUnit = {
+    serialNumber: string;
+    ssdHealth: number;
+    ramSerial: string;
+    ssdSerial: string;
+    psuSerial: string;
+    tested: boolean;
+  };
+  const blankBatchUnit = (ssdHealth = 98): BatchUnit => ({
+    serialNumber: '',
+    ssdHealth,
+    ramSerial: '',
+    ssdSerial: '',
+    psuSerial: '',
+    tested: false,
+  });
+  const [batchUnits, setBatchUnits] = useState<BatchUnit[]>([blankBatchUnit()]);
   const setBatchQty = (qty: number) => {
     const n = Math.max(1, Math.min(50, Math.floor(Number(qty)) || 1));
     setBatchUnits((prev) =>
-      Array.from({ length: n }, (_, i) => prev[i] || { serialNumber: '', ssdHealth: prev[prev.length - 1]?.ssdHealth ?? 98 })
+      Array.from({ length: n }, (_, i) => prev[i] || blankBatchUnit(prev[prev.length - 1]?.ssdHealth ?? 98))
     );
   };
   const addBatchUnit = () =>
-    setBatchUnits((prev) => [...prev, { serialNumber: '', ssdHealth: prev[prev.length - 1]?.ssdHealth ?? 98 }]);
+    setBatchUnits((prev) => [...prev, blankBatchUnit(prev[prev.length - 1]?.ssdHealth ?? 98)]);
   const removeBatchUnit = (idx: number) =>
     setBatchUnits((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev));
-  const updateBatchUnit = (idx: number, patch: Partial<{ serialNumber: string; ssdHealth: number }>) =>
+  const updateBatchUnit = (idx: number, patch: Partial<BatchUnit>) =>
     setBatchUnits((prev) => prev.map((u, i) => (i === idx ? { ...u, ...patch } : u)));
 
 // Helper tính số ngày tồn kho
@@ -884,6 +930,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     );
 
     // S/N không được trùng trong lô, cũng không trùng máy đã có trong kho
+    // Hàng Reseller bắt buộc có thông tin người bán để liên hệ khi cần
+    if (newItem.source === 'reseller' && (!newItem.seller_name.trim() || !newItem.seller_phone.trim())) {
+      alert('Hàng Reseller cần nhập Tên người bán và SĐT liên hệ để tiện liên hệ khi cần!');
+      return;
+    }
+
+    // Máy phải được test trước khi nhập — chặn máy chưa tick "Đã test"
+    const untested = batchUnits
+      .map((u, i) => (!u.tested ? i + 1 : null))
+      .filter((n): n is number => n !== null);
+    if (untested.length > 0) {
+      alert(`Máy số ${untested.join(', ')} chưa được tick "Đã test" — máy phải được test (RAM / SSD / nguồn) trước khi nhập kho!`);
+      return;
+    }
+
     const serials = batchUnits.map((u) => u.serialNumber.trim().toUpperCase()).filter(Boolean);
     if (new Set(serials).size !== serials.length) {
       alert('Có S/N bị trùng trong lô — mỗi máy phải có S/N riêng!');
@@ -914,12 +975,27 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const sale = Number(newItem.sale_price) || 0;
       const effectivePrice = sale > 0 ? sale : orig;
 
-      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N & sức khỏe SSD riêng
+      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N máy tách
+      // riêng S/N từng linh kiện (RAM / SSD / nguồn), máy nào cũng đã test
+      // và vào kho ở trạng thái sẵn sàng bán (RTS).
       for (let i = 0; i < batchUnits.length; i += 1) {
         const unit = batchUnits[i];
         const tag = identityFor(unit, i);
         const health = Math.max(1, Math.min(100, Number(unit.ssdHealth) || 98));
         const serial = unit.serialNumber.trim() || tag;
+        const components: MachineComponent[] = [
+          ...(unit.ramSerial.trim()
+            ? [{ type: 'ram' as const, serial: unit.ramSerial.trim() }]
+            : []),
+          {
+            type: 'ssd' as const,
+            serial: unit.ssdSerial.trim() || undefined,
+            health,
+          },
+          ...(unit.psuSerial.trim()
+            ? [{ type: 'psu' as const, serial: unit.psuSerial.trim() }]
+            : []),
+        ];
         await addInventoryItem({
           brand: newItem.brand,
           model: newItem.model,
@@ -933,6 +1009,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           import_price: Number(newItem.import_price),
           import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
           source: newItem.source || 'vtat',
+          seller_name: newItem.source === 'reseller' ? newItem.seller_name.trim() : undefined,
+          seller_phone: newItem.source === 'reseller' ? newItem.seller_phone.trim() : undefined,
+          seller_note: newItem.source === 'reseller' ? newItem.seller_note.trim() : undefined,
+          components,
+          tested_before_import: true,
+          image_urls: newItemImages,
           original_price: orig,
           sale_price: sale,
           price: effectivePrice,
@@ -940,7 +1022,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           stock_quantity: 1,
           quantity: 1,
           shelf_location: newItem.shelf_location,
-          qc_status: newItem.qc_status,
+          qc_status: 'ready_to_sell',
           warranty_months: Number(newItem.warranty_months),
           specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)`,
         });
@@ -963,15 +1045,19 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         import_price: 3500000,
         import_date: new Date().toISOString().slice(0, 10),
         source: 'vtat',
+        seller_name: '',
+        seller_phone: '',
+        seller_note: '',
         original_price: 4850000,
         sale_price: 0,
         price: 4850000,
         stock_quantity: 1,
         shelf_location: 'Kệ A1-01',
-        qc_status: 'testing',
+        qc_status: 'ready_to_sell',
         warranty_months: 6,
       });
-      setBatchUnits([{ serialNumber: '', ssdHealth: 98 }]);
+      setBatchUnits([blankBatchUnit()]);
+      setNewItemImages([]);
     } catch (err: unknown) {
       alert('Lỗi: ' + (err instanceof Error ? err.message : 'Không thể thêm máy'));
     }
@@ -1517,6 +1603,22 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                               </span>
                             </div>
                           )}
+                        {item.source === 'reseller' && item.seller_name && (
+                          <div className="mt-1 text-[11px] text-slate-600">
+                            Người bán: <strong>{item.seller_name}</strong>
+                            {item.seller_phone && (
+                              <>
+                                {' '}•{' '}
+                                <a
+                                  href={`tel:${item.seller_phone}`}
+                                  className="font-mono text-blue-700 hover:underline"
+                                >
+                                  {item.seller_phone}
+                                </a>
+                              </>
+                            )}
+                          </div>
+                        )}
                         {isReserved && (
                           <div className="mt-1.5 p-1.5 bg-purple-100/70 border border-purple-200 rounded-md text-[11px] text-purple-900 max-w-xs">
                             <div className="font-semibold flex items-center gap-1 text-purple-800">
@@ -2163,44 +2265,85 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
 
 
-                {/* Danh sách S/N & Sức khỏe SSD từng máy trong lô */}
+                {/* Danh sách từng máy trong lô: S/N máy tách riêng S/N linh kiện + xác nhận test */}
                 <div className="md:col-span-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-indigo-900">
-                      S/N &amp; Sức khỏe SSD từng máy trong lô
+                      S/N máy, S/N linh kiện &amp; xác nhận test từng máy
                     </span>
                     <span className="text-[11px] text-slate-500 font-mono">{batchUnits.length} máy</span>
                   </div>
+                  <p className="text-[11px] text-slate-500">
+                    S/N máy là mã quản lý chính. S/N RAM / SSD / nguồn ghi riêng từng linh kiện —
+                    máy phải được mở ra test trước khi nhập, máy nào chưa tick “Đã test” sẽ không lưu được.
+                  </p>
                   {batchUnits.map((unit, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="w-6 text-[11px] font-mono font-bold text-slate-500 shrink-0">#{idx + 1}</span>
-                      <input
-                        type="text"
-                        value={unit.serialNumber}
-                        onChange={(e) => updateBatchUnit(idx, { serialNumber: e.target.value })}
-                        placeholder={`S/N máy ${idx + 1} (mã quản lý chính của máy)`}
-                        className="flex-1 min-w-0 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                      />
-                      <input
-                        type="number"
-                        min={1}
-                        max={100}
-                        value={unit.ssdHealth}
-                        onChange={(e) => updateBatchUnit(idx, { ssdHealth: Number(e.target.value) })}
-                        title="Sức khỏe SSD (%)"
-                        className="w-20 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                      />
-                      <span className="text-[11px] text-slate-400 font-mono shrink-0">SSD %</span>
-                      {batchUnits.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeBatchUnit(idx)}
-                          title="Xóa máy này khỏi lô"
-                          className="text-slate-400 hover:text-rose-600 text-xs font-bold px-1 shrink-0"
-                        >
-                          ✕
-                        </button>
-                      )}
+                    <div key={idx} className="space-y-1.5 rounded-lg border border-indigo-100 bg-white/70 p-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 text-[11px] font-mono font-bold text-slate-500 shrink-0">#{idx + 1}</span>
+                        <input
+                          type="text"
+                          value={unit.serialNumber}
+                          onChange={(e) => updateBatchUnit(idx, { serialNumber: e.target.value })}
+                          placeholder={`S/N máy ${idx + 1} (mã quản lý chính của máy)`}
+                          className="flex-1 min-w-0 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          value={unit.ssdHealth}
+                          onChange={(e) => updateBatchUnit(idx, { ssdHealth: Number(e.target.value) })}
+                          title="Sức khỏe SSD (%)"
+                          className="w-20 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
+                        <span className="text-[11px] text-slate-400 font-mono shrink-0">SSD %</span>
+                        {batchUnits.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeBatchUnit(idx)}
+                            title="Xóa máy này khỏi lô"
+                            className="text-slate-400 hover:text-rose-600 text-xs font-bold px-1 shrink-0"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2 pl-8">
+                        <input
+                          type="text"
+                          value={unit.ramSerial}
+                          onChange={(e) => updateBatchUnit(idx, { ramSerial: e.target.value })}
+                          placeholder="S/N RAM"
+                          title="Số serial thanh RAM trong máy"
+                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={unit.ssdSerial}
+                          onChange={(e) => updateBatchUnit(idx, { ssdSerial: e.target.value })}
+                          placeholder="S/N SSD"
+                          title="Số serial ổ SSD trong máy"
+                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={unit.psuSerial}
+                          onChange={(e) => updateBatchUnit(idx, { psuSerial: e.target.value })}
+                          placeholder="S/N nguồn"
+                          title="Số serial bộ nguồn trong máy"
+                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                        />
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={unit.tested}
+                            onChange={(e) => updateBatchUnit(idx, { tested: e.target.checked })}
+                            className="w-3.5 h-3.5 accent-emerald-600"
+                          />
+                          ✓ Đã test máy này (RAM / SSD / nguồn)
+                        </label>
+                      </div>
                     </div>
                   ))}
                   <button
@@ -2210,6 +2353,54 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   >
                     + Thêm 1 máy vào lô
                   </button>
+                </div>
+
+                {/* Hình ảnh máy trong lô */}
+                <div className="md:col-span-3 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <span className="text-xs font-bold text-slate-800">
+                    Hình Ảnh Máy (ảnh chụp thực tế của lô máy này)
+                  </span>
+                  {newItemImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {newItemImages.map((url, i) => (
+                        <div key={url} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={url}
+                            alt={`Ảnh máy ${i + 1}`}
+                            className="h-20 w-20 object-cover rounded-lg border border-slate-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setNewItemImages((prev) => prev.filter((_, j) => j !== i))}
+                            title="Gỡ ảnh này"
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-bold leading-none shadow"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      multiple
+                      disabled={isUploadingImage}
+                      onChange={(e) => {
+                        handleNewItemImageUpload(e.target.files);
+                        e.target.value = '';
+                      }}
+                      className="text-xs text-slate-600 file:mr-2 file:px-3 file:py-1 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:text-xs file:font-bold hover:file:bg-blue-700 disabled:opacity-50"
+                    />
+                    {isUploadingImage && (
+                      <span className="text-[11px] text-slate-500">Đang tải lên...</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Tối đa 4MB/ảnh (PNG/JPG/WebP). Ảnh lưu chung cho các máy trong lô này.
+                  </p>
                 </div>
 
                 {/* Giá đầu vào (vốn nhập kho) */}
@@ -2267,6 +2458,53 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     </p>
                   )}
                 </div>
+
+                {/* Thông tin người bán — chỉ hiện khi nguồn Reseller */}
+                {newItem.source === 'reseller' && (
+                  <div className="md:col-span-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
+                    <span className="text-xs font-bold text-amber-900">
+                      Thông Tin Người Bán (Reseller) — để liên hệ khi cần
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                          Tên người bán *
+                        </label>
+                        <input
+                          type="text"
+                          value={newItem.seller_name}
+                          onChange={(e) => setNewItem({ ...newItem, seller_name: e.target.value })}
+                          placeholder="VD: Anh Tuấn — Cửa hàng ABC"
+                          className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] bg-white focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                          SĐT liên hệ *
+                        </label>
+                        <input
+                          type="tel"
+                          value={newItem.seller_phone}
+                          onChange={(e) => setNewItem({ ...newItem, seller_phone: e.target.value })}
+                          placeholder="VD: 0909..."
+                          className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] font-mono bg-white focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                        Ghi chú liên hệ
+                      </label>
+                      <input
+                        type="text"
+                        value={newItem.seller_note}
+                        onChange={(e) => setNewItem({ ...newItem, seller_note: e.target.value })}
+                        placeholder="VD: Zalo cùng số — liên hệ giờ hành chính, địa chỉ kho..."
+                        className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] bg-white focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Giá Gốc & Giá Giảm */}
                 <div className="md:col-span-3 p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
@@ -2386,21 +2624,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   )}
                 </div>
 
-                {/* QC Status */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
-                    Trạng Thái
-                  </label>
-                  <select
-                    value={newItem.qc_status}
-                    onChange={(e) =>
-                      setNewItem({ ...newItem, qc_status: e.target.value as InventoryItem['qc_status'] })
-                    }
-                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="testing">⏳ Đang QC (chạy thử)</option>
-                    <option value="ready_to_sell">✓ Sẵn sàng bán (RTS)</option>
-                  </select>
+                {/* Trạng thái khi nhập: luôn RTS — máy đã test trước khi nhập */}
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
+                  <span className="text-xs font-bold text-emerald-900">
+                    Trạng thái khi nhập: ✓ Sẵn sàng bán (RTS)
+                  </span>
+                  <span className="block text-[11px] text-emerald-700 mt-0.5">
+                    Máy chỉ được nhập sau khi đã test (RAM / SSD / nguồn) — xem mục xác nhận
+                    test từng máy ở trên.
+                  </span>
                 </div>
               </div>
 
@@ -2683,15 +2915,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
         const isProfitable = profit > 0;
 
-        // 1. Tiền cho người bán (15% lợi nhuận)
-        const sellerCommission = isProfitable ? Math.round(profit * 0.15) : 0;
+        // 1. Tiền cho người bán (10% lợi nhuận)
+        const sellerCommission = isProfitable ? Math.round(profit * 0.10) : 0;
         // 2. Thưởng người cho vay vốn (5% lợi nhuận)
         const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
         // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
         const lenderTotal = costPrice + lenderBonus;
         // 3. 5% tiền trích lập dự phòng
         const warrantyReserve = isProfitable ? Math.round(profit * 0.05) : 0;
-        // 4. Lợi nhuận còn lại (75% lợi nhuận)
+        // 4. Lợi nhuận còn lại (80% lợi nhuận)
         const remainingProfit = isProfitable
           ? profit - sellerCommission - lenderBonus - warrantyReserve
           : profit;
@@ -2812,7 +3044,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Khoản 1: Người bán 15% LN */}
+                  {/* Khoản 1: Người bán 10% LN */}
                   <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
@@ -2820,7 +3052,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         <span>Tiền cho người bán</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
-                        15% LN
+                        10% LN
                       </span>
                     </div>
                     <div className="text-base font-black text-indigo-950 font-mono">
@@ -2877,7 +3109,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         <span>Lợi nhuận còn lại</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-                        75% LN
+                        80% LN
                       </span>
                     </div>
                     <div className="text-base font-black text-emerald-950 font-mono">
@@ -2933,13 +3165,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Hoàn người vay vốn
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (15%)
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (10%)
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại (75%)
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại (80%)
                   </span>
                 </div>
               </div>
@@ -3610,6 +3842,84 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   </div>
                 </div>
               </div>
+
+              {/* Hình ảnh thực tế của máy */}
+              {viewingSpecsItem.image_urls && viewingSpecsItem.image_urls.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 pb-1 border-b border-slate-200">
+                    Hình Ảnh Máy
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingSpecsItem.image_urls.map((url, i) => (
+                      <a key={url} href={url} target="_blank" rel="noreferrer">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Ảnh máy ${i + 1}`}
+                          className="h-24 w-24 object-cover rounded-lg border border-slate-200 hover:border-blue-400"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Linh kiện trong máy (ghi lúc nhập, sau khi test) */}
+              {viewingSpecsItem.components && viewingSpecsItem.components.length > 0 && (
+                <div>
+                  <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 pb-1 border-b border-slate-200 flex items-center justify-between">
+                    <span>Linh Kiện Trong Máy (S/N riêng từng linh kiện)</span>
+                    {viewingSpecsItem.tested_before_import && (
+                      <span className="text-[11px] font-bold text-emerald-700 normal-case">
+                        ✓ Đã test trước khi nhập
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {viewingSpecsItem.components.map((c, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200"
+                      >
+                        <span className="font-bold text-slate-800">
+                          {c.type === 'ram' ? 'RAM' : c.type === 'ssd' ? 'SSD' : c.type === 'psu' ? 'Nguồn (PSU)' : 'Linh kiện khác'}
+                        </span>
+                        <span className="font-mono text-slate-600">
+                          {c.serial || '—'}
+                          {c.health !== undefined && ` · Sức khỏe ${c.health}%`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Thông tin người bán — hàng Reseller */}
+              {viewingSpecsItem.source === 'reseller' &&
+                (viewingSpecsItem.seller_name || viewingSpecsItem.seller_phone) && (
+                  <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
+                    <div className="text-xs font-bold text-amber-900">
+                      Người Bán (Reseller) — liên hệ khi cần
+                    </div>
+                    {viewingSpecsItem.seller_name && (
+                      <div>Tên: <strong>{viewingSpecsItem.seller_name}</strong></div>
+                    )}
+                    {viewingSpecsItem.seller_phone && (
+                      <div>
+                        SĐT:{' '}
+                        <a
+                          href={`tel:${viewingSpecsItem.seller_phone}`}
+                          className="font-mono font-bold text-blue-700 hover:underline"
+                        >
+                          {viewingSpecsItem.seller_phone}
+                        </a>
+                      </div>
+                    )}
+                    {viewingSpecsItem.seller_note && (
+                      <div className="text-slate-600">{viewingSpecsItem.seller_note}</div>
+                    )}
+                  </div>
+                )}
 
               {/* Reserved Customer Details Card */}
               {viewingSpecsItem.qc_status === 'reserved' && (

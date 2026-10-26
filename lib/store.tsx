@@ -572,6 +572,7 @@ export function StoreProvider({
     currentUser.role === 'tech_manager' ||
     currentUser.role === 'technician' ||
     currentUser.role === 'outsourced' ||
+    currentUser.role === 'salesman' ||
     currentUser.permissions?.can_update_repair_status === true;
   const canAccessPayroll = () =>
     currentUser.role === 'admin' ||
@@ -806,7 +807,8 @@ export function StoreProvider({
           rest.role === 'admin' ||
           rest.role === 'tech_manager' ||
           rest.role === 'technician' ||
-          rest.role === 'outsourced',
+          rest.role === 'outsourced' ||
+          rest.role === 'salesman',
         can_access_payroll: rest.role === 'admin' || rest.role === 'tech_manager' || rest.role === 'sales_manager',
         can_manage_users: rest.role === 'admin',
       },
@@ -1645,7 +1647,7 @@ export function StoreProvider({
         const soldPrice = item.price || item.retail_price || 0;
         const costPrice = item.cost_price || item.import_price || 0;
         const netProfit = Math.max(0, soldPrice - costPrice);
-        const sellerCommission = Math.round(netProfit * 0.15);
+        const sellerCommission = Math.round(netProfit * 0.10);
         const lenderBonus = Math.round(netProfit * 0.05);
         const lenderTotal = costPrice + lenderBonus;
         const warrantyReserve = Math.round(netProfit * 0.05);
@@ -3971,7 +3973,7 @@ export function StoreProvider({
 
     // 5. Tự động gửi tin nhắn chúc mừng bán hàng qua Bot đến nhóm cài đặt sẵn
     try {
-      const sellerCommission = Math.round(netProfit * 0.15);
+      const sellerCommission = Math.round(netProfit * 0.10);
       const lenderBonus = Math.round(netProfit * 0.05);
       const lenderTotal = finalCostPrice + lenderBonus;
       const warrantyReserve = provisionAmount;

@@ -85,7 +85,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
         visible:
           !!currentUser &&
-          ['technician', 'outsourced', 'tech_manager'].includes(currentUser.role),
+          ['technician', 'outsourced', 'salesman', 'tech_manager'].includes(currentUser.role),
       },
       {
         label: 'Tài chính & Doanh thu',

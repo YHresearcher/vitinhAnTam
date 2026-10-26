@@ -68,14 +68,14 @@ export default function CashflowSaleConfirmModal({
     )) ||
     Boolean(data.notes && /key|bản quyền|windows|office/i.test(data.notes));
 
-  // Khách vãng lai: không có mã giới thiệu / để trống trên web và không có người bán -> 15% hoa hồng sales gộp vào lợi nhuận chung
+  // Khách vãng lai: không có mã giới thiệu / để trống trên web và không có người bán -> 10% hoa hồng sales gộp vào lợi nhuận chung
   const isWalkIn =
     Boolean(data.isWalkIn) ||
     ((!data.referralCode || data.referralCode === 'Khách vãng lai') &&
      (!data.sellerName || data.sellerName === 'Khách vãng lai'));
 
-  // 1. Tiền cho người bán (15% lợi nhuận) — Nếu là khách vãng lai, hoa hồng = 0₫
-  const sellerCommission = isProfitable && !isWalkIn ? Math.round(profit * 0.15) : 0;
+  // 1. Tiền cho người bán (10% lợi nhuận) — Nếu là khách vãng lai, hoa hồng = 0₫
+  const sellerCommission = isProfitable && !isWalkIn ? Math.round(profit * 0.10) : 0;
   // 2. Thưởng người cho vay vốn (5% lợi nhuận)
   const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
   // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
@@ -243,7 +243,7 @@ export default function CashflowSaleConfirmModal({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {/* Khoản 1: Người bán 15% LN hoặc Khách vãng lai */}
+            {/* Khoản 1: Người bán 10% LN hoặc Khách vãng lai */}
             {isWalkIn ? (
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
@@ -259,7 +259,7 @@ export default function CashflowSaleConfirmModal({
                   0 ₫
                 </div>
                 <p className="text-[11px] text-slate-600">
-                  15% hoa hồng được cộng dồn trực tiếp vào lợi nhuận chung
+                  10% hoa hồng được cộng dồn trực tiếp vào lợi nhuận chung
                 </p>
               </div>
             ) : (
@@ -270,7 +270,7 @@ export default function CashflowSaleConfirmModal({
                     <span>Tiền cho người bán {data.sellerName ? `(${data.sellerName})` : ''}</span>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
-                    15% LN
+                    10% LN
                   </span>
                 </div>
                 <div className="text-base font-black text-indigo-950 font-mono">
@@ -331,8 +331,8 @@ export default function CashflowSaleConfirmModal({
                 </div>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
                   {isKey
-                    ? (isWalkIn ? '85% LN (gồm 15% vãng lai)' : '70% LN')
-                    : (isWalkIn ? '90% LN (gồm 15% vãng lai)' : '75% LN')}
+                    ? (isWalkIn ? '85% LN (gồm 10% vãng lai)' : '75% LN')
+                    : (isWalkIn ? '90% LN (gồm 10% vãng lai)' : '80% LN')}
                 </span>
               </div>
               <div className="text-base font-black text-emerald-950 font-mono">
@@ -390,13 +390,13 @@ export default function CashflowSaleConfirmModal({
               <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Hoàn người vay vốn
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> {isWalkIn ? 'Vãng lai (0% gộp)' : 'Người bán (15%)'}
+              <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> {isWalkIn ? 'Vãng lai (0% gộp)' : 'Người bán (10%)'}
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-purple-500 inline-block" /> {isKey ? 'Trích Admin (10%)' : 'Trích Admin (5%)'}
             </span>
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> {isKey ? (isWalkIn ? 'LN chung (85%)' : 'LN còn lại (70%)') : (isWalkIn ? 'LN chung (90%)' : 'LN còn lại (75%)')}
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> {isKey ? (isWalkIn ? 'LN chung (85%)' : 'LN còn lại (75%)') : (isWalkIn ? 'LN chung (90%)' : 'LN còn lại (80%)')}
             </span>
           </div>
         </div>

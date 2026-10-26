@@ -153,7 +153,7 @@ export default function OnsiteDispatchTab() {
   };
 
   const availableTechnicians = useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'admin');
+    return users.filter((u) => u.role === 'technician' || u.role === 'tech_manager' || u.role === 'outsourced' || u.role === 'salesman' || u.role === 'admin');
   }, [users]);
 
   const filteredDispatches = useMemo(() => {
@@ -504,19 +504,19 @@ export default function OnsiteDispatchTab() {
                       <option value="">-- Chưa gán KTV --</option>
                       <optgroup label="KTV Nội Bộ">
                         {availableTechnicians
-                          .filter((u) => u.role !== 'outsourced')
+                          .filter((u) => u.role !== 'outsourced' && u.role !== 'salesman')
                           .map((u) => (
                             <option key={u.id} value={u.name}>
                               {u.name} {u.role === 'admin' ? '(Admin)' : ''}
                             </option>
                           ))}
                       </optgroup>
-                      <optgroup label="KTV Thuê Ngoài / Đối Tác">
+                      <optgroup label="KTV Thuê Ngoài / Salesman">
                         {availableTechnicians
-                          .filter((u) => u.role === 'outsourced')
+                          .filter((u) => u.role === 'outsourced' || u.role === 'salesman')
                           .map((u) => (
                             <option key={u.id} value={u.name}>
-                              {u.name} (Thuê Ngoài)
+                              {u.name} {u.role === 'salesman' ? '(Salesman)' : '(Thuê Ngoài)'}
                             </option>
                           ))}
                       </optgroup>
@@ -719,7 +719,7 @@ export default function OnsiteDispatchTab() {
                   {availableTechnicians.map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name}
-                      {u.role === 'outsourced' ? ' (Thuê ngoài)' : u.role === 'admin' ? ' (Admin)' : ''}
+                      {u.role === 'outsourced' ? ' (Thuê ngoài)' : u.role === 'salesman' ? ' (Salesman)' : u.role === 'admin' ? ' (Admin)' : ''}
                     </option>
                   ))}
                 </select>

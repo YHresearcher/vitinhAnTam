@@ -39,7 +39,7 @@ export default function CounterRepairTab({
   const [actionNotice, setActionNotice] = useState<string | null>(null);
 
   const availableTechnicians = useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin' || u.role === 'tech_manager');
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'salesman' || u.role === 'admin' || u.role === 'tech_manager');
   }, [users]);
 
   const filteredTickets = useMemo(() => {

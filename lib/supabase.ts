@@ -40,7 +40,7 @@ export function setStaffAccessToken(token: string | null): void {
 // ==========================================
 // RBAC (ROLE-BASED ACCESS CONTROL)
 // ==========================================
-export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'sales' | 'outsourced';
+export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'sales' | 'outsourced' | 'salesman';
 
 export interface UserPermissions {
   can_edit_stock: boolean;
@@ -212,6 +212,16 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     email: 'sales01@vitinhantam.com',
     phone: '0933.345.678',
   },
+  salesman: {
+    id: 'u-salesman-1',
+    username: 'salesman01',
+    name: 'Salesman 01',
+    role: 'salesman',
+    roleTitle: 'Salesman — Giao máy & Kỹ thuật thị trường',
+    avatarBg: 'bg-orange-600',
+    email: 'salesman01@vitinhantam.com',
+    phone: '0933.345.679',
+  },
 };
 
 // ==========================================
@@ -249,6 +259,14 @@ export interface InventorySpecs {
   power?: string;
 }
 
+// Một linh kiện trong máy, ghi nhận lúc nhập máy sau khi test.
+export interface MachineComponent {
+  type: 'ram' | 'ssd' | 'psu' | 'other';
+  serial?: string;
+  health?: number; // Sức khỏe SSD (%) — chỉ dùng cho type 'ssd'
+  note?: string;
+}
+
 export interface InventoryItem {
   id: string;
   service_tag: string; // ST-8F4K92X, TP-994L2A
@@ -281,6 +299,14 @@ export interface InventoryItem {
   warranty_months: number;
   shelf_location: string; // Kệ A1, B2, C1...
   image_urls?: string[];
+  // Nhập máy 2026-10-26: thông tin người bán (chỉ nhập khi source = 'reseller')
+  seller_name?: string;
+  seller_phone?: string;
+  seller_note?: string; // Ghi chú liên hệ (Zalo, địa chỉ...)
+  // Linh kiện trong máy, ghi sau khi test trước khi nhập (S/N máy nằm ở
+  // service_tag/serial_number — tách riêng với S/N từng linh kiện).
+  components?: MachineComponent[];
+  tested_before_import?: boolean; // Máy đã được test (RAM/SSD/nguồn) trước khi nhập
   customer_name?: string;
   customer_phone?: string;
   customer_code?: string;

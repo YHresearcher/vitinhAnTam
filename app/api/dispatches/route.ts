@@ -5,14 +5,15 @@ import { rateLimit } from '@/lib/server/rateLimit';
 import type { SessionPayload } from '@/lib/session';
 
 // STAFF_ROLES (lib/server/auth) không gồm 'outsourced' — có chủ đích cho
-// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài là người thực thi
-// ca, nên route này chấp nhận thêm 'outsourced' nhưng siết phạm vi:
-// chỉ xem/cập nhật ca được gán cho chính mình, không tạo ca mới.
+// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài và Salesman là người
+// thực thi ca, nên route này chấp nhận thêm 2 phân hệ này nhưng siết phạm
+// vi: chỉ xem/cập nhật ca được gán cho chính mình, không tạo ca mới.
+const FIELD_ROLES = ['outsourced', 'salesman'] as const;
 function getDispatchSession(req: NextRequest): SessionPayload | null {
   const session = getSession(req);
   if (!session) return null;
   if ((STAFF_ROLES as readonly string[]).includes(session.role)) return session;
-  return session.role === 'outsourced' ? session : null;
+  return (FIELD_ROLES as readonly string[]).includes(session.role) ? session : null;
 }
 
 function isFullStaff(session: SessionPayload): boolean {
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 500 });
   }
   let query = db.from('onsite_dispatches').select('*').order('created_at', { ascending: false });
-  // KTV thuê ngoài chỉ thấy các ca được gán cho chính mình.
+  // Nhân viên thị trường (thuê ngoài / salesman) chỉ thấy các ca được gán cho chính mình.
   if (!isFullStaff(session)) {
     query = query.eq('technician_id', session.sub);
   }
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = getDispatchSession(req);
-  // Tạo ca là việc của điều phối viên — KTV thuê ngoài không tạo ca.
+  // Tạo ca là việc của điều phối viên — KTV thuê ngoài / Salesman không tạo ca.
   if (!session || !isFullStaff(session)) {
     return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
   }
@@ -139,7 +140,7 @@ export async function PATCH(req: NextRequest) {
   if (!db) {
     return NextResponse.json({ success: false, error: 'Database unavailable' }, { status: 500 });
   }
-  // KTV thuê ngoài chỉ được cập nhật ca được gán cho chính mình.
+  // Nhân viên thị trường chỉ được cập nhật ca được gán cho chính mình.
   if (!isFullStaff(session)) {
     const { data: existing } = await db
       .from('onsite_dispatches')

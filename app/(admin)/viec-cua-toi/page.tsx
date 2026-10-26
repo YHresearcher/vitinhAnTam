@@ -43,9 +43,82 @@ function mapsUrl(address: string) {
 }
 
 export default function ViecCuaToiPage() {
-  const { onsiteDispatches, currentUser, updateDispatchStatus } = useStore();
+  const { onsiteDispatches, currentUser, updateDispatchStatus, shiftLogs, adminDeductions } = useStore();
   const [notice, setNotice] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  // ---- Thu nhập của tôi (chỉ tính số liệu của riêng tài khoản đang đăng nhập) ----
+  // Thù lao ca/giao máy & kỹ thuật: cộng dồn trong shift_logs theo ngày ca trực
+  // (đã tự cộng khi hoàn tất ca). Hoa hồng bán máy: 10% lợi nhuận từ
+  // 26/10/2026, trước đó 15% (giữ đúng mức từng thời điểm, không viết lại lịch sử).
+  const COMMISSION_CUTOFF = '2026-10-26';
+  const today = new Date();
+  const [incomeYear, setIncomeYear] = useState(today.getFullYear());
+  const [incomeMonth, setIncomeMonth] = useState<number | 'all'>(today.getMonth() + 1);
+  const myName = (currentUser?.name || '').toLowerCase().trim();
+  const monthKeyOf = (d: string) => (d || '').slice(0, 7);
+
+  const feeByMonth = useMemo(() => {
+    const byMonth = new Map<string, number>();
+    for (const s of shiftLogs) {
+      const name = (s.technician_name || s.ktv_name || '').toLowerCase().trim();
+      if (myName && name !== myName) continue;
+      const key = monthKeyOf(s.shift_date || '');
+      if (!/^\d{4}-\d{2}$/.test(key)) continue;
+      byMonth.set(key, (byMonth.get(key) || 0) + (s.bonus ?? s.bonus_amount ?? 0));
+    }
+    return byMonth;
+  }, [shiftLogs, myName]);
+
+  const saleByMonth = useMemo(() => {
+    const byMonth = new Map<string, { commission: number; deals: number; profit: number }>();
+    for (const d of adminDeductions) {
+      if (d.product_type !== 'machine') continue;
+      if (myName && (d.seller_name || '').toLowerCase().trim() !== myName) continue;
+      const key = monthKeyOf(d.sale_date || '');
+      if (!/^\d{4}-\d{2}$/.test(key)) continue;
+      const rate = (d.sale_date || '') < COMMISSION_CUTOFF ? 0.15 : 0.1;
+      const commission = Math.round(Math.max(0, d.net_profit || 0) * rate);
+      const cur = byMonth.get(key) || { commission: 0, deals: 0, profit: 0 };
+      cur.commission += commission;
+      cur.deals += 1;
+      cur.profit += Math.max(0, d.net_profit || 0);
+      byMonth.set(key, cur);
+    }
+    return byMonth;
+  }, [adminDeductions, myName]);
+
+  const thisYear = today.getFullYear();
+  const incomeYears = useMemo(() => {
+    const years = new Set<number>([thisYear]);
+    for (const key of [...feeByMonth.keys(), ...saleByMonth.keys()]) {
+      years.add(Number(key.slice(0, 4)));
+    }
+    return [...years].sort((a, b) => b - a);
+  }, [feeByMonth, saleByMonth, thisYear]);
+
+  const incomeFor = (year: number, month: number | 'all') => {
+    let fee = 0;
+    let commission = 0;
+    let deals = 0;
+    let profit = 0;
+    const keys =
+      month === 'all'
+        ? Array.from({ length: 12 }, (_, i) => `${year}-${String(i + 1).padStart(2, '0')}`)
+        : [`${year}-${String(month).padStart(2, '0')}`];
+    for (const key of keys) {
+      fee += feeByMonth.get(key) || 0;
+      const s = saleByMonth.get(key);
+      if (s) {
+        commission += s.commission;
+        deals += s.deals;
+        profit += s.profit;
+      }
+    }
+    return { fee, commission, deals, profit, total: fee + commission };
+  };
+  const selectedIncome = incomeFor(incomeYear, incomeMonth);
+  const fmt = (n: number) => `${n.toLocaleString('vi-VN')} đ`;
 
   const myJobs = useMemo(() => {
     if (!currentUser) return [] as OnsiteDispatch[];
@@ -182,6 +255,123 @@ export default function ViecCuaToiPage() {
           </div>
         }
       />
+
+      {/* Thu nhập của tôi — thống kê theo tháng / năm */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">💰 Thu nhập của tôi</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Chỉ tính số liệu của riêng bạn ({currentUser?.name || '—'}): thù lao ca giao máy /
+              kỹ thuật (đã cộng vào bảng lương khi hoàn tất ca) + hoa hồng bán máy.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={incomeMonth}
+              onChange={(e) =>
+                setIncomeMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))
+              }
+              className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
+            >
+              <option value="all">Cả năm {incomeYear}</option>
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>
+                  Tháng {i + 1}
+                </option>
+              ))}
+            </select>
+            <select
+              value={incomeYear}
+              onChange={(e) => setIncomeYear(Number(e.target.value))}
+              className="px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-bold bg-white"
+            >
+              {incomeYears.map((y) => (
+                <option key={y} value={y}>
+                  Năm {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+              Thù lao ca / kỹ thuật
+            </div>
+            <div className="text-xl font-black font-mono text-emerald-900 mt-1">
+              {fmt(selectedIncome.fee)}
+            </div>
+            <p className="text-[11px] text-emerald-700 mt-0.5">
+              {incomeMonth === 'all' ? `Năm ${incomeYear}` : `Tháng ${incomeMonth}/${incomeYear}`}
+            </p>
+          </div>
+          <div className="p-3.5 bg-indigo-50 border border-indigo-200 rounded-xl">
+            <div className="text-[11px] font-bold text-indigo-700 uppercase tracking-wide">
+              Hoa hồng bán máy
+            </div>
+            <div className="text-xl font-black font-mono text-indigo-900 mt-1">
+              {fmt(selectedIncome.commission)}
+            </div>
+            <p className="text-[11px] text-indigo-700 mt-0.5">
+              {selectedIncome.deals} giao dịch · Lợi nhuận {fmt(selectedIncome.profit)}
+            </p>
+          </div>
+          <div className="p-3.5 bg-slate-900 rounded-xl">
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">
+              Tổng thu nhập
+            </div>
+            <div className="text-xl font-black font-mono text-emerald-400 mt-1">
+              {fmt(selectedIncome.total)}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Thù lao + hoa hồng bán máy
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div className="text-xs font-bold text-slate-700 mb-2">
+            Chi tiết từng tháng năm {incomeYear} (bấm vào một tháng để xem)
+          </div>
+          <div className="overflow-x-auto border border-slate-200 rounded-xl">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-left">
+                  <th className="px-3 py-2 font-bold">Tháng</th>
+                  <th className="px-3 py-2 font-bold text-right">Thù lao</th>
+                  <th className="px-3 py-2 font-bold text-right">Hoa hồng bán máy</th>
+                  <th className="px-3 py-2 font-bold text-right">Tổng</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {Array.from({ length: 12 }, (_, i) => {
+                  const m = incomeFor(incomeYear, i + 1);
+                  const isSelected = incomeMonth === i + 1;
+                  return (
+                    <tr
+                      key={i + 1}
+                      onClick={() => setIncomeMonth(i + 1)}
+                      className={`cursor-pointer hover:bg-blue-50/60 ${
+                        isSelected ? 'bg-blue-50 font-bold' : ''
+                      }`}
+                    >
+                      <td className="px-3 py-2">Tháng {i + 1}</td>
+                      <td className="px-3 py-2 text-right font-mono">{fmt(m.fee)}</td>
+                      <td className="px-3 py-2 text-right font-mono">{fmt(m.commission)}</td>
+                      <td className="px-3 py-2 text-right font-mono font-bold">{fmt(m.total)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">
+            Hoa hồng bán máy tính theo lợi nhuận từng máy: 10% từ 26/10/2026, trước đó 15%.
+          </p>
+        </div>
+      </div>
 
       {activeJobs.length === 0 ? (
         <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center">
