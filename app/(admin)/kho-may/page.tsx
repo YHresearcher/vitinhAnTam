@@ -507,20 +507,16 @@ export default function KhoMayPage() {
   // Danh sách máy trong lô nhập: mỗi máy có S/N riêng (mã quản lý chính),
   // S/N từng linh kiện tách riêng (RAM / SSD / nguồn) và cờ "đã test".
   // Máy phải được test trước khi nhập — máy chưa tick "Đã test" sẽ bị chặn lưu.
+  // Đơn giản hóa (2026-10-26): mỗi máy chỉ nhập S/N máy + % sức khỏe
+  // SSD; RAM và nguồn mặc định là tốt, không nhập S/N linh kiện nữa.
   type BatchUnit = {
     serialNumber: string;
     ssdHealth: number;
-    ramSerial: string;
-    ssdSerial: string;
-    psuSerial: string;
     tested: boolean;
   };
   const blankBatchUnit = (ssdHealth = 98): BatchUnit => ({
     serialNumber: '',
     ssdHealth,
-    ramSerial: '',
-    ssdSerial: '',
-    psuSerial: '',
     tested: false,
   });
   const [batchUnits, setBatchUnits] = useState<BatchUnit[]>([blankBatchUnit()]);
@@ -994,26 +990,19 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const sale = Number(newItem.sale_price) || 0;
       const effectivePrice = sale > 0 ? sale : orig;
 
-      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): S/N máy tách
-      // riêng S/N từng linh kiện (RAM / SSD / nguồn), máy nào cũng đã test
-      // và vào kho ở trạng thái sẵn sàng bán (RTS).
+      // Nhập từng máy thành 1 dòng riêng (1 dòng = 1 máy): chỉ ghi % sức
+      // khỏe SSD; RAM và nguồn mặc định là tốt (ghi note 'Tốt', không nhập
+      // S/N linh kiện). Máy nào cũng đã test và vào kho ở trạng thái sẵn
+      // sàng bán (RTS).
       for (let i = 0; i < batchUnits.length; i += 1) {
         const unit = batchUnits[i];
         const tag = identityFor(unit, i);
         const health = Math.max(1, Math.min(100, Number(unit.ssdHealth) || 98));
         const serial = unit.serialNumber.trim() || tag;
         const components: MachineComponent[] = [
-          ...(unit.ramSerial.trim()
-            ? [{ type: 'ram' as const, serial: unit.ramSerial.trim() }]
-            : []),
-          {
-            type: 'ssd' as const,
-            serial: unit.ssdSerial.trim() || undefined,
-            health,
-          },
-          ...(unit.psuSerial.trim()
-            ? [{ type: 'psu' as const, serial: unit.psuSerial.trim() }]
-            : []),
+          { type: 'ram' as const, note: 'Tốt' },
+          { type: 'ssd' as const, health },
+          { type: 'psu' as const, note: 'Tốt' },
         ];
         await addInventoryItem({
           brand: newItem.brand,
@@ -2285,17 +2274,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
 
 
-                {/* Danh sách từng máy trong lô: S/N máy tách riêng S/N linh kiện + xác nhận test */}
+                {/* Danh sách từng máy trong lô: S/N máy + % sức khỏe SSD + xác nhận test */}
                 <div className="md:col-span-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-indigo-900">
-                      S/N máy, S/N linh kiện &amp; xác nhận test từng máy
+                      S/N máy, % sức khỏe SSD &amp; xác nhận test từng máy
                     </span>
                     <span className="text-[11px] text-slate-500 font-mono">{batchUnits.length} máy</span>
                   </div>
                   <p className="text-[11px] text-slate-500">
-                    S/N máy là mã quản lý chính. S/N RAM / SSD / nguồn ghi riêng từng linh kiện —
-                    máy phải được mở ra test trước khi nhập, máy nào chưa tick “Đã test” sẽ không lưu được.
+                    S/N máy là mã quản lý chính. Chỉ nhập % sức khỏe SSD — RAM và nguồn mặc định
+                    là tốt. Máy nào chưa tick “Đã test” sẽ không lưu được.
                   </p>
                   {batchUnits.map((unit, idx) => (
                     <div key={idx} className="space-y-1.5 rounded-lg border border-indigo-100 bg-white/70 p-2">
@@ -2318,6 +2307,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           className="w-20 px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
                         />
                         <span className="text-[11px] text-slate-400 font-mono shrink-0">SSD %</span>
+                        <label className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 cursor-pointer select-none shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={unit.tested}
+                            onChange={(e) => updateBatchUnit(idx, { tested: e.target.checked })}
+                            className="w-3.5 h-3.5 accent-emerald-600"
+                          />
+                          ✓ Đã test
+                        </label>
                         {batchUnits.length > 1 && (
                           <button
                             type="button"
@@ -2328,41 +2326,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             ✕
                           </button>
                         )}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 pl-8">
-                        <input
-                          type="text"
-                          value={unit.ramSerial}
-                          onChange={(e) => updateBatchUnit(idx, { ramSerial: e.target.value })}
-                          placeholder="S/N RAM"
-                          title="Số serial thanh RAM trong máy"
-                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={unit.ssdSerial}
-                          onChange={(e) => updateBatchUnit(idx, { ssdSerial: e.target.value })}
-                          placeholder="S/N SSD"
-                          title="Số serial ổ SSD trong máy"
-                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={unit.psuSerial}
-                          onChange={(e) => updateBatchUnit(idx, { psuSerial: e.target.value })}
-                          placeholder="S/N nguồn"
-                          title="Số serial bộ nguồn trong máy"
-                          className="w-32 px-2 py-1 border border-slate-300 rounded-lg text-xs font-mono bg-white focus:ring-2 focus:ring-indigo-400 focus:outline-none"
-                        />
-                        <label className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-800 cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={unit.tested}
-                            onChange={(e) => updateBatchUnit(idx, { tested: e.target.checked })}
-                            className="w-3.5 h-3.5 accent-emerald-600"
-                          />
-                          ✓ Đã test máy này (RAM / SSD / nguồn)
-                        </label>
                       </div>
                     </div>
                   ))}
@@ -2648,16 +2611,6 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   )}
                 </div>
 
-                {/* Trạng thái khi nhập: luôn RTS — máy đã test trước khi nhập */}
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">
-                  <span className="text-xs font-bold text-emerald-900">
-                    Trạng thái khi nhập: ✓ Sẵn sàng bán (RTS)
-                  </span>
-                  <span className="block text-[11px] text-emerald-700 mt-0.5">
-                    Máy chỉ được nhập sau khi đã test (RAM / SSD / nguồn) — xem mục xác nhận
-                    test từng máy ở trên.
-                  </span>
-                </div>
               </div>
 
               <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
@@ -3892,7 +3845,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
               {viewingSpecsItem.components && viewingSpecsItem.components.length > 0 && (
                 <div>
                   <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3 pb-1 border-b border-slate-200 flex items-center justify-between">
-                    <span>Linh Kiện Trong Máy (S/N riêng từng linh kiện)</span>
+                    <span>Linh Kiện Trong Máy</span>
                     {viewingSpecsItem.tested_before_import && (
                       <span className="text-[11px] font-bold text-emerald-700 normal-case">
                         ✓ Đã test trước khi nhập
@@ -3909,7 +3862,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                           {c.type === 'ram' ? 'RAM' : c.type === 'ssd' ? 'SSD' : c.type === 'psu' ? 'Nguồn (PSU)' : 'Linh kiện khác'}
                         </span>
                         <span className="font-mono text-slate-600">
-                          {c.serial || '—'}
+                          {c.serial || c.note || '—'}
                           {c.health !== undefined && ` · Sức khỏe ${c.health}%`}
                         </span>
                       </div>

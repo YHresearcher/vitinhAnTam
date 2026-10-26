@@ -180,6 +180,11 @@ interface StoreContextType {
   canAssignTasks: () => boolean; // Admin & Tech Lead (Technician) can assign/reassign tickets and dispatches
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
   canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
+  // Nhân viên hiện trường (KTV thuê ngoài + Salesman): chỉ được dùng "Việc
+  // của tôi" (ca của mình + thu nhập cá nhân), không xem màn hình chung của
+  // cửa hàng (dashboard, phiếu, đơn, kho, bài viết). Cùng khái niệm với
+  // FIELD_ROLES bên app/api/dispatches.
+  isFieldStaff: () => boolean;
 
   // Task / Ticket assignment actions
   assignTicketTechnician: (id: string, technicianName: string) => Promise<boolean>;
@@ -592,6 +597,8 @@ export function StoreProvider({
     currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
   const canAccessCRM = () =>
     currentUser.role === 'admin' || currentUser.role === 'sales_manager' || currentUser.role === 'sales';
+  const isFieldStaff = () =>
+    currentUser.role === 'outsourced' || currentUser.role === 'salesman';
 
   /**
    * Đăng nhập: xác thực SERVER-SIDE qua /api/auth/login.
@@ -4715,6 +4722,7 @@ export function StoreProvider({
       canAssignTasks,
       canSellAndEditWarranty,
       canAccessCRM,
+      isFieldStaff,
       sellInventoryItem,
       markItemAsDealerSold,
       sellSparePart,

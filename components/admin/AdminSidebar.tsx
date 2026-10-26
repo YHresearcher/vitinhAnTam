@@ -39,6 +39,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canManageUsers,
     canAccessSettings,
     canAccessCRM,
+    isFieldStaff,
     pendingOrdersCount,
     currentUser,
   } = useViTinhAnTamStore();
@@ -75,7 +76,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: LayoutDashboard,
         badge: null,
         badgeColor: '',
-        visible: true,
+        // Nhân viên hiện trường chỉ xem "Việc của tôi": không dashboard chung.
+        visible: !isFieldStaff(),
       },
       {
         label: 'Việc của tôi',
@@ -112,7 +114,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             ? `${pendingTicketsCount + pendingDispatchesCount}`
             : null,
         badgeColor: 'bg-blue-100 text-blue-700 font-mono font-bold',
-        visible: true,
+        // Phiếu của toàn cửa hàng — nhân viên hiện trường chỉ xem ca của mình.
+        visible: !isFieldStaff(),
       },
       {
         label: 'Quản lý đơn hàng',
@@ -120,7 +123,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: ShoppingBag,
         badge: null,
         badgeColor: '',
-        visible: true,
+        visible: !isFieldStaff(),
       },
       {
         label: 'Kho máy & Linh kiện',
@@ -128,7 +131,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: Boxes,
         badge: null,
         badgeColor: '',
-        visible: true,
+        visible: !isFieldStaff(),
       },
       {
         label: 'Kho key bản quyền',
@@ -136,7 +139,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: KeyRound,
         badge: pendingKeyRequestsCount > 0 ? `${pendingKeyRequestsCount}` : null,
         badgeColor: 'bg-[#C0392B] text-white font-mono font-bold shadow-xs',
-        visible: true,
+        visible: !isFieldStaff(),
       },
       {
         label: 'Bài viết & SEO',
@@ -144,7 +147,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: FileText,
         badge: null,
         badgeColor: '',
-        visible: true,
+        // Nhân viên hiện trường không đăng/sửa bài viết.
+        visible: !isFieldStaff(),
       },
       {
         label: 'Tiền công KTV',
@@ -177,6 +181,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
     canAccessCRM,
     canManageUsers,
     canAccessSettings,
+    isFieldStaff,
     customers.length,
     pendingTicketsCount,
     pendingDispatchesCount,
@@ -192,7 +197,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         {/* Header Branding */}
         <div className="min-h-[68px] py-2 px-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <Link
-            href="/dashboard"
+            href={isFieldStaff() ? '/viec-cua-toi' : '/dashboard'}
             prefetch={true}
             onClick={handleNavClick}
             className="focus:outline-none"
