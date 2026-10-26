@@ -224,7 +224,7 @@ interface StoreContextType {
   }) => Promise<{ success: boolean; message: string }>;
 
   // Member management actions (Admin)
-  refreshUsersFromServer: () => Promise<boolean>;
+  refreshUsersFromServer: () => Promise<UserAccount[] | null>;
   updateUser: (id: string, data: Partial<UserAccount>) => Promise<boolean>;
   changeUserPassword: (id: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
   resetUserPassword: (id: string) => Promise<{ ok: boolean; message?: string }>;
@@ -727,23 +727,23 @@ export function StoreProvider({
     }
   };
 
-  // Đồng bộ danh sách thành viên từ máy chủ (nguồn chuẩn là DB).
-  // Trang thành viên trước đây chỉ đọc cache localStorage của trình duyệt,
-  // nên tài khoản tạo ở nơi khác (VD: Nhật Đăng) không hiện, còn tài khoản
-  // đã xóa bằng SQL vẫn hiện như thẻ ảo. Hàm này thay toàn bộ danh sách
-  // local bằng danh sách máy chủ trả về.
-  const refreshUsersFromServer = async (): Promise<boolean> => {
+  // Tải danh sách thành viên TRỰC TIẾP từ database qua máy chủ.
+  // Đây là nguồn chuẩn duy nhất khi tải được: hàm thay toàn bộ danh sách
+  // local bằng danh sách máy chủ trả về (và ghi đè cache local). Chỉ khi
+  // máy chủ lỗi hoặc phiên không có quyền admin mới trả về null để bên
+  // gọi giữ lại cache cũ làm dự phòng — bình thường không đọc cache.
+  const refreshUsersFromServer = async (): Promise<UserAccount[] | null> => {
     try {
       const response = await fetch('/api/auth/users', { method: 'GET' });
-      if (!response.ok) return false;
+      if (!response.ok) return null;
       const data = (await response.json().catch(() => null)) as { data?: unknown } | null;
-      if (!data || !Array.isArray(data.data)) return false;
+      if (!data || !Array.isArray(data.data)) return null;
       const cleaned = (data.data as UserAccount[]).filter((u) => u && u.id);
       setUsers(cleaned);
       persistUsersLocally(cleaned);
-      return true;
+      return cleaned;
     } catch {
-      return false;
+      return null;
     }
   };
 
@@ -1032,6 +1032,20 @@ export function StoreProvider({
             }
           } catch (e) {
             console.warn('Failed to parse saved users:', e);
+          }
+        }
+
+        // Tài khoản đọc TRỰC TIẾP từ database, không qua nút bấm nào:
+        // nếu đã đăng nhập nhân viên thì tải danh sách từ máy chủ ngay
+        // tại đây và dùng nó làm nguồn chuẩn (ghi đè cache local vừa đọc).
+        // Chỉ khi máy chủ lỗi hoặc phiên không có quyền admin mới giữ
+        // lại cache cũ làm dự phòng.
+        if (localStorage.getItem(STORAGE_KEYS.isLoggedIn) === 'true') {
+          try {
+            const fresh = await refreshUsersFromServer();
+            if (fresh) currentUsersList = fresh;
+          } catch {
+            // Giữ cache cũ khi không tải được từ máy chủ.
           }
         }
 

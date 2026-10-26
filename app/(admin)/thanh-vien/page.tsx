@@ -30,29 +30,14 @@ export default function MemberManagementPage() {
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [isSubmittingAdd, setIsSubmittingAdd] = useState(false);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-  const [isSyncingUsers, setIsSyncingUsers] = useState(false);
 
-  // Đồng bộ danh sách thành viên từ máy chủ mỗi khi mở trang này (admin).
-  // Trước đây trang chỉ đọc cache localStorage của trình duyệt nên tài khoản
-  // tạo ở nơi khác không hiện, còn tài khoản đã xóa vẫn hiện như thẻ ảo.
+  // Danh sách thành viên đọc TRỰC TIẾP từ database mỗi khi mở trang này
+  // (admin) — không cần bấm nút nào: tải lại từ máy chủ, ghi đè cache cũ.
   useEffect(() => {
     if (!canManageUsers()) return;
-    setIsSyncingUsers(true);
-    refreshUsersFromServer()
-      .catch(() => {})
-      .finally(() => setIsSyncingUsers(false));
+    refreshUsersFromServer().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const handleSyncUsers = async () => {
-    setIsSyncingUsers(true);
-    try {
-      const ok = await refreshUsersFromServer();
-      showToast(ok ? 'Đã đồng bộ danh sách thành viên từ máy chủ.' : 'Không đồng bộ được, vẫn giữ danh sách hiện tại.');
-    } finally {
-      setIsSyncingUsers(false);
-    }
-  };
 
   // New User Form State
   const [newUserForm, setNewUserForm] = useState({
@@ -331,13 +316,6 @@ export default function MemberManagementPage() {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={handleSyncUsers}
-            disabled={isSyncingUsers}
-            className="inline-flex items-center px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-xs transition-all active:scale-[0.98] disabled:opacity-50"
-          >
-            {isSyncingUsers ? 'Đang đồng bộ…' : '↻ Đồng bộ từ máy chủ'}
-          </button>
           <button
             onClick={() => setIsAddingUser(true)}
             className="inline-flex items-center px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-600/20 transition-all active:scale-[0.98]"
