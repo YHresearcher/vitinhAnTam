@@ -266,7 +266,7 @@ interface StoreContextType {
   } | null;
 
   // Inventory actions
-  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'created_at'>) => Promise<InventoryItem>;
+  addInventoryItem: (item: Omit<InventoryItem, 'id' | 'created_at'>) => Promise<InventoryItem | null>;
   updateInventoryItem: (id: string, data: Partial<InventoryItem>) => Promise<void>;
   updateInventoryStock: (id: string, newQuantity: number) => Promise<boolean>; // Restricted to Admin
   splitInventoryItem: (
@@ -1542,7 +1542,7 @@ export function StoreProvider({
   };
 
   // Inventory actions
-  const addInventoryItem = async (itemData: Omit<InventoryItem, 'id' | 'created_at'>): Promise<InventoryItem> => {
+  const addInventoryItem = async (itemData: Omit<InventoryItem, 'id' | 'created_at'>): Promise<InventoryItem | null> => {
     const newItem: InventoryItem = {
       ...itemData,
       // UUID để khớp cột `id UUID` của Supabase
@@ -1558,10 +1558,21 @@ export function StoreProvider({
 
     if (isUsingSupabase && supabase) {
       const client = supabase;
-      await runSupabaseWrite(
+      const ok = await runSupabaseWrite(
         () => client.from('inventory_items').insert([newItem]),
         'Thêm thiết bị'
       );
+      if (!ok) {
+        // Ghi DB thất bại: thu hồi máy vừa thêm tạm (tránh báo thành công giả
+        // rồi máy biến mất khi tải lại — lỗi từng xảy ra khi bảng thiếu cột
+        // original_price/sale_price). Người gọi hiển thị lỗi thay vì báo thành công.
+        setInventory((prev) => {
+          const next = prev.filter((item) => item.id !== newItem.id);
+          saveToLocal(STORAGE_KEYS.inventory, next);
+          return next;
+        });
+        return null;
+      }
     }
     return newItem;
   };

@@ -1021,6 +1021,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       // khỏe SSD; RAM và nguồn mặc định là tốt (ghi note 'Tốt', không nhập
       // S/N linh kiện). Máy nào cũng đã test và vào kho ở trạng thái sẵn
       // sàng bán (RTS).
+      let failedCount = 0;
       for (let i = 0; i < batchUnits.length; i += 1) {
         const unit = batchUnits[i];
         const tag = identityFor(unit, i);
@@ -1031,7 +1032,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           { type: 'ssd' as const, health },
           { type: 'psu' as const, note: 'Tốt' },
         ];
-        await addInventoryItem({
+        const added = await addInventoryItem({
           brand: newItem.brand,
           model: newItem.model,
           form_factor: newItem.form_factor,
@@ -1061,6 +1062,14 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           warranty_months: Number(newItem.warranty_months),
           specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)`,
         });
+        if (!added) failedCount += 1;
+      }
+
+      // Ghi DB thất bại thì KHÔNG báo thành công, KHÔNG đóng form để nhập lại.
+      if (failedCount > 0) {
+        setActionNotice(`Không lưu được ${failedCount}/${batchUnits.length} máy vào kho (lỗi ghi dữ liệu), vui lòng thử lại!`);
+        setTimeout(() => setActionNotice(null), 8000);
+        return;
       }
 
       setIsAddModalOpen(false);
