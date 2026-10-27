@@ -172,6 +172,7 @@ interface StoreContextType {
   }>;
   logout: () => void;
   canEditStock: () => boolean;
+  canAddMachine: () => boolean;
   canUpdateRepairStatus: () => boolean;
   canAccessPayroll: () => boolean;
   canAccessFinancials: () => boolean;
@@ -576,6 +577,8 @@ export function StoreProvider({
     currentUser.role === 'admin' ||
     currentUser.role === 'tech_manager' ||
     currentUser.permissions?.can_edit_stock === true;
+  // NVKD được nhập máy mới (chỉ thêm, không sửa/xóa kho, không sửa giá, không đổi QC).
+  const canAddMachine = () => canEditStock() || currentUser.role === 'salesman';
   const canUpdateRepairStatus = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'tech_manager' ||
@@ -4794,6 +4797,7 @@ export function StoreProvider({
       loginWithCredentials,
       logout,
       canEditStock,
+      canAddMachine,
       canUpdateRepairStatus,
       canAccessPayroll,
       canAccessFinancials,

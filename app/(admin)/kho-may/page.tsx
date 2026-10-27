@@ -30,6 +30,7 @@ export default function KhoMayPage() {
     deleteSparePart,
     currentUser,
     canEditStock,
+    canAddMachine,
     canUpdateRepairStatus,
     addInventoryItem,
     updateInventoryItem,
@@ -952,6 +953,10 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
 
   const handleCreateNewItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canAddMachine()) {
+      alert('Quyền bị từ chối: Bạn không có quyền nhập máy mới!');
+      return;
+    }
     if (!newItem.model) {
       alert('Vui lòng nhập Model!');
       return;
@@ -1277,7 +1282,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           >
             Xuất Excel (CSV)
           </button>
-          {(activeTab === 'may-bo' || activeTab === 'laptop') && canEditStock() && (
+          {(activeTab === 'may-bo' || activeTab === 'laptop') && canAddMachine() && (
             <button
               onClick={() => setIsAddModalOpen(true)}
               className="inline-flex items-center justify-center px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-all active:scale-95 whitespace-nowrap shrink-0"
@@ -1368,7 +1373,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
           <span>
           {currentUser.role === 'salesman'
-            ? `Tài khoản ${currentUser.name} (NVKD) — Được bán máy/linh kiện và xin key; không sửa giá, nhập, xóa hay đổi trạng thái QC.`
+            ? `Tài khoản ${currentUser.name} (NVKD) — Được bán máy/linh kiện, nhập máy mới và xin key; không sửa giá, xóa hay đổi trạng thái QC.`
             : `Tài khoản ${currentUser.name} (${currentUser.role === 'technician' ? 'Kỹ thuật' : 'Kinh doanh'}) — Chỉ xem tồn kho, quyền sửa dành cho Admin.`}
         </span>
         </div>
