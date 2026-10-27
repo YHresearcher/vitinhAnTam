@@ -309,7 +309,7 @@ export interface InventoryItem {
   reserved_order_code?: string;
   reserved_order_id?: string;
   reserved_delivery_method?: 'pickup' | 'delivery' | string;
-  reserved_at?: string;
+  reserved_at?: string | null;
   reserved_note?: string;
   notes?: string;
 }

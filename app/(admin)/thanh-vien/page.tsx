@@ -210,7 +210,7 @@ export default function MemberManagementPage() {
         referral_code: finalUsername,
         name: newUserForm.name.trim(),
         email: newUserForm.email.trim().toLowerCase(),
-        phone: newUserForm.phone.trim() || '0909.053.058',
+        phone: newUserForm.phone.trim(),
         role: newUserForm.role,
         roleTitle: defaultTitle,
         avatarBg,

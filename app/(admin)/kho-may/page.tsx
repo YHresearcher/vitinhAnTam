@@ -127,6 +127,7 @@ export default function KhoMayPage() {
   const [cashflowConfirmData, setCashflowConfirmData] = useState<CashflowSaleConfirm | null>(null);
   const [isSubmittingSale, setIsSubmittingSale] = useState(false);
   const [sellQuantity, setSellQuantity] = useState<number>(1);
+  const [sellNotes, setSellNotes] = useState('');
 
   // Sales Modal States - Linh Kiện (Admin & Sales)
   const [sellingPart, setSellingPart] = useState<SparePart | null>(null);
@@ -169,6 +170,7 @@ export default function KhoMayPage() {
     const effectiveItemPrice = item.sale_price && item.sale_price > 0 ? item.sale_price : ((item.original_price || item.price) ?? item.retail_price ?? 0);
     setSellPrice(effectiveItemPrice);
     setSellQuantity(1);
+    setSellNotes('');
     setSellDate(new Date().toISOString().split('T')[0]);
   };
 
@@ -278,7 +280,7 @@ export default function KhoMayPage() {
       const warrantyReserve = Math.round(profit * 0.05);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -2778,6 +2780,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ghi Chú</label>
+                    <input
+                      type="text"
+                      value={sellNotes}
+                      onChange={(e) => setSellNotes(e.target.value)}
+                      placeholder="Ghi chú thêm cho đơn bán (nếu có)..."
+                      className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -2847,9 +2860,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       min={0}
                       step={50000}
                       value={sellPrice}
+                      readOnly={!canSellAndEditWarranty()}
                       onChange={(e) => setSellPrice(Number(e.target.value))}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
                     />
+                    {!canSellAndEditWarranty() && (
+                      <span className="text-[10px] text-slate-500 mt-0.5 block">Giá niêm yết (NVKD không chỉnh sửa được)</span>
+                    )}
                   </div>
                 </div>
 
@@ -3037,7 +3054,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         setCashflowConfirmData((prev) => (prev ? { ...prev, costPrice: val } : null));
                       }}
                       className="w-full px-2 py-1 text-base font-black text-slate-800 font-mono bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      title="Bạn có thể điều chỉnh giá vốn nếu máy chưa có giá vốn ban đầu"
+                      title={canSellAndEditWarranty() ? 'Bạn có thể điều chỉnh giá vốn nếu máy chưa có giá vốn ban đầu' : 'Giá vốn từ kho (NVKD không chỉnh sửa được)'}
                     />
                   </div>
                   <span className="text-[10px] text-slate-500 mt-0.5 block">{canSellAndEditWarranty() ? 'Có thể chỉnh nhanh nếu cần' : 'Giá vốn từ kho (NVKD không chỉnh sửa được)'}</span>
@@ -4151,6 +4168,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     Sửa Giá Bán
                   </button>
                 )}
+                {viewingSpecsItem.qc_status !== 'sold' && viewingSpecsItem.qc_status !== 'dealer_sold' && (
                 <button
                   type="button"
                   onClick={() => {
@@ -4165,6 +4183,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 >
                   {viewingSpecsItem.qc_status === 'reserved' ? 'Bán máy cho khách này' : 'Bán Máy / Đổi Trạng Thái'}
                 </button>
+                )}
               </div>
             </div>
           </div>

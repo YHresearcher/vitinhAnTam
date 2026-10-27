@@ -1875,7 +1875,7 @@ export function StoreProvider({
       reserved_order_code: '',
       reserved_order_id: '',
       reserved_delivery_method: undefined,
-      reserved_at: '',
+      reserved_at: null,
       reserved_note: '',
     };
 
@@ -3819,7 +3819,7 @@ export function StoreProvider({
       reserved_order_code: '',
       reserved_order_id: '',
       reserved_delivery_method: undefined,
-      reserved_at: '',
+      reserved_at: null,
       reserved_note: '',
     });
 
@@ -3856,7 +3856,7 @@ export function StoreProvider({
               reserved_order_code: '',
               reserved_order_id: '',
               reserved_delivery_method: undefined,
-              reserved_at: '',
+              reserved_at: null,
               reserved_note: '',
             }
           : {}),
@@ -4008,7 +4008,11 @@ export function StoreProvider({
     const provisionAmount = Math.max(0, Math.round(netProfit * 0.05));
 
     if (provisionAmount > 0) {
-      const expiryDate = new Date(Date.now() + saleWarrantyMonths * 30 * 24 * 60 * 60 * 1000).toISOString();
+      // Hạn bảo hành theo tháng dương lịch, khớp với ngày hết hạn hiện ở UI
+      // (trước đây cộng 30 ngày/tháng nên thiếu 2 ngày với kỳ 6 tháng).
+      const expiryDate = isManufacturerWarranty
+        ? saleDateTime.toISOString()
+        : warrantyUntilDate!.toISOString();
       const newProvision: WarrantyProvision = {
         id: createId(),
         item_id: item.id,
