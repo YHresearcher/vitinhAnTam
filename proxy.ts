@@ -29,10 +29,13 @@ const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
  * (trùng khớp với check phía client: canAccessSettings / canManageUsers / canAccessPayroll).
  */
 const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayload>) => boolean }> = [
-  { path: '/tai-chinh', allow: (s) => s.role === 'admin' || s.canAccessPayroll === true },
+  // Khớp đúng check phía client (canAccessPayroll: admin, tech_manager, hoặc checkbox
+  // can_access_payroll) — trước đây proxy thiếu tech_manager nên QL Kỹ thuật có thể
+  // bị đẩy về /login khi tải lại trang dù phía client cho phép.
+  { path: '/tai-chinh', allow: (s) => s.role === 'admin' || s.role === 'tech_manager' || s.canAccessPayroll === true },
   { path: '/cai-dat', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/thanh-vien', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
-  { path: '/tien-cong', allow: (s) => s.role === 'admin' || s.canAccessPayroll === true },
+  { path: '/tien-cong', allow: (s) => s.role === 'admin' || s.role === 'tech_manager' || s.canAccessPayroll === true },
 ];
 
 const isProtectedPage = (pathname: string): boolean =>
@@ -82,9 +85,13 @@ export function proxy(request: NextRequest) {
 
     const rule = ADMIN_ONLY_PAGES.find((r) => pathname === r.path || pathname.startsWith(`${r.path}/`));
     if (rule && !rule.allow(session)) {
+      // Đã đăng nhập nhưng không đủ quyền: HIỆN THÔNG BÁO thay vì đẩy về /login
+      // (đẩy về /login khiến người dùng tưởng phiên đã hết, trong khi phiên vẫn còn).
+      // Trang /khong-co-quyen chỉ hiển thị thông báo, không tải dữ liệu của trang bị khóa.
       const deniedUrl = request.nextUrl.clone();
-      deniedUrl.pathname = '/login';
+      deniedUrl.pathname = '/khong-co-quyen';
       deniedUrl.search = '';
+      deniedUrl.searchParams.set('from', pathname);
       return NextResponse.redirect(deniedUrl);
     }
 
