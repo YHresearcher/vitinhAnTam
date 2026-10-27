@@ -162,8 +162,8 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         icon: FileText,
         badge: null,
         badgeColor: '',
-        // Nhân viên hiện trường không đăng/sửa bài viết.
-        visible: !isFieldStaff(),
+        // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27).
+        visible: currentUser?.role === 'admin',
       },
       {
         label: 'Tiền công KTV',

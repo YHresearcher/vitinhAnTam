@@ -36,6 +36,9 @@ const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayl
   { path: '/cai-dat', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/thanh-vien', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/tien-cong', allow: (s) => s.role === 'admin' || s.role === 'tech_manager' || s.canAccessPayroll === true },
+  // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27): không mở
+  // cho tech_manager hay checkbox phân quyền như các trang trên.
+  { path: '/bai-viet', allow: (s) => s.role === 'admin' },
 ];
 
 const isProtectedPage = (pathname: string): boolean =>
