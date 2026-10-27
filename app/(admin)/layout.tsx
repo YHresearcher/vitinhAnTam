@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { message } from 'antd';
@@ -162,11 +162,18 @@ export default function AdminLayout({
       : ['/viec-cua-toi'];
   const isRestrictedForFieldStaff =
     isLoggedIn && isFieldStaff() && !fieldAllowedPaths.includes(pathname);
+  // Thông báo rõ lý do bị chặn (mỗi trang bị khóa chỉ báo một lần) thay vì
+  // chuyển hướng im lặng — người dùng cần biết mình không có quyền vào trang đó.
+  const deniedNoticeForRef = useRef<string | null>(null);
   useEffect(() => {
     if (isRestrictedForFieldStaff) {
+      if (deniedNoticeForRef.current !== pathname) {
+        deniedNoticeForRef.current = pathname;
+        message.warning('Bạn không có quyền truy cập trang này. Đang chuyển về trang làm việc của bạn.');
+      }
       router.replace('/viec-cua-toi');
     }
-  }, [isRestrictedForFieldStaff, router]);
+  }, [isRestrictedForFieldStaff, pathname, router]);
 
   // Màn hình chờ đang tải dữ liệu / kiểm tra phiên
   if (isLoading) {
@@ -204,8 +211,11 @@ export default function AdminLayout({
   if (isRestrictedForFieldStaff) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <p className="text-sm font-bold text-slate-800 mb-1">Đang chuyển về Thống kê hiệu quả kinh doanh...</p>
-        <p className="text-xs text-slate-500">Tài khoản hiện trường chỉ xem được ca và thu nhập của mình.</p>
+        <span className="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold mb-3 border border-rose-200">
+          Không có quyền truy cập
+        </span>
+        <p className="text-sm font-bold text-slate-800 mb-1">Bạn không có quyền truy cập trang này.</p>
+        <p className="text-xs text-slate-500">Tài khoản hiện trường chỉ xem được ca và thu nhập của mình. Đang chuyển về Thống kê hiệu quả kinh doanh...</p>
       </div>
     );
   }

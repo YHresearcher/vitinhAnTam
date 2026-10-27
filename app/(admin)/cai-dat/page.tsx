@@ -530,10 +530,18 @@ export default function CaiDatPage() {
         <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 mb-3">
           Bảo Mật Hệ Thống
         </span>
-        <h2 className="text-lg font-bold text-slate-900 mb-1">YÊU CẦU QUYỀN QUẢN TRỊ VIÊN (ADMIN)</h2>
+        <h2 className="text-lg font-bold text-slate-900 mb-1">Bạn không có quyền truy cập trang này</h2>
         <p className="text-xs text-slate-600 mb-4">
           Chỉ tài khoản Admin mới có quyền điều chỉnh thông tin thương hiệu, số hotline và cấu hình hệ thống.
         </p>
+        <div className="pt-1">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-all"
+          >
+            Quay lại Trang Tổng Quan
+          </Link>
+        </div>
       </div>
     );
   }

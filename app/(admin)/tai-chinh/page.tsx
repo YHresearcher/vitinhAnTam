@@ -80,17 +80,17 @@ export default function TaiChinhPage() {
             Bảo Mật Nội Bộ
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-bold text-slate-900">Quyền Truy Cập Bị Giới Hạn</h2>
+            <h2 className="text-xl font-bold text-slate-900">Bạn không có quyền truy cập trang này</h2>
             <p className="text-sm text-slate-600 max-w-md mx-auto">
-              Phân hệ tài chính &amp; doanh thu chỉ dành cho Quản Trị Viên (Admin).
+              Phân hệ tài chính &amp; doanh thu chỉ dành cho Quản Trị Viên (Admin) và Quản lý kỹ thuật.
             </p>
           </div>
           <div className="pt-2">
             <Link
-              href="/login"
+              href="/dashboard"
               className="inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg"
             >
-              Đăng nhập bằng tài khoản Admin
+              Quay lại Trang Tổng Quan
             </Link>
           </div>
         </div>

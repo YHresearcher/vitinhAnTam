@@ -289,7 +289,7 @@ export default function MemberManagementPage() {
           Bảo Mật Nội Bộ
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-black text-slate-900">Quyền Truy Cập Bị Giới Hạn</h1>
+          <h1 className="text-2xl font-black text-slate-900">Bạn không có quyền truy cập trang này</h1>
           <p className="text-sm text-slate-600 max-w-md mx-auto">
             Tính năng quản lý thành viên, sửa mật khẩu và phân quyền nhân sự chỉ dành riêng cho{' '}
             <strong className="text-blue-700 font-bold">Quản Trị Viên (Admin)</strong>.
