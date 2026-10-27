@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useViTinhAnTamStore } from '@/lib/store';
 import { UserAccount, UserRole, generateStaffId } from '@/lib/supabase';
@@ -49,10 +49,19 @@ export default function MemberManagementPage() {
     roleTitle: '',
   });
 
-  const showToast = (msg: string) => {
+  // Timer của toast: mỗi lần showToast mới đều hủy timer cũ, để một toast
+  // cũ không thể xóa sớm popup mật khẩu mới (vd: toast lưu thành viên trước đó).
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = (msg: string, durationMs: number = 4000) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
+    toastTimerRef.current = setTimeout(() => setToastMessage(null), durationMs);
   };
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   // Trigger Reset Password: cấp mật khẩu tạm ngẫu nhiên mới
   const handleConfirmResetPassword = async () => {
@@ -61,11 +70,14 @@ export default function MemberManagementPage() {
     try {
       const res = await resetUserPassword(resetModalUser.id);
       if (res.ok) {
+        // Đóng ô xác nhận TRƯỚC, rồi mới hiện popup mật khẩu mới: 5 giây
+        // được tính từ lúc ô xác nhận biến mất, không tính từ lúc bấm nút.
+        setResetModalUser(null);
         showToast(
           res.message ||
-            `Đã reset mật khẩu của ${resetModalUser.name} (yêu cầu đổi mật khẩu ở lần đăng nhập tới)!`
+            `Đã reset mật khẩu của ${resetModalUser.name} (yêu cầu đổi mật khẩu ở lần đăng nhập tới)!`,
+          5000
         );
-        setResetModalUser(null);
       } else {
         showToast(res.message || 'Không thể reset mật khẩu.');
       }
