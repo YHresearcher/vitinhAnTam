@@ -51,6 +51,7 @@ export default function OrderManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [executingOrder, setExecutingOrder] = useState<Order | null>(null);
+  const [changingDeliveryOrder, setChangingDeliveryOrder] = useState<Order | null>(null);
   const [cashflowOrderData, setCashflowOrderData] = useState<CashflowSaleConfirmData | null>(null);
   const [isSubmittingOrderSale, setIsSubmittingOrderSale] = useState(false);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
@@ -386,6 +387,53 @@ export default function OrderManagementPage() {
     }
   };
 
+  // Đổi hình thức giao nhận SAU KHI đã xuất phiếu (đơn hoàn tất).
+  // pickup -> delivery: ghi nhận tiền công cho người giao mới (như lúc xuất kho).
+  // delivery -> pickup: KHÔNG tự hoàn tiền công đã ghi nhận (không có cơ chế
+  // hoàn an toàn) — modal cảnh báo rõ để admin tự điều chỉnh ở bảng lương.
+  const handleChangeDelivery = async (
+    order: Order,
+    info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number }
+  ) => {
+    const wasDelivery = order.delivery_method === 'delivery';
+    const nowDelivery = info.method === 'delivery';
+    const newStaffId = nowDelivery ? info.staffId || '' : '';
+    const newStaffName = nowDelivery ? info.staffName || '' : '';
+    const newFee = nowDelivery ? info.fee || 0 : 0;
+    const oldLabel = wasDelivery ? 'Giao tận nơi' : 'Nhận tại quầy';
+    const newLabel = nowDelivery ? 'Giao tận nơi' : 'Nhận tại quầy';
+    const changeNote = `[Đổi giao nhận ${new Date().toLocaleDateString('vi-VN')}: ${oldLabel} → ${newLabel}${
+      nowDelivery && newStaffName ? ` (${newStaffName} — ${newFee.toLocaleString('vi-VN')}đ)` : ''
+    }]`;
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: order.id,
+          delivery_method: info.method,
+          delivery_staff_id: newStaffId,
+          delivery_staff_name: newStaffName,
+          delivery_fee: newFee,
+          note: `${order.note || ''} • ${changeNote}`.trim(),
+        }),
+      });
+      if (!res.ok) throw new Error('Không cập nhật được đơn hàng.');
+      if (!wasDelivery && nowDelivery && newStaffName && newFee > 0) {
+        await creditTechnicianPayroll(
+          newStaffName,
+          newFee,
+          `Giao đơn hàng [${order.order_code}] đến ${order.customer_name}`
+        );
+      }
+      message.success(`Đã đổi hình thức giao nhận đơn ${order.order_code}: ${newLabel}!`);
+      setChangingDeliveryOrder(null);
+      await fetchOrders(true);
+    } catch (err: unknown) {
+      message.error(err instanceof Error ? err.message : 'Lỗi khi đổi hình thức giao nhận!');
+    }
+  };
+
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders;
     const q = searchQuery.toLowerCase().trim();
@@ -577,6 +625,17 @@ export default function OrderManagementPage() {
                                 <span>Xuất kho</span>
                               </button>
                             )}
+                            {order.status === 'completed' && canConfirmOrder && (
+                              <button
+                                type="button"
+                                onClick={() => setChangingDeliveryOrder(order)}
+                                className="px-2.5 py-1 text-[11px] font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-md transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+                                title="Đổi hình thức giao nhận sau khi đã xuất phiếu"
+                              >
+                                <Truck className="w-3 h-3" />
+                                <span>Đổi giao nhận</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -610,6 +669,15 @@ export default function OrderManagementPage() {
           inventory={inventory}
           currentUser={currentUser}
           onOrderCreated={() => fetchOrders(true)}
+        />
+      )}
+
+      {changingDeliveryOrder && (
+        <ChangeDeliveryModal
+          order={changingDeliveryOrder}
+          users={users}
+          onClose={() => setChangingDeliveryOrder(null)}
+          onSave={(info) => handleChangeDelivery(changingDeliveryOrder, info)}
         />
       )}
 
@@ -906,6 +974,210 @@ function ExecuteOrderModal({
           >
             <span>Tiếp tục: Phân bổ dòng tiền</span>
             <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+// Đổi hình thức giao nhận sau khi đã xuất phiếu (chỉ đơn hoàn tất).
+// Cho phép đổi cả người giao + thù lao trên đơn giao (vd: người giao cũ bận).
+function ChangeDeliveryModal({
+  order,
+  users,
+  onClose,
+  onSave,
+}: {
+  order: Order;
+  users: UserAccount[];
+  onClose: () => void;
+  onSave: (info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number }) => void;
+}) {
+  const [method, setMethod] = useState<'pickup' | 'delivery'>(order.delivery_method || 'pickup');
+  const [staffId, setStaffId] = useState<string>(order.delivery_staff_id || '');
+  const [fee, setFee] = useState<number>(order.delivery_fee ?? 50000);
+  const [saving, setSaving] = useState(false);
+
+  const activeStaffList = useMemo(() => users.filter((u) => u.status === 'active'), [users]);
+  const staffName = activeStaffList.find((u) => u.id === staffId)?.name;
+  const wasDelivery = order.delivery_method === 'delivery';
+  const changed =
+    method !== order.delivery_method ||
+    (method === 'delivery' &&
+      (staffId !== (order.delivery_staff_id || '') || fee !== (order.delivery_fee || 0)));
+
+  const handleSave = () => {
+    if (method === 'delivery' && !staffId) {
+      message.warning('Vui lòng chọn nhân viên / KTV đi giao hàng!');
+      return;
+    }
+    setSaving(true);
+    try {
+      onSave({ method, staffId: staffId || undefined, staffName, fee });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-5 animate-scale-up">
+        <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="text-base font-bold text-slate-900">Đổi hình thức giao nhận</h2>
+            <p className="text-xs text-slate-500">
+              Đơn: <strong className="text-slate-900 font-mono">{order.order_code}</strong>
+              {' • '}
+              {order.customer_name} — {order.device_name}
+            </p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Hiện tại:{' '}
+              <strong className="text-slate-900">
+                {wasDelivery
+                  ? `Giao tận nơi${order.delivery_staff_name ? ` — ${order.delivery_staff_name}` : ''}${order.delivery_fee ? ` (${order.delivery_fee.toLocaleString('vi-VN')}đ)` : ''}`
+                  : 'Khách nhận tại quầy'}
+              </strong>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 px-2 py-1 text-xs font-semibold rounded-lg hover:bg-slate-100"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="space-y-3 text-xs">
+          <div>
+            <label className="block text-xs font-bold text-slate-800 mb-2">Hình thức mới</label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => setMethod('pickup')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                  method === 'pickup'
+                    ? 'bg-blue-50/90 border-blue-500 ring-2 ring-blue-500/20 text-blue-950 font-bold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-xl shrink-0">🏪</span>
+                <div>
+                  <div className="text-xs font-bold">Khách nhận tại quầy</div>
+                  <div className="text-[10px] text-slate-500 font-normal">Không cần người giao</div>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMethod('delivery')}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                  method === 'delivery'
+                    ? 'bg-amber-50/90 border-amber-500 ring-2 ring-amber-500/20 text-amber-950 font-bold'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-xl shrink-0">🚚</span>
+                <div>
+                  <div className="text-xs font-bold">Giao hàng tận nơi</div>
+                  <div className="text-[10px] text-slate-500 font-normal">Chỉ định người đi giao</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {method === 'delivery' && (
+            <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-3 animate-in fade-in duration-150">
+              <div>
+                <label className="block font-semibold text-slate-800 mb-1">Địa chỉ giao hàng (theo đơn)</label>
+                <p className="text-xs text-slate-700 bg-white border border-amber-300 rounded-lg px-3 py-2">
+                  {order.customer_address || '— Chưa có địa chỉ —'}
+                </p>
+                {!order.customer_address && (
+                  <p className="text-[11px] text-amber-800 mt-1">
+                    Đơn chưa có địa chỉ giao — người giao sẽ thấy &quot;Chưa có địa chỉ&quot; trên thẻ việc.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-800 mb-1">Chỉ định nhân viên đi giao (*)</label>
+                <select
+                  value={staffId}
+                  onChange={(e) => setStaffId(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">-- Chọn nhân viên / KTV đi giao hàng --</option>
+                  {activeStaffList.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.roleTitle || u.role})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block font-semibold text-slate-800 mb-1">Thù lao giao (đ)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    value={fee}
+                    onChange={(e) => setFee(Math.max(0, Number(e.target.value) || 0))}
+                    className="w-28 px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs font-mono font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <div className="flex items-center gap-1">
+                    {[50000, 100000].map((f) => (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => setFee(f)}
+                        className={`px-2.5 py-1 rounded text-xs font-semibold border transition-all cursor-pointer ${
+                          fee === f
+                            ? 'bg-amber-100 border-amber-400 text-amber-800'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        {f === 50000 ? '50k' : '100k'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {!wasDelivery && staffName && fee > 0 && (
+                <p className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                  Sẽ ghi nhận {fee.toLocaleString('vi-VN')}đ tiền công cho {staffName} vào bảng lương.
+                </p>
+              )}
+            </div>
+          )}
+
+          {wasDelivery && method === 'pickup' && (order.delivery_fee || 0) > 0 && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+              ⚠️ Tiền công đã ghi nhận cho {order.delivery_staff_name || 'người giao cũ'} (
+              {(order.delivery_fee || 0).toLocaleString('vi-VN')}đ) sẽ <strong>KHÔNG tự hoàn lại</strong> —
+              nếu cần hoàn, admin tự điều chỉnh ở bảng lương.
+            </div>
+          )}
+
+          <p className="text-[11px] text-slate-400">
+            Chỉ đổi khi hàng chưa thực sự giao cho khách. Đơn đã đổi sẽ hiện ngay trên tab
+            &quot;Công việc của bạn&quot; của người được giao.
+          </p>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!changed || saving}
+            className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            {saving ? 'Đang lưu…' : 'Lưu thay đổi'}
           </button>
         </div>
       </div>
