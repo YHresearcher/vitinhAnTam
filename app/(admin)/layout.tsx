@@ -71,6 +71,7 @@ export default function AdminLayout({
     { title: 'Quản Lý Kho Máy & Linh Kiện', path: '/kho-may', category: 'Hàng Hóa', visible: true },
     { title: 'Quản Lý Khách Hàng (CRM)', path: '/khach-hang', category: 'Khách Hàng', visible: canAccessCRM() },
     { title: 'Điều Phối Cứu Hộ Tận Nơi (Onsite)', path: '/cuu-ho-onsite', category: 'Điều Phối', visible: true },
+    { title: 'Công việc của bạn', path: '/cong-viec-cua-toi', category: 'Công việc', visible: !!currentUser && ['sales_manager', 'salesman'].includes(currentUser.role) },
     { title: 'Bảng Kê Tiền Công & Lương KTV', path: '/tien-cong', category: 'Tài Chính', visible: canAccessPayroll() },
     { title: 'Quản Lý Thành Viên & Phân Quyền', path: '/thanh-vien', category: 'Hệ Thống', visible: canManageUsers() },
     { title: 'Cấu Hình Doanh Nghiệp & Nội Dung Web', path: '/cai-dat', category: 'Hệ Thống', visible: canAccessSettings() },
@@ -157,7 +158,7 @@ export default function AdminLayout({
   // không lọt qua đường link trực tiếp hay bảng lệnh.
   const fieldAllowedPaths =
     currentUser.role === 'salesman'
-      ? ['/viec-cua-toi', '/kho-may', '/quan-ly-key']
+      ? ['/viec-cua-toi', '/kho-may', '/quan-ly-key', '/cong-viec-cua-toi']
       : ['/viec-cua-toi'];
   const isRestrictedForFieldStaff =
     isLoggedIn && isFieldStaff() && !fieldAllowedPaths.includes(pathname);

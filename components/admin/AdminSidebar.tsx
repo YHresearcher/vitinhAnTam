@@ -18,6 +18,7 @@ import {
   FileText,
   ShieldCheck,
   Navigation,
+  ClipboardList,
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
@@ -91,6 +92,17 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         visible:
           !!currentUser &&
           ['technician', 'outsourced', 'salesman', 'tech_manager'].includes(currentUser.role),
+      },
+      {
+        label: 'Công việc của bạn',
+        href: '/cong-viec-cua-toi',
+        icon: ClipboardList,
+        badge: null,
+        badgeColor: '',
+        // Việc cấp trên phân bổ cho QL bán hàng + NVKD: giao hàng + ca dịch vụ, kèm Chỉ đường.
+        visible:
+          !!currentUser &&
+          ['sales_manager', 'salesman'].includes(currentUser.role),
       },
       {
         label: 'Tài chính & Doanh thu',
@@ -223,7 +235,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
           {(
             [
               { key: 'overview', label: 'Tổng quan & tài chính', hrefs: ['/dashboard', '/tai-chinh'] },
-              { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/viec-cua-toi', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
+              { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/viec-cua-toi', '/cong-viec-cua-toi', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
               { key: 'system', label: 'Nội dung & hệ thống', hrefs: ['/bai-viet', '/thanh-vien', '/cai-dat'] },
             ] as const
           ).map((group) => {
