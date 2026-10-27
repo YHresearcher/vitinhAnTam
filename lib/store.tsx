@@ -3815,7 +3815,9 @@ export function StoreProvider({
       warranty_months: saleWarrantyMonths,
       warranty_type: isManufacturerWarranty ? 'manufacturer' : 'months',
       handover_date: saleDateTime.toISOString(),
+      price: unitSoldPrice,
       retail_price: unitSoldPrice,
+      sale_price: unitSoldPrice,
       reserved_order_code: '',
       reserved_order_id: '',
       reserved_delivery_method: undefined,
@@ -3838,7 +3840,9 @@ export function StoreProvider({
         warranty_months: saleWarrantyMonths,
         warranty_type: isManufacturerWarranty ? 'manufacturer' : 'months',
         handover_date: saleDateTime.toISOString(),
+        price: unitSoldPrice,
         retail_price: unitSoldPrice,
+        sale_price: unitSoldPrice,
       };
     } else if (remainingStock > 0) {
       // Bán MỘT PHẦN lô: dòng gốc giữ máy chưa bán (trừ tồn kho), máy bán tách thành bản ghi riêng
@@ -4031,6 +4035,7 @@ export function StoreProvider({
         net_profit: netProfit,
         provision_rate: 0.05,
         provision_amount: provisionAmount,
+        notes: params.notes,
         status: currentUser.role === 'admin' ? 'locked' : 'pending_approval',
         approved_at: currentUser.role === 'admin' ? new Date().toISOString() : undefined,
         approved_by: currentUser.role === 'admin' ? currentUser.name : undefined,
