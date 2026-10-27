@@ -497,6 +497,7 @@ export async function PATCH(request: NextRequest) {
       delivery_staff_id?: string;
       delivery_staff_name?: string;
       delivery_fee?: number;
+      customer_address?: string;
       note?: string;
     };
 
@@ -549,6 +550,9 @@ export async function PATCH(request: NextRequest) {
     }
     if (body.delivery_fee !== undefined) {
       patchData.delivery_fee = body.delivery_fee;
+    }
+    if (body.customer_address !== undefined) {
+      patchData.customer_address = body.customer_address;
     }
     if (body.note !== undefined) {
       patchData.note = body.note;

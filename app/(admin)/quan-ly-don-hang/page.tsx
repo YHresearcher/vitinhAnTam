@@ -393,7 +393,7 @@ export default function OrderManagementPage() {
   // hoàn an toàn) — modal cảnh báo rõ để admin tự điều chỉnh ở bảng lương.
   const handleChangeDelivery = async (
     order: Order,
-    info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number }
+    info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number; shippingAddress?: string }
   ) => {
     const wasDelivery = order.delivery_method === 'delivery';
     const nowDelivery = info.method === 'delivery';
@@ -402,9 +402,12 @@ export default function OrderManagementPage() {
     const newFee = nowDelivery ? info.fee || 0 : 0;
     const oldLabel = wasDelivery ? 'Giao tận nơi' : 'Nhận tại quầy';
     const newLabel = nowDelivery ? 'Giao tận nơi' : 'Nhận tại quầy';
+    const addressChanged =
+      info.shippingAddress !== undefined &&
+      info.shippingAddress.trim() !== (order.customer_address || '').trim();
     const changeNote = `[Đổi giao nhận ${new Date().toLocaleDateString('vi-VN')}: ${oldLabel} → ${newLabel}${
       nowDelivery && newStaffName ? ` (${newStaffName} — ${newFee.toLocaleString('vi-VN')}đ)` : ''
-    }]`;
+    }${addressChanged ? ` — Địa chỉ giao: ${info.shippingAddress!.trim()}` : ''}]`;
     try {
       const res = await fetch('/api/orders', {
         method: 'PATCH',
@@ -415,6 +418,7 @@ export default function OrderManagementPage() {
           delivery_staff_id: newStaffId,
           delivery_staff_name: newStaffName,
           delivery_fee: newFee,
+          ...(addressChanged ? { customer_address: info.shippingAddress!.trim() } : {}),
           note: `${order.note || ''} • ${changeNote}`.trim(),
         }),
       });
@@ -991,20 +995,23 @@ function ChangeDeliveryModal({
   order: Order;
   users: UserAccount[];
   onClose: () => void;
-  onSave: (info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number }) => void;
+  onSave: (info: { method: 'pickup' | 'delivery'; staffId?: string; staffName?: string; fee?: number; shippingAddress?: string }) => void;
 }) {
   const [method, setMethod] = useState<'pickup' | 'delivery'>(order.delivery_method || 'pickup');
   const [staffId, setStaffId] = useState<string>(order.delivery_staff_id || '');
   const [fee, setFee] = useState<number>(order.delivery_fee ?? 50000);
+  const [shippingAddress, setShippingAddress] = useState<string>(order.customer_address || '');
   const [saving, setSaving] = useState(false);
 
   const activeStaffList = useMemo(() => users.filter((u) => u.status === 'active'), [users]);
   const staffName = activeStaffList.find((u) => u.id === staffId)?.name;
   const wasDelivery = order.delivery_method === 'delivery';
+  const addressChanged = shippingAddress.trim() !== (order.customer_address || '').trim();
   const changed =
     method !== order.delivery_method ||
     (method === 'delivery' &&
-      (staffId !== (order.delivery_staff_id || '') || fee !== (order.delivery_fee || 0)));
+      (staffId !== (order.delivery_staff_id || '') || fee !== (order.delivery_fee || 0))) ||
+    addressChanged;
 
   const handleSave = () => {
     if (method === 'delivery' && !staffId) {
@@ -1013,7 +1020,7 @@ function ChangeDeliveryModal({
     }
     setSaving(true);
     try {
-      onSave({ method, staffId: staffId || undefined, staffName, fee });
+      onSave({ method, staffId: staffId || undefined, staffName, fee, shippingAddress });
     } finally {
       setSaving(false);
     }
@@ -1088,13 +1095,17 @@ function ChangeDeliveryModal({
           {method === 'delivery' && (
             <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-3 animate-in fade-in duration-150">
               <div>
-                <label className="block font-semibold text-slate-800 mb-1">Địa chỉ giao hàng (theo đơn)</label>
-                <p className="text-xs text-slate-700 bg-white border border-amber-300 rounded-lg px-3 py-2">
-                  {order.customer_address || '— Chưa có địa chỉ —'}
-                </p>
-                {!order.customer_address && (
+                <label className="block font-semibold text-slate-800 mb-1">Địa chỉ giao hàng</label>
+                <input
+                  type="text"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="Số nhà, tên đường, phường/xã..."
+                  className="w-full px-3 py-2 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                {!shippingAddress.trim() && (
                   <p className="text-[11px] text-amber-800 mt-1">
-                    Đơn chưa có địa chỉ giao — người giao sẽ thấy &quot;Chưa có địa chỉ&quot; trên thẻ việc.
+                    Chưa có địa chỉ giao — người giao sẽ thấy &quot;Chưa có địa chỉ&quot; trên thẻ việc.
                   </p>
                 )}
               </div>
