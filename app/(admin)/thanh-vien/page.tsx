@@ -224,8 +224,7 @@ export default function MemberManagementPage() {
             newUserForm.role === 'technician' ||
             newUserForm.role === 'outsourced' ||
             newUserForm.role === 'salesman',
-          can_access_payroll:
-            newUserForm.role === 'admin' || newUserForm.role === 'tech_manager',
+          can_access_payroll: newUserForm.role === 'admin',
           can_manage_users: newUserForm.role === 'admin',
         },
       });

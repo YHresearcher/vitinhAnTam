@@ -29,13 +29,14 @@ const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
  * (trùng khớp với check phía client: canAccessSettings / canManageUsers / canAccessPayroll).
  */
 const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayload>) => boolean }> = [
-  // Khớp đúng check phía client (canAccessPayroll: admin, tech_manager, hoặc checkbox
-  // can_access_payroll) — trước đây proxy thiếu tech_manager nên QL Kỹ thuật có thể
-  // bị đẩy về /login khi tải lại trang dù phía client cho phép.
-  { path: '/tai-chinh', allow: (s) => s.role === 'admin' || s.role === 'tech_manager' || s.canAccessPayroll === true },
+  // Tài chính & Tiền công: CHỈ Admin (quyết định 2026-10-28: QL Kỹ thuật chỉ
+  // đảm nhiệm kỹ thuật, không xem tài chính/tiền công). Checkbox
+  // can_access_payroll cũng không mở 2 trang này cho QL Kỹ thuật — proxy
+  // là lớp chặn cuối và chỉ tin role admin.
+  { path: '/tai-chinh', allow: (s) => s.role === 'admin' },
   { path: '/cai-dat', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
   { path: '/thanh-vien', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
-  { path: '/tien-cong', allow: (s) => s.role === 'admin' || s.role === 'tech_manager' || s.canAccessPayroll === true },
+  { path: '/tien-cong', allow: (s) => s.role === 'admin' },
   // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27): không mở
   // cho tech_manager hay checkbox phân quyền như các trang trên.
   { path: '/bai-viet', allow: (s) => s.role === 'admin' },

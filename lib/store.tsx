@@ -586,17 +586,17 @@ export function StoreProvider({
     currentUser.role === 'outsourced' ||
     currentUser.role === 'salesman' ||
     currentUser.permissions?.can_update_repair_status === true;
-  // Tài chính & lương KTV: chỉ admin và QL Kỹ thuật. Sales Manager không còn xem
-  // 2 trang này (vẫn xem tổng quan doanh thu trên dashboard qua canAccessFinancials).
+  // Tài chính & lương KTV: CHỈ Admin (quyết định 2026-10-28: QL Kỹ thuật chỉ
+  // đảm nhiệm kỹ thuật). Sales Manager vẫn xem tổng quan doanh thu trên
+  // dashboard qua canAccessFinancials. Checkbox can_access_payroll không
+  // áp dụng cho QL Kỹ thuật — khớp với proxy (chỉ admin).
   const canAccessPayroll = () =>
     currentUser.role === 'admin' ||
-    currentUser.role === 'tech_manager' ||
-    currentUser.permissions?.can_access_payroll === true;
+    (currentUser.role !== 'tech_manager' && currentUser.permissions?.can_access_payroll === true);
   const canAccessFinancials = () =>
     currentUser.role === 'admin' ||
-    currentUser.role === 'tech_manager' ||
     currentUser.role === 'sales_manager' ||
-    currentUser.permissions?.can_access_payroll === true;
+    (currentUser.role !== 'tech_manager' && currentUser.permissions?.can_access_payroll === true);
   const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
   const canAssignTasks = () =>
