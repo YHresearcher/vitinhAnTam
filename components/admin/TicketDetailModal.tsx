@@ -72,6 +72,10 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
   const [newPartWarranty] = useState<number>(12);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+  // Ảnh chụp tiền/phí/linh kiện lúc mở phiếu: chỉ gửi lại các cột tiền khi
+  // người dùng thật sự đổi chúng — lưu chỉ để giao việc/đổi trạng thái/ghi
+  // chú không được phép ghi đè tổng tiền đã lưu (lỗi 2F: tổng 150k về 0đ).
+  const [initialMoney, setInitialMoney] = useState({ fee: 0, actualCost: 0, estimatedCost: 0, partsJson: '[]' });
 
   const availableTechnicians = useMemo(() => {
     return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'salesman' || u.role === 'admin');
@@ -83,10 +87,23 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
       setTechnicianName(ticket.technician_name || '');
       setTechnicianNote(ticket.technician_note || '');
       setTechnicianFee(ticket.technician_fee ?? 0);
-      setActualCost(ticket.actual_cost ?? ticket.total_amount ?? 0);
+      // Tiền công chỉ lấy từ actual_cost. total_amount chỉ được coi là tiền
+      // công khi phiếu không có dòng linh kiện nào (phiếu cũ) — nếu đã có
+      // linh kiện mà actual_cost trống thì tiền công là 0, còn total_amount
+      // là tổng đã gồm linh kiện, lấy nó làm tiền công sẽ tính trùng.
+      const initialParts = ticket.parts_used || [];
+      const initialActualCost =
+        ticket.actual_cost ?? (initialParts.length === 0 ? ticket.total_amount ?? 0 : 0);
+      setActualCost(initialActualCost);
       setEstimatedCost(ticket.estimated_cost ?? 0);
       setEstimatedCompletion(ticket.estimated_completion || '');
-      setParts(ticket.parts_used || []);
+      setParts(initialParts);
+      setInitialMoney({
+        fee: ticket.technician_fee ?? 0,
+        actualCost: initialActualCost,
+        estimatedCost: ticket.estimated_cost ?? 0,
+        partsJson: JSON.stringify(initialParts),
+      });
       setSaveSuccessMsg(null);
     }
   }, [ticket]);
@@ -199,16 +216,29 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
         await assignTicketTechnician(ticket.id, technicianName);
       }
 
+      const moneyChanged =
+        technicianFee !== initialMoney.fee ||
+        actualCost !== initialMoney.actualCost ||
+        estimatedCost !== initialMoney.estimatedCost ||
+        JSON.stringify(parts) !== initialMoney.partsJson;
+
       await updateTicketDetails(ticket.id, {
         status,
         technician_name: technicianName,
         technician_note: technicianNote,
-        technician_fee: technicianFee,
-        actual_cost: actualCost,
-        estimated_cost: estimatedCost,
         estimated_completion: estimatedCompletion,
-        parts_used: parts,
-        total_amount: (actualCost || 0) + partsTotal,
+        // Chỉ gửi các cột tiền khi chúng thật sự đổi so với lúc mở phiếu.
+        // Lưu để giao việc/đổi trạng thái mà gửi kèm total_amount tính lại
+        // từ state rỗng sẽ xóa tổng tiền đã lưu của phiếu.
+        ...(moneyChanged
+          ? {
+              technician_fee: technicianFee,
+              actual_cost: actualCost,
+              estimated_cost: estimatedCost,
+              parts_used: parts,
+              total_amount: (actualCost || 0) + partsTotal,
+            }
+          : {}),
       });
 
       setSaveSuccessMsg('Đã lưu thông tin phiếu sửa chữa thành công!');

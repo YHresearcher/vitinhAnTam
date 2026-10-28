@@ -83,7 +83,7 @@ export default function TaoPhieuSuaChuaPage() {
   const { currentUser, users, customers, addServiceTicket } = useStore();
 
   const availableTechnicians = useMemo(() => {
-    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'admin');
+    return users.filter((u) => u.role === 'technician' || u.role === 'outsourced' || u.role === 'salesman' || u.role === 'admin');
   }, [users]);
 
   const [ticketType, setTicketType] = useState<'counter' | 'onsite'>('counter');
@@ -558,7 +558,7 @@ export default function TaoPhieuSuaChuaPage() {
                     .filter((u) => u.role !== 'outsourced')
                     .map((u) => (
                       <option key={u.id} value={u.name}>
-                        {u.name} {u.role === 'admin' ? '(Admin)' : ''}
+                        {u.name} {u.role === 'admin' ? '(Admin)' : u.role === 'salesman' ? '(NVKD)' : ''}
                       </option>
                     ))}
                 </optgroup>
