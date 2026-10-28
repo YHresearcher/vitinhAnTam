@@ -99,6 +99,8 @@ CREATE TABLE IF NOT EXISTS service_tickets (
   -- received, diagnosing, in_progress, processing, ready, ready_deliver, completed, delivered, cancelled
   status TEXT DEFAULT 'received',
   technician_note TEXT,
+  technician_fee NUMERIC NOT NULL DEFAULT 0, -- Tiền công / thù lao trả cho KTV cho phiếu này (VNĐ)
+  fee_synced_to_payroll BOOLEAN NOT NULL DEFAULT false, -- Đã tự động kết chuyển sang bảng lương KTV chưa
   service_category TEXT DEFAULT 'sua_chua', -- sua_chua, bao_hanh
   warranty_duration_months INT,
   warranty_type TEXT NOT NULL DEFAULT 'months' CHECK (warranty_type IN ('months', 'manufacturer')),
