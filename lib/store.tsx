@@ -1117,9 +1117,15 @@ export function StoreProvider({
         if (spResult.data) setSpareParts(spResult.data as unknown as SparePart[]);
         if (blogPostRes.data && !blogPostRes.error) {
           setBlogPosts(blogPostRes.data as BlogPost[]);
+          // Database là nguồn chuẩn: đồng bộ luôn bộ nhớ đệm local để lần tải
+          // sau không đọc lại bản cũ (bài đã xóa khỏi DB vẫn hiện lại — lỗi
+          // 2026-10-28: khối khôi phục localStorage phía dưới chạy sau và ghi
+          // đè dữ liệu DB bằng bản đệm cũ).
+          saveToLocal(STORAGE_KEYS.blogPosts, blogPostRes.data);
         }
         if (blogCatRes.data && !blogCatRes.error) {
           setBlogCategories(blogCatRes.data as BlogCategory[]);
+          saveToLocal(STORAGE_KEYS.blogCategories, blogCatRes.data);
         }
 
         // Làm mới cấu hình hiển thị công khai trực tiếp từ DB: bản settings do
@@ -1472,11 +1478,13 @@ export function StoreProvider({
       setOnsiteDispatches(onsData as OnsiteDispatch[]);
       if (apiDispatches) setOnsiteDispatches(apiDispatches);
       setShiftLogs(shfData as ShiftLog[]);
-      if (blogPostResult.data && !blogPostResult.error && (blogPostResult.data as BlogPost[]).length > 0) {
+      if (blogPostResult.data && !blogPostResult.error) {
         setBlogPosts(blogPostResult.data as BlogPost[]);
+        saveToLocal(STORAGE_KEYS.blogPosts, blogPostResult.data);
       }
-      if (blogCatResult.data && !blogCatResult.error && (blogCatResult.data as BlogCategory[]).length > 0) {
+      if (blogCatResult.data && !blogCatResult.error) {
         setBlogCategories(blogCatResult.data as BlogCategory[]);
+        saveToLocal(STORAGE_KEYS.blogCategories, blogCatResult.data);
       }
 
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));

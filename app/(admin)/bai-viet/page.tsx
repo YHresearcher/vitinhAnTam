@@ -15,6 +15,10 @@ export default function BlogManagementPage() {
   const [query, setQuery] = useState('');
   const [selectedCat, setSelectedCat] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  // Xóa 2 lần bấm trong trang (không dùng window.confirm: hộp thoại mặc định
+  // của trình duyệt bị chặn im trong một số trình duyệt kiểm thử, bấm xóa
+  // không có phản hồi gì). Lần bấm đầu "gài" nút, lần hai mới xóa thật.
+  const [armedDeleteId, setArmedDeleteId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return blogPosts.filter((p) => {
@@ -26,9 +30,13 @@ export default function BlogManagementPage() {
   }, [blogPosts, query, selectedCat, selectedStatus]);
 
   const handleDelete = async (id: string, title: string) => {
-    if (window.confirm(`Xóa bài viết "${title}"?`)) {
-      await deleteBlogPost(id);
+    if (armedDeleteId !== id) {
+      setArmedDeleteId(id);
+      setTimeout(() => setArmedDeleteId((cur) => (cur === id ? null : cur)), 5000);
+      return;
     }
+    setArmedDeleteId(null);
+    await deleteBlogPost(id);
   };
 
   // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27). Proxy chặn
@@ -152,7 +160,7 @@ export default function BlogManagementPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           {post.status === 'published' && <Link href={`/tin-tuc/${post.slug}`} target="_blank" className="p-2 text-slate-500 hover:text-blue-600"><ExternalLink className="w-4 h-4" /></Link>}
                           <Link href={`/bai-viet/${post.id}`} className="p-2 text-slate-500 hover:text-blue-600"><Edit className="w-4 h-4" /></Link>
-                          <button type="button" onClick={() => handleDelete(post.id, post.title)} className="p-2 text-slate-500 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                          <button type="button" onClick={() => handleDelete(post.id, post.title)} title={armedDeleteId === post.id ? 'Bấm lần nữa để xác nhận xóa' : 'Xóa bài viết'} className={armedDeleteId === post.id ? 'px-2 py-1 text-xs font-bold text-white bg-red-600 rounded-lg' : 'p-2 text-slate-500 hover:text-red-600'}>{armedDeleteId === post.id ? 'Chắc chắn xóa?' : <Trash2 className="w-4 h-4" />}</button>
                         </div>
                       </td>
                     </tr>
