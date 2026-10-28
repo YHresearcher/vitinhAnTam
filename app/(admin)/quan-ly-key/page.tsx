@@ -129,6 +129,16 @@ export default function QuanLyKeyPage() {
     if (cat.default_unit_price != null) setKeyUnitPrice(cat.default_unit_price);
   }, [targetCatId, isAddKeyModalOpen, keyCategories]);
 
+  // Danh mục tải bất đồng bộ: khi đã có danh mục mà ô chọn phân loại của form
+  // yêu cầu cấp key còn trống (khởi tạo lúc danh mục chưa về), chọn sẵn phân
+  // loại đầu tiên để NVKD/thuê ngoài gửi được yêu cầu.
+  useEffect(() => {
+    if (keyCategories.length === 0) return;
+    if (!reqCategoryId || !keyCategories.some((c) => c.id === reqCategoryId)) {
+      setReqCategoryId(keyCategories[0].id);
+    }
+  }, [keyCategories, reqCategoryId]);
+
   // Inventory table filter
   const [invCatFilter, setInvCatFilter] = useState('all');
   const [invStatusFilter, setInvStatusFilter] = useState('all');

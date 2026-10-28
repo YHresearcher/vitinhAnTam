@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSupabase } from '@/lib/server/supabaseAdmin';
-import { requireStaff } from '@/lib/server/auth';
+import { requireStaff, getSession } from '@/lib/server/auth';
 
 // Chỉ chấp nhận session cookie đã ký. KHÔNG tin x-staff-role/Referer:
 // cả hai đều giả được bằng curl và từng khiến toàn bộ kho key bị lộ.
@@ -8,9 +8,33 @@ function isStaff(request: NextRequest): boolean {
   return requireStaff(request) !== null;
 }
 
-// GET /api/keys — Tải toàn bộ danh mục key, kho key, và yêu cầu cấp key từ Supabase
+/** Nhân viên hiện trường (NVKD / thuê ngoài): được xin key, không được thấy mã key. */
+function isFieldStaffRole(role: string): boolean {
+  return role === 'salesman' || role === 'outsourced';
+}
+
+/**
+ * Hàng key đã lược bỏ cho nhân viên hiện trường: chỉ đủ để đếm số lượng
+ * còn lại theo phân loại. TUYỆT ĐỐI không trả key_code, giá nhập/giá bán
+ * hay thông tin khách của key đã cấp.
+ */
+function redactKeyRow(row: Record<string, unknown>): Record<string, unknown> {
+  return {
+    id: row.id,
+    category_id: row.category_id,
+    category_name: row.category_name,
+    status: row.status,
+    created_at: row.created_at,
+  };
+}
+
+// GET /api/keys — Tải toàn bộ danh mục key, kho key, và yêu cầu cấp key từ Supabase.
+// Nhân viên hiện trường (NVKD/thuê ngoài) cũng được tải danh mục để tạo yêu cầu
+// cấp key, nhưng chỉ nhận key đã lược bỏ (không mã key/giá) và chỉ yêu cầu của
+// chính mình — sửa lỗi 2026-10-28: cổng này chặn NVKD nên ô chọn phân loại trống.
 export async function GET(request: NextRequest) {
-  if (!isStaff(request)) {
+  const session = getSession(request);
+  if (!session) {
     return NextResponse.json({ error: 'Forbidden', message: 'Không có quyền truy cập kho key.' }, { status: 403 });
   }
 
@@ -26,6 +50,18 @@ export async function GET(request: NextRequest) {
       db.from('key_release_requests').select('*').order('created_at', { ascending: false }),
     ]);
 
+    if (isFieldStaffRole(session.role)) {
+      const ownRequests = (reqsRes.data || []).filter(
+        (r: Record<string, unknown>) => r.requester_id === session.sub
+      );
+      return NextResponse.json({
+        success: true,
+        categories: catsRes.data || [],
+        keys: (keysRes.data || []).map((k: Record<string, unknown>) => redactKeyRow(k)),
+        requests: ownRequests,
+      });
+    }
+
     return NextResponse.json({
       success: true,
       categories: catsRes.data || [],
@@ -38,9 +74,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/keys — Thêm key đơn lẻ, thêm batch, thêm category, tạo yêu cầu cấp key
+// POST /api/keys — Thêm key đơn lẻ, thêm batch, thêm category, tạo yêu cầu cấp key.
+// Hành động create_request mở cho mọi nhân viên đã đăng nhập (kể cả NVKD/thuê
+// ngoài); các hành động quản trị kho vẫn chỉ dành cho STAFF_ROLES. Người yêu cầu
+// luôn lấy từ session đã ký, không tin trường requester_* do client gửi.
 export async function POST(request: NextRequest) {
-  if (!isStaff(request)) {
+  const session = getSession(request);
+  if (!session) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -52,6 +92,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const action = body.action;
+
+    if (action === 'create_request' && body.request) {
+      const req = {
+        ...body.request,
+        requester_id: session.sub,
+        requester_name: session.name,
+        requester_role: session.role,
+      };
+      const { data, error } = await db.from('key_release_requests').upsert([req]).select('*').single();
+      if (error) throw error;
+      return NextResponse.json({ success: true, request: data });
+    }
+
+    if (!isStaff(request)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     if (action === 'add_key' && body.key) {
       const { data, error } = await db.from('license_keys').insert([body.key]).select('*').single();
@@ -69,12 +125,6 @@ export async function POST(request: NextRequest) {
       const { data, error } = await db.from('key_categories').upsert([body.category]).select('*').single();
       if (error) throw error;
       return NextResponse.json({ success: true, category: data });
-    }
-
-    if (action === 'create_request' && body.request) {
-      const { data, error } = await db.from('key_release_requests').upsert([body.request]).select('*').single();
-      if (error) throw error;
-      return NextResponse.json({ success: true, request: data });
     }
 
     return NextResponse.json({ success: false, message: 'Hành động không hợp lệ' }, { status: 400 });
