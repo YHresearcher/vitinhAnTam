@@ -26,10 +26,14 @@ export default function DashboardPage() {
     updateQcStatus,
     pendingOrders,
     confirmPendingOrder,
+    canAccessFinancials,
   } = useViTinhAnTamStore();
 
-  // Doanh thu / dòng tiền CHỈ dành cho Admin
+  // Doanh thu / dòng tiền CHỈ dành cho Admin; QL Bán hàng vẫn xem tổng quan
+  // doanh thu trên dashboard (canAccessFinancials). QL Kỹ thuật và các vai
+  // trò hiện trường chỉ thấy sản lượng (số lượng), không thấy tiền.
   const isAdmin = currentUser.role === 'admin';
+  const showMoneyChart = isAdmin || canAccessFinancials();
 
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
   const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
@@ -318,7 +322,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       return Number.isNaN(d.getTime()) ? null : d;
     };
 
-    type CashflowEvent = { at: Date | null; income: number; expense: number };
+    type CashflowEvent = { at: Date | null; income: number; expense: number; count: number };
     const events: CashflowEvent[] = [];
 
     // THIẾT BỊ: giá đầu vào = vốn nhập khi về kho; giá bán = doanh thu khi đã bán
@@ -326,12 +330,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const qty = item.quantity ?? item.stock_quantity ?? 1;
       const importPrice = item.import_price ?? item.cost_price ?? 0;
       if (importPrice > 0) {
-        events.push({ at: parse(item.created_at), income: 0, expense: importPrice * qty });
+        events.push({ at: parse(item.created_at), income: 0, expense: importPrice * qty, count: 0 });
       }
       if (item.qc_status === 'sold') {
         const sellPrice = item.price ?? item.retail_price ?? 0;
         if (sellPrice > 0) {
-          events.push({ at: parse(item.handover_date || item.created_at), income: sellPrice, expense: 0 });
+          events.push({ at: parse(item.handover_date || item.created_at), income: sellPrice, expense: 0, count: 1 });
         }
       }
     });
@@ -340,12 +344,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     licenseKeys.forEach((key) => {
       const importPrice = key.import_price ?? 0;
       if (importPrice > 0) {
-        events.push({ at: parse(key.created_at), income: 0, expense: importPrice });
+        events.push({ at: parse(key.created_at), income: 0, expense: importPrice, count: 0 });
       }
       const delivered = ['assigned', 'used', 'activated'].includes(key.status);
       const sellPrice = key.unit_price ?? 0;
       if (delivered && sellPrice > 0) {
-        events.push({ at: parse(key.assigned_at || key.created_at), income: sellPrice, expense: 0 });
+        events.push({ at: parse(key.assigned_at || key.created_at), income: sellPrice, expense: 0, count: 1 });
       }
     });
 
@@ -354,19 +358,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       const done = ticket.status === 'completed' || ticket.status === 'delivered';
       const amount = ticket.total_amount ?? ticket.actual_cost ?? 0;
       if (done && amount > 0) {
-        events.push({ at: parse(ticket.completed_at || ticket.created_at), income: amount, expense: 0 });
+        events.push({ at: parse(ticket.completed_at || ticket.created_at), income: amount, expense: 0, count: 1 });
       }
     });
 
     return buckets.map((bucket) => {
       let income = 0;
       let expense = 0;
+      let count = 0;
       events.forEach((ev) => {
         if (!ev.at || ev.at < bucket.start || ev.at >= bucket.end) return;
         income += ev.income;
         expense += ev.expense;
+        count += ev.count;
       });
-      return { label: bucket.label, date: bucket.date, income, expense };
+      return { label: bucket.label, date: bucket.date, income, expense, count };
     });
   }, [inventory, licenseKeys, tickets, cashflowTimeframe]);
 
@@ -690,6 +696,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           <InteractiveCashflowChart
             data={cashflowData}
             isAdmin={isAdmin}
+            showMoney={showMoneyChart}
             timeframe={cashflowTimeframe}
             onTimeframeChange={setCashflowTimeframe}
             onOpenDrilldown={() => setIsDrilldownOpen(true)}

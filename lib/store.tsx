@@ -1187,7 +1187,10 @@ export function StoreProvider({
           console.warn('Could not pull dispatches from /api/dispatches:', e);
         }
 
-        // 4. Đồng bộ Kho Key Bản Quyền từ Supabase
+        // 4. Đồng bộ Kho Key Bản Quyền từ Supabase — và ghi đè bộ nhớ đệm
+        // local bằng dữ liệu máy chủ (cùng lỗi như blog 2026-10-28: khối khôi
+        // phục localStorage phía dưới chạy sau và làm yêu cầu đã xóa/xử lý
+        // hiện lại như "đang chờ").
         try {
           const keysRes = await fetch('/api/keys');
           if (keysRes.ok) {
@@ -1195,12 +1198,15 @@ export function StoreProvider({
             if (keysJson.success) {
               if (Array.isArray(keysJson.categories)) {
                 setKeyCategories(keysJson.categories);
+                saveToLocal(STORAGE_KEYS.keyCategories, keysJson.categories);
               }
               if (Array.isArray(keysJson.keys)) {
                 setLicenseKeys(keysJson.keys);
+                saveToLocal(STORAGE_KEYS.licenseKeys, keysJson.keys);
               }
               if (Array.isArray(keysJson.requests)) {
                 setKeyReleaseRequests(keysJson.requests);
+                saveToLocal(STORAGE_KEYS.keyReleaseRequests, keysJson.requests);
               }
             }
           }

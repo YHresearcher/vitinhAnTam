@@ -19,15 +19,34 @@ export interface CashflowDataPoint {
   income: number;
   expense: number;
   profit?: number;
+  count?: number;
 }
 
 interface Props {
   data: CashflowDataPoint[];
   isAdmin: boolean;
+  /** false = chỉ xem sản lượng (số lượng), không thấy tiền — QL Kỹ thuật, KTV, NVKD, thuê ngoài. */
+  showMoney?: boolean;
   timeframe: 'day' | 'week' | 'month' | 'quarter' | 'year';
   onTimeframeChange: (timeframe: 'day' | 'week' | 'month' | 'quarter' | 'year') => void;
   onOpenDrilldown?: () => void;
 }
+
+const VolumeTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const count = payload.find((p: any) => p.dataKey === 'count')?.value || 0;
+    return (
+      <div className="bg-slate-900/95 text-white p-3 rounded-xl shadow-xl border border-slate-700 text-xs backdrop-blur-md">
+        <p className="font-bold text-slate-200 border-b border-slate-700 pb-1 mb-1.5">{label}</p>
+        <div className="flex justify-between items-center gap-4 text-emerald-400 font-mono">
+          <span>Số lượng:</span>
+          <span className="font-bold">{count}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -73,6 +92,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export function InteractiveCashflowChart({
   data,
   isAdmin,
+  showMoney = true,
   timeframe,
   onTimeframeChange,
   onOpenDrilldown,
@@ -93,7 +113,7 @@ export function InteractiveCashflowChart({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <h2 className="text-sm font-bold text-slate-900">
-            {isAdmin ? 'Biểu Đồ Dòng Tiền & Doanh Thu' : 'Biểu Đồ Sản Lượng Bán Hàng & Dịch Vụ'}
+            {showMoney ? 'Biểu Đồ Dòng Tiền & Doanh Thu' : 'Biểu Đồ Sản Lượng Bán Hàng & Dịch Vụ'}
           </h2>
           {isAdmin && onOpenDrilldown && (
             <button
@@ -156,36 +176,51 @@ export function InteractiveCashflowChart({
               fontSize={10}
               tickLine={false}
               axisLine={false}
-              tickFormatter={formatYAxis}
+              tickFormatter={showMoney ? formatYAxis : (value: number) => `${value}`}
+              allowDecimals={false}
             />
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip content={showMoney ? <CustomTooltip /> : <VolumeTooltip />} />
             <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }} iconType="circle" />
-            <Area
-              type="monotone"
-              dataKey="income"
-              name="Doanh Thu"
-              stroke="#10b981"
-              strokeWidth={2.5}
-              fillOpacity={1}
-              fill="url(#incomeGrad)"
-            />
-            {isAdmin && (
-              <Bar
-                dataKey="expense"
-                name="Chi Phí / Giá Vốn"
-                fill="#f43f5e"
-                radius={[4, 4, 0, 0]}
-                barSize={16}
+            {showMoney ? (
+              <>
+                <Area
+                  type="monotone"
+                  dataKey="income"
+                  name="Doanh Thu"
+                  stroke="#10b981"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#incomeGrad)"
+                />
+                {isAdmin && (
+                  <Bar
+                    dataKey="expense"
+                    name="Chi Phí / Giá Vốn"
+                    fill="#f43f5e"
+                    radius={[4, 4, 0, 0]}
+                    barSize={16}
+                  />
+                )}
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  name="Lợi Nhuận Ròng"
+                  stroke="#06b6d4"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: '#06b6d4', strokeWidth: 1, stroke: '#fff' }}
+                />
+              </>
+            ) : (
+              <Area
+                type="monotone"
+                dataKey="count"
+                name="Số lượng"
+                stroke="#10b981"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#incomeGrad)"
               />
             )}
-            <Line
-              type="monotone"
-              dataKey="profit"
-              name="Lợi Nhuận Ròng"
-              stroke="#06b6d4"
-              strokeWidth={2}
-              dot={{ r: 3, fill: '#06b6d4', strokeWidth: 1, stroke: '#fff' }}
-            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
