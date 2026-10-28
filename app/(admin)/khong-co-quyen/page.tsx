@@ -15,6 +15,7 @@ const BLOCKED_PAGES: Record<string, string> = {
   '/thanh-vien': 'Trang Thành viên & Phân quyền',
   '/cai-dat': 'Trang Cấu hình hệ thống',
   '/bai-viet': 'Trang Bài viết & SEO',
+  '/khach-hang': 'Trang Khách hàng (CRM)',
 };
 
 export default function KhongCoQuyenPage() {

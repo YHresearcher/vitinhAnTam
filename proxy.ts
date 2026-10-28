@@ -39,6 +39,10 @@ const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayl
   // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27): không mở
   // cho tech_manager hay checkbox phân quyền như các trang trên.
   { path: '/bai-viet', allow: (s) => s.role === 'admin' },
+  // Trang Khách hàng (CRM) chỉ Admin + QL Bán hàng (quyết định 2026-10-28):
+  // khớp đúng check phía client (canAccessCRM: admin, sales_manager — không
+  // có checkbox uỷ quyền). Chế độ "chỉ xem" cũ cho KTV bị bãi bỏ.
+  { path: '/khach-hang', allow: (s) => s.role === 'admin' || s.role === 'sales_manager' },
 ];
 
 const isProtectedPage = (pathname: string): boolean =>
