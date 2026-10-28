@@ -24,6 +24,14 @@ interface TicketDetailModalProps {
   ticketId: string | null;
   onClose: () => void;
   onTicketUpdated?: () => void;
+  /**
+   * Chế độ hiện trường (NVKD/thuê ngoài mở phiếu được giao từ trang
+   * "Công việc của bạn"): chỉ đổi trạng thái + ghi chú xử lý. Ẩn/khóa phí,
+   * tiền công, linh kiện tính phí và phân bổ lại — những thứ đó thuộc về
+   * quản lý/kỹ thuật nội bộ. Lưu ở chế độ này chỉ gửi 2 cột đã biết chắc
+   * có trong DB (status, technician_note).
+   */
+  fieldMode?: boolean;
 }
 
 const STATUS_FLOW: Array<{ key: ServiceTicket['status']; label: string; desc: string; color: string }> = [
@@ -34,7 +42,7 @@ const STATUS_FLOW: Array<{ key: ServiceTicket['status']; label: string; desc: st
   { key: 'delivered', label: '5. Đã Bàn Giao', desc: 'Khách đã nhận máy & thanh toán', color: 'bg-slate-700' },
 ];
 
-export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: TicketDetailModalProps) {
+export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMode = false }: TicketDetailModalProps) {
   const {
     tickets,
     users,
@@ -169,6 +177,21 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Chế độ hiện trường: chỉ trạng thái + ghi chú, payload tối thiểu để
+      // không gửi kèm cột phí/linh kiện (vừa tránh NVKD sửa tiền, vừa tránh
+      // lỗi cả lệnh cập nhật khi một cột trong gói lớn không có trong DB).
+      if (fieldMode) {
+        if (canUpdateRepairStatus() && status !== ticket.status) {
+          await updateTicketStatus(ticket.id, status);
+        }
+        if (technicianNote !== (ticket.technician_note || '')) {
+          await updateTicketDetails(ticket.id, { technician_note: technicianNote });
+        }
+        setSaveSuccessMsg('Đã lưu thông tin phiếu sửa chữa thành công!');
+        if (onTicketUpdated) onTicketUpdated();
+        setTimeout(() => setSaveSuccessMsg(null), 3000);
+        return;
+      }
       if (canUpdateRepairStatus() && status !== ticket.status) {
         await updateTicketStatus(ticket.id, status);
       }
@@ -411,29 +434,36 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-600 font-semibold mb-1">KTV phụ trách:</label>
-                <select
-                  disabled={!canAssignTasks()}
-                  value={technicianName}
-                  onChange={(e) => setTechnicianName(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800"
-                >
-                  <option value="">-- Chưa chỉ định --</option>
-                  {availableTechnicians.map((u) => (
-                    <option key={u.id} value={u.name}>
-                      {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : u.role === 'salesman' ? 'NVKD' : 'KTV'})
-                    </option>
-                  ))}
-                </select>
+                {fieldMode ? (
+                  <div className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800">
+                    {technicianName || 'Chưa chỉ định'}
+                  </div>
+                ) : (
+                  <select
+                    disabled={!canAssignTasks()}
+                    value={technicianName}
+                    onChange={(e) => setTechnicianName(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800"
+                  >
+                    <option value="">-- Chưa chỉ định --</option>
+                    {availableTechnicians.map((u) => (
+                      <option key={u.id} value={u.name}>
+                        {u.name} ({u.role === 'admin' ? 'Quản lý' : u.role === 'outsourced' ? 'CTV' : u.role === 'salesman' ? 'NVKD' : 'KTV'})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
                 <label className="block text-slate-600 font-semibold mb-1">Hạn trả máy:</label>
                 <input
                   type="text"
+                  disabled={fieldMode}
                   value={estimatedCompletion}
                   onChange={(e) => setEstimatedCompletion(e.target.value)}
                   placeholder="VD: 17:00 25/10/2025"
-                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-800"
+                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-800 disabled:bg-slate-100 disabled:text-slate-500"
                 />
               </div>
             </div>
@@ -472,7 +502,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                     type="number"
                     step={10000}
                     min={0}
-                    disabled={ticket.fee_synced_to_payroll}
+                    disabled={ticket.fee_synced_to_payroll || fieldMode}
                     value={technicianFee}
                     onChange={(e) => setTechnicianFee(Number(e.target.value))}
                     className="w-full pl-2.5 pr-6 py-1 bg-white border border-emerald-300 rounded-lg text-xs font-mono font-bold text-emerald-950 focus:ring-1 focus:ring-emerald-500 outline-none disabled:bg-slate-100 disabled:text-slate-500"
@@ -482,7 +512,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                   </span>
                 </div>
 
-                {!ticket.fee_synced_to_payroll && (
+                {!ticket.fee_synced_to_payroll && !fieldMode && (
                   <div className="flex items-center gap-1">
                     {[50000, 100000].map((fee) => (
                       <button
@@ -543,13 +573,15 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                           {(p.price * p.quantity).toLocaleString('vi-VN')} đ
                         </td>
                         <td className="p-1.5 text-center">
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePart(idx)}
-                            className="text-rose-500 hover:text-rose-700"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {!fieldMode && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePart(idx)}
+                              className="text-rose-500 hover:text-rose-700"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -558,7 +590,8 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
               </div>
             )}
 
-            {/* Add part form */}
+            {/* Add part form — chỉ quản lý/KTV nội bộ thêm linh kiện tính phí */}
+            {!fieldMode && (
             <div className="bg-slate-50 p-2 rounded-lg border border-slate-200 flex flex-wrap items-end gap-2 text-xs">
               <div className="flex-1 min-w-[140px]">
                 <input
@@ -603,19 +636,26 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated }: Ticket
                 <span>Thêm</span>
               </button>
             </div>
+            )}
           </div>
 
           {/* Pricing Summary */}
           <div className="bg-slate-900 text-white p-3.5 rounded-xl shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400">Tiền công kỹ thuật:</span>
-              <input
-                type="number"
-                step="10000"
-                value={actualCost}
-                onChange={(e) => setActualCost(Number(e.target.value))}
-                className="w-32 px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs font-mono font-bold text-white"
-              />
+              {fieldMode ? (
+                <span className="px-2 py-1 text-xs font-mono font-bold text-white">
+                  {actualCost.toLocaleString('vi-VN')} VNĐ
+                </span>
+              ) : (
+                <input
+                  type="number"
+                  step="10000"
+                  value={actualCost}
+                  onChange={(e) => setActualCost(Number(e.target.value))}
+                  className="w-32 px-2 py-1 bg-slate-800 border border-slate-700 rounded text-xs font-mono font-bold text-white"
+                />
+              )}
               <span className="text-xs text-slate-400">VNĐ</span>
             </div>
 

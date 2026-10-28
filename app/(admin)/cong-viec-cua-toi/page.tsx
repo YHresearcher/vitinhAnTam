@@ -12,7 +12,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Navigation, Phone, MapPin, Clock, Truck, Wrench, ClipboardList, Inbox } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
-import type { CustomerOrder, OnsiteDispatch, OnsiteDispatchStatus } from '@/lib/supabase';
+import { TicketDetailModal } from '@/components/admin/TicketDetailModal';
+import type { CustomerOrder, OnsiteDispatch, OnsiteDispatchStatus, ServiceTicket } from '@/lib/supabase';
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
   pending: 'Chờ xác nhận',
@@ -44,6 +45,30 @@ const STATUS_BADGE: Record<OnsiteDispatchStatus, string> = {
   cancelled: 'bg-slate-100 text-slate-500 border-slate-200',
 };
 
+const TICKET_STATUS_LABEL: Record<ServiceTicket['status'], string> = {
+  received: 'Mới tiếp nhận',
+  diagnosing: 'Đang kiểm tra / QC',
+  in_progress: 'Đang sửa chữa',
+  processing: 'Đang xử lý',
+  ready: 'Xong chờ giao',
+  ready_deliver: 'Sẵn sàng giao',
+  completed: 'Hoàn tất',
+  delivered: 'Đã bàn giao',
+  cancelled: 'Đã huỷ',
+};
+
+const TICKET_STATUS_BADGE: Record<ServiceTicket['status'], string> = {
+  received: 'bg-blue-100 text-blue-800 border-blue-200',
+  diagnosing: 'bg-amber-100 text-amber-800 border-amber-200',
+  in_progress: 'bg-purple-100 text-purple-800 border-purple-200',
+  processing: 'bg-orange-100 text-orange-800 border-orange-200',
+  ready: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  ready_deliver: 'bg-teal-100 text-teal-800 border-teal-200',
+  completed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  delivered: 'bg-slate-100 text-slate-600 border-slate-200',
+  cancelled: 'bg-slate-100 text-slate-500 border-slate-200',
+};
+
 function mapsUrl(address: string) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
 }
@@ -53,8 +78,23 @@ function telHref(phone: string) {
 }
 
 export default function CongViecCuaToiPage() {
-  const { currentUser, onsiteDispatches } = useStore();
+  const { currentUser, onsiteDispatches, tickets, isFieldStaff } = useStore();
   const fmt = (n: number) => `${n.toLocaleString('vi-VN')} đ`;
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
+  // Phiếu sửa chữa gán cho riêng tài khoản đang đăng nhập (khớp theo tên KTV
+  // phụ trách — phiếu không có technician_id, chỉ có technician_name).
+  // Chỉ những phiếu này mới hiện ở đây; NVKD không thấy phiếu của người khác
+  // và không vào được trang phiếu chung.
+  const myTickets = useMemo(() => {
+    if (!currentUser) return [] as ServiceTicket[];
+    return tickets
+      .filter((t) => t.technician_name === currentUser.name)
+      .sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  }, [tickets, currentUser]);
+  const activeTickets = myTickets.filter(
+    (t) => t.status !== 'completed' && t.status !== 'delivered' && t.status !== 'cancelled'
+  );
 
   // Ca dịch vụ gán cho riêng tài khoản đang đăng nhập (khớp id, fallback tên).
   const myJobs = useMemo(() => {
@@ -113,7 +153,7 @@ export default function CongViecCuaToiPage() {
     };
   }, [currentUser]);
 
-  const totalActive = activeJobs.length + myDeliveries.length;
+  const totalActive = activeJobs.length + myDeliveries.length + activeTickets.length;
   const showEmpty = deliveriesLoaded && totalActive === 0;
 
   return (
@@ -128,8 +168,10 @@ export default function CongViecCuaToiPage() {
               </span>
             </h1>
             <p className="text-sm text-slate-500 mt-1">
-              Các yêu cầu cấp trên phân bổ cho bạn: giao máy tận nơi và ca dịch vụ.
-              Bấm &quot;Chỉ đường&quot; để Google Maps dẫn đường tới địa chỉ khách.
+              Các yêu cầu cấp trên phân bổ cho bạn: giao máy tận nơi, ca dịch vụ
+              và phiếu sửa chữa được giao cho bạn. Bấm &quot;Chỉ đường&quot; để Google Maps
+              dẫn đường tới địa chỉ khách; bấm &quot;Mở phiếu &amp; cập nhật&quot; để đổi
+              trạng thái và ghi chú phiếu của bạn.
             </p>
           </div>
         }
@@ -142,8 +184,8 @@ export default function CongViecCuaToiPage() {
           </div>
           <p className="font-bold text-slate-900 text-base">Chưa có công việc nào được phân bổ</p>
           <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Khi cấp trên giao việc (giao hàng hoặc ca dịch vụ), công việc sẽ hiện ở đây
-            kèm địa chỉ, số điện thoại khách và nút Chỉ đường.
+            Khi cấp trên giao việc (giao hàng, ca dịch vụ hoặc phiếu sửa chữa),
+            công việc sẽ hiện ở đây kèm địa chỉ, số điện thoại khách và nút Chỉ đường.
           </p>
         </div>
       )}
@@ -294,8 +336,81 @@ export default function CongViecCuaToiPage() {
         </div>
       )}
 
+      {activeTickets.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
+            <ClipboardList className="w-4 h-4" /> Phiếu sửa chữa được giao cho bạn ({activeTickets.length})
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {activeTickets.map((t) => (
+              <div key={t.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-bold text-slate-900 text-base leading-snug">{t.customer_name}</p>
+                    <p className="text-[11px] text-slate-400 font-mono">
+                      {t.ticket_code || `Phiếu ${t.id.slice(-4)}`} • {t.device_name || t.device_model || 'Máy tính / Laptop'}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${TICKET_STATUS_BADGE[t.status]}`}
+                  >
+                    {TICKET_STATUS_LABEL[t.status] || t.status}
+                  </span>
+                </div>
+                {t.customer_address && (
+                  <p className="flex items-start gap-1.5 text-sm text-slate-700">
+                    <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
+                    <span className="font-medium">{t.customer_address}</span>
+                  </p>
+                )}
+                {t.issue_description && (
+                  <div className="bg-amber-50/60 border border-amber-100 p-2.5 rounded-xl text-xs text-amber-900">
+                    <span className="font-semibold block mb-0.5 text-amber-800">Mô tả sự cố:</span>
+                    <p className="leading-relaxed">{t.issue_description}</p>
+                  </div>
+                )}
+                {t.technician_fee ? (
+                  <p className="text-xs text-emerald-700 font-semibold">
+                    Thù lao phiếu: {fmt(t.technician_fee)}
+                  </p>
+                ) : null}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTicketId(t.id)}
+                    className="flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl px-3 py-2.5"
+                  >
+                    <ClipboardList className="w-4 h-4" /> Mở phiếu &amp; cập nhật
+                  </button>
+                  {t.customer_phone ? (
+                    <a
+                      href={telHref(t.customer_phone)}
+                      className="flex items-center justify-center gap-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-bold rounded-xl px-3 py-2.5"
+                    >
+                      <Phone className="w-4 h-4" /> Gọi khách
+                    </a>
+                  ) : (
+                    <span className="flex items-center justify-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-400 text-sm font-semibold rounded-xl px-3 py-2.5">
+                      <Phone className="w-4 h-4" /> Chưa có SĐT
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!deliveriesLoaded && (
         <p className="text-sm text-slate-400 text-center">Đang tải đơn giao hàng được giao cho bạn…</p>
+      )}
+
+      {selectedTicketId && (
+        <TicketDetailModal
+          ticketId={selectedTicketId}
+          fieldMode={isFieldStaff()}
+          onClose={() => setSelectedTicketId(null)}
+        />
       )}
     </div>
   );

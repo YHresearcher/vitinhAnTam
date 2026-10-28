@@ -15,9 +15,13 @@ interface UrgentTicketInfo {
 }
 
 export function DeadlineTrackingWidget() {
-  const { tickets } = useStore();
+  const { tickets, currentUser, isFieldStaff } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  // Nhân viên hiện trường chỉ thấy phiếu của mình; trang phiếu chung bị chặn
+  // với họ nên link "Mở phiếu" phải về trang công việc của họ.
+  const fieldStaff = isFieldStaff();
+  const jobsHref = fieldStaff ? '/cong-viec-cua-toi' : '/cuu-ho-onsite?tab=counter';
 
   // Lọc các máy đang tiếp nhận/sửa chữa/bảo hành
   const { urgentTickets, overdueCount, upcomingCount } = useMemo(() => {
@@ -27,7 +31,8 @@ export function DeadlineTrackingWidget() {
       (t) =>
         t.status !== 'completed' &&
         t.status !== 'delivered' &&
-        t.status !== 'cancelled'
+        t.status !== 'cancelled' &&
+        (!fieldStaff || !currentUser || t.technician_name === currentUser.name)
     );
 
     const list: UrgentTicketInfo[] = [];
@@ -98,7 +103,7 @@ export function DeadlineTrackingWidget() {
       overdueCount: overdue,
       upcomingCount: upcoming,
     };
-  }, [tickets]);
+  }, [tickets, fieldStaff, currentUser]);
 
   // Nếu người dùng chủ động tắt
   if (isDismissed) {
@@ -250,7 +255,7 @@ export function DeadlineTrackingWidget() {
                         </span>
                       </span>
                       <Link
-                        href={`/cuu-ho-onsite?tab=counter&ticketId=${ticket.id}`}
+                        href={fieldStaff ? jobsHref : `/cuu-ho-onsite?tab=counter&ticketId=${ticket.id}`}
                         onClick={() => setIsOpen(false)}
                         className="px-2.5 py-1 bg-slate-900 hover:bg-black text-white text-[11px] font-bold rounded-lg transition-colors"
                       >
@@ -269,11 +274,11 @@ export function DeadlineTrackingWidget() {
               Tự động cập nhật theo thời gian thực
             </span>
             <Link
-              href="/cuu-ho-onsite?tab=counter"
+              href={jobsHref}
               onClick={() => setIsOpen(false)}
               className="text-blue-600 hover:text-blue-800 font-bold text-xs"
             >
-              Xem Toàn Bộ Phiếu
+              Xem {fieldStaff ? 'Phiếu Của Bạn' : 'Toàn Bộ Phiếu'}
             </Link>
           </div>
         </div>
