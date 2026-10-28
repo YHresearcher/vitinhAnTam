@@ -1502,8 +1502,15 @@ export function StoreProvider({
     const q = query.trim().toUpperCase();
     if (!q) return null;
 
-    // Search by Service Tag
-    const matchedItem = inventory.find((item) => item.service_tag.toUpperCase() === q);
+    // Search by Service Tag / Serial Number — khớp CHÍNH XÁC trước. Số serial
+    // của máy thường chứa nhiều chữ số (vd SN-M720Q-8400T-01) nên KHÔNG được
+    // rơi xuống nhánh số điện thoại phía dưới (lỗi 2026-10-28: tra serial ra
+    // nhầm máy khác do khớp theo 7 số cuối của số điện thoại).
+    const matchedItem = inventory.find((item) => {
+      const tag = (item.service_tag || '').trim().toUpperCase();
+      const serial = (item.serial_number || '').trim().toUpperCase();
+      return (tag && tag === q) || (serial && serial === q);
+    });
     if (matchedItem) {
       const matchedCustomer = customers.find(
         (c) => c.phone === matchedItem.customer_phone || c.full_name === matchedItem.customer_name
@@ -1517,9 +1524,12 @@ export function StoreProvider({
       return { item: matchedItem, customer: matchedCustomer, ticket: matchedTicket };
     }
 
-    // Search by Phone Number
+    // Search by Phone Number — chỉ khi chuỗi nhập vào KHÔNG chứa chữ cái
+    // (số điện thoại thật). Chuỗi có chữ cái là mã máy/mã phiếu, đã xử lý
+    // ở trên, không được khớp theo số điện thoại.
     const rawDigits = query.replace(/\D/g, '');
-    if (rawDigits.length >= 7) {
+    const hasLetters = /[a-zA-Z]/.test(query);
+    if (!hasLetters && rawDigits.length >= 7) {
       const last7 = rawDigits.slice(-7);
       const isMatchPhone = (phone?: string) => {
         if (!phone) return false;

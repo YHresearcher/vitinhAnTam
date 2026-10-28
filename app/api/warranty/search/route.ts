@@ -136,7 +136,11 @@ export async function GET(request: NextRequest) {
   }
 
   const rawDigits = q.replace(/\D/g, '');
-  const isPhoneSearch = rawDigits.length >= 9;
+  // Chỉ coi là tra theo SĐT khi chuỗi KHÔNG chứa chữ cái. Mã máy (serial /
+  // service tag) thường chứa nhiều chữ số — coi nhầm thành SĐT khiến tra
+  // cứu trả về máy của khách khác (lỗi 2026-10-28: SN-M720Q-8400T-01 có 9
+  // chữ số nên bị xếp vào nhánh SĐT).
+  const isPhoneSearch = rawDigits.length >= 9 && !/[a-zA-Z]/.test(q);
   const last9Digits = isPhoneSearch ? rawDigits.slice(-9) : '';
 
   const db = getServerSupabase() || (isSupabaseConfigured() && supabase ? supabase : null);
@@ -184,11 +188,24 @@ export async function GET(request: NextRequest) {
 
       let matchedItem = isPhoneSearch
         ? items.find((i) => phoneMatch(i.customer_phone)) || null
-        : items[0] || null;
+        : items.find(
+            (i) =>
+              String(i.serial_number || '').toUpperCase() === q.toUpperCase() ||
+              String(i.service_tag || '').toUpperCase() === q.toUpperCase()
+          ) ||
+          items[0] ||
+          null;
 
       const matchedTicket = isPhoneSearch
         ? tickets.find((t) => phoneMatch(t.customer_phone)) || null
-        : tickets[0] || null;
+        : tickets.find(
+            (t) =>
+              String(t.ticket_code || '').toUpperCase() === q.toUpperCase() ||
+              String(t.device_service_tag || '').toUpperCase() === q.toUpperCase() ||
+              String(t.service_tag || '').toUpperCase() === q.toUpperCase()
+          ) ||
+          tickets[0] ||
+          null;
 
       const matchedCustomer = isPhoneSearch
         ? customers.find((c) => phoneMatch(c.phone)) || null
