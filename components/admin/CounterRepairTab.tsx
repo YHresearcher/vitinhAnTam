@@ -6,6 +6,21 @@ import { useStore } from '@/lib/store';
 import { ServiceTicket } from '@/lib/supabase';
 import { TicketDetailModal } from '@/components/admin/TicketDetailModal';
 
+// Số tiền dự kiến thu của phiếu = tiền công + linh kiện (đúng định nghĩa
+// trong modal phiếu). Chỉ khi cả hai đều 0 mới lùi về total_amount rồi
+// estimated_cost. Dùng `??` trực tiếp trên actual_cost là sai vì actual_cost
+// lưu 0 (không phải null) ở mọi phiếu chưa sửa tiền → danh sách hiện 0đ
+// cho tất cả phiếu dù linh kiện/tổng tiền đã có.
+function ticketExpectedAmount(t: ServiceTicket): number {
+  const partsTotal = (t.parts_used || []).reduce(
+    (sum, p) => sum + (p.price || 0) * (p.quantity || 1),
+    0
+  );
+  const labor = t.actual_cost || 0;
+  if (partsTotal > 0 || labor > 0) return partsTotal + labor;
+  return t.total_amount || t.estimated_cost || 0;
+}
+
 const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string; text: string; border: string }> = {
   received: { label: 'Tiếp nhận mới', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
   diagnosing: { label: 'Đang kiểm tra / QC', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
@@ -67,7 +82,7 @@ export default function CounterRepairTab({
     const ready = tickets.filter((t) => t.status === 'ready').length;
     const estimatedRev = tickets
       .filter((t) => t.status !== 'cancelled')
-      .reduce((sum, t) => sum + (t.actual_cost ?? t.estimated_cost ?? t.total_amount ?? 0), 0);
+      .reduce((sum, t) => sum + ticketExpectedAmount(t), 0);
     return { total, inProgress, ready, estimatedRev };
   }, [tickets]);
 
@@ -94,7 +109,7 @@ export default function CounterRepairTab({
       `"${(t.issue_description || '').replace(/"/g, '""')}"`,
       STATUS_LABELS[t.status]?.label || t.status,
       `"${t.technician_name || ''}"`,
-      t.actual_cost ?? t.estimated_cost ?? t.total_amount ?? 0,
+      ticketExpectedAmount(t),
     ]);
 
     const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
@@ -343,7 +358,7 @@ export default function CounterRepairTab({
                         )}
                       </td>
                       <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono">
-                        {(ticket.actual_cost ?? ticket.estimated_cost ?? ticket.total_amount ?? 0).toLocaleString('vi-VN')} đ
+                        {ticketExpectedAmount(ticket).toLocaleString('vi-VN')} đ
                       </td>
                       <td className="py-3 px-3 text-center">
                         <button

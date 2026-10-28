@@ -199,6 +199,7 @@ export default function TaoPhieuSuaChuaPage() {
         issueDescription: issueDescription + (windowsPin ? ` (Mật khẩu Windows: ${windowsPin})` : ''),
         issue_description: issueDescription + (windowsPin ? ` (Mật khẩu Windows: ${windowsPin})` : ''),
         estimated_cost: serviceCategory === 'bao_hanh' ? customCost : totalCost,
+        total_amount: totalCost,
         parts_used: parts,
         warranty_until: wDate.toISOString().split('T')[0],
       });
