@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
-import { useStore } from '@/lib/store';
+import { useStore, calcSellerCommission } from '@/lib/store';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import type { CustomerOrder, OnsiteDispatch, OnsiteDispatchStatus } from '@/lib/supabase';
 
@@ -67,9 +67,9 @@ export default function ViecCuaToiPage() {
 
   // ---- Thu nhập của tôi (chỉ tính số liệu của riêng tài khoản đang đăng nhập) ----
   // Thù lao ca/giao máy & kỹ thuật: cộng dồn trong shift_logs theo ngày ca trực
-  // (đã tự cộng khi hoàn tất ca). Hoa hồng bán máy: 10% lợi nhuận từ
-  // 26/10/2026, trước đó 15% (giữ đúng mức từng thời điểm, không viết lại lịch sử).
-  const COMMISSION_CUTOFF = '2026-10-26';
+  // (đã tự cộng khi hoàn tất ca). Hoa hồng bán máy: 15% lãi ròng (trừ 60.000đ
+  // quảng cáo/đơn) từ 30/10/2026; 10% lãi gộp từ 26–29/10/2026; trước đó 15%
+  // lãi gộp (giữ đúng mức từng thời điểm, không viết lại lịch sử).
   const today = new Date();
   const [incomeYear, setIncomeYear] = useState(today.getFullYear());
   const [incomeMonth, setIncomeMonth] = useState<number | 'all'>(today.getMonth() + 1);
@@ -95,8 +95,7 @@ export default function ViecCuaToiPage() {
       if (myName && (d.seller_name || '').toLowerCase().trim() !== myName) continue;
       const key = monthKeyOf(d.sale_date || '');
       if (!/^\d{4}-\d{2}$/.test(key)) continue;
-      const rate = (d.sale_date || '') < COMMISSION_CUTOFF ? 0.15 : 0.1;
-      const commission = Math.round(Math.max(0, d.net_profit || 0) * rate);
+      const commission = calcSellerCommission(d.net_profit || 0, d.sale_date || '', false);
       const cur = byMonth.get(key) || { commission: 0, deals: 0, profit: 0 };
       cur.commission += commission;
       cur.deals += 1;
@@ -586,7 +585,7 @@ export default function ViecCuaToiPage() {
             </table>
           </div>
           <p className="text-[11px] text-slate-400 mt-2">
-            Hoa hồng bán máy tính theo lợi nhuận từng máy: 10% từ 26/10/2026, trước đó 15%.
+            Hoa hồng bán máy tính theo lãi ròng từng máy: 15% (đã trừ 60.000đ quảng cáo/đơn) từ 30/10/2026; 10% lãi gộp từ 26–29/10/2026; trước đó 15% lãi gộp.
           </p>
         </div>
       </div>

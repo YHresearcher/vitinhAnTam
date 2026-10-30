@@ -97,6 +97,35 @@ export interface SystemSettings {
   notifyOnSaleSuccess?: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Hoa hồng bán hàng — quy tắc đã chốt (phương án A, áp dụng từ 30/10/2026).
+// Lãi ròng = lãi gộp − chi phí quảng cáo chuẩn 60.000đ/đơn; hoa hồng = 15% lãi ròng.
+// Tiền công trực tiếp theo lần việc đã trả qua bảng lương nên không trừ thêm ở
+// đây (đúng ví dụ đã chốt: 5.000.000 − 3.500.000 − 60.000 = 1.440.000 → 216.000).
+// Lịch sử giữ nguyên, không viết lại: trước 26/10/2026 là 15% trên lãi gộp;
+// từ 26/10 đến 29/10/2026 là 10% trên lãi gộp. Khách vãng lai không tính hoa hồng sales.
+// ---------------------------------------------------------------------------
+export const STANDARD_ADS_COST_PER_ORDER = 60000;
+export const SELLER_COMMISSION_RATE = 0.15;
+export const COMMISSION_RULE_CHANGE_DATE = '2026-10-30';
+export const COMMISSION_CUTOFF_2026_10_26 = '2026-10-26';
+
+export function calcSellerCommission(
+  grossProfit: number,
+  saleDateISO: string,
+  isWalkIn: boolean,
+): number {
+  if (isWalkIn) return 0;
+  const saleDay = (saleDateISO || '').slice(0, 10);
+  if (saleDay >= COMMISSION_RULE_CHANGE_DATE) {
+    return Math.round(Math.max(0, grossProfit - STANDARD_ADS_COST_PER_ORDER) * SELLER_COMMISSION_RATE);
+  }
+  if (saleDay < COMMISSION_CUTOFF_2026_10_26) {
+    return Math.round(Math.max(0, grossProfit) * 0.15);
+  }
+  return Math.round(Math.max(0, grossProfit) * 0.1);
+}
+
 export const initialSystemSettings: SystemSettings = {
   brandSlogan: 'Bán bằng tâm để bạn an tâm',
   hotline: '0909.053.058',
@@ -1740,7 +1769,7 @@ export function StoreProvider({
         const soldPrice = item.price || item.retail_price || 0;
         const costPrice = item.cost_price || item.import_price || 0;
         const netProfit = Math.max(0, soldPrice - costPrice);
-        const sellerCommission = Math.round(netProfit * 0.10);
+        const sellerCommission = calcSellerCommission(netProfit, new Date().toISOString(), false);
         const lenderBonus = Math.round(netProfit * 0.05);
         const lenderTotal = costPrice + lenderBonus;
         const warrantyReserve = Math.round(netProfit * 0.05);
@@ -4112,7 +4141,7 @@ export function StoreProvider({
 
     // 5. Tự động gửi tin nhắn chúc mừng bán hàng qua Bot đến nhóm cài đặt sẵn
     try {
-      const sellerCommission = Math.round(netProfit * 0.10);
+      const sellerCommission = calcSellerCommission(netProfit, saleDateTime.toISOString(), false);
       const lenderBonus = Math.round(netProfit * 0.05);
       const lenderTotal = finalCostPrice + lenderBonus;
       const warrantyReserve = provisionAmount;

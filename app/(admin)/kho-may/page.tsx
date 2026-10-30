@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useStore } from '@/lib/store';
+import { useStore, calcSellerCommission } from '@/lib/store';
 import {
   InventoryItem,
   MachineComponent,
@@ -274,13 +274,13 @@ export default function KhoMayPage() {
       }
 
       const profit = Math.max(0, soldPrice - effectiveCostPrice);
-      const sellerBonus = Math.round(profit * 0.10);
+      const sellerBonus = calcSellerCommission(profit, saleDate || new Date().toISOString(), false);
       const lenderBonus = Math.round(profit * 0.05);
       const lenderTotal = effectiveCostPrice + lenderBonus;
       const warrantyReserve = Math.round(profit * 0.05);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (10%): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại (80%): ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15% lãi ròng): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -2961,8 +2961,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         const profit = soldPrice - costPrice; // Lợi nhuận = giá bán ra - giá nhập
         const isProfitable = profit > 0;
 
-        // 1. Tiền cho người bán (10% lợi nhuận)
-        const sellerCommission = isProfitable ? Math.round(profit * 0.10) : 0;
+        // 1. Tiền cho người bán (15% lãi ròng: lãi gộp trừ 60.000đ quảng cáo/đơn)
+        const sellerCommission = isProfitable ? calcSellerCommission(profit, cashflowConfirmData.saleDate || new Date().toISOString(), false) : 0;
         // 2. Thưởng người cho vay vốn (5% lợi nhuận)
         const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
         // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
@@ -3091,7 +3091,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Khoản 1: Người bán 10% LN */}
+                  {/* Khoản 1: Người bán 15% lãi ròng */}
                   <div className="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
@@ -3099,7 +3099,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         <span>Tiền cho người bán</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 font-mono">
-                        10% LN
+                        15% lãi ròng
                       </span>
                     </div>
                     <div className="text-base font-black text-indigo-950 font-mono">
@@ -3156,7 +3156,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         <span>Lợi nhuận còn lại</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono">
-                        80% LN
+                        {profit > 0 ? `${Math.round((remainingProfit / profit) * 100)}% LN` : '—'}
                       </span>
                     </div>
                     <div className="text-base font-black text-emerald-950 font-mono">
@@ -3212,13 +3212,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Hoàn người vay vốn
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (10%)
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (15% lãi ròng)
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại (80%)
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại
                   </span>
                 </div>
               </div>
