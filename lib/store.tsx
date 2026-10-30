@@ -7,6 +7,7 @@ import {
   isSupabaseConfigured,
   UserRole,
   UserAccount,
+  UserPermissions,
   Customer,
   InventoryItem,
   SparePart,
@@ -439,6 +440,55 @@ const STORAGE_KEYS = {
   adminDeductions: 'vtat_admin_deductions_v3',
   blogPosts: 'vtat_blog_posts_v3',
   blogCategories: 'vtat_blog_categories_v3',
+};
+
+// Quyền MẶC ĐỊNH theo nhóm tài khoản — nguồn duy nhất cho việc cấp quyền
+// khi tạo thành viên mới (trang Nhân sự dùng bản này) và nút "đặt lại theo
+// mặc định" khi sửa. Các helper can*() trong provider vẫn là lớp thi hành:
+// quyền theo vai trò (VD: QL Bán hàng xem CRM/tài chính, NVKD bán máy)
+// không nằm trong 4 ô này mà nằm ở helper. Admin thêm/bớt từng ô cho
+// từng người ở trang Nhân sự; ô tick thêm chỉ NỚI quyền, trừ QL Kỹ thuật
+// vẫn luôn bị chặn tài chính/lương ở mọi lớp (quyết định 2026-10-28).
+// - Sửa kho: Admin + QL Kỹ thuật.
+// - Đổi trạng thái phiếu: mọi vai trò kỹ thuật/bán hàng TRỪ QL Bán hàng.
+// - Tiền công/lương + quản lý thành viên: chỉ Admin.
+export const ROLE_PERMISSION_DEFAULTS: Record<UserRole, UserPermissions> = {
+  admin: {
+    can_edit_stock: true,
+    can_update_repair_status: true,
+    can_access_payroll: true,
+    can_manage_users: true,
+  },
+  tech_manager: {
+    can_edit_stock: true,
+    can_update_repair_status: true,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
+  technician: {
+    can_edit_stock: false,
+    can_update_repair_status: true,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
+  sales_manager: {
+    can_edit_stock: false,
+    can_update_repair_status: false,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
+  outsourced: {
+    can_edit_stock: false,
+    can_update_repair_status: true,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
+  salesman: {
+    can_edit_stock: false,
+    can_update_repair_status: true,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
 };
 
 export function StoreProvider({

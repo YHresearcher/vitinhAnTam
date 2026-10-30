@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useViTinhAnTamStore } from '@/lib/store';
+import { useViTinhAnTamStore, ROLE_PERMISSION_DEFAULTS } from '@/lib/store';
 import { UserAccount, UserRole, generateStaffId } from '@/lib/supabase';
 // Lucide icons removed for minimalist text design
 
@@ -216,17 +216,7 @@ export default function MemberManagementPage() {
         avatarBg,
         status: 'active',
         password_changed: false,
-        permissions: {
-          can_edit_stock: newUserForm.role === 'admin' || newUserForm.role === 'tech_manager',
-          can_update_repair_status:
-            newUserForm.role === 'admin' ||
-            newUserForm.role === 'tech_manager' ||
-            newUserForm.role === 'technician' ||
-            newUserForm.role === 'outsourced' ||
-            newUserForm.role === 'salesman',
-          can_access_payroll: newUserForm.role === 'admin',
-          can_manage_users: newUserForm.role === 'admin',
-        },
+        permissions: { ...ROLE_PERMISSION_DEFAULTS[newUserForm.role] },
       });
 
       const tempPw = (createdUser as { temporaryPassword?: string }).temporaryPassword;
@@ -758,9 +748,23 @@ export default function MemberManagementPage() {
 
               {/* Granular Permissions Checkboxes */}
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
-                  Phân Quyền Chi Tiết
-                </span>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                    Phân Quyền Chi Tiết
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingUser({
+                        ...editingUser,
+                        permissions: { ...ROLE_PERMISSION_DEFAULTS[editingUser.role] },
+                      })
+                    }
+                    className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline underline-offset-2"
+                  >
+                    Đặt lại theo mặc định của vai trò
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -972,6 +976,29 @@ export default function MemberManagementPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Quyền mặc định của vai trò này
+                </span>
+                <div className="grid grid-cols-2 gap-1.5 text-slate-700">
+                  {(
+                    [
+                      ['can_edit_stock', 'Sửa số lượng tồn kho'],
+                      ['can_update_repair_status', 'Đổi trạng thái phiếu sửa'],
+                      ['can_access_payroll', 'Xem tiền công & ca trực'],
+                      ['can_manage_users', 'Quản lý thành viên & mật khẩu'],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <span key={key}>
+                      {ROLE_PERMISSION_DEFAULTS[newUserForm.role][key] ? '✓' : '—'} {label}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Tài khoản mới nhận đúng các quyền trên. Admin thêm/bớt từng quyền sau khi tạo, ở khung sửa bên dưới.
+                </p>
               </div>
 
               <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-1.5">
