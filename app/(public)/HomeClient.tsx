@@ -222,17 +222,11 @@ export default function HomePage() {
     }));
   }, [keyCategories, licenseKeys, publicKeyCatalog]);
 
-  // QUY TẮC HIỂN THỊ KEY Ở TRANG CHỦ: mục "Tất cả" chỉ hiện 3 phân loại
-  // nổi bật — Windows 11 Pro, Office 2021, Microsoft 365 — theo đúng thứ
-  // tự này; tab "Phần mềm & Key" (xem toàn bộ) hiện mọi phân loại còn hàng.
-  const featuredSoftwareCategories = useMemo(() => {
-    const patterns = ['WINDOWS 11 PRO', 'OFFICE 2021', '365'];
-    return patterns
-      .map((p) => availableSoftwareCategories.find((c) => c.name.toUpperCase().includes(p)))
-      .filter((c): c is (typeof availableSoftwareCategories)[number] => Boolean(c));
-  }, [availableSoftwareCategories]);
-  const displayedSoftwareCategories =
-    homeProductTab === 'software' ? availableSoftwareCategories : featuredSoftwareCategories;
+  // QUY TẮC HIỂN THỊ KEY Ở TRANG CHỦ: mọi phân loại còn hàng đều hiện ở
+  // cả mục "Tất cả" lẫn tab "Phần mềm & Key" — không còn giới hạn 3 phân
+  // loại nổi bật (Windows 10 từng bị ẩn ở mục "Tất cả" vì nằm ngoài danh
+  // sách nổi bật cũ).
+  const displayedSoftwareCategories = availableSoftwareCategories;
   // Tổng số key đang sẵn sàng — dùng cho chip trạng thái kho ở hero
   const totalAvailableKeys = useMemo(
     () => availableSoftwareCategories.reduce((sum, c) => sum + (c.availableStock || 0), 0),
