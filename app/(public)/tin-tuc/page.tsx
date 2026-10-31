@@ -15,7 +15,7 @@ import { formatDateVN } from '@/lib/supabase';
 import { TRANSLATIONS } from '@/lib/translations';
 
 export default function PublicBlogPage() {
-  const { blogPosts, blogCategories, currentLang } = useViTinhAnTamStore();
+  const { blogPosts, blogCategories, currentLang, isLoading } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'].blog;
   const [search, setSearch] = useState('');
@@ -149,7 +149,18 @@ export default function PublicBlogPage() {
         )}
 
         {/* Grid of articles */}
-        {remainingPosts.length > 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-4 animate-pulse">
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/3" />
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-3/4" />
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-full" />
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : remainingPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {remainingPosts.map((post) => {
               const cat = blogCategories.find((c) => c.id === post.category_id);

@@ -34,7 +34,7 @@ import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
 export default function HomePage() {
   const router = useRouter();
-  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs, reviews, spareParts } = useViTinhAnTamStore();
+  const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs, reviews, spareParts, isLoading } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
@@ -284,6 +284,11 @@ export default function HomePage() {
                 thương hiệu với header): số máy + số key đang có sẵn thật */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-6 pb-5 border-b border-slate-200/60 text-xs">
               <div className="flex items-center gap-2">
+                {isLoading ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-500 text-[10px] font-extrabold uppercase tracking-wider border border-slate-200 animate-pulse">
+                    {isEn ? 'Loading stock…' : 'Đang tải kho…'}
+                  </span>
+                ) : (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider border border-emerald-200">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -293,6 +298,7 @@ export default function HomePage() {
                     ? `In stock now: ${totalReadyStock} computers • ${totalAvailableKeys} license keys`
                     : `Có sẵn tại kho: ${totalReadyStock} máy • ${totalAvailableKeys} key bản quyền`}
                 </span>
+                )}
               </div>
               <span className="hidden sm:block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                 {isEn ? 'On-site rescue & support' : 'Cứu hộ & hỗ trợ tận nơi'}
@@ -470,7 +476,7 @@ export default function HomePage() {
               >
                 <span>{isEn ? 'Components (RAM / SSD)' : 'LINH KIỆN (RAM / SSD)'}</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
-                  {allComponents.length}
+                  {isLoading ? '…' : allComponents.length}
                 </span>
               </button>
               <button
@@ -484,7 +490,7 @@ export default function HomePage() {
               >
                 <span>{isEn ? 'Software & License Keys' : 'PHẦN MỀM & KEY BẢN QUYỀN'}</span>
                 <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
-                  {availableSoftwareCategories.length}
+                  {isLoading ? '…' : availableSoftwareCategories.length}
                 </span>
               </button>
             </div>
@@ -494,7 +500,20 @@ export default function HomePage() {
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
           {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
             <div className="space-y-6 mb-10">
-              {displayedProducts.length === 0 ? (
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+                      <div className="aspect-16/10 bg-slate-200" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-4 bg-slate-200 rounded w-3/4" />
+                        <div className="h-3 bg-slate-200 rounded w-1/2" />
+                        <div className="h-3 bg-slate-200 rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : displayedProducts.length === 0 ? (
                 <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
                   <Monitor className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                   <p className="text-sm font-semibold text-slate-600">
@@ -638,7 +657,20 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {displayedComponents.length === 0 ? (
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+                      <div className="aspect-16/10 bg-slate-200" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-4 bg-slate-200 rounded w-3/4" />
+                        <div className="h-3 bg-slate-200 rounded w-1/2" />
+                        <div className="h-3 bg-slate-200 rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : displayedComponents.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
                   {isEn ? 'Components are currently being replenished.' : 'Kho linh kiện RAM & SSD đang được cập nhật thêm.'}
                 </div>
@@ -767,7 +799,20 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {displayedSoftwareCategories.length === 0 ? (
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
+                      <div className="aspect-16/10 bg-slate-200" />
+                      <div className="p-5 space-y-3">
+                        <div className="h-4 bg-slate-200 rounded w-3/4" />
+                        <div className="h-3 bg-slate-200 rounded w-1/2" />
+                        <div className="h-3 bg-slate-200 rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : displayedSoftwareCategories.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
                   {isEn ? 'License keys are temporarily being replenished.' : 'Các phiên bản key bản quyền đang được cập nhật thêm vào kho.'}
                 </div>
