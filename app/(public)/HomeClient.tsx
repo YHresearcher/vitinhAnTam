@@ -1037,10 +1037,6 @@ export default function HomePage() {
                     </div>
                     <div className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
-                      <span>{t.services.pkg3F2}</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" strokeWidth={1.5} />
                       <span>{t.services.pkg3F3}</span>
                     </div>
                   </div>
