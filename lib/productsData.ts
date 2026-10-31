@@ -129,7 +129,8 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         item.image_urls && item.image_urls.length > 0
           ? item.image_urls[0]
           : rawMatch?.img ||
-            'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=800&auto=format&fit=crop&q=80';
+            // Ảnh mặc định cùng phong cách hero cho máy chưa có ảnh thật
+            '/images/machine-card-laptop.webp';
 
       const shelf = item.shelf_location
         ? isEn
