@@ -915,12 +915,6 @@ export default function HomePage() {
               <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight mt-4">
                 {t.services.title}
               </h2>
-              <p className="text-xs sm:text-sm text-[#6E5D53] leading-relaxed mt-3">
-                {t.services.subtitle}
-              </p>
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-[#E8E2D9] text-[11px] font-bold text-[#2B1810] mt-4">
-                {t.services.commitmentBadge}
-              </div>
             </div>
 
             {/* 3 Service Packages Cards */}

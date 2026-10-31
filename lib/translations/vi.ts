@@ -112,10 +112,7 @@ export const VI_TRANSLATIONS = {
   },
   services: {
     tag: 'MUA MÁY CŨ TẠI AN TÂM ĐƯỢC GÌ',
-    title: 'Máy cũ đã test kỹ, bảo hành 6 tháng nguyên máy',
-    subtitle:
-      'Shop chỉ tập trung ba việc: bán máy cũ đã test kỹ, nâng cấp đúng nhu cầu, cài sẵn phần mềm bản quyền. Bán tại Tây Ninh và Sài Gòn, báo giá trước khi làm.',
-    commitmentBadge: 'Test Kỹ Từng Máy • Bảo Hành 6 Tháng Nguyên Máy • Báo Giá Trước Khi Làm',
+    title: 'Máy bán ra đã được kiểm tra toàn bộ, bảo hành 6 tháng',
     pkg1Title: 'MÁY CŨ ĐÃ TEST KỸ, BẢO HÀNH 6 THÁNG',
     pkg1Time: '⏱️ Có sẵn tại Tây Ninh & Sài Gòn',
     pkg1Desc:

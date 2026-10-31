@@ -115,9 +115,6 @@ export const EN_TRANSLATIONS = {
   services: {
     tag: 'WHAT YOU GET WHEN YOU BUY FROM AN TAM',
     title: 'USED MACHINES, TESTED AND COVERED BY A 6-MONTH WARRANTY',
-    subtitle:
-      'We focus on three things: selling thoroughly tested used machines, upgrades matched to your real needs, and licensed software preinstalled. Sold in Tay Ninh and Saigon, quoted before any work.',
-    commitmentBadge: 'Every Machine Tested • 6-Month Whole-Machine Warranty • Quoted Before Any Work',
     pkg1Title: 'TESTED USED MACHINES, 6-MONTH WARRANTY',
     pkg1Time: '⏱️ Available in Tay Ninh & Saigon',
     pkg1Desc:
