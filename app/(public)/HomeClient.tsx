@@ -631,7 +631,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
-                    {isEn ? 'GENUINE UPGRADE COMPONENTS (RAM, HIGH-SPEED SSD)' : 'LINH KIỆN NÂNG CẤP CHÍNH HÃNG (RAM, SSD CHUYÊN DỤNG)'}
+                    {isEn ? 'GENUINE UPGRADE COMPONENTS (RAM, HIGH-SPEED SSD)' : 'LINH KIỆN NÂNG CẤP (RAM, SSD)'}
                   </h3>
                 </div>
                 <Link
@@ -764,7 +764,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#C0392B]"></div>
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#2B1810]">
-                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (WINDOWS & OFFICE)' : 'KEY BẢN QUYỀN SỐ CHÍNH HÃNG (WINDOWS & OFFICE)'}
+                    {isEn ? 'GENUINE DIGITAL LICENSE KEYS (WINDOWS & OFFICE)' : 'KEY BẢN QUYỀN (WINDOWS & OFFICE)'}
                   </h3>
                 </div>
                 <button
