@@ -42,7 +42,8 @@ export const EN_TRANSLATIONS = {
   },
   hero: {
     brandTag: 'VI TINH AN TAM • PROFESSIONAL & DEDICATED',
-    mainTitle: 'TESTED USED COMPUTERS — 6-MONTH WARRANTY — READY TO USE',
+    mainTitle: 'Pre-owned machines, business-grade quality',
+    warrantyTag: '6-MONTH WARRANTY',
     badgeWindows: 'GENUINE CLEAN WINDOWS',
     badge2h: 'RAPID RESPONSE • DEDICATED SUPPORT',
     description:
@@ -113,7 +114,7 @@ export const EN_TRANSLATIONS = {
   },
   services: {
     tag: 'WHAT YOU GET WHEN YOU BUY FROM AN TAM',
-    title: 'TESTED USED MACHINES — 6-MONTH WARRANTY — READY TO USE',
+    title: 'USED MACHINES, TESTED AND COVERED BY A 6-MONTH WARRANTY',
     subtitle:
       'We focus on three things: selling thoroughly tested used machines, upgrades matched to your real needs, and licensed software preinstalled. Sold in Tay Ninh and Saigon, quoted before any work.',
     commitmentBadge: 'Every Machine Tested • 6-Month Whole-Machine Warranty • Quoted Before Any Work',

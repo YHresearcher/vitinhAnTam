@@ -40,7 +40,8 @@ export const VI_TRANSLATIONS = {
   },
   hero: {
     brandTag: 'VI TÍNH AN TÂM • CHUYÊN NGHIỆP & TẬN TÂM',
-    mainTitle: 'MÁY CŨ TEST KỸ — BẢO HÀNH 6 THÁNG — MUA VỀ DÙNG NGAY',
+    mainTitle: 'Chuyên máy đã qua sử dụng, chuẩn doanh nghiệp',
+    warrantyTag: 'BẢO HÀNH 6 THÁNG',
     badgeWindows: 'WINDOWS BẢN QUYỀN SẠCH',
     badge2h: 'ỨNG PHÓ NHANH • HỖ TRỢ TẬN TÂM',
     description:
@@ -111,7 +112,7 @@ export const VI_TRANSLATIONS = {
   },
   services: {
     tag: 'MUA MÁY CŨ TẠI AN TÂM ĐƯỢC GÌ',
-    title: 'MÁY CŨ TEST KỸ — BẢO HÀNH 6 THÁNG — MUA VỀ DÙNG NGAY',
+    title: 'Máy cũ đã test kỹ, bảo hành 6 tháng nguyên máy',
     subtitle:
       'Shop chỉ tập trung ba việc: bán máy cũ đã test kỹ, nâng cấp đúng nhu cầu, cài sẵn phần mềm bản quyền. Bán tại Tây Ninh và Sài Gòn, báo giá trước khi làm.',
     commitmentBadge: 'Test Kỹ Từng Máy • Bảo Hành 6 Tháng Nguyên Máy • Báo Giá Trước Khi Làm',

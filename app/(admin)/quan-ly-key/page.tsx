@@ -139,6 +139,17 @@ export default function QuanLyKeyPage() {
     }
   }, [keyCategories, reqCategoryId]);
 
+  // Danh mục tải bất đồng bộ: ô chọn phân loại của form NHẬP KEY cũng cần
+  // chọn sẵn phân loại đầu tiên khi danh mục về (giống form yêu cầu) — nếu
+  // không targetCatId kẹt ở '' khởi tạo lúc danh mục chưa về, ô chọn hiện
+  // trống và bấm Lưu báo 'Vui lòng chọn phân loại key!' dù phân loại đã có.
+  useEffect(() => {
+    if (keyCategories.length === 0) return;
+    if (!targetCatId || !keyCategories.some((c) => c.id === targetCatId)) {
+      setTargetCatId(keyCategories[0].id);
+    }
+  }, [keyCategories, targetCatId]);
+
   // Inventory table filter
   const [invCatFilter, setInvCatFilter] = useState('all');
   const [invStatusFilter, setInvStatusFilter] = useState('all');

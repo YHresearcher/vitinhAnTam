@@ -304,6 +304,11 @@ export default function HomePage() {
 
               {/* Left Column: Headlines & Actions */}
               <div className="lg:col-span-7 flex flex-col gap-6">
+                {/* Tag bự: bảo hành là lý do mạnh nhất để khách dám mua máy cũ */}
+                <span className="inline-flex items-center gap-2 self-start px-4 py-2 rounded-lg bg-[#C0392B] text-white text-base sm:text-lg font-black uppercase tracking-wide shadow-md">
+                  <ShieldCheck className="w-5 h-5" />
+                  {t.hero.warrantyTag || (isEn ? '6-MONTH WARRANTY' : 'BẢO HÀNH 6 THÁNG')}
+                </span>
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#1A0F0A] tracking-tight leading-[1.12]">
                   {t.hero.mainTitle}
                 </h1>
