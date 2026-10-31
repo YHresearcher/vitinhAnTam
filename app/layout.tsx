@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
+        url: 'https://www.vitinhantam.com/images/hero-laptop-windows.webp',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',
@@ -86,7 +86,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Vi tính An Tâm - Bán bằng tâm để bạn an tâm',
     description: 'PC đồng bộ & laptop tuyển chọn, linh kiện rõ ràng, hỗ trợ tận tâm.',
-    images: ['https://www.vitinhantam.com/images/hero-showroom.jpg'],
+    images: ['https://www.vitinhantam.com/images/hero-laptop-windows.webp'],
   },
   robots: {
     index: true,
@@ -109,7 +109,7 @@ const jsonLd = {
   url: 'https://www.vitinhantam.com',
   telephone: '+84909053058',
   email: 'hello@vitinhantam.com',
-  image: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
+  image: 'https://www.vitinhantam.com/images/hero-laptop-windows.webp',
   address: {
     '@type': 'PostalAddress',
     streetAddress: '52 Nguyễn Cửu Vân',

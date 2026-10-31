@@ -83,6 +83,17 @@ export default function QuanLyKeyPage() {
   const [catSelectedPreset, setCatSelectedPreset] = useState<string>('WINDOWS 11 PROFESSIONAL');
   const [catCustomName, setCatCustomName] = useState('');
   const [catDescription, setCatDescription] = useState('Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác');
+  // Mô tả gợi ý theo từng phiên bản có sẵn — chọn phân loại thì mô tả đổi theo.
+  // Trước đây mô tả kẹt ở câu của Windows dù đã chuyển sang Office.
+  const CAT_PRESET_DESCRIPTIONS: Record<string, string> = {
+    'WINDOWS 11 PROFESSIONAL': 'Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác',
+    'WINDOWS 11 HOME': 'Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác',
+    'WINDOWS 10 PROFESSIONAL': 'Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác',
+    'OFFICE PRO PLUS 2024': 'Bản quyền vĩnh viễn, kích hoạt online 1 lần',
+    'OFFICE PRO PLUS 2021': 'Bản quyền vĩnh viễn, kích hoạt online 1 lần',
+    'OFFICE PRO PLUS 2019': 'Bản quyền vĩnh viễn, kích hoạt online 1 lần',
+    'MICROSOFT 365 FAMILY': 'Gói đăng ký 12 tháng, dùng cho nhiều thành viên trong gia đình',
+  };
   const [catDefaultImportPrice, setCatDefaultImportPrice] = useState<number>(0);
   const [catDefaultUnitPrice, setCatDefaultUnitPrice] = useState<number>(0);
 
@@ -1778,6 +1789,7 @@ export default function QuanLyKeyPage() {
                     onClick={() => {
                       setCatCategoryType('windows');
                       setCatSelectedPreset('WINDOWS 11 PROFESSIONAL');
+                      setCatDescription('Kích hoạt được chỉ cho 01 máy, không thể sử dụng lại trên máy khác');
                     }}
                     className={`py-2 rounded-lg font-bold text-center transition-all ${
                       catCategoryType === 'windows'
@@ -1792,6 +1804,7 @@ export default function QuanLyKeyPage() {
                     onClick={() => {
                       setCatCategoryType('office');
                       setCatSelectedPreset('OFFICE PRO PLUS 2021');
+                      setCatDescription('Bản quyền vĩnh viễn, kích hoạt online 1 lần');
                     }}
                     className={`py-2 rounded-lg font-bold text-center transition-all ${
                       catCategoryType === 'office'
@@ -1803,7 +1816,10 @@ export default function QuanLyKeyPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setCatCategoryType('others')}
+                    onClick={() => {
+                      setCatCategoryType('others');
+                      setCatDescription('');
+                    }}
                     className={`py-2 rounded-lg font-bold text-center transition-all ${
                       catCategoryType === 'others'
                         ? 'bg-[#C0392B] text-white'
@@ -1839,7 +1855,11 @@ export default function QuanLyKeyPage() {
                   </label>
                   <select
                     value={catSelectedPreset}
-                    onChange={(e) => setCatSelectedPreset(e.target.value)}
+                    onChange={(e) => {
+                      setCatSelectedPreset(e.target.value);
+                      const d = CAT_PRESET_DESCRIPTIONS[e.target.value];
+                      if (d) setCatDescription(d);
+                    }}
                     className="w-full px-3 py-2 border border-[#E8E2D9] rounded-lg bg-white text-[#2B1810] font-bold"
                   >
                     {catCategoryType === 'windows' ? (

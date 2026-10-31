@@ -460,6 +460,7 @@ export default function KhoMayPage() {
     ram: '16GB DDR4',
     ssd_capacity: '256GB NVMe',
     ssd_health: 98,
+    screen_size: '',
     import_price: 0,
     import_date: new Date().toISOString().slice(0, 10),
     source: 'vtat',
@@ -1062,7 +1063,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           shelf_location: newItem.shelf_location,
           qc_status: 'ready_to_sell',
           warranty_months: Number(newItem.warranty_months),
-          specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)`,
+          specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)${newItem.screen_size.trim() ? ` | Màn ${newItem.screen_size.trim()}` : ''}`,
         });
         if (!added) failedCount += 1;
       }
@@ -1088,6 +1089,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ram: '16GB DDR4',
         ssd_capacity: '256GB NVMe',
         ssd_health: 98,
+        screen_size: '',
         import_price: 3500000,
         import_date: new Date().toISOString().slice(0, 10),
         source: 'vtat',
@@ -2298,6 +2300,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder="VD: 256GB NVMe"
                     value={newItem.ssd_capacity}
                     onChange={(e) => setNewItem({ ...newItem, ssd_capacity: e.target.value })}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Kích thước màn hình */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
+                    Kích Thước Màn Hình
+                  </label>
+                  <input
+                    type="text"
+                    placeholder='VD: 14" hoặc 15.6"'
+                    value={newItem.screen_size}
+                    onChange={(e) => setNewItem({ ...newItem, screen_size: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>

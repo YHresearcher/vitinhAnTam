@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     url: 'https://www.vitinhantam.com',
     images: [
       {
-        url: 'https://www.vitinhantam.com/images/hero-showroom.jpg',
+        url: 'https://www.vitinhantam.com/images/hero-laptop-windows.webp',
         width: 1200,
         height: 630,
         alt: 'Vi Tính An Tâm — Máy Tính Đồng Bộ & Laptop Tuyển Chọn',

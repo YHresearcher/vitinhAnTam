@@ -374,12 +374,12 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Right Column: Hero Showroom Image (Clean & Modern) */}
+              {/* Right Column: Hero Laptop Image (Clean & Modern) */}
               <div className="lg:col-span-5 relative">
                 <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-200/90 aspect-16/11 group bg-slate-100">
                   <Image
-                    src="/images/hero-showroom.jpg"
-                    alt="Showroom Vi Tính An Tâm - Máy Tính Doanh Nghiệp Tuyển Chọn"
+                    src="/images/hero-laptop-windows.webp"
+                    alt="Máy tính đã test kỹ, màn hình Windows — Vi Tính An Tâm"
                     fill
                     priority
                     className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -390,14 +390,13 @@ export default function HomePage() {
                 {/* Sub-card trust badges underneath image */}
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Operating System' : 'Hệ thống'}</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Windows OEM' : 'Windows Bản Quyền Số'}</div>
-                    <div className="text-[11px] text-slate-500">{isEn ? 'Lifetime motherboard entitlement' : 'Vĩnh viễn theo bo mạch chủ'}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Licence' : 'Bản quyền'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Genuine Windows with the machine' : 'Windows bản quyền theo máy'}</div>
+                    <div className="text-[11px] text-slate-500">{isEn ? 'Activated online once, stays good' : 'Kích hoạt online 1 lần, dùng ổn định lâu dài'}</div>
                   </div>
                   <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs">
-                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'Technical Support' : 'Hỗ trợ kỹ thuật'}</div>
-                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Rapid On-Site Response' : 'Ứng Phó Nhanh'}</div>
-                    <div className="text-[11px] text-slate-500">{isEn ? 'On-site dispatch & remote diagnostics' : 'Tận nơi hoặc qua UltraViewer'}</div>
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">{isEn ? 'After-Sales Support' : 'Hỗ trợ sau bán'}</div>
+                    <div className="text-xs font-bold text-slate-900 mt-0.5">{isEn ? 'Remote support via UltraViewer' : 'Hỗ trợ từ xa qua UltraViewer'}</div>
                   </div>
                 </div>
               </div>
