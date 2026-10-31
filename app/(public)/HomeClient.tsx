@@ -500,17 +500,9 @@ export default function HomePage() {
           {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
             <div className="space-y-6 mb-10">
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
-                      <div className="aspect-16/10 bg-slate-200" />
-                      <div className="p-5 space-y-3">
-                        <div className="h-4 bg-slate-200 rounded w-3/4" />
-                        <div className="h-3 bg-slate-200 rounded w-1/2" />
-                        <div className="h-3 bg-slate-200 rounded w-2/3" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 animate-pulse" aria-hidden="true">
+                  <div className="h-4 bg-slate-200 rounded w-1/3" />
+                  <div className="h-3 bg-slate-200 rounded w-1/2 mt-3" />
                 </div>
               ) : displayedProducts.length === 0 ? (
                 <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
@@ -657,17 +649,9 @@ export default function HomePage() {
               </div>
 
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
-                      <div className="aspect-16/10 bg-slate-200" />
-                      <div className="p-5 space-y-3">
-                        <div className="h-4 bg-slate-200 rounded w-3/4" />
-                        <div className="h-3 bg-slate-200 rounded w-1/2" />
-                        <div className="h-3 bg-slate-200 rounded w-2/3" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 animate-pulse" aria-hidden="true">
+                  <div className="h-4 bg-slate-200 rounded w-1/3" />
+                  <div className="h-3 bg-slate-200 rounded w-1/2 mt-3" />
                 </div>
               ) : displayedComponents.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">
@@ -799,17 +783,9 @@ export default function HomePage() {
               </div>
 
               {isLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-hidden="true">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
-                      <div className="aspect-16/10 bg-slate-200" />
-                      <div className="p-5 space-y-3">
-                        <div className="h-4 bg-slate-200 rounded w-3/4" />
-                        <div className="h-3 bg-slate-200 rounded w-1/2" />
-                        <div className="h-3 bg-slate-200 rounded w-2/3" />
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 animate-pulse" aria-hidden="true">
+                  <div className="h-4 bg-slate-200 rounded w-1/3" />
+                  <div className="h-3 bg-slate-200 rounded w-1/2 mt-3" />
                 </div>
               ) : displayedSoftwareCategories.length === 0 ? (
                 <div className="p-8 text-center rounded-xl bg-white border border-[#E8E2D9] text-xs text-[#6E5D53]">

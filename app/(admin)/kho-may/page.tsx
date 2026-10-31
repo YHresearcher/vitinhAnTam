@@ -461,6 +461,7 @@ export default function KhoMayPage() {
     ssd_capacity: '256GB NVMe',
     ssd_health: 98,
     screen_size: '',
+    other_features: '',
     import_price: 0,
     import_date: new Date().toISOString().slice(0, 10),
     source: 'vtat',
@@ -1064,6 +1065,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           qc_status: 'ready_to_sell',
           warranty_months: Number(newItem.warranty_months),
           specs_summary: `${newItem.cpu} | ${newItem.ram} | SSD ${newItem.ssd_capacity} (${health}%)${newItem.screen_size.trim() ? ` | Màn ${newItem.screen_size.trim()}` : ''}`,
+          specs: {
+            cpu: newItem.cpu,
+            ram: newItem.ram,
+            ssd: newItem.ssd_capacity,
+            ssd_health: health,
+            ssd_status: health >= 80 ? 'Good' : health >= 50 ? 'Caution' : 'Bad',
+            screen: newItem.screen_size.trim() || undefined,
+            features: newItem.other_features.trim() || undefined,
+          },
         });
         if (!added) failedCount += 1;
       }
@@ -1090,6 +1100,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         ssd_capacity: '256GB NVMe',
         ssd_health: 98,
         screen_size: '',
+        other_features: '',
         import_price: 3500000,
         import_date: new Date().toISOString().slice(0, 10),
         source: 'vtat',
@@ -2314,6 +2325,20 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     placeholder='VD: 14" hoặc 15.6"'
                     value={newItem.screen_size}
                     onChange={(e) => setNewItem({ ...newItem, screen_size: e.target.value })}
+                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Các tính năng khác — hiện trong mô tả máy cho khách */}
+                <div className="md:col-span-3">
+                  <label className="block text-xs font-semibold text-slate-700 mb-0.5">
+                    Các Tính Năng Khác
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="VD: Bàn phím có đèn, mở khóa vân tay, màn cảm ứng, webcam Full HD..."
+                    value={newItem.other_features}
+                    onChange={(e) => setNewItem({ ...newItem, other_features: e.target.value })}
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
@@ -4140,6 +4165,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   <div className="pt-2 border-t border-blue-100 text-[11px] text-slate-600">
                     <span className="font-semibold text-slate-700">Mô tả ngoại quan:</span>{' '}
                     {viewingSpecsItem.specs_summary}
+                  </div>
+                )}
+                {viewingSpecsItem.specs?.features && (
+                  <div className="pt-2 border-t border-blue-100 text-[11px] text-slate-600">
+                    <span className="font-semibold text-slate-700">Tính năng khác:</span>{' '}
+                    {viewingSpecsItem.specs.features}
                   </div>
                 )}
               </div>

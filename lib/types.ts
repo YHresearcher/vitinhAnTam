@@ -69,6 +69,7 @@ export interface InventorySpecs {
   gpu?: string;
   screen?: string;
   power?: string;
+  features?: string; // Tính năng khác nhập tay lúc nhập máy — hiện trong mô tả máy cho khách
 }
 
 // Một linh kiện trong máy, ghi nhận lúc nhập máy sau khi test.

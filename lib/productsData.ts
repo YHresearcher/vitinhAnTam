@@ -183,7 +183,9 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
             ? en.subBadge
             : '6-Month Full-System Warranty'
           : (rawMatch?.vi.subBadge || 'Bảo hành 6 tháng'),
-        desc: isEn
+        desc: item.specs?.features?.trim()
+          ? item.specs.features.trim()
+          : isEn
           ? en
             ? en.desc
             : 'Meticulously inspected enterprise hardware, 100% stress-tested with FurMark & AIDA64 for quiet and cool operation.'
