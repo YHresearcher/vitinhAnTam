@@ -1183,11 +1183,12 @@ export function StoreProvider({
         const spQuery = includeAdminData
           ? supabase.from('spare_parts').select('*')
           : supabase.from('spare_parts').select(PUBLIC_SPARE_PART_COLUMNS);
-        const [invResult, spResult, blogPostRes, blogCatRes] = await Promise.all([
+        const [invResult, spResult, blogPostRes, blogCatRes, faqRes] = await Promise.all([
           invQuery,
           spQuery,
           supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
           supabase.from('blog_categories').select('*').order('created_at', { ascending: true }),
+          supabase.from('faqs').select('*').order('order_index', { ascending: true }),
         ]);
         if (invResult.error) {
           throw new Error(invResult.error.message);
@@ -1205,6 +1206,14 @@ export function StoreProvider({
         if (blogCatRes.data && !blogCatRes.error) {
           setBlogCategories(blogCatRes.data as BlogCategory[]);
           saveToLocal(STORAGE_KEYS.blogCategories, blogCatRes.data);
+        }
+        if (faqRes.data && !faqRes.error) {
+          setFaqs(faqRes.data as FaqItem[]);
+          // FAQ là nội dung công khai như blog: DB là nguồn chuẩn, ghi đè
+          // bộ nhớ đệm local để lần tải sau không đọc lại bản cũ (trước đây
+          // store không hề đọc bảng faqs nên khôi phục dòng trong DB cũng
+          // không hiện lên trang chủ).
+          saveToLocal(STORAGE_KEYS.faqs, faqRes.data);
         }
 
         // Làm mới cấu hình hiển thị công khai trực tiếp từ DB: bản settings do
@@ -1515,6 +1524,7 @@ export function StoreProvider({
         shfResult,
         blogPostResult,
         blogCatResult,
+        faqResult,
       ] = await Promise.all([
         supabase.from('inventory_items').select('*'),
         supabase.from('customers').select('*'),
@@ -1524,6 +1534,7 @@ export function StoreProvider({
         supabase.from('shift_logs').select('*'),
         supabase.from('blog_posts').select('*').order('created_at', { ascending: false }),
         supabase.from('blog_categories').select('*'),
+        supabase.from('faqs').select('*').order('order_index', { ascending: true }),
       ]);
 
       // Dispatch đọc qua API server (nguồn sự thật) — ghi/đọc trực tiếp
@@ -1570,6 +1581,10 @@ export function StoreProvider({
       if (blogCatResult.data && !blogCatResult.error) {
         setBlogCategories(blogCatResult.data as BlogCategory[]);
         saveToLocal(STORAGE_KEYS.blogCategories, blogCatResult.data);
+      }
+      if (faqResult.data && !faqResult.error) {
+        setFaqs(faqResult.data as FaqItem[]);
+        saveToLocal(STORAGE_KEYS.faqs, faqResult.data);
       }
 
       setLastSyncedAt(new Date().toLocaleTimeString('vi-VN'));
@@ -4695,6 +4710,24 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.faqs, next);
       return next;
     });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        // Ghi song song Supabase để lần kéo sau không ghi đè mất câu mới.
+        // KHÔNG chặn bằng isUuid: id FAQ khôi phục là dạng text 'faq-1',
+        // không phải UUID — chặn isUuid sẽ lặng lẽ bỏ qua đúng các dòng đó.
+        // order_index/created_at có trong bảng DB (không có trong type
+        // FaqItem) nên ghi kèm để insert không vỡ nếu cột NOT NULL.
+        await supabase.from('faqs').insert({
+          ...newFaq,
+          order_index: faqs.length + 1,
+          created_at: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.error('Failed to sync new FAQ to Supabase:', err);
+      }
+    }
+
     return newFaq;
   };
 
@@ -4704,6 +4737,15 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.faqs, next);
       return next;
     });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('faqs').update(data).eq('id', id);
+      } catch (err) {
+        console.error('Failed to update FAQ on Supabase:', err);
+      }
+    }
+
     return true;
   };
 
@@ -4713,6 +4755,15 @@ export function StoreProvider({
       saveToLocal(STORAGE_KEYS.faqs, next);
       return next;
     });
+
+    if (isUsingSupabase && supabase) {
+      try {
+        await supabase.from('faqs').delete().eq('id', id);
+      } catch (err) {
+        console.error('Failed to delete FAQ on Supabase:', err);
+      }
+    }
+
     return true;
   };
 
