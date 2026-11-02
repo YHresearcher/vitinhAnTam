@@ -45,16 +45,16 @@ export const VI_TRANSLATIONS = {
     badgeWindows: 'WINDOWS BẢN QUYỀN SẠCH',
     badge2h: 'HỖ TRỢ NHANH • BÁO GIÁ TRƯỚC KHI LÀM',
     description:
-      'Máy tính cũ đã test kỹ từng máy, bảo hành 6 tháng nguyên máy. Nâng cấp RAM, SSD đúng nhu cầu, phần mềm bản quyền cài sẵn. Bán tại Tây Ninh và Sài Gòn.',
+      'Máy tính cũ đã test kỹ từng máy, bảo hành 6 tháng nguyên máy. Nâng cấp RAM, SSD đúng nhu cầu, phần mềm bản quyền cài sẵn. Bán tại Tân An (Long An), Tây Ninh và Sài Gòn.',
     pillar1Title: 'MÁY DOANH NGHIỆP ĐÃ TEST KỸ',
     pillar1Desc:
       'ThinkPad, EliteBook, Latitude tuyển chọn. Test RAM, SSD, nguồn, báo rõ % sức khỏe SSD trước khi giao.',
     pillar2Title: 'PHẦN MỀM BẢN QUYỀN CÀI SẴN',
     pillar2Desc:
       'Windows, Office bản quyền cài sẵn, kích hoạt xong mới giao. Office vĩnh viễn, kích hoạt online 1 lần, không phí gia hạn. Microsoft 365 là gói 12 tháng, nói rõ từ đầu.',
-    pillar3Title: 'BÁN TẠI TÂY NINH & SÀI GÒN',
+    pillar3Title: 'CƠ SỞ TÂN AN (LONG AN), TÂY NINH & TP.HCM',
     pillar3Desc:
-      'Mua máy, nâng cấp, cài phần mềm ở cả hai nơi. Báo giá trước khi làm, máy bảo hành 6 tháng nguyên máy.',
+      'Mua máy, nâng cấp, cài phần mềm tại Long An, Tây Ninh và TP.HCM. Báo giá trước khi làm, máy bảo hành 6 tháng nguyên máy.',
     quickSearchLabel: 'Tra cứu bảo hành/sửa chữa:',
     quickSearchPlaceholder: 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...',
     quickSearchBtn: 'Tra Cứu',
@@ -114,7 +114,7 @@ export const VI_TRANSLATIONS = {
     tag: 'MUA MÁY CŨ TẠI AN TÂM ĐƯỢC GÌ',
     title: 'Máy bán ra đã được kiểm tra toàn bộ, bảo hành 6 tháng',
     pkg1Title: 'MÁY CŨ ĐÃ TEST KỸ, BẢO HÀNH 6 THÁNG',
-    pkg1Time: '⏱️ Có sẵn tại Tây Ninh & Sài Gòn',
+    pkg1Time: '⏱️ Có sẵn tại Tân An (Long An) & TP.HCM',
     pkg1Desc:
       'Máy nào trước khi giao cũng được kiểm tra lại kỹ: chạy thử, vệ sinh, đo sức khỏe ổ cứng. Có sao nói vậy, không giấu lỗi.',
     pkg1F1: 'Test RAM, SSD, nguồn; báo rõ % sức khỏe SSD',

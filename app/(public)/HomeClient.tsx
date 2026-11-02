@@ -32,14 +32,70 @@ import {
 } from '@/lib/translations';
 import { getShowcaseProducts, ShowcaseItem } from '@/lib/productsData';
 
+interface HeroWarrantySearchProps {
+  isEn: boolean;
+  placeholder?: string;
+  buttonText?: string;
+  onSearch: (tag: string) => void;
+}
+
+function HeroWarrantySearch({ isEn, placeholder, buttonText, onSearch }: HeroWarrantySearchProps) {
+  const [tag, setTag] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(tag);
+  };
+
+  return (
+    <div className="pt-2">
+      <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+        <span>
+          {isEn
+            ? 'Check warranty & service history by Phone Number / Warranty Code:'
+            : 'Tra cứu bảo hành & lịch sử sửa chữa theo Số Điện Thoại / Mã Bảo Hành:'}
+        </span>
+      </div>
+      <form
+        onSubmit={handleSubmit}
+        role="search"
+        aria-label="Tra cứu bảo hành nhanh"
+        className="flex items-stretch gap-2 max-w-lg"
+      >
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            placeholder={
+              placeholder ||
+              (isEn ? 'Enter phone number or warranty code...' : 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...')
+            }
+            aria-label="Nhập Số Điện Thoại hoặc Mã Bảo Hành"
+            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-medium shadow-2xs"
+          />
+        </div>
+        <button
+          type="submit"
+          className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center gap-1 shadow-2xs shrink-0 cursor-pointer"
+        >
+          <span>{buttonText || (isEn ? 'Lookup' : 'Tra Cứu')}</span>
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { currentLang, inventory, systemSettings, keyCategories, licenseKeys, faqs, reviews, spareParts, isLoading } = useViTinhAnTamStore();
   const isEn = currentLang === 'en';
   const t = TRANSLATIONS[currentLang || 'vi'];
 
-  // Search state for quick warranty lookup
-  const [searchInput, setSearchInput] = useState('');
+  // Quick filters for hardware machines
+  const [hardwareFilter, setHardwareFilter] = useState<'all' | 'laptop' | 'pc' | 'ram16' | 'under5m' | '5to10m' | 'above10m'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
@@ -87,14 +143,13 @@ export default function HomePage() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleSearchSubmit = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const query = searchInput.trim();
-    if (!query) {
+  const handleSearchSubmit = (query: string) => {
+    const clean = query.trim();
+    if (!clean) {
       showToast(isEn ? 'Please enter a Service Tag or phone number!' : 'Vui lòng nhập Service Tag hoặc Số điện thoại!');
       return;
     }
-    router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(query)}`);
+    router.push(`/tra-cuu-bao-hanh?tag=${encodeURIComponent(clean)}`);
   };
 
   // Lấy dữ liệu sản phẩm (Memoized để tăng tốc độ phản hồi UI)
@@ -119,16 +174,65 @@ export default function HomePage() {
     return uniqueList;
   }, [allProducts]);
   
-  // QUY TẮC HIỂN THỊ KHO MÁY: sắp xếp mới nhất trước (theo ngày nhập kho);
-  // mục "Tất cả" chỉ hiện 3 máy mới nhất, tab "Máy tính & Laptop" (xem
-  // toàn bộ kho) hiện toàn bộ.
+  // QUY TẮC HIỂN THỊ KHO MÁY: sắp xếp mới nhất trước (theo ngày nhập kho)
   const sortedInStockProducts = useMemo(
     () =>
       [...inStockProducts].sort((a, b) => (b.addedAt || '').localeCompare(a.addedAt || '')),
     [inStockProducts]
   );
+
+  // Bộ đếm phân loại phục vụ lọc nhanh kho máy
+  const filterCounts = useMemo(() => {
+    let laptop = 0, pc = 0, ram16 = 0, under5m = 0, midPrice = 0, above10m = 0;
+    for (const p of sortedInStockProducts) {
+      const isLaptop = p.category === 'laptop' || (p.name || '').toLowerCase().includes('laptop');
+      if (isLaptop) laptop++;
+      else pc++;
+      const ram = (p.specs?.ram || '').toUpperCase();
+      if (ram.includes('16GB') || ram.includes('32GB') || ram.includes('64GB')) ram16++;
+      if (p.price > 0 && p.price < 5000000) under5m++;
+      if (p.price >= 5000000 && p.price <= 10000000) midPrice++;
+      if (p.price > 10000000) above10m++;
+    }
+    return { laptop, pc, ram16, under5m, midPrice, above10m, total: sortedInStockProducts.length };
+  }, [sortedInStockProducts]);
+
+  // Danh sách máy theo bộ lọc nhanh
+  const filteredHardwareProducts = useMemo(() => {
+    if (hardwareFilter === 'all') return sortedInStockProducts;
+    return sortedInStockProducts.filter((p) => {
+      if (hardwareFilter === 'laptop') {
+        return p.category === 'laptop' || (p.name || '').toLowerCase().includes('laptop');
+      }
+      if (hardwareFilter === 'pc') {
+        return (
+          p.category === 'office' ||
+          p.category === 'workstation' ||
+          !(p.category === 'laptop' || (p.name || '').toLowerCase().includes('laptop'))
+        );
+      }
+      if (hardwareFilter === 'ram16') {
+        const ram = (p.specs?.ram || '').toUpperCase();
+        return ram.includes('16GB') || ram.includes('32GB') || ram.includes('64GB');
+      }
+      if (hardwareFilter === 'under5m') {
+        return p.price > 0 && p.price < 5000000;
+      }
+      if (hardwareFilter === '5to10m') {
+        return p.price >= 5000000 && p.price <= 10000000;
+      }
+      if (hardwareFilter === 'above10m') {
+        return p.price > 10000000;
+      }
+      return true;
+    });
+  }, [sortedInStockProducts, hardwareFilter]);
+
   const featuredProducts = useMemo(() => sortedInStockProducts.slice(0, 3), [sortedInStockProducts]);
-  const displayedProducts = homeProductTab === 'hardware' ? sortedInStockProducts : featuredProducts;
+  const displayedProducts =
+    homeProductTab === 'hardware' || hardwareFilter !== 'all'
+      ? filteredHardwareProducts
+      : featuredProducts;
 
   // QUY TẮC HIỂN THỊ LINH KIỆN: toàn bộ RAM & SSD còn hàng, mới nhất
   // trước (theo created_at nếu dữ liệu có); mục "Tất cả" chỉ hiện 3
@@ -335,37 +439,13 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                {/* Quick warranty search box */}
-                <div className="pt-2">
-                  <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>{isEn ? 'Check warranty & service history by Phone Number / Warranty Code:' : 'Tra cứu bảo hành & lịch sử sửa chữa theo Số Điện Thoại / Mã Bảo Hành:'}</span>
-                  </div>
-                  <form
-                    onSubmit={handleSearchSubmit}
-                    role="search"
-                    aria-label="Tra cứu bảo hành nhanh"
-                    className="flex items-stretch gap-2 max-w-lg"
-                  >
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                      <input
-                        type="text"
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        placeholder={t.hero.quickSearchPlaceholder || (isEn ? 'Enter phone number or warranty code...' : 'Nhập Số Điện Thoại hoặc Mã Phiếu Bảo Hành...')}
-                        aria-label="Nhập Số Điện Thoại hoặc Mã Bảo Hành"
-                        className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent font-medium shadow-2xs"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs transition-all flex items-center gap-1 shadow-2xs shrink-0"
-                    >
-                      <span>{t.hero.quickSearchBtn || (isEn ? 'Lookup' : 'Tra Cứu')}</span>
-                    </button>
-                  </form>
-                </div>
+                {/* Quick warranty search box (Isolated to avoid full page re-renders) */}
+                <HeroWarrantySearch
+                  isEn={isEn}
+                  placeholder={t.hero.quickSearchPlaceholder}
+                  buttonText={t.hero.quickSearchBtn}
+                  onSearch={handleSearchSubmit}
+                />
               </div>
 
               {/* Right Column: Hero Laptop Image (Clean & Modern) */}
@@ -427,7 +507,162 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 2. DANH MỤC SẢN PHẨM TRANG CHỦ — Card Grid Layout */}
+        {/* 2. CAM KẾT VÀNG & QUY TRÌNH KIỂM ĐỊNH QC 4 BƯỚC */}
+        <section className="bg-gradient-to-b from-white via-[#FAF7F2] to-white border-b border-[#E8E2D9] py-14 scroll-mt-20" id="cam-ket-an-tam">
+          <span id="quy-trinh-qc" className="sr-only" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* 3 Cam kết Vàng */}
+            <div className="mb-12">
+              <div className="text-center max-w-2xl mx-auto mb-8 space-y-2">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#FBE8DE] text-[#C0392B] border border-[#F2C4B2] text-xs font-bold uppercase tracking-wider">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{isEn ? 'AN TAM THREE GOLDEN PROMISES' : '3 CAM KẾT VÀNG TẠI VI TÍNH AN TÂM'}</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-[#2B1810] tracking-tight">
+                  {isEn ? 'Buy with peace of mind — Transparent from the inside out' : 'Bán Bằng Tâm Để Bạn An Tâm — Minh Bạch Từ Trong Ra Ngoài'}
+                </h2>
+                <p className="text-xs sm:text-sm text-[#6E5D53]">
+                  {isEn
+                    ? 'We strictly eliminate hidden defects, component swapping, and vague warranties.'
+                    : 'Nói không với hàng dựng, linh kiện xào nấu, cam kết bảo hành rõ ràng bằng văn bản và hệ thống điện tử.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                      <ShieldCheck className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-[#2B1810]">
+                      {isEn ? '6-Month Comprehensive Warranty' : 'Bảo Hành 6 Tháng Toàn Diện'}
+                    </h3>
+                    <p className="text-xs text-[#6E5D53] leading-relaxed">
+                      {isEn
+                        ? 'Covers the whole unit including motherboard, power, and display. Serial lookup online, no paper receipts required.'
+                        : 'Bảo hành nguyên máy gồm bo mạch, nguồn, màn hình. Tra cứu trực tuyến bằng số điện thoại hoặc mã bảo hành, không sợ mất hóa đơn.'}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100 mt-4 flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>{isEn ? '100% Genuine boards' : '100% Bo mạch zin nguyên bản'}</span>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-[#2B1810]">
+                      {isEn ? '30-Day 1-to-1 Replacement' : '30 Ngày 1 Đổi 1'}
+                    </h3>
+                    <p className="text-xs text-[#6E5D53] leading-relaxed">
+                      {isEn
+                        ? 'If any hardware defect arises within the first 30 days, we exchange another machine immediately without hassle.'
+                        : 'Trong 30 ngày đầu sử dụng, nếu phát sinh lỗi phần cứng do nhà sản xuất, tiệm đổi ngay máy tương đương hoặc hoàn tiền chu đáo.'}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100 mt-4 flex items-center gap-1 text-[11px] font-bold text-amber-800">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>{isEn ? 'Zero hesitation policy' : 'Đổi máy nhanh, không vòng vo'}</span>
+                  </div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all flex flex-col justify-between">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-200">
+                      <Monitor className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-[#2B1810]">
+                      {isEn ? 'Lifetime Software & Remote Support' : 'Hỗ Trợ Phần Mềm Trọn Đời'}
+                    </h3>
+                    <p className="text-xs text-[#6E5D53] leading-relaxed">
+                      {isEn
+                        ? 'Pre-installed genuine Windows. Free remote assistance via UltraViewer/AnyDesk whenever you encounter difficulties.'
+                        : 'Cài sẵn Windows bản quyền số vĩnh viễn theo máy. Hỗ trợ kỹ thuật từ xa qua UltraViewer trọn đời mỗi khi bạn cần trợ giúp.'}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100 mt-4 flex items-center gap-1 text-[11px] font-bold text-blue-700">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>{isEn ? 'Free UltraViewer support' : 'Cứu hộ từ xa miễn phí'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Bước kiểm định xuất xưởng */}
+            <div className="pt-8 border-t border-[#E8E2D9]/80">
+              <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
+                <h3 className="text-xl sm:text-2xl font-black text-[#2B1810] tracking-tight">
+                  {t.qcProcess.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-[#6E5D53]">
+                  {t.qcProcess.subtitle}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="p-5 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xs hover:border-[#C0392B] transition-all group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl font-black text-[#E8E2D9] group-hover:text-[#C0392B] transition-colors font-mono">01</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">Stress-Test</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[#2B1810] uppercase">{t.qcProcess.s1Title}</h4>
+                  <p className="text-[11px] text-[#6E5D53] mt-1.5 leading-relaxed">
+                    {t.qcProcess.s1Desc}
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xs hover:border-[#C0392B] transition-all group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl font-black text-[#E8E2D9] group-hover:text-[#C0392B] transition-colors font-mono">02</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">Vệ sinh & Keo</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[#2B1810] uppercase">{t.qcProcess.s2Title}</h4>
+                  <p className="text-[11px] text-[#6E5D53] mt-1.5 leading-relaxed">
+                    {t.qcProcess.s2Desc}
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xs hover:border-[#C0392B] transition-all group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl font-black text-[#E8E2D9] group-hover:text-[#C0392B] transition-colors font-mono">03</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">Ổ cứng & RAM</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[#2B1810] uppercase">{t.qcProcess.s3Title}</h4>
+                  <p className="text-[11px] text-[#6E5D53] mt-1.5 leading-relaxed">
+                    {t.qcProcess.s3Desc}
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#E8E2D9] shadow-2xs hover:border-[#C0392B] transition-all group">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-3xl font-black text-[#E8E2D9] group-hover:text-[#C0392B] transition-colors font-mono">04</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600">Main Zin 100%</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-[#2B1810] uppercase">{t.qcProcess.s4Title}</h4>
+                  <p className="text-[11px] text-[#6E5D53] mt-1.5 leading-relaxed">
+                    {t.qcProcess.s4Desc}
+                  </p>
+                </div>
+              </div>
+
+              {/* Nút lướt tới kho máy */}
+              <div className="text-center pt-2">
+                <a
+                  href="#san-pham"
+                  onClick={(e) => scrollToSection(e, 'san-pham')}
+                  className="inline-flex items-center gap-2 text-xs font-bold text-[#C0392B] hover:text-[#A93226] uppercase tracking-wider hover:underline cursor-pointer"
+                >
+                  <span>{isEn ? 'Browse verified computers in stock below ↓' : 'Xem ngay kho máy đã kiểm định đạt chuẩn bên dưới ↓'}</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 3. DANH MỤC SẢN PHẨM TRANG CHỦ — Card Grid Layout */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 scroll-mt-20" id="san-pham">
           <span id="danh-muc-san-pham" className="sr-only" />
           {/* Section Header */}
@@ -445,23 +680,37 @@ export default function HomePage() {
           </div>
 
           {/* Category Filter Tabs: Tất Cả, Máy Tính & Laptop, Linh Kiện, Phần Mềm & Key */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 p-3 rounded-xl bg-[#FAF7F2] border border-[#E8E2D9]">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() => setHomeProductTab(homeProductTab === 'hardware' ? 'all' : 'hardware')}
-                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all ${
+                onClick={() => setHomeProductTab('all')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all cursor-pointer ${
+                  homeProductTab === 'all'
+                    ? 'bg-[#2B1810] text-white shadow-xs'
+                    : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
+                }`}
+              >
+                {isEn ? 'All Categories' : 'TẤT CẢ'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHomeProductTab('hardware')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
                   homeProductTab === 'hardware'
                     ? 'bg-[#2B1810] text-white shadow-xs'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
                 }`}
               >
-                {isEn ? 'Computers & Laptops' : 'MÁY TÍNH & LAPTOP'}
+                <span>{isEn ? 'Computers & Laptops' : 'MÁY TÍNH & LAPTOP'}</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-mono">
+                  {isLoading ? '…' : sortedInStockProducts.length}
+                </span>
               </button>
               <button
                 type="button"
-                onClick={() => setHomeProductTab(homeProductTab === 'components' ? 'all' : 'components')}
-                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                onClick={() => setHomeProductTab('components')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
                   homeProductTab === 'components'
                     ? 'bg-[#2B1810] text-white shadow-xs'
                     : 'bg-white border border-[#E8E2D9] text-[#6E5D53] hover:border-[#2B1810]'
@@ -474,8 +723,8 @@ export default function HomePage() {
               </button>
               <button
                 type="button"
-                onClick={() => setHomeProductTab(homeProductTab === 'software' ? 'all' : 'software')}
-                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                onClick={() => setHomeProductTab('software')}
+                className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
                   homeProductTab === 'software'
                     ? 'bg-[#C0392B] text-white shadow-xs'
                     : 'bg-white border border-[#E8E2D9] text-[#C0392B] hover:border-[#C0392B]'
@@ -489,6 +738,112 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Quick Pills Filter for Hardware */}
+          {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
+            <div className="flex flex-wrap items-center gap-2 mb-8 p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+              <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1.5">
+                <ScanLine className="w-3.5 h-3.5 text-[#C0392B]" />
+                <span>{isEn ? 'Filter PCs:' : 'Lọc nhanh máy:'}</span>
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('all')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === 'all'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `All (${filterCounts.total})` : `Tất cả (${filterCounts.total})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('laptop')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === 'laptop'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `Laptop (${filterCounts.laptop})` : `Laptop (${filterCounts.laptop})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('pc')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === 'pc'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `PC Đồng bộ (${filterCounts.pc})` : `PC Đồng bộ (${filterCounts.pc})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('ram16')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === 'ram16'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `RAM 16GB+ (${filterCounts.ram16})` : `RAM 16GB+ (${filterCounts.ram16})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('under5m')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === 'under5m'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `< 5M (${filterCounts.under5m})` : `< 5 Triệu (${filterCounts.under5m})`}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setHardwareFilter('5to10m')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  hardwareFilter === '5to10m'
+                    ? 'bg-[#C0392B] text-white shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                {isEn ? `5 - 10M (${filterCounts.midPrice})` : `5 - 10 Triệu (${filterCounts.midPrice})`}
+              </button>
+
+              {filterCounts.above10m > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setHardwareFilter('above10m')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    hardwareFilter === 'above10m'
+                      ? 'bg-[#C0392B] text-white shadow-xs'
+                      : 'bg-slate-50 border border-slate-200 text-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  {isEn ? `> 10M (${filterCounts.above10m})` : `> 10 Triệu (${filterCounts.above10m})`}
+                </button>
+              )}
+
+              {hardwareFilter !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setHardwareFilter('all')}
+                  className="text-xs text-[#C0392B] hover:underline font-bold ml-auto cursor-pointer"
+                >
+                  {isEn ? '✕ Reset filter' : '✕ Xóa bộ lọc'}
+                </button>
+              )}
+            </div>
+          )}
+
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
           {/* 1. MÁY TÍNH ĐỒNG BỘ & LAPTOP DOANH NGHIỆP */}
           {(homeProductTab === 'all' || homeProductTab === 'hardware') && (
@@ -501,12 +856,24 @@ export default function HomePage() {
               ) : displayedProducts.length === 0 ? (
                 <div className="text-center py-12 px-4 rounded-2xl bg-white border border-dashed border-slate-200">
                   <Monitor className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm font-semibold text-slate-600">
-                    {isEn ? 'Hardware inventory is currently being updated.' : 'Kho máy tính đang được cập nhật thiết bị mới từ hệ thống.'}
+                  <p className="text-sm font-semibold text-slate-700">
+                    {hardwareFilter !== 'all'
+                      ? (isEn ? 'No machines match the selected filter.' : 'Không tìm thấy máy nào phù hợp với bộ lọc đã chọn.')
+                      : (isEn ? 'Hardware inventory is currently being updated.' : 'Kho máy tính đang được cập nhật thiết bị mới từ hệ thống.')}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {isEn ? 'Please contact our hotline or Zalo for instant consultation.' : 'Quý khách vui lòng liên hệ Hotline/Zalo để được tư vấn cấu hình phù hợp.'}
-                  </p>
+                  {hardwareFilter !== 'all' ? (
+                    <button
+                      type="button"
+                      onClick={() => setHardwareFilter('all')}
+                      className="mt-3 px-4 py-2 rounded-lg bg-[#C0392B] text-white text-xs font-bold hover:bg-[#A93226] transition-colors cursor-pointer"
+                    >
+                      {isEn ? 'Show all in-stock machines' : 'Xem tất cả máy sẵn hàng'}
+                    </button>
+                  ) : (
+                    <p className="text-xs text-slate-400 mt-1">
+                      {isEn ? 'Please contact our hotline or Zalo for instant consultation.' : 'Quý khách vui lòng liên hệ Hotline/Zalo để được tư vấn cấu hình phù hợp.'}
+                    </p>
+                  )}
                 </div>
               ) : (
                 <>
@@ -1039,52 +1406,6 @@ export default function HomePage() {
                 <span>{t.services.btnBigDispatch}</span>
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* 4. QUY TRÌNH KIỂM ĐỊNH QC 4 BƯỚC */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <h2 className="text-2xl sm:text-4xl font-black text-[#2B1810] tracking-tight">
-              {t.qcProcess.title}
-            </h2>
-            <p className="text-xs sm:text-sm text-[#6E5D53]">
-              {t.qcProcess.subtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">01</div>
-              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s1Title}</h3>
-              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
-                {t.qcProcess.s1Desc}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">02</div>
-              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s2Title}</h3>
-              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
-                {t.qcProcess.s2Desc}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">03</div>
-              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s3Title}</h3>
-              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
-                {t.qcProcess.s3Desc}
-              </p>
-            </div>
-
-            <div className="p-6 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs hover:border-[#C0392B] transition-all">
-              <div className="text-4xl font-black text-[#E8E2D9] leading-none mb-3">04</div>
-              <h3 className="text-sm font-bold text-[#2B1810] uppercase">{t.qcProcess.s4Title}</h3>
-              <p className="text-xs text-[#6E5D53] mt-2 leading-relaxed">
-                {t.qcProcess.s4Desc}
-              </p>
             </div>
           </div>
         </section>

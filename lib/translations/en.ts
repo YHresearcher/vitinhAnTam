@@ -47,16 +47,16 @@ export const EN_TRANSLATIONS = {
     badgeWindows: 'GENUINE CLEAN WINDOWS',
     badge2h: 'RAPID RESPONSE • DEDICATED SUPPORT',
     description:
-      'Used computers tested one by one, with a 6-month whole-machine warranty. RAM and SSD upgrades matched to your needs, licensed software preinstalled. Sold in Tay Ninh and Saigon.',
+      'Used computers tested one by one, with a 6-month whole-machine warranty. RAM and SSD upgrades matched to your needs, licensed software preinstalled. Available in Tan An (Long An), Tay Ninh and Saigon.',
     pillar1Title: 'TESTED BUSINESS MACHINES',
     pillar1Desc:
       'Hand-picked ThinkPad, EliteBook and Latitude. RAM, SSD and power supply tested, with SSD health % reported before handover.',
     pillar2Title: 'LICENSED SOFTWARE PREINSTALLED',
     pillar2Desc:
       'Windows and Office licenses installed and activated before handover. Office is perpetual, activated online once, with no renewal fees. Microsoft 365 is a 12-month plan, stated upfront.',
-    pillar3Title: 'SOLD IN TAY NINH & SAIGON',
+    pillar3Title: 'LOCATIONS: TAN AN (LONG AN), TAY NINH & SAIGON',
     pillar3Desc:
-      'Buy machines, upgrades and software in both cities. Quoted before any work, with a 6-month whole-machine warranty.',
+      'Buy machines, upgrades and software across Long An, Tay Ninh and HCMC. Quoted before any work, with a 6-month whole-machine warranty.',
     quickSearchLabel: 'Quick Lookup:',
     quickSearchPlaceholder: 'Enter phone number or warranty code...',
     quickSearchBtn: 'Lookup',
@@ -116,7 +116,7 @@ export const EN_TRANSLATIONS = {
     tag: 'WHAT YOU GET WHEN YOU BUY FROM AN TAM',
     title: 'USED MACHINES, TESTED AND COVERED BY A 6-MONTH WARRANTY',
     pkg1Title: 'TESTED USED MACHINES, 6-MONTH WARRANTY',
-    pkg1Time: '⏱️ Available in Tay Ninh & Saigon',
+    pkg1Time: '⏱️ Available in Tan An (Long An) & Saigon',
     pkg1Desc:
       'Every machine is checked again before handover: run under load, cleaned, drive health measured. Flaws are told upfront, never hidden.',
     pkg1F1: 'RAM, SSD and power supply tested; SSD health % reported',
