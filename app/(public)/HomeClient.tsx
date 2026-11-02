@@ -555,12 +555,12 @@ export default function HomePage() {
                       <Sparkles className="w-6 h-6" />
                     </div>
                     <h3 className="text-base font-bold text-[#2B1810]">
-                      {isEn ? '30-Day 1-to-1 Replacement' : '30 Ngày 1 Đổi 1'}
+                      {isEn ? '7-Day 1-to-1 Replacement' : '7 Ngày 1 Đổi 1'}
                     </h3>
                     <p className="text-xs text-[#6E5D53] leading-relaxed">
                       {isEn
-                        ? 'If any hardware defect arises within the first 30 days, we exchange another machine immediately without hassle.'
-                        : 'Trong 30 ngày đầu sử dụng, nếu phát sinh lỗi phần cứng do nhà sản xuất, tiệm đổi ngay máy tương đương hoặc hoàn tiền chu đáo.'}
+                        ? 'If any hardware defect arises within the first 7 days, we exchange another machine immediately without hassle.'
+                        : 'Trong 7 ngày đầu sử dụng, nếu phát sinh lỗi phần cứng do nhà sản xuất, tiệm đổi ngay máy tương đương hoặc hoàn tiền chu đáo.'}
                     </p>
                   </div>
                   <div className="pt-4 border-t border-slate-100 mt-4 flex items-center gap-1 text-[11px] font-bold text-amber-800">
