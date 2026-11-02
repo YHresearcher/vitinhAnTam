@@ -279,8 +279,9 @@ export default function KhoMayPage() {
       const lenderTotal = effectiveCostPrice + lenderBonus;
       const warrantyReserve = Math.round(Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER) * 0.10);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
+      const netProfitAfterAds = Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER);
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15% lãi ròng): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (10%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Quảng cáo chuẩn: 60.000₫ | Lãi ròng (N): ${netProfitAfterAds.toLocaleString('vi-VN')}₫ | Người bán (15% lãi ròng): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (10%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -3010,6 +3011,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         const lenderTotal = costPrice + lenderBonus;
         // 3. 10% tiền trích lập dự phòng
         const warrantyReserve = isProfitable ? Math.round(Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER) * 0.10) : 0;
+        // Lãi ròng sau quảng cáo chuẩn (hoa hồng 15% và dự phòng 10% tính trên N)
+        const netProfitAfterAds = isProfitable ? Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER) : 0;
         // 4. Lợi nhuận còn lại (80% lợi nhuận)
         const remainingProfit = isProfitable
           ? profit - sellerCommission - lenderBonus - warrantyReserve
@@ -3122,12 +3125,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
               </div>
 
+              {/* Quảng cáo chuẩn + lãi ròng N */}
+              <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-blue-50/70 border border-blue-200 text-[11px] font-semibold text-blue-900">
+                <span>Quảng cáo chuẩn: 60.000₫/đơn</span>
+                <span className="font-mono">Lãi ròng N: {netProfitAfterAds.toLocaleString('vi-VN')} ₫ (lãi gộp trừ 60.000đ quảng cáo chuẩn)</span>
+              </div>
+
               {/* 4 Khoản phân bổ dòng tiền theo đúng yêu cầu */}
               <div className="space-y-2">
                 <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
                   <span>Chi Tiết 4 Khoản Phân Bổ Dòng Tiền</span>
                   <span className="text-[11px] text-slate-500 lowercase font-normal">
-                    (tính trên lợi nhuận {profit > 0 ? profit.toLocaleString('vi-VN') + ' ₫' : '0 ₫'})
+                    (hoa hồng 15% và dự phòng 10% tính trên lãi ròng sau 60.000đ quảng cáo chuẩn)
                   </span>
                 </div>
 
