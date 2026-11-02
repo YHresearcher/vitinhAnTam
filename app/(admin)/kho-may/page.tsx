@@ -3178,7 +3178,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                         <span>10% trích lập dự phòng</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">
-                        5% LN
+                        10% lãi ròng
                       </span>
                     </div>
                     <div className="text-base font-black text-rose-950 font-mono">
