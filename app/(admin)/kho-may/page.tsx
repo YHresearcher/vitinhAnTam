@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useStore, calcSellerCommission } from '@/lib/store';
+import { useStore, calcSellerCommission, STANDARD_ADS_COST_PER_ORDER } from '@/lib/store';
 import {
   InventoryItem,
   MachineComponent,
@@ -277,10 +277,10 @@ export default function KhoMayPage() {
       const sellerBonus = calcSellerCommission(profit, saleDate || new Date().toISOString(), false);
       const lenderBonus = Math.round(profit * 0.05);
       const lenderTotal = effectiveCostPrice + lenderBonus;
-      const warrantyReserve = Math.round(profit * 0.05);
+      const warrantyReserve = Math.round(Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER) * 0.10);
       const remainingProfit = profit - sellerBonus - lenderBonus - warrantyReserve;
 
-      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15% lãi ròng): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (5%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
+      const cashflowNote = `[Phân bổ dòng tiền] Giá bán: ${soldPrice.toLocaleString('vi-VN')}₫ | Vốn nhập: ${effectiveCostPrice.toLocaleString('vi-VN')}₫ | Lợi nhuận: ${profit.toLocaleString('vi-VN')}₫ | Người bán (15% lãi ròng): ${sellerBonus.toLocaleString('vi-VN')}₫ | Hoàn người cho vay (Vốn+5%LN): ${lenderTotal.toLocaleString('vi-VN')}₫ | Dự phòng (10%): ${warrantyReserve.toLocaleString('vi-VN')}₫ | LN còn lại: ${remainingProfit.toLocaleString('vi-VN')}₫${sellNotes.trim() ? ` | Ghi chú: ${sellNotes.trim()}` : ''}`;
 
       const res = await sellInventoryItem({
         itemId: item.id,
@@ -3008,8 +3008,8 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
         const lenderBonus = isProfitable ? Math.round(profit * 0.05) : 0;
         // Tiền hoàn người cho vay vốn (tiền vốn nhập + 5% lợi nhuận)
         const lenderTotal = costPrice + lenderBonus;
-        // 3. 5% tiền trích lập dự phòng
-        const warrantyReserve = isProfitable ? Math.round(profit * 0.05) : 0;
+        // 3. 10% tiền trích lập dự phòng
+        const warrantyReserve = isProfitable ? Math.round(Math.max(0, profit - STANDARD_ADS_COST_PER_ORDER) * 0.10) : 0;
         // 4. Lợi nhuận còn lại (80% lợi nhuận)
         const remainingProfit = isProfitable
           ? profit - sellerCommission - lenderBonus - warrantyReserve

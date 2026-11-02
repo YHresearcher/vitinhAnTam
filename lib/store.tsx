@@ -391,7 +391,7 @@ interface StoreContextType {
   rejectKeyReleaseRequest: (requestId: string, reason: string) => Promise<boolean>;
   updateKeyEmailTemplate: (updates: Partial<KeyEmailTemplateConfig>) => Promise<boolean>;
 
-  // 5% Warranty Provision Fund Lifecycle
+  // 10% Warranty Provision Fund Lifecycle
   warrantyProvisions: WarrantyProvision[];
   approveWarrantyProvision: (provisionId: string) => Promise<{ success: boolean; message: string }>;
   unlockMaturedWarrantyProvisions: () => Promise<{ unlockedCount: number; unlockedTotal: number }>;
@@ -617,7 +617,7 @@ export function StoreProvider({
   const [keyReleaseRequests, setKeyReleaseRequests] = useState<KeyReleaseRequest[]>([]);
   const [keyEmailTemplate, setKeyEmailTemplate] = useState<KeyEmailTemplateConfig>(initialKeyEmailTemplate);
 
-  // 5% Warranty Provision Fund State
+  // 10% Warranty Provision Fund State
   const [warrantyProvisions, setWarrantyProvisions] = useState<WarrantyProvision[]>([]);
 
   // Admin Deductions Fund State (10% Key / 5% Machine)
@@ -1837,7 +1837,7 @@ export function StoreProvider({
         const sellerCommission = calcSellerCommission(netProfit, new Date().toISOString(), false);
         const lenderBonus = Math.round(netProfit * 0.05);
         const lenderTotal = costPrice + lenderBonus;
-        const warrantyReserve = Math.round(netProfit * 0.05);
+        const warrantyReserve = Math.round(Math.max(0, netProfit - STANDARD_ADS_COST_PER_ORDER) * 0.10);
         const remainingProfit = Math.max(0, netProfit - sellerCommission - lenderBonus - warrantyReserve);
 
         fetch('/api/webhook/notify', {
@@ -4123,11 +4123,12 @@ export function StoreProvider({
       ]);
     }
 
-    // 4. Calculate 5% Warranty Provision Fund from Net Profit (theo TỔNG số máy bán ra)
+    // 4. Calculate 10% Warranty Provision Fund from Net Profit (lãi ròng = lãi gộp − 60.000đ quảng cáo chuẩn/đơn)
     const finalSoldPrice = unitSoldPrice * sellQty;
     const finalCostPrice = item.cost_price || item.import_price || 0;
     const netProfit = Math.max(0, finalSoldPrice - finalCostPrice * sellQty);
-    const provisionAmount = Math.max(0, Math.round(netProfit * 0.05));
+    const netProfitForProvision = Math.max(0, netProfit - STANDARD_ADS_COST_PER_ORDER);
+    const provisionAmount = Math.max(0, Math.round(netProfitForProvision * 0.10));
 
     if (provisionAmount > 0) {
       // Hạn bảo hành theo tháng dương lịch, khớp với ngày hết hạn hiện ở UI
@@ -4150,8 +4151,8 @@ export function StoreProvider({
         warranty_expiry_date: expiryDate,
         sale_price: finalSoldPrice,
         cost_price: finalCostPrice * sellQty,
-        net_profit: netProfit,
-        provision_rate: 0.05,
+        net_profit: netProfitForProvision,
+        provision_rate: 0.10,
         provision_amount: provisionAmount,
         notes: params.notes,
         status: currentUser.role === 'admin' ? 'locked' : 'pending_approval',
@@ -4249,7 +4250,7 @@ export function StoreProvider({
       customerCode,
       message: `Bán máy thành công${sellQty > 1 ? ` ${sellQty} máy` : ''}${
         !isAlreadySold && remainingStock > 0 ? ` (Còn ${remainingStock} máy trong kho)` : ''
-      }! Mã khách hàng: ${customerCode} (Trích 5% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
+      }! Mã khách hàng: ${customerCode} (Trích 10% Quỹ BH: ${provisionAmount.toLocaleString('vi-VN')}₫)`,
     };
   };
 

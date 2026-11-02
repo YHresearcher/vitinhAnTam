@@ -204,9 +204,9 @@ export function FinanceOverviewTab({
             <div className="text-[10px] text-emerald-600 font-sans">Doanh thu trừ giá vốn</div>
           </div>
 
-          {/* 4. Quỹ Bảo Hành 5% */}
+          {/* 4. Quỹ Bảo Hành 10% */}
           <div className="p-4 bg-purple-50/80 border border-purple-200 rounded-2xl space-y-1">
-            <div className="text-[10px] font-bold text-purple-900 uppercase">4. Quỹ BH (5%)</div>
+            <div className="text-[10px] font-bold text-purple-900 uppercase">4. Quỹ BH (10%)</div>
             <div className="text-base font-black text-purple-800">{totalFund.toLocaleString("vi-VN")}₫</div>
             <div className="text-[10px] text-purple-600 font-sans">Phong tỏa & tất toán 31/12</div>
           </div>

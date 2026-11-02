@@ -205,7 +205,7 @@ export function FinanceWarrantyFundTab() {
 
             <div className="grid grid-cols-3 gap-2 text-center text-xs pt-1">
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="text-amber-400 font-bold font-mono">Bước 1: Trích 5%</div>
+                <div className="text-amber-400 font-bold font-mono">Bước 1: Trích 10%</div>
                 <div className="text-[10px] text-slate-400 mt-1">Admin duyệt hoặc tự động phong tỏa</div>
               </div>
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">

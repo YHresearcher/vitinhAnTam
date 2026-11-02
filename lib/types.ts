@@ -154,8 +154,8 @@ export interface WarrantyProvision {
   sale_price: number;
   cost_price: number;
   net_profit: number;
-  provision_rate: number; // 0.05 (5%)
-  provision_amount: number; // net_profit * 0.05
+  provision_rate: number; // 0.10 (10%)
+  provision_amount: number; // net_profit * 0.10
   status: 'pending_approval' | 'locked' | 'unlocked' | 'settled';
   approved_at?: string;
   approved_by?: string;
