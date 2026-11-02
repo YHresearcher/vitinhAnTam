@@ -393,8 +393,10 @@ export async function GET(request: NextRequest) {
   // tận nơi" trong trang Thống kê hiệu quả kinh doanh). Cùng cách siết
   // phạm vi như /api/dispatches; nhân viên nội bộ xem toàn bộ như trước.
   const session = getSession(request);
+  // Đồng sáng lập (Vận hành) xem toàn bộ đơn (như nhân viên nội bộ) để
+  // xử lý vận hành; bước chốt tiền bị siết ở PATCH, không ở GET.
   const isStaffSession =
-    !!session && (STAFF_ROLES as readonly string[]).includes(session.role);
+    !!session && ((STAFF_ROLES as readonly string[]).includes(session.role) || session.role === 'co_founder');
   const isFieldSession =
     !!session && (['outsourced', 'salesman'] as readonly string[]).includes(session.role);
   if (!isStaffSession && !isFieldSession) {
@@ -479,7 +481,11 @@ export async function GET(request: NextRequest) {
 // PATCH /api/orders — Staff xác nhận / cập nhật trạng thái đơn hàng
 // ---------------------------------------------------------------------------
 export async function PATCH(request: NextRequest) {
-  if (!isStaff(request)) {
+  // Đồng sáng lập (Vận hành) được qua cổng này nhưng bị siết ở dưới: chỉ
+  // đẩy đơn sang 'processing' (+ giao hàng/ghi chú/địa chỉ), không xác nhận,
+  // không hoàn tất (bước chốt tiền), không hủy, không sửa phí giao hàng.
+  const patchSession = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
+  if (!isStaff(request) && patchSession?.role !== 'co_founder') {
     return NextResponse.json(
       { error: 'Forbidden', message: 'Chỉ admin, sales và kỹ thuật mới có quyền cập nhật đơn hàng.' },
       { status: 403 }
@@ -519,6 +525,22 @@ export async function PATCH(request: NextRequest) {
     // Kiểm tra quyền: Chỉ admin mới có quyền thay đổi người chăm sóc khách hàng
     const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
     const isAdmin = session?.role === 'admin';
+
+    // Đồng sáng lập (Vận hành): chỉ được xử lý đơn tới bước đóng gói/QC.
+    if (session?.role === 'co_founder') {
+      if (body.status && body.status !== 'processing') {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Founders chỉ được xử lý đơn tới bước đóng gói/QC; xác nhận, hoàn tất và hủy do admin/quản lý thực hiện.' },
+          { status: 403 }
+        );
+      }
+      if (body.delivery_fee !== undefined) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: 'Founders không được sửa phí giao hàng.' },
+          { status: 403 }
+        );
+      }
+    }
 
     if ((body.assigned_care_id !== undefined || body.assigned_care_name !== undefined) && !isAdmin) {
       return NextResponse.json(

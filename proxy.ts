@@ -20,6 +20,7 @@ const PROTECTED_PAGES = [
   '/quan-ly-key',
   '/quan-ly-don-hang',
   '/bai-viet',
+  '/sao-ke',
 ];
 
 const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];
@@ -34,8 +35,11 @@ const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayl
   // can_access_payroll cũng không mở 2 trang này cho QL Kỹ thuật — proxy
   // là lớp chặn cuối và chỉ tin role admin.
   { path: '/tai-chinh', allow: (s) => s.role === 'admin' },
-  { path: '/cai-dat', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
-  { path: '/thanh-vien', allow: (s) => s.role === 'admin' || s.canManageUsers === true },
+  // Cài đặt & Nhân sự: Admin, hoặc người được uỷ quyền canManageUsers —
+  // TRỪ co_founder (vai vận hành không được quản lý thành viên/cài đặt dù
+  // checkbox có bị tick nhầm; khớp với store helpers + API routes).
+  { path: '/cai-dat', allow: (s) => s.role === 'admin' || (s.role !== 'co_founder' && s.canManageUsers === true) },
+  { path: '/thanh-vien', allow: (s) => s.role === 'admin' || (s.role !== 'co_founder' && s.canManageUsers === true) },
   { path: '/tien-cong', allow: (s) => s.role === 'admin' },
   // Chỉ Admin được xem/sửa Bài viết & SEO (quyết định 2026-10-27): không mở
   // cho tech_manager hay checkbox phân quyền như các trang trên.
@@ -44,6 +48,10 @@ const ADMIN_ONLY_PAGES: Array<{ path: string; allow: (s: NonNullable<SessionPayl
   // khớp đúng check phía client (canAccessCRM: admin, sales_manager — không
   // có checkbox uỷ quyền). Chế độ "chỉ xem" cũ cho KTV bị bãi bỏ.
   { path: '/khach-hang', allow: (s) => s.role === 'admin' || s.role === 'sales_manager' },
+  // Sao kê founders: CHỈ Admin (xem trước) và Founders (key co_founder, xem
+  // phần của riêng mình). Đây là ngoại lệ duy nhất của Founders với khu tài
+  // chính — /tai-chinh vẫn khóa admin tuyệt đối ở trên.
+  { path: '/sao-ke', allow: (s) => s.role === 'admin' || s.role === 'co_founder' },
 ];
 
 const isProtectedPage = (pathname: string): boolean =>
@@ -123,6 +131,7 @@ export const config = {
     '/quan-ly-key/:path*',
     '/quan-ly-don-hang/:path*',
     '/bai-viet/:path*',
+    '/sao-ke/:path*',
     '/api/inventory/:path*',
     '/api/tickets/:path*',
   ],

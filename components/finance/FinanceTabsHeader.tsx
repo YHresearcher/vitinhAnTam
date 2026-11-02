@@ -3,8 +3,8 @@
 import React from 'react';
 
 interface Props {
-  activeTab: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions';
-  onTabChange: (t: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions') => void;
+  activeTab: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions' | 'founders_settlement' | 'capital_statement';
+  onTabChange: (t: 'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions' | 'founders_settlement' | 'capital_statement') => void;
   ledgerCount: number;
   debtCount: number;
   warrantyCount?: number;
@@ -148,6 +148,43 @@ export function FinanceTabsHeader({
                 {adminDeductionsCount}
               </span>
             )}
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => onTabChange('founders_settlement')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'founders_settlement'
+                ? 'bg-emerald-700 text-white shadow-xs'
+                : 'text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>Tất toán Founders</span>
+          </button>
+        )}
+
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => onTabChange('capital_statement')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === 'capital_statement'
+                ? 'bg-amber-700 text-white shadow-xs'
+                : 'text-amber-700 hover:text-amber-900 hover:bg-amber-50'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span>Sao kê người bỏ vốn</span>
           </button>
         )}
       </div>

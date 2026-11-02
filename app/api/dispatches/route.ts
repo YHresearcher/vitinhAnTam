@@ -5,10 +5,11 @@ import { rateLimit } from '@/lib/server/rateLimit';
 import type { SessionPayload } from '@/lib/session';
 
 // STAFF_ROLES (lib/server/auth) không gồm 'outsourced' — có chủ đích cho
-// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài và NVKD là người
-// thực thi ca, nên route này chấp nhận thêm 2 phân hệ này nhưng siết phạm
-// vi: chỉ xem/cập nhật ca được gán cho chính mình, không tạo ca mới.
-const FIELD_ROLES = ['outsourced', 'salesman'] as const;
+// các API nội bộ khác. Riêng dispatch: KTV thuê ngoài, NVKD và Đồng sáng
+// lập (Vận hành) là người thực thi ca, nên route này chấp nhận thêm các
+// phân hệ này nhưng siết phạm vi: chỉ xem/cập nhật ca được gán cho chính
+// mình, không tạo ca mới.
+const FIELD_ROLES = ['outsourced', 'salesman', 'co_founder'] as const;
 function getDispatchSession(req: NextRequest): SessionPayload | null {
   const session = getSession(req);
   if (!session) return null;

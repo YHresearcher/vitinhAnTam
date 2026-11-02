@@ -15,6 +15,8 @@ import { FinanceLedgerTab } from '@/components/finance/FinanceLedgerTab';
 import { FinancePayrollTab } from '@/components/finance/FinancePayrollTab';
 import { FinanceDebtTab } from '@/components/finance/FinanceDebtTab';
 import { FinanceAdminDeductionsTab } from '@/components/finance/FinanceAdminDeductionsTab';
+import { FoundersSettlementTab } from '@/components/finance/FoundersSettlementTab';
+import { CapitalStatementTab } from '@/components/finance/CapitalStatementTab';
 
 export default function TaiChinhPage() {
   const { canAccessPayroll, warrantyProvisions, currentUser, getAdminDeductions } = useViTinhAnTamStore();
@@ -23,7 +25,7 @@ export default function TaiChinhPage() {
 
   const adminDeductionsList = useMemo(() => getAdminDeductions(), [getAdminDeductions]);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'warranty_fund' | 'ledger' | 'payroll' | 'debt' | 'admin_deductions' | 'founders_settlement' | 'capital_statement'>('overview');
   const [timeframe, setTimeframe] = useState<TimeframeOption>('month');
 
   const [ledgerSearch, setLedgerSearch] = useState('');
@@ -145,6 +147,8 @@ export default function TaiChinhPage() {
       )}
       {activeTab === 'debt' && <FinanceDebtTab debtCustomersList={debtCustomersList} />}
       {activeTab === 'admin_deductions' && <FinanceAdminDeductionsTab />}
+      {activeTab === 'founders_settlement' && <FoundersSettlementTab />}
+      {activeTab === 'capital_statement' && <CapitalStatementTab />}
     </div>
   );
 }

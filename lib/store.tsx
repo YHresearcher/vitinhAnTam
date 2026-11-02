@@ -23,6 +23,8 @@ import {
   KeyEmailTemplateConfig,
   WarrantyProvision,
   AdminDeductionItem,
+  FounderMonthlyCosts,
+  FounderSettlementRecord,
   CustomerOrder,
   BlogPost,
   BlogCategory,
@@ -46,6 +48,14 @@ export interface ZaloContactItem {
   role?: string;
 }
 
+// Chi nhánh cửa hàng — mỗi chi nhánh có địa chỉ riêng, nhập trong Cài đặt.
+// Số Zalo/WhatsApp/Email xài chung cho mọi chi nhánh nên không nằm ở đây.
+export interface Branch {
+  id: string;
+  name: string;
+  address: string;
+}
+
 export interface ContactWidgetConfig {
   showWarranty?: boolean;
   showHotline?: boolean;
@@ -60,6 +70,7 @@ export interface SystemSettings {
   zaloNumber: string;
   zaloLink: string;
   zaloContacts?: ZaloContactItem[];
+  branches?: Branch[];
   contactWidget?: ContactWidgetConfig;
   whatsappNumber: string;
   whatsappLink: string;
@@ -137,6 +148,9 @@ export const initialSystemSettings: SystemSettings = {
     { id: 'zalo-2', name: 'Kỹ Thuật 2', phone: '0909053058', role: 'Hỗ trợ phần cứng & bảo hành' },
     { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '0909053058', role: 'Cứu hộ khẩn cấp & key bản quyền' },
   ],
+  branches: [
+    { id: 'branch-1', name: 'Trụ sở chính', address: '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh' },
+  ],
   contactWidget: { showWarranty: true, showHotline: true, showZalo: true, showWhatsapp: true, showBackToTop: true },
   whatsappNumber: '0909053058',
   whatsappLink: 'https://wa.me/84909053058',
@@ -212,6 +226,7 @@ interface StoreContextType {
   canSellAndEditWarranty: () => boolean; // Admin & Sales have full access to sell, edit customer, serial & warranty
   canSell: () => boolean; // Admin, Sales Manager & NVKD: sell-only (no price/warranty/customer edits)
   canAccessCRM: () => boolean; // Admin & Sales have full CRM access, KTV view-only
+  canFinalizeMoney: () => boolean; // Everyone except co_founder (operations role): money finalization is admin-only for co_founder-prepared sales
   // Nhân viên hiện trường (KTV thuê ngoài + NVKD): chỉ được dùng "Việc
   // của tôi" (ca của mình + thu nhập cá nhân), không xem màn hình chung của
   // cửa hàng (dashboard, phiếu, đơn, kho, bài viết). Cùng khái niệm với
@@ -402,6 +417,15 @@ interface StoreContextType {
   addAdminDeduction: (item: Omit<AdminDeductionItem, 'id' | 'created_at'>) => Promise<AdminDeductionItem>;
   getAdminDeductions: () => AdminDeductionItem[];
 
+  // Tất toán quỹ founders theo tháng (bảng chốt 2026-11-02). Số tiền luôn
+  // tính trực tiếp từ bản ghi bán máy; ở đây chỉ lưu chi phí thực tế, trạng
+  // thái chốt tháng và tổng vốn tự có (null = chưa nhập).
+  founderSettlements: FounderSettlementRecord[];
+  saveFounderSettlement: (record: FounderSettlementRecord) => void;
+  setSettlementStatus: (month: string, status: 'pending' | 'settled', by?: string) => void;
+  founderCapital: number | null;
+  setFounderCapital: (amount: number | null) => void;
+
   // Blog & SEO Content System
   blogPosts: BlogPost[];
   blogCategories: BlogCategory[];
@@ -438,6 +462,8 @@ const STORAGE_KEYS = {
   keyEmailTemplate: 'vtat_key_email_template_v3',
   warrantyProvisions: 'vtat_warranty_provisions_v3',
   adminDeductions: 'vtat_admin_deductions_v3',
+  founderSettlements: 'vtat_founder_settlements_v3',
+  founderCapital: 'vtat_founder_capital_v3',
   blogPosts: 'vtat_blog_posts_v3',
   blogCategories: 'vtat_blog_categories_v3',
 };
@@ -449,6 +475,9 @@ const STORAGE_KEYS = {
 // không nằm trong 4 ô này mà nằm ở helper. Admin thêm/bớt từng ô cho
 // từng người ở trang Nhân sự; ô tick thêm chỉ NỚI quyền, trừ QL Kỹ thuật
 // vẫn luôn bị chặn tài chính/lương ở mọi lớp (quyết định 2026-10-28).
+// Đồng sáng lập (Vận hành) cũng bị chặn cứng tài chính/lương/cài đặt/
+// quản lý thành viên/sửa kho ở mọi lớp (quyết định 2026-11-01): các helper
+// bên dưới + proxy + API routes đều loại trừ role này khỏi đường checkbox.
 // - Sửa kho: Admin + QL Kỹ thuật.
 // - Đổi trạng thái phiếu: mọi vai trò kỹ thuật/bán hàng TRỪ QL Bán hàng.
 // - Tiền công/lương + quản lý thành viên: chỉ Admin.
@@ -484,6 +513,15 @@ export const ROLE_PERMISSION_DEFAULTS: Record<UserRole, UserPermissions> = {
     can_manage_users: false,
   },
   salesman: {
+    can_edit_stock: false,
+    can_update_repair_status: true,
+    can_access_payroll: false,
+    can_manage_users: false,
+  },
+  // Đồng sáng lập (Vận hành): làm kho/key/đơn/điều phối việc của mình,
+  // KHÔNG tài chính, KHÔNG tiền công, KHÔNG cài đặt, KHÔNG quản lý
+  // thành viên, KHÔNG sửa kho. Đổi trạng thái phiếu = true (việc của mình).
+  co_founder: {
     can_edit_stock: false,
     can_update_repair_status: true,
     can_access_payroll: false,
@@ -623,6 +661,11 @@ export function StoreProvider({
   // Admin Deductions Fund State (10% Key / 5% Machine)
   const [adminDeductions, setAdminDeductions] = useState<AdminDeductionItem[]>([]);
 
+  // Tất toán quỹ founders theo tháng (bảng chốt 2026-11-02).
+  const [founderSettlements, setFounderSettlements] = useState<FounderSettlementRecord[]>([]);
+  // Tổng vốn tự có của người bỏ vốn chính; null = chưa nhập.
+  const [founderCapital, setFounderCapitalState] = useState<number | null>(null);
+
   // Connection & Sync
   const [isLoading, setIsLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'local' | 'syncing'>('local');
@@ -652,32 +695,37 @@ export function StoreProvider({
   }, [isLoggingOut, logoutCountdown]);
 
   // Role permissions
+  // co_founder bị loại trừ khỏi đường checkbox ở mọi helper dưới đây:
+  // tick nhầm ô phân quyền cũng không mở được quyền bị cấm cho vai này.
   const canEditStock = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'tech_manager' ||
-    currentUser.permissions?.can_edit_stock === true;
+    (currentUser.role !== 'co_founder' && currentUser.permissions?.can_edit_stock === true);
   // NVKD được nhập máy mới (chỉ thêm, không sửa/xóa kho, không sửa giá, không đổi QC).
-  const canAddMachine = () => canEditStock() || currentUser.role === 'salesman';
+  // Đồng sáng lập (Vận hành) cũng được nhập máy mới theo đúng luồng hiện có.
+  const canAddMachine = () => canEditStock() || currentUser.role === 'salesman' || currentUser.role === 'co_founder';
   const canUpdateRepairStatus = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'tech_manager' ||
     currentUser.role === 'technician' ||
     currentUser.role === 'outsourced' ||
     currentUser.role === 'salesman' ||
+    currentUser.role === 'co_founder' ||
     currentUser.permissions?.can_update_repair_status === true;
   // Tài chính & lương KTV: CHỈ Admin (quyết định 2026-10-28: QL Kỹ thuật chỉ
   // đảm nhiệm kỹ thuật). Sales Manager vẫn xem tổng quan doanh thu trên
   // dashboard qua canAccessFinancials. Checkbox can_access_payroll không
-  // áp dụng cho QL Kỹ thuật — khớp với proxy (chỉ admin).
+  // áp dụng cho QL Kỹ thuật — khớp với proxy (chỉ admin). Đồng sáng lập
+  // (Vận hành) cũng bị chặn cứng ở đây, ở proxy và ở API routes.
   const canAccessPayroll = () =>
     currentUser.role === 'admin' ||
-    (currentUser.role !== 'tech_manager' && currentUser.permissions?.can_access_payroll === true);
+    (currentUser.role !== 'tech_manager' && currentUser.role !== 'co_founder' && currentUser.permissions?.can_access_payroll === true);
   const canAccessFinancials = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'sales_manager' ||
-    (currentUser.role !== 'tech_manager' && currentUser.permissions?.can_access_payroll === true);
-  const canAccessSettings = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
-  const canManageUsers = () => currentUser.role === 'admin' || currentUser.permissions?.can_manage_users === true;
+    (currentUser.role !== 'tech_manager' && currentUser.role !== 'co_founder' && currentUser.permissions?.can_access_payroll === true);
+  const canAccessSettings = () => currentUser.role === 'admin' || (currentUser.role !== 'co_founder' && currentUser.permissions?.can_manage_users === true);
+  const canManageUsers = () => currentUser.role === 'admin' || (currentUser.role !== 'co_founder' && currentUser.permissions?.can_manage_users === true);
   const canAssignTasks = () =>
     currentUser.role === 'admin' || currentUser.role === 'tech_manager' || currentUser.role === 'technician';
   const canSellAndEditWarranty = () =>
@@ -685,12 +733,20 @@ export function StoreProvider({
 
   // Quyền bán hàng (riêng): admin, sales_manager và NVKD được bán máy/linh kiện.
   // Khác với canSellAndEditWarranty ở chỗ không kèm quyền sửa giá/bảo hành/thông tin khách.
+  // Đồng sáng lập (Vận hành) cũng được bán theo giá bán niêm yết (giá bị
+  // khóa ở form bán; bước chốt tiền vẫn bị chặn — xem canFinalizeMoney).
   const canSell = () =>
     currentUser.role === 'admin' ||
     currentUser.role === 'sales_manager' ||
-    currentUser.role === 'salesman';
+    currentUser.role === 'salesman' ||
+    currentUser.role === 'co_founder';
   const canAccessCRM = () =>
     currentUser.role === 'admin' || currentUser.role === 'sales_manager';
+  // Chốt tiền (phân bổ dòng tiền, hoa hồng, hoàn vốn, dự phòng): mọi vai trò
+  // từng được chốt trước đây vẫn chốt được; CHỈ Đồng sáng lập (Vận hành) bị
+  // chặn — đơn bán do vai này chuẩn bị phải chờ admin chốt tiền. Đây là
+  // cổng chặn cuối cho kho-may + đơn hàng (không phải whitelist mới).
+  const canFinalizeMoney = () => currentUser.role !== 'co_founder';
   const isFieldStaff = () =>
     currentUser.role === 'outsourced' || currentUser.role === 'salesman';
 
@@ -929,7 +985,8 @@ export function StoreProvider({
           rest.role === 'tech_manager' ||
           rest.role === 'technician' ||
           rest.role === 'outsourced' ||
-          rest.role === 'salesman',
+          rest.role === 'salesman' ||
+          rest.role === 'co_founder',
         // Sales Manager KHÔNG còn được cấp quyền lương/tài chính theo role
         // (admin vẫn có thể cấp riêng từng người qua checkbox phân quyền).
         can_access_payroll: rest.role === 'admin' || rest.role === 'tech_manager',
@@ -1263,16 +1320,36 @@ export function StoreProvider({
 
         // 3b. Dispatch: ưu tiên dữ liệu từ API server (nguồn sự thật cho
         // bảng này — đọc/ghi trực tiếp qua PostgREST không đáng tin cậy).
+        let dispatchApiOk = false;
         try {
           const dRes = await fetch('/api/dispatches');
           if (dRes.ok) {
             const dJson = await dRes.json().catch(() => null);
             if (dJson?.success && Array.isArray(dJson.data)) {
               setOnsiteDispatches(dJson.data as OnsiteDispatch[]);
+              dispatchApiOk = true;
             }
           }
         } catch (e) {
           console.warn('Could not pull dispatches from /api/dispatches:', e);
+        }
+        // Nếu API dispatch lỗi: dữ liệu đọc trực tiếp phía trên vẫn chứa
+        // TOÀN BỘ ca — với vai chỉ được xem việc của mình (hiện trường +
+        // Đồng sáng lập Vận hành), lọc lại về ca của mình, không để
+        // fallback rò rỉ ca người khác.
+        if (
+          !dispatchApiOk &&
+          (currentUser.role === 'outsourced' ||
+            currentUser.role === 'salesman' ||
+            currentUser.role === 'co_founder')
+        ) {
+          setOnsiteDispatches((prev) =>
+            prev.filter(
+              (d) =>
+                d.technician_id === currentUser.id ||
+                (!d.technician_id && d.technician_name === currentUser.name),
+            ),
+          );
         }
 
         // 4. Đồng bộ Kho Key Bản Quyền từ Supabase — và ghi đè bộ nhớ đệm
@@ -1376,15 +1453,29 @@ export function StoreProvider({
             setAdminDeductions(parsed);
           }
         });
+        readJson<FounderSettlementRecord[]>(STORAGE_KEYS.founderSettlements, (parsed) => {
+          if (Array.isArray(parsed)) {
+            setFounderSettlements(parsed);
+          }
+        });
+        readJson<number | null>(STORAGE_KEYS.founderCapital, (parsed) => {
+          if (typeof parsed === 'number' && Number.isFinite(parsed)) {
+            setFounderCapitalState(parsed);
+          } else if (parsed === null) {
+            setFounderCapitalState(null);
+          }
+        });
 
         // Tài chính: đối chiếu với Supabase khi đã đăng nhập nhân viên.
         // DB có dữ liệu → DB là nguồn chuẩn. DB trống mà local có → đẩy
         // local lên DB (backfill một lần cho dữ liệu cũ chỉ có ở local).
         if (localStorage.getItem(STORAGE_KEYS.isLoggedIn) === 'true' && isUsingSupabase && supabase) {
           try {
-            const [provRes, dedRes] = await Promise.all([
+            const [provRes, dedRes, settleRes, capitalRes] = await Promise.all([
               supabase.from('warranty_provisions').select('*'),
               supabase.from('admin_deductions').select('*'),
+              supabase.from('founder_settlements').select('*'),
+              supabase.from('founder_capital').select('*'),
             ]);
             if (!provRes.error && Array.isArray(provRes.data)) {
               if (provRes.data.length > 0) {
@@ -1405,6 +1496,38 @@ export function StoreProvider({
                 const localDed = JSON.parse(localStorage.getItem(STORAGE_KEYS.adminDeductions) || '[]');
                 if (Array.isArray(localDed) && localDed.length > 0) {
                   await syncFinanceCollection('admin_deductions', localDed);
+                }
+              }
+            }
+            // Tất toán founders: bảng chưa có (migration chưa áp) thì select
+            // lỗi và bỏ qua lặng — dữ liệu vẫn nằm ở localStorage.
+            if (!settleRes.error && Array.isArray(settleRes.data)) {
+              if (settleRes.data.length > 0) {
+                setFounderSettlements(settleRes.data as FounderSettlementRecord[]);
+                saveToLocal(STORAGE_KEYS.founderSettlements, settleRes.data);
+              } else {
+                const localSettle = JSON.parse(localStorage.getItem(STORAGE_KEYS.founderSettlements) || '[]');
+                if (Array.isArray(localSettle) && localSettle.length > 0) {
+                  await syncFinanceCollection('founder_settlements', localSettle);
+                }
+              }
+            }
+            if (!capitalRes.error && Array.isArray(capitalRes.data)) {
+              const row = (capitalRes.data as { id?: string; amount?: unknown }[]).find((r) => r.id === 'main');
+              const rawAmount = row?.amount;
+              const parsedAmount =
+                typeof rawAmount === 'number'
+                  ? rawAmount
+                  : typeof rawAmount === 'string' && rawAmount !== ''
+                    ? Number(rawAmount)
+                    : null;
+              if (typeof parsedAmount === 'number' && Number.isFinite(parsedAmount)) {
+                setFounderCapitalState(parsedAmount);
+                saveToLocal(STORAGE_KEYS.founderCapital, parsedAmount);
+              } else {
+                const localCapital = JSON.parse(localStorage.getItem(STORAGE_KEYS.founderCapital) || 'null');
+                if (typeof localCapital === 'number') {
+                  await syncFinanceCollection('founder_capital', [{ id: 'main', amount: localCapital }]);
                 }
               }
             }
@@ -1571,7 +1694,21 @@ export function StoreProvider({
       setCustomers(cusData as Customer[]);
       setTickets(tckData as ServiceTicket[]);
       setSpareParts(spData as SparePart[]);
-      setOnsiteDispatches(onsData as OnsiteDispatch[]);
+      // Khi API dispatch lỗi, dữ liệu đọc trực tiếp (onsData) chứa toàn bộ
+      // ca — vai chỉ xem việc của mình (hiện trường + Đồng sáng lập Vận
+      // hành) chỉ nhận ca của mình, không để fallback rò rỉ ca người khác.
+      const isOwnJobsOnlyRole =
+        currentUser.role === 'outsourced' ||
+        currentUser.role === 'salesman' ||
+        currentUser.role === 'co_founder';
+      const baseDispatches = isOwnJobsOnlyRole
+        ? (onsData as OnsiteDispatch[]).filter(
+            (d) =>
+              d.technician_id === currentUser.id ||
+              (!d.technician_id && d.technician_name === currentUser.name),
+          )
+        : (onsData as OnsiteDispatch[]);
+      setOnsiteDispatches(baseDispatches);
       if (apiDispatches) setOnsiteDispatches(apiDispatches);
       setShiftLogs(shfData as ShiftLog[]);
       if (blogPostResult.data && !blogPostResult.error) {
@@ -2484,7 +2621,7 @@ export function StoreProvider({
   // trình duyệt, đổi máy là mất số liệu tiền. Upsert toàn bộ collection
   // (dữ liệu nhỏ) sau mỗi lần thay đổi; chạy bằng JWT nhân viên.
   const syncFinanceCollection = async (
-    table: 'warranty_provisions' | 'admin_deductions',
+    table: 'warranty_provisions' | 'admin_deductions' | 'founder_settlements' | 'founder_capital',
     rows: unknown[]
   ): Promise<void> => {
     if (!isUsingSupabase || !supabase || !Array.isArray(rows) || rows.length === 0) return;
@@ -3507,6 +3644,19 @@ export function StoreProvider({
       return false;
     }
 
+    // Đồng sáng lập (Vận hành): chỉ được đổi trạng thái phiếu của CHÍNH
+    // mình (phiếu giao cho mình theo tên — ServiceTicket không có
+    // technician_id, khớp cách lọc việc của mình ở trang Thống kê).
+    // Các vai trò khác giữ nguyên hành vi hiện có.
+    const targetForScope = tickets.find((t) => t.id === id);
+    if (currentUser.role === 'co_founder') {
+      const isOwnTicket =
+        !!targetForScope?.technician_name && targetForScope.technician_name === currentUser.name;
+      if (!isOwnTicket) {
+        return false;
+      }
+    }
+
     let synced = false;
     const target = tickets.find((t) => t.id === id);
     if (
@@ -3515,7 +3665,10 @@ export function StoreProvider({
       target.technician_name &&
       target.technician_fee &&
       target.technician_fee > 0 &&
-      !target.fee_synced_to_payroll
+      !target.fee_synced_to_payroll &&
+      // Đồng sáng lập không kích hoạt đồng bộ tiền công khi hoàn tất phiếu
+      // (tiền là phần bị cấm của vai này; phí phiếu do admin/tech_manager xử lý).
+      currentUser.role !== 'co_founder'
     ) {
       synced = true;
       await creditTechnicianPayroll(
@@ -4619,6 +4772,59 @@ export function StoreProvider({
     return combined.sort((a, b) => new Date(b.sale_date).getTime() - new Date(a.sale_date).getTime());
   };
 
+  // Tất toán quỹ founders theo tháng (bảng chốt 2026-11-02). Chỉ lưu chi phí
+  // thực tế, trạng thái chốt tháng và tổng vốn; số tiền luôn tính trực tiếp
+  // từ bản ghi bán máy nên bảng admin và bảng sao kê không bao giờ lệch.
+  const saveFounderSettlement = (record: FounderSettlementRecord): void => {
+    const now = new Date().toISOString();
+    const stamped: FounderSettlementRecord = {
+      ...record,
+      updated_at: now,
+      created_at: record.created_at || now,
+    };
+    setFounderSettlements((prev) => {
+      const next = [stamped, ...prev.filter((r) => r.id !== record.id)];
+      saveToLocal(STORAGE_KEYS.founderSettlements, next);
+      void syncFinanceCollection('founder_settlements', next);
+      return next;
+    });
+  };
+
+  const setSettlementStatus = (month: string, status: 'pending' | 'settled', by?: string): void => {
+    const now = new Date().toISOString();
+    setFounderSettlements((prev) => {
+      const existing = prev.find((r) => r.id === month);
+      const record: FounderSettlementRecord = existing
+        ? {
+            ...existing,
+            status,
+            settledAt: status === 'settled' ? now : undefined,
+            settledBy: status === 'settled' ? by : undefined,
+            updated_at: now,
+          }
+        : {
+            id: month,
+            costs: { adsAboveStandard: 0, rent: 0, salaries: 0, utilities: 0, other: 0, note: '' },
+            status,
+            settledAt: status === 'settled' ? now : undefined,
+            settledBy: status === 'settled' ? by : undefined,
+            created_at: now,
+            updated_at: now,
+          };
+      const next = [record, ...prev.filter((r) => r.id !== month)];
+      saveToLocal(STORAGE_KEYS.founderSettlements, next);
+      void syncFinanceCollection('founder_settlements', next);
+      return next;
+    });
+  };
+
+  const setFounderCapital = (amount: number | null): void => {
+    const clean = typeof amount === 'number' && Number.isFinite(amount) && amount >= 0 ? Math.round(amount) : null;
+    setFounderCapitalState(clean);
+    saveToLocal(STORAGE_KEYS.founderCapital, clean);
+    void syncFinanceCollection('founder_capital', [{ id: 'main', amount: clean }]);
+  };
+
   // CRM Customer Management
   const addCustomer = async (customerData: Omit<Customer, 'id' | 'created_at'>): Promise<Customer> => {
     const existingCodes = customers
@@ -4982,6 +5188,7 @@ export function StoreProvider({
       canSellAndEditWarranty,
       canSell,
       canAccessCRM,
+      canFinalizeMoney,
       isFieldStaff,
       sellInventoryItem,
       markItemAsDealerSold,
@@ -5035,6 +5242,11 @@ export function StoreProvider({
       adminDeductions,
       addAdminDeduction,
       getAdminDeductions,
+      founderSettlements,
+      saveFounderSettlement,
+      setSettlementStatus,
+      founderCapital,
+      setFounderCapital,
       addSoftwareKeys,
       assignSoftwareKey,
       updateSoftwareKeyStatus,

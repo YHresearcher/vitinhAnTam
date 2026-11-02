@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
   try {
     // 1. Kiểm tra session Admin / Quyền quản trị
     const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-    if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+    if (!session || session.role === 'co_founder' || (session.role !== 'admin' && !session.canManageUsers)) {
       return NextResponse.json(
         { success: false, message: 'Bạn không có quyền tải lên file hệ thống.' },
         { status: 403 }
@@ -292,7 +292,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // 1. Kiểm tra session Admin / Quyền quản trị
     const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-    if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+    if (!session || session.role === 'co_founder' || (session.role !== 'admin' && !session.canManageUsers)) {
       return NextResponse.json(
         { success: false, message: 'Bạn không có quyền xóa file hệ thống.' },
         { status: 403 }

@@ -65,8 +65,10 @@ export async function POST(request: NextRequest) {
       sub: user.id,
       role: user.role,
       name: user.name,
-      canManageUsers: user.role === 'admin' || user.permissions?.can_manage_users === true,
-      canAccessPayroll: user.role === 'admin' || user.permissions?.can_access_payroll === true,
+      // co_founder KHÔNG BAO GIỜ mang cờ quản lý/tiền công trong session,
+      // kể cả khi checkbox phân quyền bị tick nhầm (fail-closed từ lúc cấp).
+      canManageUsers: user.role === 'admin' || (user.role !== 'co_founder' && user.permissions?.can_manage_users === true),
+      canAccessPayroll: user.role === 'admin' || (user.role !== 'co_founder' && user.permissions?.can_access_payroll === true),
     }),
     sessionCookieOptions
   );

@@ -20,5 +20,7 @@ export function requireStaff(request: NextRequest): SessionPayload | null {
 
 /** Admin thật hoặc người được uỷ quyền quản lý (canManageUsers / canAccessPayroll tuỳ ngữ cảnh). */
 export function isAdminLike(session: SessionPayload | null): boolean {
-  return Boolean(session && (session.role === 'admin' || session.canManageUsers === true));
+  // co_founder KHÔNG BAO GIỜ là admin-like, kể cả khi checkbox
+  // can_manage_users bị tick nhầm (vai vận hành, không quản lý).
+  return Boolean(session && (session.role === 'admin' || (session.role !== 'co_founder' && session.canManageUsers === true)));
 }

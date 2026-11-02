@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   const sessionToken = req.cookies.get(SESSION_COOKIE)?.value;
   const session = verifySession(sessionToken);
 
-  if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+  if (!session || session.role === 'co_founder' || (session.role !== 'admin' && !session.canManageUsers)) {
     return NextResponse.json({ ok: false, error: 'Unauthorized. Yêu cầu quyền quản trị.' }, { status: 401 });
   }
 

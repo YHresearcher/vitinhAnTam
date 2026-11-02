@@ -4,7 +4,7 @@ import { SESSION_COOKIE, verifySession } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+  if (!session || session.role === 'co_founder' || (session.role !== 'admin' && !session.canManageUsers)) {
     return NextResponse.json(
       { success: false, message: 'Bạn không có quyền xem cấu hình hệ thống.' },
       { status: 403 }
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-    if (!session || (session.role !== 'admin' && !session.canManageUsers)) {
+    if (!session || session.role === 'co_founder' || (session.role !== 'admin' && !session.canManageUsers)) {
       return NextResponse.json(
         { success: false, message: 'Bạn không có quyền cập nhật cấu hình hệ thống.' },
         { status: 403 }

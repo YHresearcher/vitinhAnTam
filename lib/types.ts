@@ -1,6 +1,6 @@
 // Cac type/interface cua Supabase — tach tu lib/supabase.ts (GD2, khong doi noi dung).
 
-export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'outsourced' | 'salesman';
+export type UserRole = 'admin' | 'tech_manager' | 'technician' | 'sales_manager' | 'outsourced' | 'salesman' | 'co_founder';
 
 export interface UserPermissions {
   can_edit_stock: boolean;
@@ -184,6 +184,37 @@ export interface AdminDeductionItem {
   serial_number?: string;
   notes?: string;
   created_at?: string;
+}
+
+// Chi phí thực tế trong tháng do admin nhập (tính năng tất toán founders).
+// Đây là chi phí người bỏ vốn chịu toàn bộ, KHÔNG trừ vào lãi ròng N trước
+// khi chia — chỉ dùng để tính phần thực nhận của người bỏ vốn (14% − chi phí).
+export interface FounderMonthlyCosts {
+  adsAboveStandard: number; // Ads vượt chuẩn 60k/đơn
+  rent: number; // Mặt bằng
+  salaries: number; // Lương
+  utilities: number; // Điện nước
+  other: number; // Khác
+  note?: string;
+}
+
+// Một dòng tất toán tháng của quỹ founders. id là tháng 'YYYY-MM'.
+// Trạng thái do admin chốt tay; số tiền luôn tính trực tiếp từ bản ghi bán
+// máy, không lưu cứng, để bảng admin và bảng sao kê luôn khớp nhau.
+export interface FounderSettlementRecord {
+  id: string; // 'YYYY-MM'
+  costs: FounderMonthlyCosts;
+  status: 'pending' | 'settled';
+  settledAt?: string;
+  settledBy?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Tổng vốn tự có của người bỏ vốn chính. amount null = chưa nhập — khi đó
+// gốc chưa đối trừ, phần 14% tích lũy chỉ hiển thị là "tạm giữ để trừ gốc".
+export interface FounderCapital {
+  amount: number | null;
 }
 
 export interface SparePart {

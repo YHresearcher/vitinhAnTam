@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 import type { BlogCategory, BlogPost, UserProfile, UserRole } from './types';
-export type { UserRole, UserPermissions, UserProfile, UserAccount, CustomerTierType, Customer, InventorySpecs, MachineComponent, WarrantyType, InventoryItem, WarrantyProvision, AdminDeductionItem, SparePart, SoftwareKeyItem, SoftwareLicense, KeyCategory, LicenseKeyItem, KeyReleaseRequest, CustomerOrder, KeyEmailTemplateConfig, MultiTierWarranty, ServiceItem, ServiceTicket, OnsiteDispatchStatus, OnsiteDispatch, ShiftLog, BlogCategory, FaqSchemaItem, BlogPost, FaqItem, CustomerReview } from './types';
+export type { UserRole, UserPermissions, UserProfile, UserAccount, CustomerTierType, Customer, InventorySpecs, MachineComponent, WarrantyType, InventoryItem, WarrantyProvision, AdminDeductionItem, FounderMonthlyCosts, FounderSettlementRecord, FounderCapital, SparePart, SoftwareKeyItem, SoftwareLicense, KeyCategory, LicenseKeyItem, KeyReleaseRequest, CustomerOrder, KeyEmailTemplateConfig, MultiTierWarranty, ServiceItem, ServiceTicket, OnsiteDispatchStatus, OnsiteDispatch, ShiftLog, BlogCategory, FaqSchemaItem, BlogPost, FaqItem, CustomerReview } from './types';
 
 const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 // Tự động chuẩn hóa nếu người dùng copy cả đường dẫn /rest/v1/ từ Dashboard
@@ -181,6 +181,19 @@ export const MOCK_USERS: Record<UserRole, UserProfile> = {
     avatarBg: 'bg-orange-600',
     email: 'salesman01@vitinhantam.com',
     phone: '0933.345.679',
+  },
+  // Mock placeholder cho vai Đồng sáng lập (Vận hành) — chỉ để thỏa kiểu
+  // Record<UserRole, ...>; KHÔNG phải tài khoản thật, không tạo tài khoản
+  // trong DB. Tài khoản thật do owner tạo ở trang Nhân sự.
+  co_founder: {
+    id: 'u-cofounder-1',
+    username: 'dong-sang-lap',
+    name: 'Đồng Sáng Lập (Vận Hành)',
+    role: 'co_founder',
+    roleTitle: 'Founders',
+    avatarBg: 'bg-rose-600',
+    email: 'dong-sang-lap@vitinhantam.com',
+    phone: '0909.053.058',
   },
 };
 

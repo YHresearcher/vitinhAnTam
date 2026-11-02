@@ -347,7 +347,10 @@ export default function OrderDetailModal({
               </button>
             )}
 
-            {order.status === 'processing' && (
+            {/* Nút chốt tiền: ẩn với Đồng sáng lập (Vận hành) — vai này xử lý
+                đơn tới đóng gói/QC nhưng không chốt tiền; handler phía trang
+                đơn hàng cũng chặn lại (rào chắn thứ hai). */}
+            {order.status === 'processing' && currentUser.role !== 'co_founder' && (
               <button
                 type="button"
                 onClick={() => {

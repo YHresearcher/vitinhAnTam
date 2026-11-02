@@ -124,6 +124,9 @@ export default function MemberManagementPage() {
     } else if (editingUser.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';
       avatarBg = 'bg-indigo-600';
+    } else if (editingUser.role === 'co_founder') {
+      defaultTitle = defaultTitle || 'Founders';
+      avatarBg = 'bg-rose-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -198,6 +201,9 @@ export default function MemberManagementPage() {
     } else if (newUserForm.role === 'sales_manager') {
       defaultTitle = defaultTitle || 'Quản lý bán hàng';
       avatarBg = 'bg-indigo-600';
+    } else if (newUserForm.role === 'co_founder') {
+      defaultTitle = defaultTitle || 'Founders';
+      avatarBg = 'bg-rose-600';
     } else {
       defaultTitle = defaultTitle || 'Chuyên viên kinh doanh';
       avatarBg = 'bg-purple-600';
@@ -371,7 +377,7 @@ export default function MemberManagementPage() {
 
         {/* Role Tabs */}
         <div className="flex items-center gap-1 shrink-0 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-wrap">
-          {(['all', 'admin', 'tech_manager', 'technician', 'outsourced', 'salesman', 'sales_manager'] as const).map((tab) => (
+          {(['all', 'admin', 'tech_manager', 'technician', 'outsourced', 'salesman', 'sales_manager', 'co_founder'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setRoleFilter(tab)}
@@ -390,6 +396,7 @@ export default function MemberManagementPage() {
                   outsourced: 'Thuê ngoài',
                   salesman: 'NVKD',
                   sales_manager: 'QL Bán hàng',
+                  co_founder: 'Founders',
                 } as const
               )[tab]}
             </button>
@@ -441,6 +448,7 @@ export default function MemberManagementPage() {
                           outsourced: 'bg-amber-50 text-amber-800 border border-amber-200 font-semibold',
                           salesman: 'bg-orange-50 text-orange-800 border border-orange-200 font-semibold',
                           sales_manager: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+                          co_founder: 'bg-rose-50 text-rose-700 border border-rose-200',
                         } as const
                       )[member.role]
                     }`}
@@ -453,6 +461,7 @@ export default function MemberManagementPage() {
                         outsourced: 'Thuê Ngoài',
                         salesman: 'NVKD',
                         sales_manager: 'QL Bán Hàng',
+                        co_founder: 'Founders',
                       } as const
                     )[member.role]}
                   </span>
@@ -713,6 +722,7 @@ export default function MemberManagementPage() {
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Chẩn đoán & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV sửa chữa' },
                     { id: 'salesman', label: 'NVKD', desc: 'Bán hàng, giao máy & kỹ thuật thị trường' },
+                    { id: 'co_founder', label: 'Founders', desc: 'Vận hành, không quản lý/tài chính' },
                   ].map((r) => (
                     <button
                       key={r.id}
@@ -770,6 +780,8 @@ export default function MemberManagementPage() {
                     <input
                       type="checkbox"
                       checked={editingUser.permissions?.can_edit_stock || false}
+                      disabled={editingUser.role === 'co_founder'}
+                      title={editingUser.role === 'co_founder' ? 'Founders không được sửa kho' : undefined}
                       onChange={(e) =>
                         setEditingUser({
                           ...editingUser,
@@ -804,6 +816,8 @@ export default function MemberManagementPage() {
                     <input
                       type="checkbox"
                       checked={editingUser.permissions?.can_access_payroll || false}
+                      disabled={editingUser.role === 'co_founder'}
+                      title={editingUser.role === 'co_founder' ? 'Founders không được xem tiền công/tài chính' : undefined}
                       onChange={(e) =>
                         setEditingUser({
                           ...editingUser,
@@ -821,6 +835,8 @@ export default function MemberManagementPage() {
                     <input
                       type="checkbox"
                       checked={editingUser.permissions?.can_manage_users || false}
+                      disabled={editingUser.role === 'co_founder'}
+                      title={editingUser.role === 'co_founder' ? 'Founders không được quản lý thành viên' : undefined}
                       onChange={(e) =>
                         setEditingUser({
                           ...editingUser,
@@ -835,6 +851,11 @@ export default function MemberManagementPage() {
                     <span>Quản lý thành viên &amp; mật khẩu</span>
                   </label>
                 </div>
+                {editingUser.role === 'co_founder' && (
+                  <p className="text-[11px] text-slate-500 mt-2">
+                    Founders bị khóa cứng: không sửa kho, không xem tiền công/tài chính, không quản lý thành viên — kể cả khi ô trên bị tick.
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
@@ -960,6 +981,7 @@ export default function MemberManagementPage() {
                     { id: 'technician', label: 'KTV Nội Bộ', desc: 'Sửa chữa & QC' },
                     { id: 'outsourced', label: 'KTV Thuê Ngoài', desc: 'Đối tác / CTV ngoài' },
                     { id: 'salesman', label: 'NVKD', desc: 'Bán hàng, giao máy & kỹ thuật thị trường' },
+                    { id: 'co_founder', label: 'Founders', desc: 'Vận hành, không quản lý/tài chính' },
                   ].map((r) => (
                     <button
                       key={r.id}

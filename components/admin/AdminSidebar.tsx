@@ -113,6 +113,17 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         visible: canAccessPayroll(),
       },
       {
+        label: 'Sao kê của tôi',
+        href: '/sao-ke',
+        icon: CircleDollarSign,
+        badge: null,
+        badgeColor: '',
+        // Chỉ Founders (key co_founder) thấy sao kê của riêng mình trong
+        // sidebar. Admin xem bản xem trước qua đường dẫn trực tiếp; tài
+        // chính đầy đủ vẫn ở /tai-chinh.
+        visible: currentUser?.role === 'co_founder',
+      },
+      {
         label: 'Khách hàng (CRM)',
         href: '/khach-hang',
         icon: Users,

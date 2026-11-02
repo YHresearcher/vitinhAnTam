@@ -46,6 +46,7 @@ export default function OrderManagementPage() {
     reserveInventoryItem,
     cancelReservationItem,
     creditTechnicianPayroll,
+    canFinalizeMoney,
   } = useViTinhAnTamStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -271,6 +272,13 @@ export default function OrderManagementPage() {
 
   const handleFinalizeOrderSale = async (finalData: CashflowSaleConfirmData) => {
     if (!executingOrder || isSubmittingOrderSale) return;
+    // Lớp chặn cuối: Đồng sáng lập (Vận hành) xử lý đơn tới đóng gói/QC
+    // nhưng KHÔNG chốt tiền — nút "Xuất kho & Phân bổ dòng tiền" đã bị ẩn
+    // với vai này, handler này là rào chắn thứ hai.
+    if (!canFinalizeMoney()) {
+      message.error('Vai trò vận hành không chốt tiền: đơn này cần admin hoàn tất.');
+      return;
+    }
     setIsSubmittingOrderSale(true);
 
     try {

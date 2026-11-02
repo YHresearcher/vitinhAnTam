@@ -42,6 +42,7 @@ export default function KhoMayPage() {
     cancelReservationItem,
     canSellAndEditWarranty,
     canSell,
+    canFinalizeMoney,
     sellInventoryItem,
     markItemAsDealerSold,
     sellSparePart,
@@ -226,6 +227,16 @@ export default function KhoMayPage() {
       return;
     }
 
+    // Đồng sáng lập (Vận hành) chuẩn bị đơn bán tới đây thì dừng: bước
+    // chốt tiền (phân bổ dòng tiền) do admin thực hiện — KHÔNG mở popup
+    // chốt tiền, KHÔNG ghi gì xuống kho. Modal vẫn mở để đọc lại thông tin
+    // bàn giao cho admin.
+    if (!canFinalizeMoney()) {
+      setActionNotice('Vai trò vận hành không chốt tiền: đơn bán này chưa được ghi nhận — hãy báo admin hoàn tất.');
+      setTimeout(() => setActionNotice(null), 5000);
+      return;
+    }
+
     const initialCost = Number(sellingItem.import_price || sellingItem.cost_price || 0);
     setCashflowConfirmData({
       item: sellingItem,
@@ -245,6 +256,13 @@ export default function KhoMayPage() {
 
   const handleFinalizeSale = async () => {
     if (!cashflowConfirmData || isSubmittingSale) return;
+    // Lớp chặn cuối: Đồng sáng lập (Vận hành) không chốt tiền dù bằng cách
+    // nào cũng tới được đây (popup chốt tiền đã bị chặn ở handleConfirmSale).
+    if (!canFinalizeMoney()) {
+      setActionNotice('Vai trò vận hành không chốt tiền: đơn bán này cần admin hoàn tất.');
+      setTimeout(() => setActionNotice(null), 5000);
+      return;
+    }
     setIsSubmittingSale(true);
 
     try {
@@ -380,13 +398,21 @@ export default function KhoMayPage() {
     setSellPartDate(new Date().toISOString().split('T')[0]);
   };
 
-  // Xác nhận bán linh kiện
+  // Xác nhận bán linh kiện — Đồng sáng lập (Vận hành) KHÔNG bán linh kiện
+  // trực tiếp: sellSparePart trừ tồn kho + ghi phiếu thu tiền ngay (bước
+  // chốt tiền một bước, không có popup chốt riêng như bán máy). Vai này
+  // dừng ở thông báo, chờ admin thực hiện.
   const handleConfirmPartSale = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sellingPart) return;
     if (!sellPartCustomerName.trim() || !sellPartCustomerPhone.trim()) {
       setActionNotice('Vui lòng nhập họ tên và số điện thoại khách hàng!');
       setTimeout(() => setActionNotice(null), 3500);
+      return;
+    }
+    if (!canFinalizeMoney()) {
+      setActionNotice('Vai trò vận hành không chốt tiền: đơn bán linh kiện này chưa được ghi nhận — hãy báo admin hoàn tất.');
+      setTimeout(() => setActionNotice(null), 5000);
       return;
     }
 
@@ -2907,7 +2933,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold font-mono"
                     />
                     {!canSellAndEditWarranty() && (
-                      <span className="text-[10px] text-slate-500 mt-0.5 block">Giá niêm yết (NVKD không chỉnh sửa được)</span>
+                      <span className="text-[10px] text-slate-500 mt-0.5 block">Giá niêm yết (không chỉnh sửa được)</span>
                     )}
                   </div>
                 </div>
@@ -3282,21 +3308,27 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 >
                   ← Quay lại chỉnh sửa
                 </button>
-                <button
-                  type="button"
-                  disabled={isSubmittingSale}
-                  onClick={handleFinalizeSale}
-                  className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
-                >
-                  {isSubmittingSale ? (
-                    <span>Đang hoàn tất...</span>
-                  ) : (
-                    <>
-                      <span>Xác Nhận &amp; Xuất Bán Ngay</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+                {canFinalizeMoney() ? (
+                  <button
+                    type="button"
+                    disabled={isSubmittingSale}
+                    onClick={handleFinalizeSale}
+                    className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {isSubmittingSale ? (
+                      <span>Đang hoàn tất...</span>
+                    ) : (
+                      <>
+                        <span>Xác Nhận &amp; Xuất Bán Ngay</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                    Vai trò vận hành không chốt tiền — đơn bán này cần admin hoàn tất.
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -3421,9 +3453,13 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       min={0}
                       step={10000}
                       value={sellPartPrice}
+                      readOnly={currentUser.role === 'co_founder'}
                       onChange={(e) => setSellPartPrice(Number(e.target.value))}
                       className="w-full px-3 py-2 text-xs rounded-lg bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-bold font-mono"
                     />
+                    {currentUser.role === 'co_founder' && (
+                      <span className="text-[10px] text-slate-500 mt-0.5 block">Giá niêm yết (không chỉnh sửa được)</span>
+                    )}
                   </div>
                 </div>
 

@@ -65,6 +65,7 @@ export default function AdminLayout({
   const navItems = [
     { title: 'Tổng Quan Bảng Điều Khiển', path: '/dashboard', category: 'Trang Chính', visible: true },
     { title: 'Phân Hệ Quản Lý Tài Chính & Doanh Thu', path: '/tai-chinh', category: 'Tài Chính', visible: canAccessPayroll() },
+    { title: 'Sao Kê Của Tôi (Founders)', path: '/sao-ke', category: 'Tài Chính', visible: currentUser?.role === 'co_founder' },
     { title: 'Quản Lý Kho Key Bản Quyền Windows & Office', path: '/quan-ly-key', category: 'Bản Quyền', visible: true },
     { title: 'Danh Sách Phiếu Sửa Chữa', path: '/phieu-sua-chua', category: 'Nghiệp Vụ', visible: true },
     { title: 'Lập Phiếu Tiếp Nhận Máy Mới', path: '/phieu-sua-chua/tao-moi', category: 'Nghiệp Vụ', visible: true },

@@ -32,6 +32,8 @@ function redactKeyRow(row: Record<string, unknown>): Record<string, unknown> {
 // Nhân viên hiện trường (NVKD/thuê ngoài) cũng được tải danh mục để tạo yêu cầu
 // cấp key, nhưng chỉ nhận key đã lược bỏ (không mã key/giá) và chỉ yêu cầu của
 // chính mình — sửa lỗi 2026-10-28: cổng này chặn NVKD nên ô chọn phân loại trống.
+// Đồng sáng lập (Vận hành) nhận toàn bộ yêu cầu + kho key nhưng BỊ LƯỢC GIÁ
+// NHẬP (giá vốn): giữ mã key + giá bán để bán hàng, không thấy import_price.
 export async function GET(request: NextRequest) {
   const session = getSession(request);
   if (!session) {
@@ -59,6 +61,19 @@ export async function GET(request: NextRequest) {
         categories: catsRes.data || [],
         keys: (keysRes.data || []).map((k: Record<string, unknown>) => redactKeyRow(k)),
         requests: ownRequests,
+      });
+    }
+
+    // Đồng sáng lập (Vận hành): kho key đầy đủ nhưng lược bỏ giá nhập.
+    if (session.role === 'co_founder') {
+      return NextResponse.json({
+        success: true,
+        categories: catsRes.data || [],
+        keys: (keysRes.data || []).map((k: Record<string, unknown>) => {
+          const { import_price: _importPrice, ...rest } = k;
+          return rest;
+        }),
+        requests: reqsRes.data || [],
       });
     }
 
