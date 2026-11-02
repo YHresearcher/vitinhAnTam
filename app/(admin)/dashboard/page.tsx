@@ -39,6 +39,7 @@ export default function DashboardPage() {
   const [selectedItemForLabel, setSelectedItemForLabel] = useState<InventoryItem | null>(null);
   const [cashflowTimeframe, setCashflowTimeframe] = useState<'day' | 'week' | 'month' | 'quarter' | 'year'>('month');
   const [isDrilldownOpen, setIsDrilldownOpen] = useState(false);
+  const [isCashflowCollapsed, setIsCashflowCollapsed] = useState(false);
   const [activeListTab, setActiveListTab] = useState<'tickets' | 'onsite' | 'qc'>('tickets');
 
 // Helper tính số ngày tồn kho của thiết bị (thuần túy theo timestamp)
@@ -734,20 +735,76 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       {/* 2 BIỂU ĐỒ TRỌNG TÂM: DÒNG TIỀN & DOANH THU 4 TRỤ CỘT       */}
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* BIỂU ĐỒ DÒNG TIỀN — biểu đồ duy nhất ở Dashboard.
-            Cơ cấu doanh thu 4 trụ cột đã có ở Tài chính (tab Cơ cấu);
-            SLA dịch vụ đã chuyển sang trang Sửa chữa & Cứu hộ; năng
-            suất KTV đã chuyển sang trang Tiền công KTV; phân bổ tồn
-            kho đã có mục cảnh báo tồn lâu ngay bên dưới. */}
         <div className="lg:col-span-12">
-          <InteractiveCashflowChart
-            data={cashflowData}
-            isAdmin={isAdmin}
-            showMoney={showMoneyChart}
-            timeframe={cashflowTimeframe}
-            onTimeframeChange={setCashflowTimeframe}
-            onOpenDrilldown={() => setIsDrilldownOpen(true)}
-          />
+          {/* Thanh chuyển đổi thu gọn / mở rộng biểu đồ */}
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <span>📊</span>
+              <span>Dòng Tiền &amp; Doanh Thu Hoạt Động</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsCashflowCollapsed((prev) => !prev)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-700 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition-all cursor-pointer shadow-2xs"
+            >
+              <span>{isCashflowCollapsed ? '▶ Mở rộng biểu đồ dòng tiền' : '▲ Thu gọn biểu đồ (Dành chỗ thao tác)'}</span>
+            </button>
+          </div>
+
+          {isCashflowCollapsed ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="text-xs font-bold text-slate-700">Tóm tắt ({financialAnalytics.timeframeLabel}):</span>
+                {showMoneyChart ? (
+                  <>
+                    <span className="text-xs text-slate-600">
+                      Thu: <strong className="font-mono text-blue-700">{Number(financialAnalytics.totalIncome || 0).toLocaleString('vi-VN')}₫</strong>
+                    </span>
+                    <span className="text-xs text-slate-600">
+                      Chi: <strong className="font-mono text-rose-600">{Number(financialAnalytics.totalExpense || 0).toLocaleString('vi-VN')}₫</strong>
+                    </span>
+                    <span className="text-xs text-slate-600">
+                      Lãi ròng: <strong className="font-mono text-emerald-700">{Number(financialAnalytics.netProfit || 0).toLocaleString('vi-VN')}₫</strong>
+                    </span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">
+                      Tỷ suất {financialAnalytics.profitMargin}%
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xs text-slate-600">
+                    Sản lượng: <strong className="font-mono text-slate-900">{financialAnalytics.totalSalesCount} giao dịch</strong>
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDrilldownOpen(true)}
+                    className="text-xs font-bold text-indigo-700 hover:underline cursor-pointer"
+                  >
+                    Xem sổ chi tiết →
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsCashflowCollapsed(false)}
+                  className="px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Mở lại biểu đồ
+                </button>
+              </div>
+            </div>
+          ) : (
+            <InteractiveCashflowChart
+              data={cashflowData}
+              isAdmin={isAdmin}
+              showMoney={showMoneyChart}
+              timeframe={cashflowTimeframe}
+              onTimeframeChange={setCashflowTimeframe}
+              onOpenDrilldown={() => setIsDrilldownOpen(true)}
+            />
+          )}
         </div>
       </div>
 
