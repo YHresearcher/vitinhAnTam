@@ -70,7 +70,7 @@ export function FinanceWarrantyCharts({ stats, monthlyTrend }: Props) {
           <div className="flex items-center gap-2">
             <PieIcon className="w-4 h-4 text-purple-600" />
             <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
-              Cơ Cấu Trạng Thái Quỹ Bảo Hành 5%
+              Cơ Cấu Trạng Thái Quỹ Bảo Hành 10%
             </h4>
           </div>
           <span className="text-[11px] font-mono font-bold text-slate-500">
@@ -187,7 +187,7 @@ export function FinanceWarrantyCharts({ stats, monthlyTrend }: Props) {
                   }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '6px' }} iconType="circle" />
-                <Bar dataKey="provisioned" name="Trích Lập (5%)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={18} />
+                <Bar dataKey="provisioned" name="Trích Lập (10%)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={18} />
                 <Bar dataKey="unlocked" name="Đã Mở / Khả Dụng" fill="#10b981" radius={[4, 4, 0, 0]} barSize={18} />
               </BarChart>
             </ResponsiveContainer>
@@ -197,7 +197,7 @@ export function FinanceWarrantyCharts({ stats, monthlyTrend }: Props) {
         <div className="p-2.5 bg-purple-50 rounded-2xl border border-purple-100 flex items-center justify-between text-[11px] text-purple-900">
           <span className="flex items-center gap-1.5 font-medium">
             <ShieldCheck className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-            Trích tự động 5% mỗi đơn máy bán để bảo vệ an toàn rủi ro linh kiện bảo hành
+            Trích tự động 10% mỗi đơn máy bán để bảo vệ an toàn rủi ro linh kiện bảo hành
           </span>
         </div>
       </div>

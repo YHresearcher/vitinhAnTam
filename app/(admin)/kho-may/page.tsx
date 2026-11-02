@@ -3170,12 +3170,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     </p>
                   </div>
 
-                  {/* Khoản 3: 5% trích lập dự phòng */}
+                  {/* Khoản 3: 10% trích lập dự phòng */}
                   <div className="p-3 bg-rose-50/60 border border-rose-200 rounded-xl space-y-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
                         <ShieldCheck className="w-3.5 h-3.5 text-rose-600" />
-                        <span>5% trích lập dự phòng</span>
+                        <span>10% trích lập dự phòng</span>
                       </div>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 font-mono">
                         5% LN
@@ -3256,7 +3256,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" /> Người bán (15% lãi ròng)
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (5%)
+                    <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" /> Dự phòng (10%)
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" /> LN còn lại

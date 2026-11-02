@@ -163,13 +163,13 @@ export function FinanceWarrantyFundTab() {
             <div className="p-5 bg-white rounded-3xl border border-slate-200 shadow-2xs space-y-2">
               <div className="flex items-center justify-between text-xs text-slate-500 font-bold uppercase">
                 <span>1. Tỷ lệ trích lập</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-mono">5% Lãi Ròng</span>
+                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-mono">10% Lãi Ròng</span>
               </div>
               <div className="text-xl font-black text-slate-900 font-mono">
                 {stats.activeFundTotal.toLocaleString("vi-VN")}₫
               </div>
               <p className="text-[11px] text-slate-500 leading-relaxed">
-                Tự động trích 5% từ lãi gộp mỗi máy bán ra để đảm bảo ngân sách bảo hành chu đáo cho khách.
+                Tự động trích 10% từ lãi ròng mỗi máy bán ra để đảm bảo ngân sách bảo hành chu đáo cho khách.
               </p>
             </div>
 
@@ -190,7 +190,7 @@ export function FinanceWarrantyFundTab() {
           <div className="p-5 bg-slate-900 text-white rounded-3xl shadow-md space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-black text-sm">Vòng Đời Quỹ Bảo Hành 5%</h4>
+                <h4 className="font-black text-sm">Vòng Đời Quỹ Bảo Hành 10%</h4>
                 <p className="text-xs text-slate-400 mt-0.5">Quy trình tự động hóa minh bạch tài chính</p>
               </div>
               <button
@@ -226,7 +226,7 @@ export function FinanceWarrantyFundTab() {
         <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-black text-slate-900">
-              Danh Sách Khoản Trích Lập Quỹ Bảo Hành 5%
+              Danh Sách Khoản Trích Lập Quỹ Bảo Hành 10%
             </h3>
             <p className="text-xs text-slate-500">Đối chiếu chi tiết từng máy và tiến độ giải tỏa quỹ</p>
           </div>
@@ -260,7 +260,7 @@ export function FinanceWarrantyFundTab() {
                 <th className="py-3 px-4">Ngày Bán & Hạn BH</th>
                 <th className="py-3 px-4 text-right">Doanh Thu</th>
                 <th className="py-3 px-4 text-right">Lãi Gộp</th>
-                <th className="py-3 px-4 text-right">Quỹ 5% Trích</th>
+                <th className="py-3 px-4 text-right">Quỹ 10% Trích</th>
                 <th className="py-3 px-4 text-center">Trạng Thái</th>
                 <th className="py-3 px-4 text-center">Hành Động</th>
               </tr>

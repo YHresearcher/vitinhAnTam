@@ -26,7 +26,7 @@ export function FinanceOverviewTab({
   const { warrantyProvisions } = useViTinhAnTamStore();
   const { stream, totalRevenue, totalExpense, netProfit, profitMargin } = financialSummary;
 
-  // 5% warranty calculation for current scope
+  // 10% warranty calculation for current scope
   const lockedFund = warrantyProvisions
     .filter((p: WarrantyProvision) => p.status === "locked")
     .reduce((sum: number, p: WarrantyProvision) => sum + p.provision_amount, 0);
@@ -177,7 +177,7 @@ export function FinanceOverviewTab({
               onClick={onOpenWarrantyFund}
               className="text-xs font-bold text-purple-700 hover:text-purple-900 transition-colors cursor-pointer"
             >
-              Xem Chi Tiết Quỹ 5% →
+              Xem Chi Tiết Quỹ 10% →
             </button>
           )}
         </div>
