@@ -1541,15 +1541,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       {/* Inventory Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[920px]">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4">Model & Kiểu Dáng</th>
-                <th className="py-3 px-4">Serial Number (S/N) / Tag</th>
-                <th className="py-3 px-4 text-right">Giá Bán</th>
-                <th className="py-3 px-4">Trạng Thái QC</th>
-                <th className="py-3 px-4 text-center">Định Danh / Tồn</th>
-                <th className="py-3 px-4 text-center">Thao Tác</th>
+                <th className="py-3 px-4 whitespace-nowrap">Serial Number (S/N) / Tag</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">Giá Bán</th>
+                <th className="py-3 px-4 whitespace-nowrap">Trạng Thái QC</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">Định Danh / Tồn</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-sm">
@@ -1733,7 +1733,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                       </td>
 
                       {/* Serial Number & Device Identity */}
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 whitespace-nowrap">
                         <div className="flex flex-col gap-1">
                           <button
                             type="button"
@@ -1748,6 +1748,11 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                               Xem cấu hình chi tiết →
                             </span>
                           </button>
+                          {item.shelf_location && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded w-fit" title="Vị trí để máy trong kho">
+                              📍 <span>{item.shelf_location}</span>
+                            </span>
+                          )}
                           {item.ssd_health !== undefined && (
                             <span className="text-[10px] font-mono text-slate-500">
                               SSD Health:{' '}
@@ -2039,17 +2044,17 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           {/* Spare Parts Table */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[880px]">
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     <th className="py-3 px-4">Linh Kiện</th>
-                    <th className="py-3 px-4">Loại</th>
-                    <th className="py-3 px-4">Tình Trạng</th>
-                    <th className="py-3 px-4">Tồn Kho</th>
-                    {canEditStock() && <th className="py-3 px-4">Giá Nhập</th>}
-                    <th className="py-3 px-4 text-right">Giá Bán</th>
-                    <th className="py-3 px-4 text-center">Bảo Hành</th>
-                    <th className="py-3 px-4 text-center">Thao Tác</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Loại</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Tình Trạng</th>
+                    <th className="py-3 px-4 whitespace-nowrap">Tồn Kho</th>
+                    {canEditStock() && <th className="py-3 px-4 whitespace-nowrap">Giá Nhập</th>}
+                    <th className="py-3 px-4 text-right whitespace-nowrap">Giá Bán</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Bảo Hành</th>
+                    <th className="py-3 px-4 text-center whitespace-nowrap">Thao Tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-sm">

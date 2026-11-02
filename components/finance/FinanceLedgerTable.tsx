@@ -14,17 +14,17 @@ export function FinanceLedgerTable({ ledgerList, collectedCash }: Props) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full text-left text-xs border-collapse min-w-[950px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase">
-              <th className="py-3 px-3.5">Mã Giao Dịch</th>
-              <th className="py-3 px-3.5">Ngày</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Mã Giao Dịch</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Ngày</th>
               <th className="py-3 px-3.5">Nội Dung</th>
-              <th className="py-3 px-3.5">Khách Hàng/Đối Tác</th>
-              <th className="py-3 px-3.5 text-right">Thu Vào</th>
-              <th className="py-3 px-3.5 text-right">Chi Ra</th>
-              <th className="py-3 px-3.5 text-right">Lãi Ròng</th>
-              <th className="py-3 px-3.5 text-center">Trạng Thái</th>
+              <th className="py-3 px-3.5 whitespace-nowrap">Khách Hàng/Đối Tác</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap">Thu Vào</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap">Chi Ra</th>
+              <th className="py-3 px-3.5 text-right whitespace-nowrap">Lãi Ròng</th>
+              <th className="py-3 px-3.5 text-center whitespace-nowrap">Trạng Thái</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -49,13 +49,13 @@ export function FinanceLedgerTable({ ledgerList, collectedCash }: Props) {
                     <div className="font-medium text-slate-800">{tx.partyName}</div>
                     {tx.partyPhone && <div className="text-[10px] text-slate-400 font-mono">{tx.partyPhone}</div>}
                   </td>
-                  <td className="py-3 px-3.5 text-right font-mono font-bold text-blue-700">
+                  <td className="py-3 px-3.5 text-right font-mono font-bold text-blue-700 whitespace-nowrap">
                     {tx.incomeAmount > 0 ? `+${tx.incomeAmount.toLocaleString('vi-VN')}₫` : '-'}
                   </td>
-                  <td className="py-3 px-3.5 text-right font-mono text-rose-600">
+                  <td className="py-3 px-3.5 text-right font-mono text-rose-600 whitespace-nowrap">
                     {tx.expenseAmount > 0 ? `-${tx.expenseAmount.toLocaleString('vi-VN')}₫` : '-'}
                   </td>
-                  <td className="py-3 px-3.5 text-right font-mono font-bold">
+                  <td className="py-3 px-3.5 text-right font-mono font-bold whitespace-nowrap">
                     {tx.netProfit > 0 ? (
                       <span className="text-emerald-700">+{tx.netProfit.toLocaleString('vi-VN')}₫</span>
                     ) : tx.netProfit < 0 ? (

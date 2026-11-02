@@ -1,6 +1,33 @@
 import { LedgerItem } from './types';
 import { InventoryItem, ServiceTicket, OnsiteDispatch, LicenseKeyItem, ShiftLog } from '@/lib/supabase';
 
+/**
+ * Tính toán doanh thu, giá vốn và lợi nhuận thực tế của phiếu sửa chữa:
+ * - Nếu có thay linh kiện (parts_used): giá vốn phản ánh linh kiện nhập + công thợ
+ * - Nếu là dịch vụ thuần (vệ sinh, cài win...): giá vốn tính theo tiền công KTV (technician_fee)
+ * Đảm bảo đồng bộ 100% giữa Dashboard và Sổ Quỹ Tài Chính.
+ */
+export function calculateTicketCostAndRevenue(t: ServiceTicket): { revenue: number; cost: number; profit: number } {
+  const parts = t.parts_used || [];
+  const partsRevenue = parts.reduce((s, p) => s + (p.price || 0) * (p.quantity || 1), 0);
+  const labor = t.actual_cost || 0;
+  const rev = t.total_amount || (partsRevenue + labor) || t.estimated_cost || 0;
+
+  let cost = 0;
+  if (parts.length > 0) {
+    const partsCost = Math.round(partsRevenue * 0.65);
+    const laborRev = Math.max(0, rev - partsRevenue);
+    const techCost = t.technician_fee ?? Math.round(laborRev * 0.35);
+    cost = partsCost + techCost;
+  } else {
+    cost = t.technician_fee ?? Math.round(rev * 0.35);
+  }
+
+  cost = Math.min(cost, rev);
+  const profit = rev - cost;
+  return { revenue: rev, cost, profit };
+}
+
 export function buildLedgerItems(
   inventory: InventoryItem[],
   tickets: ServiceTicket[],
@@ -35,9 +62,8 @@ export function buildLedgerItems(
   });
 
   tickets.forEach((t) => {
-    const rev = t.total_amount ?? t.actual_cost ?? 0;
-    const cost = Math.round(rev * 0.35);
-    const dStr = t.created_at || t.estimated_completion || new Date().toISOString();
+    const { revenue: rev, cost, profit } = calculateTicketCostAndRevenue(t);
+    const dStr = t.completed_at || t.created_at || t.estimated_completion || new Date().toISOString();
     if (rev > 0) {
       items.push({
         id: `t-${t.id}`,
@@ -51,7 +77,7 @@ export function buildLedgerItems(
         partyPhone: t.customer_phone,
         incomeAmount: rev,
         expenseAmount: cost,
-        netProfit: rev - cost,
+        netProfit: profit,
         paymentStatus: t.status === 'completed' || t.status === 'delivered' ? 'paid' : 'partial',
         paymentMethod: 'Tiền mặt',
         notes: t.status === 'completed' ? 'Đã thu đủ' : 'Đang xử lý',

@@ -307,7 +307,7 @@ export function NewOrderNotificationWidget() {
       aria-label="Thông Báo Đơn Hàng & Yêu Cầu Dịch Vụ Mới"
       className={`fixed print:hidden transition-all duration-300 ${
         isOpen
-          ? 'bottom-3 right-3 left-3 sm:left-auto sm:bottom-6 sm:right-4 w-auto sm:w-[440px] max-w-[440px] z-[85]'
+          ? 'bottom-3 right-3 left-3 sm:left-auto sm:bottom-6 sm:right-4 w-auto sm:w-[440px] max-w-[440px] z-[45]'
           : 'bottom-20 right-4 z-40'
       }`}
     >

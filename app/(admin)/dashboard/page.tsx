@@ -10,6 +10,7 @@ import {
 } from '@/components/admin/FinancialDrilldownModal';
 import { InventoryItem, OnsiteDispatch } from '@/lib/supabase';
 import { InteractiveCashflowChart } from '@/components/dashboard/InteractiveCashflowChart';
+import { calculateTicketCostAndRevenue } from '@/components/finance/financeHelpers';
 import { message } from 'antd';
 
 export default function DashboardPage() {
@@ -165,14 +166,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       }
     });
 
-    // 2. Phiếu sửa chữa
+    // 2. Phiếu sửa chữa (đồng bộ 100% công thức giá vốn & lợi nhuận với Sổ Quỹ Tài Chính)
     tickets.forEach((tck) => {
       const done = tck.status === 'completed' || tck.status === 'delivered';
       const tckDate = parse(tck.completed_at || tck.created_at);
       if (done && tckDate && tckDate >= periodStart) {
-        const rev = tck.total_amount ?? tck.actual_cost ?? 0;
-        const cost = Math.round(rev * 0.35);
-        const profit = rev - cost;
+        const { revenue: rev, cost, profit } = calculateTicketCostAndRevenue(tck);
         tRev += rev; tCost += cost; tCount += 1;
         txList.push({
           id: tck.id,
@@ -395,11 +394,59 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       on_the_way: 'in_progress',
       arrived: 'in_progress',
     };
-    await updateDispatchStatus(id, nextStatus[currentStatus] || 'completed');
+    const targetStatus = nextStatus[currentStatus] || 'completed';
+    await updateDispatchStatus(id, targetStatus);
+
+    const statusLabels: Record<string, string> = {
+      dispatched: 'Đã xuất phát',
+      in_progress: 'Đang xử lý tại chỗ',
+      completed: 'Hoàn tất ca',
+    };
+
+    message.open({
+      key: `dispatch-${id}`,
+      duration: 5,
+      content: (
+        <span className="flex items-center gap-2">
+          <span>Đã chuyển ca sang &quot;{statusLabels[targetStatus] || targetStatus}&quot;</span>
+          <button
+            type="button"
+            onClick={async () => {
+              message.destroy(`dispatch-${id}`);
+              await updateDispatchStatus(id, currentStatus);
+              message.info('Đã hoàn tác trạng thái ca cứu hộ!');
+            }}
+            className="text-amber-700 font-bold underline hover:text-amber-900 cursor-pointer ml-1"
+          >
+            Hoàn tác
+          </button>
+        </span>
+      ),
+    });
   };
 
   const handlePassTesting = async (id: string) => {
     await updateQcStatus(id, 'ready_to_sell');
+    message.open({
+      key: `qc-${id}`,
+      duration: 5,
+      content: (
+        <span className="flex items-center gap-2">
+          <span>Đã chuyển máy sang &quot;Sẵn sàng bán&quot;</span>
+          <button
+            type="button"
+            onClick={async () => {
+              message.destroy(`qc-${id}`);
+              await updateQcStatus(id, 'testing');
+              message.info('Đã hoàn tác về Đang kiểm định QC!');
+            }}
+            className="text-amber-700 font-bold underline hover:text-amber-900 cursor-pointer ml-1"
+          >
+            Hoàn tác
+          </button>
+        </span>
+      ),
+    });
   };
 
   const handleFailTesting = async (id: string) => {

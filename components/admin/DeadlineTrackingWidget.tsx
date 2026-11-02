@@ -114,7 +114,7 @@ export function DeadlineTrackingWidget() {
     <aside
       aria-label="Cảnh Báo Hạn Trả"
       className={`fixed bottom-6 right-4 font-sans transition-all duration-200 ${
-        isOpen ? 'z-[70]' : 'z-40'
+        isOpen ? 'z-[45]' : 'z-40'
       }`}
     >
       {/* 1. MÀN HÌNH CHI TIẾT (KHI MỞ RỘNG) */}

@@ -107,6 +107,17 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
       setSaveSuccessMsg(null);
     }
   }, [ticket]);
+
+  // Đóng modal bằng phím Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
   const deadlineInfo = useMemo(() => {
     if (!ticket) return null;
     const now = new Date();
@@ -258,8 +269,16 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
   const cleanPhone = (ticket.customer_phone || '').replace(/\D/g, '');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs font-sans animate-in fade-in duration-150">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs font-sans animate-in fade-in duration-150 cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] cursor-default"
+      >
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white p-4 sm:px-6 flex items-center justify-between shadow-md shrink-0">
           <div className="flex items-center gap-3">
@@ -302,7 +321,9 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-rose-600/80 text-white flex items-center justify-center text-xs font-bold transition-colors"
+              aria-label="Đóng chi tiết phiếu (ESC)"
+              title="Đóng (ESC)"
+              className="w-8 h-8 rounded-lg bg-white/10 hover:bg-rose-600/80 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -320,7 +341,7 @@ export function TicketDetailModal({ ticketId, onClose, onTicketUpdated, fieldMod
           >
             <div className="flex items-center gap-2">
               {deadlineInfo.isOverdue ? (
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 animate-bounce" />
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
               ) : (
                 <Clock className="w-4 h-4 text-amber-600 shrink-0" />
               )}

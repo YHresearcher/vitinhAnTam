@@ -23,7 +23,7 @@ function ticketExpectedAmount(t: ServiceTicket): number {
 
 const STATUS_LABELS: Record<ServiceTicket['status'], { label: string; bg: string; text: string; border: string }> = {
   received: { label: 'Tiếp nhận mới', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  diagnosing: { label: 'Đang kiểm tra / QC', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+  diagnosing: { label: 'Đang kiểm tra / QC', bg: 'bg-amber-100', text: 'text-amber-900', border: 'border-amber-300' },
   in_progress: { label: 'Đang sửa chữa', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
   processing: { label: 'Đang xử lý kỹ thuật', bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
   ready: { label: 'Đã xử lý xong (Chờ giao)', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -252,18 +252,18 @@ export default function CounterRepairTab({
       {/* Tickets Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[920px]">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="py-2.5 px-3">Mã Phiếu</th>
-                <th className="py-2.5 px-3">Khách Hàng</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Mã Phiếu</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Khách Hàng</th>
                 <th className="py-2.5 px-3">Thiết Bị</th>
-                <th className="py-2.5 px-3">Hình Thức</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Hình Thức</th>
                 <th className="py-2.5 px-3">Mô Tả Lỗi</th>
-                <th className="py-2.5 px-3">Trạng Thái</th>
-                <th className="py-2.5 px-3">KTV</th>
-                <th className="py-2.5 px-3 text-right">Chi Phí</th>
-                <th className="py-2.5 px-3 text-center">Thao Tác</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">Trạng Thái</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">KTV</th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap">Chi Phí</th>
+                <th className="py-2.5 px-3 text-center whitespace-nowrap">Thao Tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-xs">
@@ -283,10 +283,10 @@ export default function CounterRepairTab({
                   };
                   return (
                     <tr key={ticket.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-3 font-mono font-bold text-blue-600">
+                      <td className="py-3 px-3 font-mono font-bold text-blue-600 whitespace-nowrap">
                         {ticket.ticket_code}
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <div className="font-semibold text-slate-800">{ticket.customer_name}</div>
                         <div className="text-[11px] text-slate-500 font-mono mt-0.5">{ticket.customer_phone}</div>
                       </td>
@@ -298,7 +298,7 @@ export default function CounterRepairTab({
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                           ticket.ticket_type === 'onsite' || ticket.reception_mode === 'mobile'
                             ? 'bg-amber-100 text-amber-800'
@@ -313,7 +313,7 @@ export default function CounterRepairTab({
                         </p>
                       </td>
 
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         {canUpdateRepairStatus() ? (
                           <select
                             value={ticket.status}
@@ -333,7 +333,7 @@ export default function CounterRepairTab({
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-3 text-slate-600">
+                      <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                         {canAssignTasks() ? (
                           <select
                             value={ticket.technician_name}
@@ -357,10 +357,10 @@ export default function CounterRepairTab({
                           <span className="text-xs font-medium text-slate-800">{ticket.technician_name}</span>
                         )}
                       </td>
-                      <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono">
+                      <td className="py-3 px-3 text-right font-bold text-slate-900 font-mono whitespace-nowrap">
                         {ticketExpectedAmount(ticket).toLocaleString('vi-VN')} đ
                       </td>
-                      <td className="py-3 px-3 text-center">
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => setSelectedTicketId(ticket.id)}

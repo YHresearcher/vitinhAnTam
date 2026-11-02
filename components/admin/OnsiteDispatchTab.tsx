@@ -96,7 +96,7 @@ export default function OnsiteDispatchTab() {
   } = useStore();
 
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<React.ReactNode | null>(null);
   const [convertingDispatch, setConvertingDispatch] = useState<OnsiteDispatch | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({
@@ -165,10 +165,30 @@ export default function OnsiteDispatchTab() {
   }, [onsiteDispatches, filterStatus]);
 
   const handleStatusChange = async (id: string, newStatus: OnsiteDispatchStatus) => {
+    const current = onsiteDispatches.find((d) => d.id === id);
+    const prevStatus = current?.status;
     await updateDispatchStatus(id, newStatus);
     const cfg = STATUS_CONFIG[newStatus];
-    setNotice(`Đã chuyển trạng thái: ${cfg ? cfg.label : newStatus}`);
-    setTimeout(() => setNotice(null), 3000);
+    setNotice(
+      <span className="flex items-center gap-2">
+        <span>Đã chuyển trạng thái: {cfg ? cfg.label : newStatus}</span>
+        {prevStatus && (
+          <button
+            type="button"
+            onClick={async (e) => {
+              e.stopPropagation();
+              await updateDispatchStatus(id, prevStatus);
+              setNotice('Đã hoàn tác trạng thái ca cứu hộ!');
+              setTimeout(() => setNotice(null), 3000);
+            }}
+            className="text-amber-800 font-bold underline hover:text-amber-950 cursor-pointer ml-1"
+          >
+            Hoàn tác
+          </button>
+        )}
+      </span>
+    );
+    setTimeout(() => setNotice(null), 5000);
   };
 
   const handleAssignTechnician = async (dispatchId: string, technicianName: string) => {
