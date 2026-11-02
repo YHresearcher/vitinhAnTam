@@ -385,7 +385,7 @@ export default function MuaHangClient() {
                   {deliveryMethod === 'pickup' && <Check className="w-4 h-4 text-[#C0392B]" />}
                 </div>
                 <p className="text-xs text-[#6E5D53] mt-1 leading-snug">
-                  {systemSettings.address || (isEn ? '52 Nguyen Cuu Van, Long An Ward, Tay Ninh' : '52 Nguyễn Cửu Vân, p. Long An, tỉnh Tây Ninh')}
+                  {systemSettings.address || (isEn ? '52 Nguyen Cuu Van, Ward 4, Tan An City, Long An' : '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">
@@ -592,7 +592,7 @@ export default function MuaHangClient() {
                     {isEn ? 'Delivery' : 'Nhận hàng'}
                   </div>
                   <div className="text-sm font-semibold text-[#2B1810] mt-0.5">
-                    {deliveryMethod === 'pickup' && (isEn ? `Showroom Pickup — ${systemSettings.address || '52 Nguyen Cuu Van, Long An Ward, Tay Ninh'}` : `Mua tại cửa hàng — ${systemSettings.address || '52 Nguyễn Cửu Vân, P. Long An, tỉnh Tây Ninh'}`)}
+                    {deliveryMethod === 'pickup' && (isEn ? `Showroom Pickup — ${systemSettings.address || '52 Nguyen Cuu Van, Ward 4, Tan An City, Long An'}` : `Mua tại cửa hàng — ${systemSettings.address || '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An'}`)}
                     {deliveryMethod === 'delivery' && (
                       <>
                         <span>{isEn ? 'Doorstep Delivery' : 'Giao hàng tận nơi'}</span>

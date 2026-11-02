@@ -13,15 +13,21 @@ export interface ProvinceLocation {
 
 export const ON_SITE_LOCATIONS: Record<'long_an' | 'tphcm', ProvinceLocation> = {
   long_an: {
-    name: 'Tây Ninh',
-    nameEn: 'Tay Ninh',
+    name: 'Long An & Tây Ninh',
+    nameEn: 'Long An & Tay Ninh',
     districts: [
       {
         id: 'tan_an',
-        name: 'Phường Long An (Nội thành)',
-        nameEn: 'Long An Ward (Urban)',
+        name: 'TP. Tân An & Khu vực lân cận',
+        nameEn: 'Tan An City & Vicinity',
         wards: [
-          'Phường Long An',
+          'Phường 1',
+          'Phường 2',
+          'Phường 3',
+          'Phường 4',
+          'Phường 5',
+          'Phường 6',
+          'Phường 7',
           'Xã An Vĩnh Ngãi',
           'Xã Bình Tâm',
           'Xã Hướng Thọ Phú',

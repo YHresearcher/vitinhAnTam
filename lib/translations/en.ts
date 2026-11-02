@@ -14,7 +14,7 @@ export const EN_TRANSLATIONS = {
   },
   footer: {
     hubTitle: 'VI TINH AN TAM STORE',
-    hubAddress: '52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province',
+    hubAddress: '52 Nguyen Cuu Van, Ward 4, Tan An City, Long An Province',
     hotlineLabel: 'Hotline / Zalo:',
     techSupportLabel: 'Tech Support:',
     techSupportValue: '24/7 on-duty dispatch',
@@ -191,9 +191,9 @@ export const EN_TRANSLATIONS = {
     hotlineLabel: 'Emergency Hotline & Technical Zalo:',
     btnCallTech: 'Call On-Duty Engineer Now',
     hqBadge: 'HEADQUARTERS',
-    hqTitle: 'Vi Tinh An Tam - Long An Ward Hub',
+    hqTitle: 'Vi Tinh An Tam - Tan An Hub',
     hqAddress:
-      '52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province (Spacious car parking available)',
+      '52 Nguyen Cuu Van, Ward 4, Tan An City, Long An Province (Spacious car parking available)',
     mapLink: 'View Directions on Google Maps',
   },
   floating: {
@@ -268,7 +268,7 @@ export const EN_TRANSLATIONS = {
     modeOnsiteTitle: 'On-Site Technical Support',
     modeOnsiteDesc: 'In-person assistance at your home or office by convenient appointment.',
     modeCounterTitle: 'Bring Computer to Hub',
-    modeCounterDesc: '52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province (Convenient parking, rapid 30-min express checkout)',
+    modeCounterDesc: '52 Nguyen Cuu Van, Ward 4, Tan An City, Long An Province (Convenient parking, rapid 30-min express checkout)',
     step2Title: '2. Client Information',
     nameLabel: 'Full Name *',
     namePlaceholder: '',

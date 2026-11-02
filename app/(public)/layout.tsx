@@ -23,7 +23,7 @@ export default function PublicLayout({
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2B1810] flex flex-col selection:bg-[#C0392B] selection:text-white font-inter">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2B1810] flex flex-col selection:bg-[#C0392B] selection:text-white font-sans">
       {!isLoginPage && <Navbar />}
       <div className="flex-1">{children}</div>
       {!isLoginPage && <FloatingContactWidget />}

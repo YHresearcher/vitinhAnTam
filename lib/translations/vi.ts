@@ -14,7 +14,7 @@ export const VI_TRANSLATIONS = {
   },
   footer: {
     hubTitle: 'CỬA HÀNG VI TÍNH AN TÂM',
-    hubAddress: '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh',
+    hubAddress: '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An',
     hotlineLabel: 'Hotline / Zalo:',
     techSupportLabel: 'Hỗ trợ kỹ thuật:',
     techSupportValue: '24/7 trực ca tiếp nhận',
@@ -188,9 +188,9 @@ export const VI_TRANSLATIONS = {
     hotlineLabel: 'Gọi gấp & Zalo kỹ thuật:',
     btnCallTech: 'Gọi kỹ thuật đang trực',
     hqBadge: 'TRỤ SỞ CHÍNH',
-    hqTitle: 'Trụ Sở & Trạm Kỹ Thuật (phường Long An)',
+    hqTitle: 'Trụ Sở & Trạm Kỹ Thuật (TP. Tân An)',
     hqAddress:
-      '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh (Có bãi đỗ ô tô thuận tiện)',
+      '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An (Có bãi đỗ ô tô thuận tiện)',
     mapLink: 'Chỉ đường trên Google Maps',
   },
   floating: {
@@ -265,7 +265,7 @@ export const VI_TRANSLATIONS = {
     modeOnsiteTitle: 'Kỹ Thuật Viên Đến Tận Nơi',
     modeOnsiteDesc: 'Phục vụ tận nhà hoặc văn phòng theo lịch hẹn thuận tiện cho bạn.',
     modeCounterTitle: 'Mang Máy Đến Cửa Hàng',
-    modeCounterDesc: '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh (Có chỗ đỗ xe, kiểm tra & lấy ngay sau 30 phút)',
+    modeCounterDesc: '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An (Có chỗ đỗ xe, kiểm tra & lấy ngay sau 30 phút)',
     step2Title: '2. Thông tin khách hàng',
     nameLabel: 'Họ và tên *',
     namePlaceholder: '',

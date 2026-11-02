@@ -112,9 +112,9 @@ const jsonLd = {
   image: 'https://www.vitinhantam.com/images/hero-laptop-windows.webp',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: '52 Nguyễn Cửu Vân',
-    addressLocality: 'Long An',
-    addressRegion: 'Tây Ninh',
+    streetAddress: '52 Nguyễn Cửu Vân, Phường 4',
+    addressLocality: 'Tân An',
+    addressRegion: 'Long An',
     postalCode: '820000',
     addressCountry: 'VN',
   },

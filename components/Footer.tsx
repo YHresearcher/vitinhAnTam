@@ -114,9 +114,9 @@ export function Footer() {
         <div className="pt-8 border-t border-[#332219] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8D7B73]">
           <p>© {new Date().getFullYear()} Vi Tính An Tâm (vitinhantam.com) - {currentLang === 'en' ? 'Sold with Care, Keeping You Carefree.' : 'Bán bằng tâm để bạn an tâm.'}</p>
           <div className="flex flex-wrap items-center gap-5">
-            <a className="hover:text-[#E67E22] transition-colors font-medium" href="#chinh-sach">
+            <Link className="hover:text-[#E67E22] transition-colors font-medium" href="/#faq-an-tam">
               {t.warrantyTerms}
-            </a>
+            </Link>
             <Link className="hover:text-[#E67E22] transition-colors flex items-center gap-1.5 font-medium" href="/login">
               <Lock className="w-3.5 h-3.5 text-[#D9531E]" strokeWidth={1.5} />
               <span>{t.internalLogin}</span>

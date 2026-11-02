@@ -744,17 +744,18 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Nút Xem Toàn Bộ Kho Hàng */}
+          {/* Nút Xem Toàn Bộ Kho Hàng (Chuyển tab hardware mượt mà không reload) */}
           <div className="pt-2 pb-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="/danh-muc-san-pham"
+            <button
+              type="button"
+              onClick={() => setHomeProductTab('hardware')}
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-sm sm:text-base tracking-wide shadow-lg shadow-[#C0392B]/20 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 group text-center cursor-pointer"
             >
               <span>
-                {isEn ? 'View Entire Inventory' : 'Xem toàn bộ kho hàng'}
+                {isEn ? `View Entire PC Inventory (${sortedInStockProducts.length} computers)` : `Xem toàn bộ kho máy (${sortedInStockProducts.length} sản phẩm)`}
               </span>
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-            </a>
+            </button>
           </div>
 
           {/* 2. PHẦN MỀM & KEY BẢN QUYỀN WINDOWS / OFFICE */}
@@ -927,7 +928,7 @@ export default function HomePage() {
                     <div className="text-[11px] text-[#6E5D53] mt-0.5">{t.services.pkg1Sub}</div>
                   </div>
                   <Link
-                    href="/danh-muc-san-pham"
+                    href={`/dat-lich?service=${encodeURIComponent(t.services.pkg1Title)}`}
                     className="w-full py-2.5 rounded-lg bg-[#C0392B] hover:bg-[#A93226] text-white font-bold text-xs tracking-wide transition-all text-center block shadow-xs"
                   >
                     {t.services.btnPkg1 || t.services.btnBookPkg}
@@ -1178,6 +1179,7 @@ export default function HomePage() {
                   >
                     <button
                       type="button"
+                      id={`faq-question-${idx}`}
                       onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                       aria-expanded={isOpen}
                       aria-controls={`faq-answer-${idx}`}
@@ -1214,7 +1216,7 @@ export default function HomePage() {
         footer={null}
         centered
         width={680}
-        title={null}
+        title={<span className="text-sm font-bold text-slate-800">{t.qcModal.badge || 'Kiểm định chất lượng & Thông số phần cứng'}</span>}
         className="qc-detail-modal"
       >
         {selectedProduct && (

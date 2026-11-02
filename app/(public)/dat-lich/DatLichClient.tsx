@@ -111,13 +111,13 @@ function AppointmentBookingContent() {
   const getFullAddress = () => {
     if (locationType === 'counter') {
       return currentLang === 'en'
-        ? 'Vi Tinh An Tam Store (52 Nguyen Cuu Van, Long An Ward, Tay Ninh Province)'
-        : 'Cửa hàng Vi Tính An Tâm (52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh)';
+        ? 'Vi Tinh An Tam Store (52 Nguyen Cuu Van, Ward 4, Tan An City, Long An Province)'
+        : 'Cửa hàng Vi Tính An Tâm (52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An)';
     }
 
     const currentDistName =
       availableDistricts.find((d) => d.id === selectedDistrict)?.name || '';
-    const cityName = selectedCity === 'long_an' ? 'Tây Ninh' : 'TP. Hồ Chí Minh';
+    const cityName = selectedCity === 'long_an' ? 'Long An / Tây Ninh' : 'TP. Hồ Chí Minh';
 
     const parts = [
       streetAddress.trim(),
@@ -463,7 +463,7 @@ function AppointmentBookingContent() {
                           onChange={(e) => handleCityChange(e.target.value as 'long_an' | 'tphcm')}
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#C0392B] focus:border-transparent bg-white transition-all cursor-pointer"
                         >
-                          <option value="long_an">Tây Ninh</option>
+                          <option value="long_an">Long An / Tây Ninh</option>
                           <option value="tphcm">TP. Hồ Chí Minh</option>
                         </select>
                       </div>

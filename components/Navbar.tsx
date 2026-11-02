@@ -196,7 +196,9 @@ export function Navbar() {
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="xl:hidden p-1.5 rounded-lg text-[#2B1810] hover:text-[#C0392B] hover:bg-[#F4EFEA] transition-colors"
-            aria-label="Toggle Navigation Menu"
+            aria-label={isMobileMenuOpen ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav"
           >
             {isMobileMenuOpen ? (
               <X className="w-6 h-6" strokeWidth={1.5} />
@@ -209,7 +211,11 @@ export function Navbar() {
 
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
-        <div className="xl:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-4 pt-2 pb-4 space-y-1 shadow-lg">
+        <nav
+          id="mobile-nav"
+          aria-label="Menu di động"
+          className="xl:hidden border-t border-[#E8E2D9] bg-[#FAF7F2] px-4 pt-2 pb-6 space-y-1 shadow-lg max-h-[calc(100vh-72px)] overflow-y-auto"
+        >
           <Link
             href="/"
             onClick={() => setIsMobileMenuOpen(false)}
@@ -312,7 +318,7 @@ export function Navbar() {
               </button>
             </div>
           </div>
-        </div>
+        </nav>
       )}
     </header>
   );
