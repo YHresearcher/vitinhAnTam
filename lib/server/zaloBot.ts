@@ -1,4 +1,5 @@
 import { getStoredSettings, getStoredSettingsAsync } from '@/lib/server/settings';
+import { loadUsersAsync } from '@/lib/server/users';
 
 // Zalo Bot API chính thức (SDK python-zalo-bot) — https://bot.zapps.vn/docs/create-bot/
 // URL dạng: {base}/bot{token}/{method} — contract lấy từ source SDK (zalo_bot/_bot.py)
@@ -486,8 +487,41 @@ export async function dispatchSystemEvent(
         `Chúc bạn một ngày làm việc hiệu quả!`;
     }
 
+    // Xác định Chat ID nhận tin:
+    // 1. Nếu payload có targetChatId chỉ định -> ưu tiên gửi đến đó
+    // 2. Nếu có technicianId/technicianPhone/technicianName -> tự động tra cứu Zalo Chat ID của thợ
+    // 3. Mặc định fallback: defaultChatId của tiệm
+    let targetChatId = typeof payload.targetChatId === 'string' && payload.targetChatId.trim()
+      ? payload.targetChatId.trim()
+      : '';
+
+    if (!targetChatId && (payload.technicianId || payload.technicianPhone || payload.technicianName)) {
+      try {
+        const users = await loadUsersAsync();
+        const tech = users.find((u) => {
+          if (payload.technicianId && u.id === payload.technicianId) return true;
+          if (payload.technicianPhone) {
+            const p1 = String(u.phone || '').replace(/\D/g, '').replace(/^84/, '0');
+            const p2 = String(payload.technicianPhone).replace(/\D/g, '').replace(/^84/, '0');
+            return p1 && p1 === p2;
+          }
+          if (payload.technicianName && u.name.trim().toLowerCase() === String(payload.technicianName).trim().toLowerCase()) {
+            return true;
+          }
+          return false;
+        });
+        if (tech?.zalo_chat_id) {
+          targetChatId = tech.zalo_chat_id;
+        }
+      } catch {}
+    }
+
+    if (!targetChatId) {
+      targetChatId = defaultChatId;
+    }
+
     const res = await sendZaloBotMessage({
-      chatId: defaultChatId,
+      chatId: targetChatId,
       text: formattedText,
     });
 
@@ -496,7 +530,19 @@ export async function dispatchSystemEvent(
       errorDetail = res.error;
       console.error('[Zalo Bot] Gửi thông báo thất bại:', res.error);
     } else {
-      console.log(`[Zalo Bot] Đã gửi thông báo thành công cho sự kiện: ${eventType}`);
+      console.log(`[Zalo Bot] Đã gửi thông báo thành công cho sự kiện: ${eventType} (tới Chat ID: ${targetChatId})`);
+    }
+
+    // Nếu tin đã gửi riêng cho kỹ thuật viên, đồng thời gửi một bản sao ngắn vào Chat ID chung của tiệm
+    if (res.ok && targetChatId !== defaultChatId && defaultChatId) {
+      const summaryText = `📋 [BẢN SAO ĐIỀU PHỐI - ĐÃ GỬI RIÊNG KTV]\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `👤 Đã chuyển tin riêng đến Zalo KTV phụ trách.\n\n` +
+        formattedText;
+      void sendZaloBotMessage({
+        chatId: defaultChatId,
+        text: summaryText,
+      }).catch(() => undefined);
     }
   } else {
     if (!token || !defaultChatId) {
@@ -509,4 +555,53 @@ export async function dispatchSystemEvent(
     customSent: false,
     error: errorDetail,
   };
+}
+
+/**
+ * Gửi tin nhắn riêng trực tiếp cho một nhân sự qua Zalo
+ * Tự động tìm zalo_chat_id từ ID hoặc Số điện thoại.
+ */
+export async function sendZaloToStaff({
+  userId,
+  userPhone,
+  text,
+}: {
+  userId?: string;
+  userPhone?: string;
+  text: string;
+}): Promise<{ ok: boolean; error?: string; sentToUser?: boolean }> {
+  try {
+    const { token, defaultChatId } = await getZaloBotConfigAsync();
+    if (!token) return { ok: false, error: 'Chưa cấu hình Zalo Bot Token.' };
+
+    const users = await loadUsersAsync();
+    const cleanPhone = userPhone ? userPhone.replace(/\D/g, '').replace(/^84/, '0') : '';
+
+    const staff = users.find((u) => {
+      if (userId && u.id === userId) return true;
+      if (cleanPhone) {
+        const uPhone = String(u.phone || '').replace(/\D/g, '').replace(/^84/, '0');
+        return uPhone && uPhone === cleanPhone;
+      }
+      return false;
+    });
+
+    const targetChatId = staff?.zalo_chat_id || defaultChatId;
+    if (!targetChatId) {
+      return { ok: false, error: 'Nhân viên chưa liên kết Zalo và hệ thống chưa có Chat ID mặc định.' };
+    }
+
+    const res = await sendZaloBotMessage({
+      chatId: targetChatId,
+      text,
+    });
+
+    return {
+      ok: res.ok,
+      error: res.error,
+      sentToUser: !!staff?.zalo_chat_id,
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }

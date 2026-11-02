@@ -99,6 +99,7 @@ export function rowToUser(row: Record<string, unknown>): StoredUser {
           can_access_payroll: false,
           can_manage_users: false,
         },
+    zalo_chat_id: row.zalo_chat_id ? String(row.zalo_chat_id).trim() : undefined,
     password_hash: String(row.password_hash || ''),
     password_changed: row.password_changed === false ? false : true,
   };
@@ -115,6 +116,7 @@ export function userToRow(user: StoredUser): Record<string, unknown> {
     role_title: user.roleTitle,
     avatar_bg: user.avatarBg,
     referral_code: user.referral_code || null,
+    zalo_chat_id: user.zalo_chat_id || null,
     status: user.status,
     permissions: user.permissions,
     password_hash: user.password_hash,
@@ -418,6 +420,7 @@ export function upsertUser(
       can_manage_users: false,
     },
     status: rest.status ?? base.status ?? 'active',
+    zalo_chat_id: rest.zalo_chat_id !== undefined ? (rest.zalo_chat_id ? rest.zalo_chat_id.trim() : undefined) : base.zalo_chat_id,
     created_at: base.created_at ?? new Date().toISOString(),
     password_hash: pHash || hashPassword(issueTemporaryPassword(id)),
     password_changed: pChanged === false ? false : true,
@@ -434,9 +437,10 @@ export function upsertUser(
     Promise.resolve().then(async () => {
       const row = userToRow(next);
       let res = await sb.from('users').upsert(row);
-      if (res.error && (res.error.code === 'PGRST204' || String(res.error.message).includes('referral_code'))) {
+      if (res.error && (res.error.code === 'PGRST204' || String(res.error.message).includes('referral_code') || String(res.error.message).includes('zalo_chat_id'))) {
         const fallbackRow = { ...row };
         delete fallbackRow.referral_code;
+        delete fallbackRow.zalo_chat_id;
         res = await sb.from('users').upsert(fallbackRow);
       }
       if (res.error) console.warn('Lỗi background save Supabase user:', res.error.message);
@@ -614,4 +618,76 @@ export function removeUser(id: string): boolean {
     }).catch((err: unknown) => console.error('Lỗi kết nối background Supabase user:', err));
   }
   return true;
+}
+
+/**
+ * Tìm nhân viên theo Zalo Chat ID (đã liên kết)
+ */
+export async function findUserByZaloChatIdAsync(chatId: string): Promise<StoredUser | null> {
+  const cleanId = String(chatId || '').trim();
+  if (!cleanId) return null;
+  const users = await loadUsersAsync();
+  return users.find((u) => u.zalo_chat_id && String(u.zalo_chat_id).trim() === cleanId) || null;
+}
+
+/**
+ * Tự động liên kết Zalo Chat ID cho nhân viên bằng Số điện thoại (Cách 1)
+ */
+export async function linkUserZaloChatIdByPhoneAsync(
+  phone: string,
+  chatId: string
+): Promise<{ success: boolean; user?: SafeUser; message?: string }> {
+  const cleanChatId = String(chatId || '').trim();
+  if (!cleanChatId) {
+    return { success: false, message: 'Chat ID không hợp lệ.' };
+  }
+
+  // Chuẩn hóa số điện thoại: bỏ ký tự không phải số, quy đổi đầu 84 thành 0
+  const normalizedPhone = String(phone || '').replace(/\D/g, '').replace(/^84/, '0');
+  if (normalizedPhone.length < 9) {
+    return { success: false, message: 'Số điện thoại không hợp lệ (phải có từ 9-11 chữ số).' };
+  }
+
+  const users = await loadUsersAsync();
+  // Tìm user có SĐT khớp
+  const matchedUser = users.find((u) => {
+    const uPhone = String(u.phone || '').replace(/\D/g, '').replace(/^84/, '0');
+    return uPhone && uPhone === normalizedPhone;
+  });
+
+  if (!matchedUser) {
+    return {
+      success: false,
+      message: `Không tìm thấy tài khoản nhân sự nào khớp với số điện thoại ${phone}. Vui lòng nhờ Quản trị viên cập nhật SĐT vào danh sách Nhân sự trước.`,
+    };
+  }
+
+  // Cập nhật Zalo Chat ID
+  const updated = await upsertUserAsync({ zalo_chat_id: cleanChatId }, { id: matchedUser.id });
+  return {
+    success: true,
+    user: updated,
+    message: `Đã kết nối thành công tài khoản "${matchedUser.name}" (${matchedUser.roleTitle}) với Zalo Chat ID ${cleanChatId}!`,
+  };
+}
+
+/**
+ * Hủy liên kết Zalo Chat ID
+ */
+export async function unlinkUserZaloChatIdAsync(
+  chatId: string
+): Promise<{ success: boolean; user?: SafeUser; message?: string }> {
+  const cleanId = String(chatId || '').trim();
+  if (!cleanId) return { success: false, message: 'Chat ID không hợp lệ.' };
+  const users = await loadUsersAsync();
+  const matched = users.find((u) => u.zalo_chat_id && String(u.zalo_chat_id).trim() === cleanId);
+  if (!matched) {
+    return { success: false, message: 'Tài khoản Zalo này chưa từng liên kết với nhân sự nào trong hệ thống.' };
+  }
+  const updated = await upsertUserAsync({ zalo_chat_id: '' }, { id: matched.id });
+  return {
+    success: true,
+    user: updated,
+    message: `Đã hủy liên kết Zalo của nhân sự ${matched.name}.`,
+  };
 }

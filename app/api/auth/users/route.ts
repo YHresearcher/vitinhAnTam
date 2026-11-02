@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
     // Whitelist trường được sửa qua endpoint này.
     const ALLOWED_FIELDS: Array<keyof UserAccount> = [
-      'name', 'username', 'email', 'phone', 'roleTitle', 'avatarBg', 'referral_code',
+      'name', 'username', 'email', 'phone', 'roleTitle', 'avatarBg', 'referral_code', 'zalo_chat_id',
     ];
     const safePatch: Partial<UserAccount> = {};
     for (const field of ALLOWED_FIELDS) {

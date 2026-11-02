@@ -138,6 +138,7 @@ export default function MemberManagementPage() {
       referral_code: cleanUsername || editingUser.referral_code,
       email: editingUser.email.trim().toLowerCase(),
       phone: editingUser.phone?.trim() || '',
+      zalo_chat_id: editingUser.zalo_chat_id !== undefined ? editingUser.zalo_chat_id.trim() : undefined,
       role: editingUser.role,
       roleTitle: defaultTitle,
       avatarBg,
@@ -491,6 +492,28 @@ export default function MemberManagementPage() {
                     <span className="font-mono text-slate-700">{member.phone || 'Chưa cập nhật'}</span>
                   </div>
 
+                  {/* Zalo Bot Status */}
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-slate-500 text-[11px]">Thông báo Zalo:</span>
+                    {member.zalo_chat_id ? (
+                      <span
+                        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200"
+                        title={`Chat ID: ${member.zalo_chat_id}`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Đã kết nối
+                      </span>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded"
+                        title="Nhân viên chỉ cần nhắn 'ket noi <SĐT>' vào Zalo Bot"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        Chưa kết nối
+                      </span>
+                    )}
+                  </div>
+
                   {/* Password Status Banner */}
                   <div className="pt-1">
                     {member.password_changed === false ? (
@@ -709,6 +732,41 @@ export default function MemberManagementPage() {
                   placeholder="0912.345.678"
                   className="w-full px-3.5 py-2 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
                 />
+              </div>
+
+              {/* Zalo Chat ID (Tự động liên kết qua webhook hoặc nhập tay) */}
+              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700">
+                    💬 Zalo Chat ID (Tự Động Nhận Diện)
+                  </label>
+                  {editingUser.zalo_chat_id ? (
+                    <button
+                      type="button"
+                      onClick={() => setEditingUser({ ...editingUser, zalo_chat_id: '' })}
+                      className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 underline"
+                      title="Xóa ID để nhân sự kết nối lại"
+                    >
+                      Hủy liên kết Zalo
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-slate-400">Chưa liên kết</span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={editingUser.zalo_chat_id || ''}
+                  onChange={(e) => setEditingUser({ ...editingUser, zalo_chat_id: e.target.value.trim() })}
+                  placeholder="Hệ thống tự điền khi nhân sự nhắn tin vào Bot Zalo"
+                  className="w-full px-3 py-1.5 text-xs rounded-xl bg-white border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                />
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  💡 <strong>Cách kết nối nhanh nhất:</strong> Nhân sự chỉ cần mở Zalo Bot của tiệm và nhắn tin:{' '}
+                  <code className="text-blue-700 font-bold bg-blue-50 px-1 py-0.5 rounded border border-blue-100">
+                    ket noi {editingUser.phone || 'SĐT_CỦA_THỢ'}
+                  </code>
+                  . Webhook sẽ tự động xác thực và điền Chat ID vào đây!
+                </p>
               </div>
 
               {/* Role Selection */}

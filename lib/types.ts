@@ -19,6 +19,7 @@ export interface UserProfile {
   email?: string;
   phone?: string;
   referral_code?: string;
+  zalo_chat_id?: string;
 }
 
 export interface UserAccount extends UserProfile {
