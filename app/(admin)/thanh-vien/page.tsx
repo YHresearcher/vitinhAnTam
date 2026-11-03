@@ -664,8 +664,8 @@ export default function MemberManagementPage() {
       {/* MODAL 2: EDIT MEMBER PROFILE & ROLE */}
       {editingUser && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-5 animate-scale-up">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-5 animate-scale-up flex flex-col max-h-[calc(100dvh-2rem)]">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-base font-bold text-slate-900">Sửa Thông Tin &amp; Phân Quyền</h2>
                 <p className="text-xs text-slate-500">Mã tài khoản: {editingUser.id}</p>
@@ -678,7 +678,7 @@ export default function MemberManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveEditUser} className="space-y-4">
+            <form onSubmit={handleSaveEditUser} className="space-y-4 overflow-y-auto min-h-0">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Họ và Tên Nhân Sự *</label>
                 <input
@@ -939,8 +939,8 @@ export default function MemberManagementPage() {
       {/* MODAL 3: ADD NEW MEMBER */}
       {isAddingUser && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-5 animate-scale-up">
-            <div className="flex items-start justify-between pb-3 border-b border-slate-100">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full p-6 space-y-5 animate-scale-up flex flex-col max-h-[calc(100dvh-2rem)]">
+            <div className="flex items-start justify-between pb-3 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-base font-bold text-slate-900">Thêm Thành Viên Mới</h2>
               </div>
@@ -952,7 +952,7 @@ export default function MemberManagementPage() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateNewUser} className="space-y-4">
+            <form onSubmit={handleCreateNewUser} className="space-y-4 overflow-y-auto min-h-0">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Họ và Tên Nhân Sự *</label>
                 <input
