@@ -122,8 +122,8 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
           ? 'Whisper-quiet & cool, 100% factory-original motherboard'
           : 'Chạy êm mát, bo mạch zin 100%',
         gift: isEn
-          ? 'Complimentary business keyboard & mouse bundle + mousepad'
-          : (rawMatch?.vi.specs.gift || 'Tặng combo phím chuột & lót chuột mới'),
+          ? 'Free shockproof bag'
+          : (rawMatch?.vi.specs.gift || 'Tặng túi chống sốc'),
       };
 
       const defaultImg =
