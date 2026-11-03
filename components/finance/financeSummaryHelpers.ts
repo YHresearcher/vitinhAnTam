@@ -89,8 +89,18 @@ export function calculateFinancialSummary(
   const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
   const roiRate = totalExpense > 0 ? Math.round((netProfit / totalExpense) * 100) : 0;
 
+  // Hàng seller chỉ là thông tin của người bán (shop không nhập máy, không sở
+  // hữu, không bỏ tiền) nên KHÔNG tính vào vốn tồn kho của shop. Loại cả giá
+  // trị cũ 'reseller' vì dữ liệu live vẫn còn giá trị đó cho tới khi migration
+  // đổi source reseller→seller được áp riêng.
   const warehouseCapital = inventory
-    .filter((i) => i.qc_status !== 'sold' && i.qc_status !== 'dealer_sold')
+    .filter(
+      (i) =>
+        i.qc_status !== 'sold' &&
+        i.qc_status !== 'dealer_sold' &&
+        i.source !== 'seller' &&
+        i.source !== 'reseller'
+    )
     .reduce((sum, i) => sum + (i.import_price || i.cost_price || 3200000), 0);
   const sparePartsCapital = spareParts.reduce((sum, p) => sum + (p.unit_cost || 0) * (p.quantity_in_stock || 1), 0);
   const keysCapital = licenseKeys
