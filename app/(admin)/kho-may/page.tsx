@@ -521,6 +521,20 @@ export default function KhoMayPage() {
       }).catch(() => {});
     }
   };
+  // Ảnh đại diện = ảnh ĐẦU TIÊN trong danh sách: thẻ sản phẩm và gallery
+  // trang khách đều lấy image_urls[0] làm ảnh mở đầu, nên chỉ cần đưa ảnh
+  // được chọn lên đầu — không cần thêm trường riêng, không sợ trạng thái
+  // đại diện cũ (xóa ảnh đầu thì ảnh tiếp theo tự thành ảnh đại diện).
+  const setFeaturedNewItemImage = (idx: number) => {
+    if (idx <= 0) return;
+    setNewItemImages((prev) => {
+      if (idx <= 0 || idx >= prev.length) return prev;
+      const next = [...prev];
+      const [picked] = next.splice(idx, 1);
+      next.unshift(picked);
+      return next;
+    });
+  };
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   // Lỗi tải ảnh hiện ngay trong form (không dùng alert — alert gốc dễ bị
   // trình duyệt chặn và người dùng tưởng là tải xong nhưng không có ảnh).
@@ -2470,6 +2484,22 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             alt={`Ảnh máy ${i + 1}`}
                             className="h-20 w-20 object-cover rounded-lg border border-slate-300"
                           />
+                          {i === 0 ? (
+                            <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[9px] font-bold text-center py-0.5 rounded-b-lg">
+                              ★ Ảnh đại diện
+                            </span>
+                          ) : (
+                            newItemImages.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setFeaturedNewItemImage(i)}
+                                title="Đặt làm ảnh đại diện"
+                                className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none shadow"
+                              >
+                                ★
+                              </button>
+                            )
+                          )}
                           <button
                             type="button"
                             onClick={() => removeNewItemImage(i)}
@@ -2503,7 +2533,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   </div>
                   <p className="text-[11px] text-slate-500">
                     Tối đa 4MB/ảnh (PNG/JPG/WebP). Ảnh tự động nén về tối đa 1600px khi tải
-                    lên để nhẹ hệ thống. Ảnh lưu chung cho các máy trong lô này.
+                    lên để nhẹ hệ thống. Ảnh lưu chung cho các máy trong lô này. Ảnh đầu
+                    tiên là ảnh đại diện hiển thị trên trang bán — bấm ★ trên một ảnh để
+                    đặt nó làm ảnh đại diện.
                   </p>
                 </div>
 
