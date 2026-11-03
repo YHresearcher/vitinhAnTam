@@ -1017,9 +1017,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     );
 
     // S/N không được trùng trong lô, cũng không trùng máy đã có trong kho
-    // Hàng Reseller bắt buộc có thông tin người bán để liên hệ khi cần
-    if (newItem.source === 'reseller' && (!newItem.seller_name.trim() || !newItem.seller_phone.trim())) {
-      alert('Hàng Reseller cần nhập Tên người bán và SĐT liên hệ để tiện liên hệ khi cần!');
+    // Hàng Seller bắt buộc có thông tin người bán để liên hệ khi cần
+    if (newItem.source === 'seller' && (!newItem.seller_name.trim() || !newItem.seller_phone.trim())) {
+      alert('Hàng Seller cần nhập Tên người bán và SĐT liên hệ để tiện liên hệ khi cần!');
       return;
     }
 
@@ -1090,9 +1090,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
           import_price: Number(newItem.import_price),
           import_date: newItem.import_date || new Date().toISOString().slice(0, 10),
           source: newItem.source || 'vtat',
-          seller_name: newItem.source === 'reseller' ? newItem.seller_name.trim() : undefined,
-          seller_phone: newItem.source === 'reseller' ? newItem.seller_phone.trim() : undefined,
-          seller_note: newItem.source === 'reseller' ? newItem.seller_note.trim() : undefined,
+          seller_name: newItem.source === 'seller' ? newItem.seller_name.trim() : undefined,
+          seller_phone: newItem.source === 'seller' ? newItem.seller_phone.trim() : undefined,
+          seller_note: newItem.source === 'seller' ? newItem.seller_note.trim() : undefined,
           components,
           tested_before_import: true,
           image_urls: newItemImages,
@@ -1690,7 +1690,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                             {item.form_factor}
                           </span>
                         </div>
-                        {item.source === 'reseller' &&
+                        {item.source === 'seller' &&
                           item.qc_status !== 'sold' &&
                           item.qc_status !== 'dealer_sold' && (
                             <div className="mt-1.5">
@@ -1702,15 +1702,15 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                                       ? 'bg-amber-100 text-amber-800 border border-amber-200'
                                       : 'bg-sky-50 text-sky-700 border border-sky-200'
                                 }`}
-                                title="Hàng Reseller: tự động xoá khỏi kho sau 7 ngày kể từ ngày nhập nếu chưa bán"
+                                title="Hàng Seller: tự động xoá khỏi kho sau 7 ngày kể từ ngày nhập nếu chưa bán"
                               >
                                 {daysInStock >= 7
-                                  ? 'RESELLER · QUÁ HẠN 7 NGÀY — SẮP TỰ XOÁ'
-                                  : `RESELLER · CÒN ${7 - daysInStock} NGÀY`}
+                                  ? 'SELLER · QUÁ HẠN 7 NGÀY — SẮP TỰ XOÁ'
+                                  : `SELLER · CÒN ${7 - daysInStock} NGÀY`}
                               </span>
                             </div>
                           )}
-                        {item.source === 'reseller' && item.seller_name && (
+                        {item.source === 'seller' && item.seller_name && (
                           <div className="mt-1 text-[11px] text-slate-600">
                             Người bán: <strong>{item.seller_name}</strong>
                             {item.seller_phone && (
@@ -2574,7 +2574,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                   />
                 </div>
 
-                {/* Nguồn Nhập: Kho VTAT (không thời hạn) / Reseller (tự xoá sau 7 ngày) */}
+                {/* Nguồn Nhập: Kho VTAT (không thời hạn) / Seller (tự xoá sau 7 ngày) */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-0.5">
                     Nguồn Nhập *
@@ -2585,21 +2585,21 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                     className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[13px] focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium text-slate-800 bg-white"
                   >
                     <option value="vtat">Kho VTAT (không thời hạn)</option>
-                    <option value="reseller">Reseller (tự xoá khỏi kho sau 7 ngày)</option>
+                    <option value="seller">Seller (tự xoá khỏi kho sau 7 ngày)</option>
                   </select>
-                  {newItem.source === 'reseller' && (
+                  {newItem.source === 'seller' && (
                     <p className="text-[11px] text-amber-700 mt-1">
-                      Máy Reseller chưa bán sẽ <strong>tự động xoá khỏi kho sau 7 ngày</strong> kể
+                      Máy Seller chưa bán sẽ <strong>tự động xoá khỏi kho sau 7 ngày</strong> kể
                       từ ngày nhập (máy đang giữ cho khách/đã bán không bị xoá).
                     </p>
                   )}
                 </div>
 
-                {/* Thông tin người bán — chỉ hiện khi nguồn Reseller */}
-                {newItem.source === 'reseller' && (
+                {/* Thông tin người bán — chỉ hiện khi nguồn Seller */}
+                {newItem.source === 'seller' && (
                   <div className="md:col-span-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2">
                     <span className="text-xs font-bold text-amber-900">
-                      Thông Tin Người Bán (Reseller) — để liên hệ khi cần
+                      Thông Tin Người Bán (Seller) — để liên hệ khi cần
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
@@ -4077,12 +4077,12 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 </div>
               )}
 
-              {/* Thông tin người bán — hàng Reseller */}
-              {viewingSpecsItem.source === 'reseller' &&
+              {/* Thông tin người bán — hàng Seller */}
+              {viewingSpecsItem.source === 'seller' &&
                 (viewingSpecsItem.seller_name || viewingSpecsItem.seller_phone) && (
                   <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-1">
                     <div className="text-xs font-bold text-amber-900">
-                      Người Bán (Reseller) — liên hệ khi cần
+                      Người Bán (Seller) — liên hệ khi cần
                     </div>
                     {viewingSpecsItem.seller_name && (
                       <div>Tên: <strong>{viewingSpecsItem.seller_name}</strong></div>

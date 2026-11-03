@@ -105,7 +105,7 @@ export interface InventoryItem {
   cost_price?: number;
   import_price?: number;
   import_date?: string; // YYYY-MM-DD - Ngày nhập hàng vào kho
-  source?: 'vtat' | 'reseller' | string; // Nguồn nhập: 'vtat' = kho VTAT (không thời hạn) | 'reseller' = hàng Reseller (tự xoá khỏi kho sau 7 ngày chưa bán)
+  source?: 'vtat' | 'seller' | string; // Nguồn nhập: 'vtat' = kho VTAT (không thời hạn) | 'seller' = hàng Seller (tự xoá khỏi kho sau 7 ngày chưa bán)
   retail_price?: number;
   price?: number;
   original_price?: number; // Giá gốc niêm yết (VNĐ)
@@ -117,7 +117,7 @@ export interface InventoryItem {
   warranty_type?: WarrantyType;
   shelf_location: string; // Kệ A1, B2, C1...
   image_urls?: string[];
-  // Nhập máy 2026-10-26: thông tin người bán (chỉ nhập khi source = 'reseller')
+  // Nhập máy 2026-10-26: thông tin người bán (chỉ nhập khi source = 'seller')
   seller_name?: string;
   seller_phone?: string;
   seller_note?: string; // Ghi chú liên hệ (Zalo, địa chỉ...)

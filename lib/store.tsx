@@ -2031,7 +2031,7 @@ export function StoreProvider({
       );
     }
     // Dọn ảnh đi kèm (2026-10-26): xóa file ảnh của máy này khỏi Storage
-    // khi xóa máy — kể cả máy reseller bị quét tự động quá hạn 7 ngày
+    // khi xóa máy — kể cả máy seller bị quét tự động quá hạn 7 ngày
     // (luồng đó cũng gọi hàm này). TRỪ ảnh còn được máy khác dùng chung
     // (ảnh tải theo lô được lưu chung cho cả lô): chỉ xóa file không còn
     // máy nào tham chiếu. Best-effort: lỗi xóa ảnh không chặn việc xóa máy
@@ -2055,18 +2055,18 @@ export function StoreProvider({
     return true;
   };
 
-  // TỰ ĐỘNG XOÁ MÁY RESELLER QUÁ HẠN: máy có nguồn nhập 'reseller' còn
+  // TỰ ĐỘNG XOÁ MÁY SELLER QUÁ HẠN: máy có nguồn nhập 'seller' còn
   // trong kho đủ 7 ngày kể từ ngày nhập sẽ tự bị xoá khỏi kho (quy định:
-  // kho VTAT không thời hạn, Reseller quá 7 ngày thì trả lại). Chạy mỗi
+  // kho VTAT không thời hạn, Seller quá 7 ngày thì trả lại). Chạy mỗi
   // khi dữ liệu kho/tài khoản thay đổi trong phiên nhân viên; bỏ qua máy
   // đã bán, dealer đã bán và máy đang giữ cho khách (reserved — đã có
   // khách đặt cọc). deleteInventoryItem tự kiểm tra quyền sửa kho, nên
   // khách vãng lai không kích hoạt được việc xoá này.
-  const sweptResellerIdsRef = useRef<Set<string>>(new Set());
+  const sweptSellerIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const now = Date.now();
     const expired = inventory.filter((item) => {
-      if (item.source !== 'reseller') return false;
+      if (item.source !== 'seller') return false;
       if (
         item.qc_status === 'sold' ||
         item.qc_status === 'dealer_sold' ||
@@ -2074,7 +2074,7 @@ export function StoreProvider({
       ) {
         return false;
       }
-      if (sweptResellerIdsRef.current.has(item.id)) return false;
+      if (sweptSellerIdsRef.current.has(item.id)) return false;
       const dateStr = item.import_date || item.created_at;
       if (!dateStr) return false;
       const importedAt = new Date(dateStr).getTime();
@@ -2082,7 +2082,7 @@ export function StoreProvider({
       return Math.floor((now - importedAt) / (1000 * 60 * 60 * 24)) >= 7;
     });
     if (expired.length === 0) return;
-    expired.forEach((item) => sweptResellerIdsRef.current.add(item.id));
+    expired.forEach((item) => sweptSellerIdsRef.current.add(item.id));
     void (async () => {
       for (const item of expired) {
         await deleteInventoryItem(item.id);
