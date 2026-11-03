@@ -95,9 +95,18 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
     const inventoryValue = activeInventory
       .filter((i) => i.qc_status !== 'sold')
       .reduce((sum, i) => sum + (i.sale_price && i.sale_price > 0 ? i.sale_price : (i.price ?? i.retail_price ?? i.original_price ?? 0)), 0);
-    const inventoryCapital = activeInventory
-      .filter((i) => i.qc_status !== 'sold')
-      .reduce((sum, i) => sum + (i.import_price ?? i.cost_price ?? 0), 0);
+    // Tổng vốn hàng tồn = vốn máy của shop + vốn key tự nhập (key luôn do
+    // shop tự bỏ tiền nhập nên phải tính vào kho). Hàng seller (chỉ lấy thông
+    // tin, shop không bỏ tiền mua) KHÔNG tính vào vốn — loại cả 'seller' lẫn
+    // 'reseller' cũ vì dữ liệu live vẫn còn giá trị 'reseller' cho tới khi
+    // migration đổi tên nguồn được áp riêng.
+    const availableKeys = licenseKeys.filter((k) => k.status === 'available');
+    const keysCapital = availableKeys.reduce((sum, k) => sum + (k.import_price || 150000), 0);
+    const inventoryCapital =
+      activeInventory
+        .filter((i) => i.qc_status !== 'sold' && i.source !== 'seller' && i.source !== 'reseller')
+        .reduce((sum, i) => sum + (i.import_price ?? i.cost_price ?? 0), 0) +
+      keysCapital;
 
     return {
       total,
@@ -115,8 +124,9 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
       otherBrandCount,
       inventoryValue,
       inventoryCapital,
+      keysCount: availableKeys.length,
     };
-  }, [inventory]);
+  }, [inventory, licenseKeys]);
 
   // QUẢN LÝ DOANH THU & PHÂN TÍCH CHUYÊN SÂU (FINANCIAL DRILL-DOWN)
   const financialAnalytics = useMemo(() => {
@@ -871,7 +881,7 @@ function calculateDaysInStock(item: InventoryItem, nowTimestamp: number): number
                 <div className="text-lg font-black text-blue-700 font-mono mt-0.5">
                   {deviceStats.inventoryCapital.toLocaleString('vi-VN')}₫
                 </div>
-                <span className="text-[10px] text-slate-500">Toàn bộ kho ({deviceStats.total} máy)</span>
+                <span className="text-[10px] text-slate-500">Toàn bộ kho ({deviceStats.total} máy + {deviceStats.keysCount} key)</span>
               </div>
             </>
           )}
