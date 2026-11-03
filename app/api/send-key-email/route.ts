@@ -39,6 +39,10 @@ export async function POST(req: NextRequest) {
     const warrantyInfo = template?.warranty_info || 'Bảo hành kích hoạt 1 đổi 1 trọn đời cho 01 thiết bị';
     const customFooter = template?.footer_note || 'Trân trọng cảm ơn quý khách đã tin tưởng và sử dụng dịch vụ tại Vi Tính An Tâm!';
 
+    // Loại key theo tên phân loại (cùng cách nhận diện 365 như trang bán):
+    // chỉ key Microsoft 365 mới thấy hướng dẫn 365, các key khác không đổi gì.
+    const is365Key = String(category_name || '').toUpperCase().includes('365');
+
     const subject = is_test
       ? `[TEST EMAIL] [Vi Tính An Tâm] Bàn giao Key Bản Quyền: ${category_name || 'Phần mềm'}`
       : `[Vi Tính An Tâm] Bàn giao Key Bản Quyền Chính Hãng: ${category_name || 'Phần mềm'}`;
@@ -85,10 +89,18 @@ export async function POST(req: NextRequest) {
         <tr><td class="label">Bảo hành:</td><td class="val" style="color: #16a34a;">${escapeHtml(warrantyInfo)}</td></tr>
         <tr><td class="label">Thời gian cấp:</td><td class="val">${new Date().toLocaleString('vi-VN')}</td></tr>
       </table>
+      ${is365Key ? `<div class="instruction-box">
+        <strong>📌 HƯỚNG DẪN KÍCH HOẠT MICROSOFT 365:</strong><br>
+        Gói Microsoft 365 của shop là gói 12 tháng, gắn với tài khoản Microsoft của bạn, không gắn với máy.<br>
+        1. Vào microsoft365.com/setup, đăng nhập bằng tài khoản Microsoft của bạn (chưa có thì tạo miễn phí).<br>
+        2. Nhập mã key 25 ký tự ở trên, làm theo hướng dẫn để gắn gói vào tài khoản đó.<br>
+        3. Sau đó vào microsoft365.com, tải và cài đặt, rồi mở bất kỳ ứng dụng Office nào và đăng nhập bằng CÙNG tài khoản đó để kích hoạt.<br>
+        • Kích hoạt không được, liên hệ shop để được hỗ trợ.
+      </div>` : ''}
       <div class="instruction-box">
         <strong>📌 LƯU Ý KHI SỬ DỤNG:</strong><br>
         • Vui lòng lưu lại email này để sử dụng làm căn cứ bảo hành.<br>
-        • Mỗi mã key chỉ sử dụng cho 01 thiết bị duy nhất.<br>
+        ${is365Key ? '• Mã key chỉ dùng để đổi 01 lần, gắn với tài khoản Microsoft của bạn.<br>' : '• Mỗi mã key chỉ sử dụng cho 01 thiết bị duy nhất.<br>'}
         • Hotline hỗ trợ kỹ thuật: <strong>${escapeHtml(supportPhone)}</strong>
       </div>
     </div>
