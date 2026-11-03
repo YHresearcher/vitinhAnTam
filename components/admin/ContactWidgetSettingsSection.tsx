@@ -17,8 +17,8 @@ const MAX_CONTACTS = 6;
 const WIDGET_TOGGLES: Array<{ key: keyof ContactWidgetConfig; label: string }> = [
   { key: 'showWarranty', label: 'Nút tra cứu bảo hành' },
   { key: 'showHotline', label: 'Nút gọi Hotline' },
-  { key: 'showZalo', label: 'Nút Zalo (danh sách kỹ thuật)' },
-  { key: 'showWhatsapp', label: 'Nút WhatsApp' },
+  { key: 'showZalo', label: 'Kênh Zalo trong Phương thức liên hệ' },
+  { key: 'showWhatsapp', label: 'Kênh WhatsApp trong Phương thức liên hệ' },
   { key: 'showBackToTop', label: 'Nút lên đầu trang' },
 ];
 

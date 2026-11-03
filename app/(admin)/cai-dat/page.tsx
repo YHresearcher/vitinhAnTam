@@ -5,6 +5,7 @@ import { useViTinhAnTamStore, SystemSettings } from '@/lib/store';
 import { FaqItem, CustomerReview } from '@/lib/mockData';
 import { PaymentQrSettingsSection } from '@/components/admin/PaymentQrSettingsSection';
 import { ContactWidgetSettingsSection } from '@/components/admin/ContactWidgetSettingsSection';
+import { BranchesSettingsSection } from '@/components/admin/BranchesSettingsSection';
 import Link from 'next/link';
 import {
   Tabs,
@@ -856,6 +857,14 @@ export default function CaiDatPage() {
                           className="w-full px-3.5 py-2 rounded-lg border border-slate-200 text-xs font-mono text-slate-700 focus:outline-none focus:border-[#C0392B] bg-slate-50 focus:bg-white"
                         />
                       </div>
+                    </div>
+
+                    {/* Chi nhánh cửa hàng */}
+                    <div className="pt-2">
+                      <BranchesSettingsSection
+                        formData={formData}
+                        setFormData={setFormData}
+                      />
                     </div>
 
                     {/* Giới thiệu chân trang */}

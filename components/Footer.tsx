@@ -9,6 +9,11 @@ import { MapPin, Send, Clock, ShieldCheck, CheckCircle, Lock } from 'lucide-reac
 export function Footer() {
   const { currentLang, systemSettings } = useViTinhAnTamStore();
   const t = TRANSLATIONS[currentLang || 'vi'].footer;
+  // Chi nhánh hiển thị được: có tên hoặc địa chỉ; trống cả hai thì bỏ qua.
+  // Hết chi nhánh -> hiện lại địa chỉ cửa hàng chung như trước.
+  const displayBranches = (systemSettings.branches ?? []).filter(
+    (b) => (b.name || '').trim() !== '' || (b.address || '').trim() !== ''
+  );
 
   return (
     <footer id="chinh-sach" className="w-full bg-[#1C130E] border-t border-[#332219] pt-12 pb-10 text-[#D7CCC8] mt-16 shadow-[0_-4px_24px_rgba(0,0,0,0.2)] scroll-mt-20">
@@ -20,9 +25,22 @@ export function Footer() {
               <MapPin className="w-4 h-4 text-[#D9531E] shrink-0" strokeWidth={1.5} />
               <span>{t.hubTitle}</span>
             </h3>
-            <p className="text-[#BCAAA4] text-xs leading-relaxed">
-              {currentLang === 'en' ? t.hubAddress : (systemSettings.address || t.hubAddress)}
-            </p>
+            {displayBranches.length > 0 ? (
+              <ul className="space-y-2">
+                {displayBranches.map((b) => (
+                  <li key={b.id} className="text-[#BCAAA4] text-xs leading-relaxed">
+                    {b.name ? (
+                      <strong className="text-white font-bold block">{b.name}</strong>
+                    ) : null}
+                    {b.address ? <span>{b.address}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-[#BCAAA4] text-xs leading-relaxed">
+                {currentLang === 'en' ? t.hubAddress : (systemSettings.address || t.hubAddress)}
+              </p>
+            )}
             <div className="pt-1 space-y-1.5 text-xs text-[#BCAAA4]">
               <p>
                 <strong className="text-white font-bold">{t.hotlineLabel}</strong>{' '}

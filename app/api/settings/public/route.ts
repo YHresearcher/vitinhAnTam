@@ -10,6 +10,7 @@ const PUBLIC_FIELDS: (keyof SystemSettings)[] = [
   'zaloNumber',
   'zaloLink',
   'zaloContacts',
+  'branches',
   'contactWidget',
   'whatsappNumber',
   'whatsappLink',

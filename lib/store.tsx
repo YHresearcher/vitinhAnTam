@@ -149,7 +149,7 @@ export const initialSystemSettings: SystemSettings = {
     { id: 'zalo-3', name: 'Kỹ Thuật 3', phone: '0909053058', role: 'Cứu hộ khẩn cấp & key bản quyền' },
   ],
   branches: [
-    { id: 'branch-1', name: 'Trụ sở chính', address: '52 Nguyễn Cửu Vân, Phường 4, TP. Tân An, Long An' },
+    { id: 'branch-1', name: 'Trụ sở chính', address: '52 Nguyễn Cửu Vân, phường Long An, tỉnh Tây Ninh' },
   ],
   contactWidget: { showWarranty: true, showHotline: true, showZalo: true, showWhatsapp: true, showBackToTop: true },
   whatsappNumber: '0909053058',

@@ -14,6 +14,7 @@ const FIELD_MAP: Array<[keyof SystemSettings, string]> = [
   ['zaloNumber', 'zalo_number'],
   ['zaloLink', 'zalo_link'],
   ['zaloContacts', 'zalo_contacts'],
+  ['branches', 'branches'],
   ['contactWidget', 'contact_widget'],
   ['whatsappNumber', 'whatsapp_number'],
   ['whatsappLink', 'whatsapp_link'],
@@ -149,7 +150,7 @@ async function upsertSupabaseSettingsSafely(sb: ReturnType<typeof getServerSupab
 
       // Danh sách các cột lõi chắc chắn đã có trong DB
       const CORE_DB_COLUMNS = new Set([
-        'brand_slogan', 'hotline', 'zalo_number', 'zalo_link', 'zalo_contacts',
+        'brand_slogan', 'hotline', 'zalo_number', 'zalo_link', 'zalo_contacts', 'branches',
         'whatsapp_number', 'whatsapp_link', 'email', 'address', 'street_address',
         'district', 'city', 'service_areas', 'working_hours_weekday', 'working_hours_weekend',
         'prime_hours', 'footer_about', 'footer_copyright', 'store_name',
