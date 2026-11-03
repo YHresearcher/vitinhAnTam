@@ -9,6 +9,7 @@ export interface ShowcaseItem {
   name: string;
   serviceTag: string;
   img: string;
+  images: string[]; // Toàn bộ ảnh thực tế của máy (image_urls); fallback [img] khi trống
   category: 'office' | 'laptop' | 'workstation';
   badge: string;
   subBadge: string;
@@ -132,6 +133,9 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
             // Ảnh mặc định cùng phong cách hero cho máy chưa có ảnh thật
             '/images/machine-card-laptop.webp';
 
+      // Toàn bộ ảnh thực tế (lọc chuỗi rỗng phòng thủ); trống thì dùng [img] để gallery vẫn có ảnh chính.
+      const galleryUrls = (item.image_urls || []).filter((u) => !!u);
+
       const shelf = item.shelf_location
         ? isEn
           ? `Shelf ${item.shelf_location.replace(/^Kệ\s*/i, '')}`
@@ -154,6 +158,7 @@ export function getShowcaseProducts(isEn: boolean, inventory: InventoryItem[] = 
         id: item.id,
         serviceTag: item.service_tag,
         img: defaultImg,
+        images: galleryUrls.length > 0 ? galleryUrls : [defaultImg],
         category,
         price: effectivePrice,
         originalPrice: rawOriginal,

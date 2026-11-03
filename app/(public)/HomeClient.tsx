@@ -101,6 +101,14 @@ export default function HomePage() {
 
   // Modal for QC & S/N inspection
   const [selectedProduct, setSelectedProduct] = useState<ShowcaseItem | null>(null);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  // Đổi máy khác trong popup thì quay về ảnh đầu — tránh kẹt ở ảnh thứ N của máy trước.
+  useEffect(() => { setGalleryIndex(0); }, [selectedProduct?.id]);
+  // Phòng thủ cho dữ liệu cũ thiếu trường images: luôn có ít nhất ảnh chính.
+  const galleryImages = selectedProduct?.images && selectedProduct.images.length > 0
+    ? selectedProduct.images
+    : selectedProduct ? [selectedProduct.img] : [];
+  const galleryMainIndex = Math.min(galleryIndex, Math.max(galleryImages.length - 1, 0));
   const [homeProductTab, setHomeProductTab] = useState<'all' | 'hardware' | 'components' | 'software'>('all');
 
   // Handle smooth scroll on initial anchor load or hash change
@@ -1560,6 +1568,33 @@ export default function HomePage() {
                 <div className="text-xs text-slate-500">{t.qcModal.priceLabel}</div>
                 <div className="text-xl font-bold text-[#C0392B] font-mono">{formatVND(selectedProduct.price)}</div>
               </div>
+            </div>
+
+            {/* Gallery ảnh thực tế của máy — đủ danh sách ảnh, không chỉ ảnh đầu */}
+            <div>
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                <Image
+                  src={galleryImages[galleryMainIndex] || selectedProduct.img}
+                  alt={selectedProduct.name}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              {galleryImages.length > 1 && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {galleryImages.map((url, i) => (
+                    <button
+                      key={`${url}-${i}`}
+                      type="button"
+                      onClick={() => setGalleryIndex(i)}
+                      aria-label={`Ảnh ${i + 1}`}
+                      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 transition ${i === galleryMainIndex ? 'border-[#C0392B]' : 'border-slate-200 hover:border-slate-400'}`}
+                    >
+                      <Image src={url} alt="" fill className="object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hardware & Test Evidence Grid */}
