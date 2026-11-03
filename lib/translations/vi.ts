@@ -108,7 +108,7 @@ export const VI_TRANSLATIONS = {
     policy: 'Chính sách:',
     policyVal: 'Bảo hành 6 tháng, hỗ trợ kỹ thuật và xử lý nhanh chóng',
     btnReserve: 'Mua Ngay',
-    btnZaloPhotos: 'Chat Zalo Xem Thêm Ảnh Thật Máy',
+    btnZaloPhotos: 'Thắc mắc? Hỏi An Tâm',
   },
   services: {
     tag: 'MUA MÁY CŨ TẠI AN TÂM ĐƯỢC GÌ',

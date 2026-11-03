@@ -110,7 +110,7 @@ export const EN_TRANSLATIONS = {
     policy: 'Warranty Guarantee:',
     policyVal: '6-Month warranty with flexible on-site support when needed',
     btnReserve: 'Reserve / Request Delivery',
-    btnZaloPhotos: 'Chat WhatsApp / Zalo For Real Photos',
+    btnZaloPhotos: 'Contact Whatsapp',
   },
   services: {
     tag: 'WHAT YOU GET WHEN YOU BUY FROM AN TAM',

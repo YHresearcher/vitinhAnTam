@@ -1659,13 +1659,17 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
               </Link>
               <a
-                href={`${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${zaloMessage}`}
+                href={
+                  isEn
+                    ? `${systemSettings.whatsappLink || 'https://wa.me/84909053058'}?text=${zaloMessage}`
+                    : `${systemSettings.zaloLink || 'https://zalo.me/0909053058'}?text=${zaloMessage}`
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="py-3 px-5 rounded-xl bg-[#0068FF] hover:bg-[#0054d1] text-white font-bold text-xs sm:text-sm text-center transition-all shadow-xs flex items-center justify-center gap-2"
               >
                 <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
-                <span>{t.qcModal.btnZaloPhotos || (isEn ? 'Chat Zalo For Real Photos' : 'Chat Zalo Xem Thêm Ảnh Thật')}</span>
+                <span>{t.qcModal.btnZaloPhotos || (isEn ? 'Contact Whatsapp' : 'Thắc mắc? Hỏi An Tâm')}</span>
               </a>
             </div>
           </div>
