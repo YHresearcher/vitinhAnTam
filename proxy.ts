@@ -21,6 +21,9 @@ const PROTECTED_PAGES = [
   '/quan-ly-don-hang',
   '/bai-viet',
   '/sao-ke',
+  // Trang Tài khoản của tôi: chỉ cần đăng nhập, mọi vai trò đều vào được
+  // (không có rule ADMIN_ONLY cho trang này).
+  '/tai-khoan',
 ];
 
 const PROTECTED_APIS = ['/api/inventory', '/api/tickets'];

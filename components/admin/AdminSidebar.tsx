@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Navigation,
   ClipboardList,
+  User,
   X,
 } from 'lucide-react';
 import { Logo } from '@/components/Logo';
@@ -200,6 +201,16 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
         badgeColor: '',
         visible: canAccessSettings(),
       },
+      {
+        label: 'Tài khoản của tôi',
+        href: '/tai-khoan',
+        icon: User,
+        badge: null,
+        badgeColor: '',
+        // Mọi vai trò đều thấy và dùng được: tự sửa họ tên, SĐT, email,
+        // mật khẩu của chính mình (username/vai trò/quyền hạn vẫn chỉ Admin đổi).
+        visible: true,
+      },
     ];
     return rawNavItems.filter((item) => item.visible);
   }, [
@@ -247,7 +258,7 @@ export function AdminSidebar({ mobileOpen = false, onCloseMobile }: AdminSidebar
             [
               { key: 'overview', label: 'Tổng quan & tài chính', hrefs: ['/dashboard', '/tai-chinh'] },
               { key: 'ops', label: 'Nghiệp vụ & kho', hrefs: ['/khach-hang', '/cuu-ho-onsite', '/viec-cua-toi', '/cong-viec-cua-toi', '/quan-ly-don-hang', '/kho-may', '/quan-ly-key', '/tien-cong'] },
-              { key: 'system', label: 'Nội dung & hệ thống', hrefs: ['/bai-viet', '/thanh-vien', '/cai-dat'] },
+              { key: 'system', label: 'Nội dung & hệ thống', hrefs: ['/bai-viet', '/thanh-vien', '/cai-dat', '/tai-khoan'] },
             ] as const
           ).map((group) => {
             const groupItems = navItems.filter((item) =>

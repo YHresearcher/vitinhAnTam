@@ -159,8 +159,8 @@ export default function AdminLayout({
   // không lọt qua đường link trực tiếp hay bảng lệnh.
   const fieldAllowedPaths =
     currentUser.role === 'salesman'
-      ? ['/viec-cua-toi', '/kho-may', '/quan-ly-key', '/cong-viec-cua-toi']
-      : ['/viec-cua-toi'];
+      ? ['/viec-cua-toi', '/kho-may', '/quan-ly-key', '/cong-viec-cua-toi', '/tai-khoan']
+      : ['/viec-cua-toi', '/tai-khoan'];
   const isRestrictedForFieldStaff =
     isLoggedIn && isFieldStaff() && !fieldAllowedPaths.includes(pathname);
   // Thông báo rõ lý do bị chặn (mỗi trang bị khóa chỉ báo một lần) thay vì

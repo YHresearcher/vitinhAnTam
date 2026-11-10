@@ -279,6 +279,8 @@ interface StoreContextType {
   resetUserPassword: (id: string) => Promise<{ ok: boolean; message?: string }>;
   addUser: (user: Omit<UserAccount, 'id' | 'created_at'>) => Promise<UserAccount>;
   deleteUser: (id: string) => Promise<boolean>;
+  // Tự phục vụ: áp dụng thông tin tài khoản của chính mình vừa lưu ở /tai-khoan
+  applyMyProfile: (user: UserAccount) => void;
 
   // Data Collections
   inventory: InventoryItem[];
@@ -894,6 +896,16 @@ export function StoreProvider({
     } catch {
       return null;
     }
+  };
+
+  // Áp dụng thông tin tài khoản của CHÍNH MÌNH vừa lưu ở trang /tai-khoan:
+  // cập nhật currentUser (header/sidebar hiện tên mới ngay, không cần tải lại)
+  // và đồng bộ luôn mục tương ứng trong danh sách users nếu đang có.
+  // Chỉ cập nhật state ở client — mọi kiểm tra quyền vẫn do API /api/auth/me giữ.
+  const applyMyProfile = (user: UserAccount) => {
+    if (!user?.id) return;
+    setCurrentUser(user);
+    setUsers(users.map((u) => (u.id === user.id ? { ...u, ...user } : u)));
   };
 
   const updateUser = async (id: string, data: Partial<UserAccount>): Promise<boolean> => {
@@ -5199,6 +5211,7 @@ export function StoreProvider({
       addUser,
       deleteUser,
       refreshUsersFromServer,
+      applyMyProfile,
       addCustomer,
       updateCustomer,
       deleteCustomer,
