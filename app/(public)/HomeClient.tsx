@@ -406,9 +406,6 @@ export default function HomePage() {
                 </span>
                 )}
               </div>
-              <span className="hidden sm:block text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                {isEn ? 'On-site rescue & support' : 'Cứu hộ & hỗ trợ tận nơi'}
-              </span>
             </div>
 
             {/* Main Hero: 2-column with content left & image showcase right */}
