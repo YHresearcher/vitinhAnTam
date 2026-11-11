@@ -25,15 +25,12 @@ function displayBranches(all: Branch[] | undefined): Branch[] {
   );
 }
 
-type Channel = 'zalo' | 'whatsapp' | 'email';
-
-// Một mục "Phương thức liên hệ" duy nhất: chọn kênh TRƯỚC (Zalo / WhatsApp /
-// Email), rồi chọn chi nhánh; số Zalo/WhatsApp/Email dùng chung cho mọi chi
-// nhánh nên không nằm theo từng chi nhánh.
+// Một mục "Phương thức liên hệ" duy nhất: chọn chi nhánh, rồi bấm thẳng nút
+// nhắn tin của kênh muốn dùng (Zalo / WhatsApp); số Zalo/WhatsApp dùng chung
+// cho mọi chi nhánh nên không nằm theo từng chi nhánh.
 export function FloatingContactWidget() {
   const { currentLang, systemSettings } = useViTinhAnTamStore();
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const [channel, setChannel] = useState<Channel>('zalo');
   const [branchId, setBranchId] = useState<string | null>(null);
 
   const isEn = currentLang === 'en';
@@ -45,16 +42,6 @@ export function FloatingContactWidget() {
   const showZalo = cw?.showZalo !== false;
   const showWhatsapp = cw?.showWhatsapp !== false;
 
-  // Kênh khả dụng: Zalo/WhatsApp theo công tắc Cài đặt, Email luôn có.
-  const channelOptions: Array<{ key: Channel; label: string }> = [
-    ...(showZalo ? [{ key: 'zalo' as Channel, label: 'Zalo' }] : []),
-    ...(showWhatsapp ? [{ key: 'whatsapp' as Channel, label: 'WhatsApp' }] : []),
-    { key: 'email' as Channel, label: 'Email' },
-  ];
-  const activeChannel: Channel = channelOptions.some((o) => o.key === channel)
-    ? channel
-    : channelOptions[0].key;
-
   const branches = displayBranches(systemSettings.branches);
   const selectedBranch: Branch | undefined =
     branches.find((b) => b.id === branchId) ?? branches[0];
@@ -64,14 +51,39 @@ export function FloatingContactWidget() {
   const zaloHref = systemSettings.zaloLink || `https://zalo.me/${zaloNumber}`;
   const whatsappNumber = systemSettings.whatsappNumber || '0909053058';
   const whatsappHref = systemSettings.whatsappLink || waLink(whatsappNumber);
-  const email = systemSettings.email || 'hello@vitinhantam.com';
 
-  const action =
-    activeChannel === 'zalo'
-      ? { href: zaloHref, label: isEn ? 'Chat on Zalo' : 'Nhắn Zalo', detail: zaloNumber, bg: 'bg-[#0068FF] hover:bg-[#0054d1]', external: true }
-      : activeChannel === 'whatsapp'
-      ? { href: whatsappHref, label: isEn ? 'Chat on WhatsApp' : 'Nhắn WhatsApp', detail: whatsappNumber, bg: 'bg-[#25D366] hover:bg-[#20ba5a]', external: true }
-      : { href: `mailto:${email}`, label: isEn ? 'Send Email' : 'Gửi Email', detail: email, bg: 'bg-[#2B1810] hover:bg-[#1d110a]', external: false };
+  // Nút nhắn tin nhanh: một nút bấm thẳng cho mỗi kênh khả dụng (Zalo /
+  // WhatsApp theo công tắc Cài đặt). Không còn Email trong widget này.
+  const channels: Array<{
+    key: 'zalo' | 'whatsapp';
+    href: string;
+    label: string;
+    detail: string;
+    bg: string;
+  }> = [
+    ...(showZalo
+      ? [
+          {
+            key: 'zalo' as const,
+            href: zaloHref,
+            label: isEn ? 'Chat on Zalo' : 'Nhắn Zalo',
+            detail: zaloNumber,
+            bg: 'bg-[#0068FF] hover:bg-[#0054d1]',
+          },
+        ]
+      : []),
+    ...(showWhatsapp
+      ? [
+          {
+            key: 'whatsapp' as const,
+            href: whatsappHref,
+            label: isEn ? 'Chat on WhatsApp (English)' : 'Nhắn WhatsApp (English)',
+            detail: whatsappNumber,
+            bg: 'bg-[#25D366] hover:bg-[#20ba5a]',
+          },
+        ]
+      : []),
+  ];
 
   const selectClassName =
     'w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#C0392B] focus:bg-white cursor-pointer';
@@ -108,7 +120,7 @@ export function FloatingContactWidget() {
         </a>
       )}
 
-      {/* 3. Phuong thuc lien he: 1 muc duy nhat, chon kenh truoc roi chon chi nhanh */}
+      {/* 3. Phuong thuc lien he: chon chi nhanh roi bam nut nhan tin nhanh */}
       <div className="relative pointer-events-auto">
         <button
           type="button"
@@ -145,25 +157,7 @@ export function FloatingContactWidget() {
               </button>
             </div>
 
-            {/* Kênh liên hệ — chọn TRƯỚC */}
-            <div>
-              <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
-                {isEn ? 'Choose a channel' : 'Chọn kênh liên hệ'}
-              </label>
-              <select
-                value={activeChannel}
-                onChange={(e) => setChannel(e.target.value as Channel)}
-                className={selectClassName}
-              >
-                {channelOptions.map((o) => (
-                  <option key={o.key} value={o.key}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Chi nhánh — chọn SAU (địa chỉ hiển thị, số liên hệ dùng chung) */}
+            {/* Chi nhánh (địa chỉ hiển thị, số liên hệ dùng chung) */}
             {branches.length > 0 ? (
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
@@ -199,17 +193,36 @@ export function FloatingContactWidget() {
               </p>
             )}
 
-            {/* Nút liên hệ theo kênh đã chọn — số dùng chung mọi chi nhánh */}
-            <a
-              href={action.href}
-              {...(action.external
-                ? { target: '_blank', rel: 'noopener noreferrer' }
-                : {})}
-              className={`block text-center py-2.5 rounded-xl text-white text-xs font-bold transition ${action.bg}`}
-            >
-              {action.label}
-              <span className="block text-[10px] font-medium opacity-80 mt-0.5">{action.detail}</span>
-            </a>
+            {/* Nút nhắn tin nhanh — bấm thẳng kênh muốn dùng, số dùng chung mọi chi nhánh */}
+            {channels.length > 0 ? (
+              <div className="space-y-2">
+                <span className="block text-[11px] font-bold text-slate-500 uppercase">
+                  {isEn ? 'Message us' : 'Nhắn tin nhanh'}
+                </span>
+                {channels.map((c) => (
+                  <a
+                    key={c.key}
+                    href={c.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`block text-center py-2.5 rounded-xl text-white text-xs font-bold transition ${c.bg}`}
+                  >
+                    {c.label}
+                    <span className="block text-[10px] font-medium opacity-80 mt-0.5">{c.detail}</span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] leading-relaxed text-[#6E5D53]">
+                {isEn
+                  ? 'Messaging is off right now — please call the hotline '
+                  : 'Nhắn tin đang tắt — vui lòng gọi hotline '}
+                <a href={`tel:${cleanHotline}`} className="font-bold text-[#C0392B]">
+                  {hotline}
+                </a>
+                .
+              </p>
+            )}
           </div>
         )}
       </div>
