@@ -1558,9 +1558,16 @@ export function StoreProvider({
           }
         });
 
-        readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
-          setSystemSettings((prev) => ({ ...prev, ...parsed }));
-        });
+        // Chỉ đọc cấu hình đệm khi kéo từ máy chủ thất bại: bản đệm có thể
+        // cũ (vd chi nhánh vừa đổi trong DB) và sẽ ghi đè cấu hình mới vừa
+        // tải qua /api/settings/public ở trên — đúng lỗi khách vãng lai vẫn
+        // thấy chi nhánh cũ dù DB đã đổi (13/11/2026). Các bảng kho/khách
+        // ở trên đã dùng cùng kiểu chặn này (if (!supabasePulledOk)).
+        if (!supabasePulledOk) {
+          readJson<SystemSettings>('vtat_system_settings_v2', (parsed) => {
+            setSystemSettings((prev) => ({ ...prev, ...parsed }));
+          });
+        }
 
         // Tải cấu hình mới nhất từ máy chủ (.data/settings.json)
         fetch('/api/settings')
