@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRecoveryToken } from '@/lib/server/password-recovery';
-import { loadUsers } from '@/lib/server/users';
+import { loadUsersAsync } from '@/lib/server/users';
 import { rateLimit } from '@/lib/server/rateLimit';
 
 const GENERIC_MESSAGE = 'Nếu email tồn tại trong hệ thống, hướng dẫn khôi phục đã được gửi. Vui lòng kiểm tra hộp thư và thư mục spam.';
@@ -28,7 +28,14 @@ export async function POST(request: NextRequest) {
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   if (!isValidEmail(email)) return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
 
-  const user = loadUsers().find((candidate) => candidate.email.toLowerCase() === email && candidate.status !== 'suspended');
+  // Tra tài khoản thẳng trong database (Supabase), không tra kho file/bộ nhớ
+  // đồng bộ của từng instance serverless nữa — kho đó giữ email cũ (vd địa
+  // chỉ giữ chỗ của admin) nên tài khoản thật bị báo "không tìm thấy" và
+  // email khôi phục không bao giờ được gửi (lỗi 10/11/2026, khiến admin bị
+  // khóa ngoài khi quên mật khẩu). Vẫn trả thông điệp chung để không lộ
+  // tài khoản nào tồn tại.
+  const users = await loadUsersAsync();
+  const user = users.find((candidate) => candidate.email.toLowerCase() === email && candidate.status !== 'suspended');
   if (!user) return NextResponse.json({ success: true, message: GENERIC_MESSAGE });
 
   const apiKey = process.env.RESEND_API_KEY;
