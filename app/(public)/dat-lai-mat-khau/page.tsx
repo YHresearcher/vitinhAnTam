@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { FormEvent, Suspense, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Logo } from '@/components/Logo';
 
 /**
@@ -10,6 +10,7 @@ import { Logo } from '@/components/Logo';
  * to avoid Next.js build-time prerendering errors.
  */
 function ResetPasswordForm() {
+  const router = useRouter();
   const params = useSearchParams();
   const token = params.get('token') || '';
   const [password, setPassword] = useState('');
@@ -33,7 +34,12 @@ function ResetPasswordForm() {
       });
       const data = await response.json();
       if (!response.ok) setError(data.message || 'Không thể cập nhật mật khẩu.');
-      else setMessage(data.message);
+      else {
+        setMessage(data.message);
+        // Cập nhật xong tự chuyển về trang đăng nhập (trước đây chỉ hiện
+        // thông báo rồi đứng yên tại trang, user phải tự bấm quay lại).
+        window.setTimeout(() => router.push('/login'), 2500);
+      }
     } catch {
       setError('Không thể kết nối máy chủ. Vui lòng thử lại.');
     } finally {
@@ -49,7 +55,12 @@ function ResetPasswordForm() {
         <input type="password" required minLength={8} maxLength={128} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mật khẩu mới" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-200" />
         <input type="password" required minLength={8} maxLength={128} value={confirm} onChange={(event) => setConfirm(event.target.value)} placeholder="Nhập lại mật khẩu mới" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-red-200" />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        {message && <p className="text-sm text-emerald-700 bg-emerald-50 p-3 rounded-xl">{message}</p>}
+        {message && (
+          <>
+            <p className="text-sm text-emerald-700 bg-emerald-50 p-3 rounded-xl">{message}</p>
+            <p className="text-sm text-slate-500 text-center">Đang chuyển về trang đăng nhập…</p>
+          </>
+        )}
         <button disabled={loading || Boolean(message)} className="w-full py-3 rounded-xl bg-[#C0392B] text-white font-bold disabled:opacity-50">{loading ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}</button>
       </form>
       <Link href="/login" className="block text-center mt-5 text-sm text-slate-600 hover:text-[#C0392B]">← Quay lại đăng nhập</Link>
